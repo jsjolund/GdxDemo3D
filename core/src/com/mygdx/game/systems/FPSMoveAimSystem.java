@@ -1,0 +1,146 @@
+package com.mygdx.game.systems;
+
+import com.badlogic.ashley.core.*;
+import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.IntIntMap;
+import com.mygdx.game.GameSettings;
+import com.mygdx.game.components.MoveAimComponent;
+
+/**
+ * Created by user on 8/1/15.
+ */
+public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
+
+	private final IntIntMap keys = new IntIntMap();
+	public Family systemFamily;
+	Vector3 directionAim = new Vector3(Vector3.X);
+	Vector3 directionAimOld = new Vector3(Vector3.X);
+	Vector3 xzRotationAim = new Vector3();
+	Vector2 screenCenter = new Vector2();
+	float epsilonY = 0.008f;
+
+	Vector3 directionMove = new Vector3();
+	Vector3 moveVector = new Vector3();
+
+
+	Vector3 up = new Vector3(Vector3.Y);
+	Matrix4 transform = new Matrix4();
+	private ImmutableArray<Entity> entities;
+	private ComponentMapper<MoveAimComponent> moveComponents = ComponentMapper.getFor(MoveAimComponent.class);
+
+	public FPSMoveAimSystem() {
+		systemFamily = Family.all(MoveAimComponent.class).get();
+	}
+
+	public void addedToEngine(Engine engine) {
+		entities = engine.getEntitiesFor(systemFamily);
+		Gdx.input.setCursorCatched(true);
+	}
+
+	@Override
+	public boolean keyDown(int keycode) {
+		keys.put(keycode, keycode);
+		return true;
+	}
+
+	@Override
+	public boolean keyUp(int keycode) {
+		keys.remove(keycode, 0);
+		return true;
+	}
+
+	@Override
+	public boolean keyTyped(char character) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		return false;
+	}
+
+	@Override
+	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		return false;
+	}
+
+	public void centerMouseCursor() {
+		Gdx.input.setCursorPosition((int) screenCenter.x, (int) screenCenter.y);
+	}
+
+	private void calculateMoveDirection() {
+		directionMove.setZero();
+
+		if (keys.containsKey(GameSettings.FORWARD)) {
+			directionMove.add(directionAim);
+		}
+		if (keys.containsKey(GameSettings.BACKWARD)) {
+			directionMove.sub(directionAim);
+		}
+		if (keys.containsKey(GameSettings.STRAFE_LEFT)) {
+			moveVector.setZero().sub(directionAim).crs(up);
+			directionMove.add(moveVector);
+		}
+		if (keys.containsKey(GameSettings.STRAFE_RIGHT)) {
+			moveVector.setZero().add(directionAim).crs(up);
+			directionMove.add(moveVector);
+		}
+		directionMove.nor();
+	}
+
+	@Override
+	public void update(float deltaTime) {
+		calculateMoveDirection();
+
+		for (int i = 0; i < entities.size(); ++i) {
+			Entity entity = entities.get(i);
+
+			MoveAimComponent moveCmp = moveComponents.get(entity);
+
+			moveCmp.directionAim.set(directionAim);
+			moveCmp.directionMove.set(directionMove);
+			moveCmp.up.set(up);
+		}
+	}
+
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		float mouseSens = GameSettings.MOUSE_SENSITIVITY;
+
+		directionAimOld.set(directionAim);
+
+		float mouseDx = screenX - screenCenter.x;
+		float mouseDy = screenY - screenCenter.y;
+
+		directionAim.rotate(
+				xzRotationAim.set(directionAim).crs(Vector3.Y),
+				-mouseSens * mouseDy);
+
+		if (directionAim.isCollinear(Vector3.Y, epsilonY)
+				|| directionAim.isCollinearOpposite(Vector3.Y, epsilonY)) {
+			directionAim.set(directionAimOld);
+		}
+		directionAim.rotate(Vector3.Y, -mouseSens * mouseDx);
+
+		directionAim.nor();
+		centerMouseCursor();
+
+		return true;
+	}
+
+	@Override
+	public boolean scrolled(int amount) {
+		return false;
+	}
+}
