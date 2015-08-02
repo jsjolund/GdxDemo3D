@@ -122,13 +122,10 @@ public class BlenderLoader {
 				shape = new btSphereShape(radius);
 
 			} else if (bodyType.equals("capsule")) {
-				float radius = Math.max(
-						Math.max(Math.abs(cmp.scale.x), Math.abs(cmp.scale.y)),
-						Math.abs(cmp.scale.z));
-				shape = new btCapsuleShape(radius, cmp.scale.y * 2);
+				float radius = Math.max(Math.abs(cmp.scale.x), Math.abs(cmp.scale.z));
+				shape = new btCapsuleShape(radius, cmp.scale.y * 2.5f);
 			}
 		}
-
 		return shape;
 	}
 

@@ -3,7 +3,6 @@ package com.mygdx.game.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.mygdx.game.components.LightComponent;
 
 /**
@@ -17,13 +16,11 @@ public class ModelEnvironmentSystem extends EntitySystem {
 	public Environment environment;
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<LightComponent> lights = ComponentMapper.getFor(LightComponent.class);
+
 	public ModelEnvironmentSystem() {
 		environment = new Environment();
 		systemFamily = Family.all(LightComponent.class).get();
 		lightListener = new LightListener();
-
-		this.environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.1f, 0.1f, 0.1f,
-				1.f));
 	}
 
 	public void addedToEngine(Engine engine) {

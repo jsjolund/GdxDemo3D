@@ -20,16 +20,20 @@ import java.nio.ByteBuffer;
  * Created by user on 8/1/15.
  */
 public class AbstractScreen implements Screen {
+
 	public static final String tag = "AbstractScreen";
 
 	protected Viewport viewport;
-	Camera camera;
-	SpriteBatch spriteBatch;
-	Matrix4 uiMatrix;
-	Vector3 screenCenter = new Vector3();
-	int reqHeight;
-	int reqWidth;
+	protected Camera camera;
+	protected SpriteBatch spriteBatch;
+	protected Matrix4 uiMatrix;
+	private Vector3 screenCenter = new Vector3();
+	private int reqHeight;
+	private int reqWidth;
 	private ShapeRenderer shapeRenderer;
+
+	protected Color viewportBorderColor = Color.BLACK;
+	protected Color viewportBackgroundColor = Color.LIGHT_GRAY;
 
 	public AbstractScreen(int reqWidth, int reqHeight) {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
@@ -101,10 +105,11 @@ public class AbstractScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1);
+		Gdx.graphics.getGL20().glClearColor(viewportBorderColor.r,
+				viewportBorderColor.g, viewportBorderColor.b, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		shapeRenderer.setColor(Color.CYAN);
+		shapeRenderer.setColor(viewportBackgroundColor);
 		shapeRenderer.rect(0, 0, getViewportWidth(), getViewportHeight());
 		shapeRenderer.end();
 
@@ -146,6 +151,11 @@ public class AbstractScreen implements Screen {
 	@Override
 	public void hide() {
 
+	}
+
+	public Vector3 getScreenCenter(Vector3 out) {
+		out.set(screenCenter);
+		return out;
 	}
 
 	public Vector3 screenPointToViewport(Vector3 screen) {

@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
@@ -18,18 +17,15 @@ public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
 
 	private final IntIntMap keys = new IntIntMap();
 	public Family systemFamily;
+
 	Vector3 directionAim = new Vector3(Vector3.X);
 	Vector3 directionAimOld = new Vector3(Vector3.X);
 	Vector3 xzRotationAim = new Vector3();
 	Vector2 screenCenter = new Vector2();
-	float epsilonY = 0.008f;
-
 	Vector3 directionMove = new Vector3();
 	Vector3 moveVector = new Vector3();
-
-
 	Vector3 up = new Vector3(Vector3.Y);
-	Matrix4 transform = new Matrix4();
+
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<MoveAimComponent> moveComponents = ComponentMapper.getFor(MoveAimComponent.class);
 
@@ -126,16 +122,14 @@ public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
 		directionAim.rotate(
 				xzRotationAim.set(directionAim).crs(Vector3.Y),
 				-mouseSens * mouseDy);
-
-		if (directionAim.isCollinear(Vector3.Y, epsilonY)
-				|| directionAim.isCollinearOpposite(Vector3.Y, epsilonY)) {
-			directionAim.set(directionAimOld);
-		}
 		directionAim.rotate(Vector3.Y, -mouseSens * mouseDx);
 
+		if ((Math.signum(directionAim.x) != Math.signum(directionAimOld.x))
+				&& Math.signum(directionAim.z) != Math.signum(directionAimOld.z)) {
+			directionAim.set(directionAimOld);
+		}
 		directionAim.nor();
 		centerMouseCursor();
-
 		return true;
 	}
 

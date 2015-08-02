@@ -18,10 +18,12 @@ public class PhysicsMoveSystem extends EntitySystem {
 	Vector3 prevVelocity = new Vector3();
 	Vector3 velocity = new Vector3();
 	Vector3 xzVelocity = new Vector3();
+	Vector3 xzRotation = new Vector3();
 	Matrix4 transform = new Matrix4();
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<MoveAimComponent> moveComponents = ComponentMapper.getFor(MoveAimComponent.class);
 	private ComponentMapper<PhysicsComponent> phyComponents = ComponentMapper.getFor(PhysicsComponent.class);
+
 	public PhysicsMoveSystem() {
 		systemFamily = Family.all(MoveAimComponent.class, PhysicsComponent.class).get();
 		listener = new PhysicsMoveListener();
@@ -46,18 +48,18 @@ public class PhysicsMoveSystem extends EntitySystem {
 			PhysicsComponent phyCmp = phyComponents.get(entity);
 
 			prevVelocity = phyCmp.body.getLinearVelocity();
+
 			xzVelocity.set(moveCmp.directionMove).scl(1, 0, 1).nor().scl(deltaTime).scl(moveCmp.speed);
+
 			velocity.set(xzVelocity).add(0, prevVelocity.y, 0);
 
 			phyCmp.body.getWorldTransform(transform);
 			transform.getTranslation(moveCmp.position);
-			transform.setToLookAt(moveCmp.directionAim, moveCmp.up).inv();
+			transform.setToLookAt(xzRotation.set(moveCmp.directionAim).scl(1,0,1), moveCmp.up).inv();
 			transform.setTranslation(moveCmp.position);
-
 			phyCmp.body.proceedToTransform(transform);
 
 			phyCmp.body.setLinearVelocity(velocity);
-//			phyCmp.body.setAngularVelocity(Vector3.Zero);
 
 		}
 	}
@@ -68,14 +70,12 @@ public class PhysicsMoveSystem extends EntitySystem {
 		public void entityAdded(Entity entity) {
 			PhysicsComponent phyCmp = phyComponents.get(entity);
 			phyCmp.body.setActivationState(Collision.DISABLE_DEACTIVATION);
-			phyCmp.body.setAngularFactor(Vector3.Y);
 		}
 
 		@Override
 		public void entityRemoved(Entity entity) {
 			PhysicsComponent phyCmp = phyComponents.get(entity);
 			phyCmp.body.setActivationState(Collision.ACTIVE_TAG);
-			phyCmp.body.setAngularFactor(Vector3.Zero);
 		}
 	}
 }

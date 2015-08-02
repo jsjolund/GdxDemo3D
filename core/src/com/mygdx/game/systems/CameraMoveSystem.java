@@ -26,21 +26,15 @@ public class CameraMoveSystem extends EntitySystem {
 
 	@Override
 	public void update(float deltaTime) {
-		camera.update();
-//		for (int i = 0; i < entities.size(); ++i) {
-//			Entity entity = entities.get(i);
-//			MoveAimComponent cmp = moveCmps.get(entity);
-//		}
-		Entity entity = entities.get(0);
-		MoveAimComponent cmp = moveCmps.get(entity);
-		camera.position.set(cmp.position);
-		camera.position.add(cmp.directionAim.cpy().scl(-10));
-		camera.position.add(cmp.up.cpy().scl(2));
-		camera.direction.set(cmp.directionAim);
-		camera.up.set(cmp.up);
-		camera.update();
-
+		if (entities.size() > 0) {
+			Entity entity = entities.get(0);
+			MoveAimComponent cmp = moveCmps.get(entity);
+			camera.position.set(cmp.position);
+			camera.position.add(cmp.cameraPosOffset);
+			camera.direction.set(cmp.directionAim);
+			camera.up.set(cmp.up);
+			camera.update();
+		}
 	}
-
 
 }

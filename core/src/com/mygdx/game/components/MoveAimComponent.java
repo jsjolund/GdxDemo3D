@@ -16,4 +16,5 @@ public class MoveAimComponent extends Component {
 
 	public float speed = 800f;
 
+	public Vector3 cameraPosOffset = new Vector3(0,1,0);
 }

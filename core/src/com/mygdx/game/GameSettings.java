@@ -10,7 +10,6 @@ public class GameSettings {
 
 	public static final int CROSSHAIR = 5;
 	public static final float MOUSE_SENSITIVITY = 0.01f;
-	public static final Vector3 GRAVITY = new Vector3(0, -9.81f * 2, 0);
 	public static final float CAMERA_FOV = 60;
 
 	public static final float PLAYER_WALK_SPEED = 8f;
