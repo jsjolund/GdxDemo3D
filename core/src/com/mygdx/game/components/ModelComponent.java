@@ -18,10 +18,11 @@ public class ModelComponent extends Component {
 	public final float radius;
 	private final BoundingBox bounds = new BoundingBox();
 	public ModelInstance modelInstance;
+	public String id;
 
-	public ModelComponent(Model model) {
-		modelInstance = new ModelInstance(model);
-
+	public ModelComponent(Model model, String id) {
+		this.id = id;
+		this.modelInstance = new ModelInstance(model);
 		try {
 			modelInstance.calculateBoundingBox(bounds);
 		} catch (Exception e) {

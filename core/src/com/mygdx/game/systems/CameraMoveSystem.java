@@ -3,6 +3,7 @@ package com.mygdx.game.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.components.MoveAimComponent;
 
 /**
@@ -17,7 +18,10 @@ public class CameraMoveSystem extends EntitySystem {
 
 	public CameraMoveSystem(Camera camera) {
 		systemFamily = Family.all(MoveAimComponent.class).get();
+
 		this.camera = camera;
+		camera.lookAt(Vector3.X);
+		camera.update();
 	}
 
 	public void addedToEngine(Engine engine) {
@@ -30,7 +34,9 @@ public class CameraMoveSystem extends EntitySystem {
 			Entity entity = entities.get(0);
 			MoveAimComponent cmp = moveCmps.get(entity);
 			camera.position.set(cmp.position);
+
 			camera.position.add(cmp.cameraPosOffset);
+
 			camera.direction.set(cmp.directionAim);
 			camera.up.set(cmp.up);
 			camera.update();

@@ -134,7 +134,7 @@ public class BlenderLoader {
 
 		assets.finishLoadingAsset(cmp.modelPath);
 		Model model = assets.get(cmp.modelPath, Model.class);
-		entity.add(new ModelComponent(model));
+		entity.add(new ModelComponent(model, cmp.name));
 
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
 		setInstanceTransform(instance, cmp.position, cmp.rotation, cmp.scale);
@@ -208,8 +208,8 @@ public class BlenderLoader {
 			entity = new Entity();
 
 			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, cmp.rotation.x);
-			transform.rotate(Vector3.Z, cmp.rotation.z);
+			transform.rotate(Vector3.X, -cmp.rotation.x);
+			transform.rotate(Vector3.Z, -cmp.rotation.z);
 			direction.rot(transform);
 
 			transform.translate(cmp.position);
