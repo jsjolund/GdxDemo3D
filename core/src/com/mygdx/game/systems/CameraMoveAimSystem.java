@@ -34,9 +34,7 @@ public class CameraMoveAimSystem extends EntitySystem {
 			Entity entity = entities.get(0);
 			MoveAimComponent cmp = moveCmps.get(entity);
 			camera.position.set(cmp.position);
-
 			camera.position.add(cmp.cameraPosOffset);
-
 			camera.direction.set(cmp.directionAim);
 			camera.up.set(cmp.up);
 			camera.update();

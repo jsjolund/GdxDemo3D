@@ -135,7 +135,7 @@
 //			isActiveObject = false;
 //		}
 //
-//		PhysicsMotionState motionState = new PhysicsMotionState();
+//		MotionStateComponent motionState = new MotionStateComponent();
 //		motionState.transform = instance.transform;
 //
 //		entity.add(new TransformComponent(instance.transform));

@@ -49,7 +49,6 @@ public class BlenderComponentsLoader {
 			entity = new Entity();
 
 			transform.translate(cmp.position);
-			entity.add(new TransformComponent(transform));
 			entity.add(new LightComponent(
 					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
 							cmp.position, cmp.lamp_energy * cmp.lamp_distance / 2)));
@@ -69,7 +68,6 @@ public class BlenderComponentsLoader {
 			float cutoffAngle = cmp.lamp_falloff;
 			float exponent = 1;
 
-			entity.add(new TransformComponent(transform));
 			entity.add(new LightComponent(
 					new SpotLight().set(cmp.lamp_color, cmp.position,
 							direction, intensity, cutoffAngle, exponent)));
@@ -84,7 +82,6 @@ public class BlenderComponentsLoader {
 			direction.rot(transform);
 
 			transform.translate(cmp.position);
-			entity.add(new TransformComponent(transform));
 			entity.add(new LightComponent(
 					new DirectionalLight().set(cmp.lamp_color.r, cmp.lamp_color.g,
 							cmp.lamp_color.b, direction.x, direction.y, direction.z)));
@@ -152,17 +149,15 @@ public class BlenderComponentsLoader {
 			isActiveObject = false;
 		}
 
-		PhysicsMotionState motionState = new PhysicsMotionState();
-		motionState.transform = instance.transform;
-
-		entity.add(new TransformComponent(instance.transform));
+		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+		entity.add(motionStateCmp);
 
 		float mass = loadMass(cmp, empties);
 
 		if (isActiveObject && mass > 0) {
 			Gdx.app.debug(tag, String.format("Created active model entity %s with %.2f mass.", cmp.name, mass));
 			entity.add(new PhysicsComponent(
-					shape, motionState, mass,
+					shape, motionStateCmp.motionState, mass,
 					PhysicsSystem.OBJECT_FLAG,
 					PhysicsSystem.ALL_FLAG,
 					true, false));
@@ -170,7 +165,7 @@ public class BlenderComponentsLoader {
 		} else {
 			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name, mass));
 			entity.add(new PhysicsComponent(
-					shape, motionState, 0,
+					shape, motionStateCmp.motionState, 0,
 					PhysicsSystem.GROUND_FLAG,
 					PhysicsSystem.ALL_FLAG,
 					false, false));

@@ -7,10 +7,12 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.physics.bullet.Bullet;
-import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.MoveAimComponent;
-import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.systems.*;
 
@@ -69,7 +71,30 @@ public class GameScreen extends AbstractScreen {
 			if (modelCmp.id.endsWith("human")) {
 				entity.add(new MoveAimComponent());
 				Gdx.app.debug(tag, "Added controller to human");
+				System.out.println(entity.getComponents().toString());
 				break;
+			}
+			if (modelCmp.id.endsWith("ball")) {
+				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
+				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);
+
+				Entity billboard = new Entity();
+				billboard.add(ballMotionState);
+
+				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
+				BillboardTextureComponent billboardTexture = new BillboardTextureComponent(billboardPixmap);
+				billboard.add(billboardTexture);
+
+				Material material = new Material();
+				material.set(new TextureAttribute(TextureAttribute.Diffuse, billboardTexture.textureRegion));
+				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
+				material.set(blendAttrib);
+
+				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(5, 5, material, 0, 0,
+						1, 1), "plane");
+				billboard.add(billboardModel);
+
+				engine.addEntity(billboard);
 			}
 		}
 
@@ -88,6 +113,13 @@ public class GameScreen extends AbstractScreen {
 		engine.addEntityListener(phyFamily, phyMoveSys.listener);
 		engine.addSystem(phyMoveSys);
 
+		Gdx.app.debug(tag, "Adding billboard system");
+		Family billFamily = Family.all(
+				BillboardTextureComponent.class,
+				MotionStateComponent.class,
+				ModelComponent.class).get();
+		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
+		engine.addSystem(billSys);
 	}
 
 	@Override
@@ -96,4 +128,5 @@ public class GameScreen extends AbstractScreen {
 		engine.update(Gdx.graphics.getDeltaTime());
 //		engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
 	}
+
 }

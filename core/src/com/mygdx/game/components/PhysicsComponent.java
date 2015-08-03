@@ -14,7 +14,7 @@ import com.badlogic.gdx.utils.Disposable;
 public class PhysicsComponent extends Component implements Disposable {
 
 	private static Vector3 localInertia = new Vector3();
-	public final PhysicsMotionState motionState;
+	public final MotionStateComponent.PhysicsMotionState motionState;
 	public final btRigidBody body;
 	public final short belongsToFlag;
 	public final short collidesWithFlag;
@@ -22,7 +22,7 @@ public class PhysicsComponent extends Component implements Disposable {
 	private final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
 
 	public PhysicsComponent(btCollisionShape shape,
-							PhysicsMotionState motionState,
+							MotionStateComponent.PhysicsMotionState motionState,
 							float mass,
 							short belongsToFlag,
 							short collidesWithFlag,
