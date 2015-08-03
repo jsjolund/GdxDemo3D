@@ -160,6 +160,7 @@ public class BlenderComponentsLoader {
 		float mass = loadMass(cmp, empties);
 
 		if (isActiveObject && mass > 0) {
+			Gdx.app.debug(tag, String.format("Created active model entity %s with %.2f mass.", cmp.name, mass));
 			entity.add(new PhysicsComponent(
 					shape, motionState, mass,
 					PhysicsSystem.OBJECT_FLAG,
@@ -167,6 +168,7 @@ public class BlenderComponentsLoader {
 					true, false));
 
 		} else {
+			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name, mass));
 			entity.add(new PhysicsComponent(
 					shape, motionState, 0,
 					PhysicsSystem.GROUND_FLAG,

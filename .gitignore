@@ -62,3 +62,9 @@ build/
 
 ## OS Specific
 .DS_Store
+
+## 3d Models
+*.blend1
+*.obj
+*.mtl
+*.fbx

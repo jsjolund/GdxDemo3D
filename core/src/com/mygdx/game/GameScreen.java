@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MoveAimComponent;
+import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.systems.*;
 
@@ -19,7 +20,6 @@ import com.mygdx.game.systems.*;
 public class GameScreen extends AbstractScreen {
 
 	PooledEngine engine;
-
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		super(reqWidth, reqHeight);
@@ -79,12 +79,13 @@ public class GameScreen extends AbstractScreen {
 		Gdx.input.setInputProcessor(moveSys);
 
 		Gdx.app.debug(tag, "Adding camera system");
-		CameraMoveSystem camSys = new CameraMoveSystem(camera);
+		CameraMoveAimSystem camSys = new CameraMoveAimSystem(camera);
 		engine.addSystem(camSys);
 
 		Gdx.app.debug(tag, "Adding movement system");
-		PhysicsMoveSystem phyMoveSys = new PhysicsMoveSystem();
-		engine.addEntityListener(phyMoveSys.systemFamily, phyMoveSys.listener);
+		Family phyFamily = Family.all(MoveAimComponent.class, PhysicsComponent.class).get();
+		PhysicsMoveAimSystem phyMoveSys = new PhysicsMoveAimSystem(phyFamily);
+		engine.addEntityListener(phyFamily, phyMoveSys.listener);
 		engine.addSystem(phyMoveSys);
 
 	}

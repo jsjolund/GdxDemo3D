@@ -9,14 +9,14 @@ import com.mygdx.game.components.MoveAimComponent;
 /**
  * Created by user on 8/1/15.
  */
-public class CameraMoveSystem extends EntitySystem {
+public class CameraMoveAimSystem extends EntitySystem {
 
 	public Family systemFamily;
 	private ImmutableArray<Entity> entities;
 	private Camera camera;
 	private ComponentMapper<MoveAimComponent> moveCmps = ComponentMapper.getFor(MoveAimComponent.class);
 
-	public CameraMoveSystem(Camera camera) {
+	public CameraMoveAimSystem(Camera camera) {
 		systemFamily = Family.all(MoveAimComponent.class).get();
 
 		this.camera = camera;
