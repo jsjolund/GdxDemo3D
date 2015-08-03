@@ -23,7 +23,8 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		systemFamily = Family.all(LightComponent.class).get();
 		lightListener = new LightListener();
 
-//		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
+		float a = 0.2f;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, a, a, a, 1.f));
 	}
 
 	public void addedToEngine(Engine engine) {

@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MoveAimComponent;
+import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.systems.*;
 
 /**
@@ -30,7 +31,7 @@ public class GameScreen extends AbstractScreen {
 		camera = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		camera.position.set(100, 100, 100);
 		camera.lookAt(0, 0, 0);
-		camera.near = 1f;
+		camera.near = 1e-3f;
 		camera.far = 3000f;
 		camera.update();
 
@@ -49,7 +50,11 @@ public class GameScreen extends AbstractScreen {
 		engine.addEntityListener(phySys.systemFamily, phySys.listener);
 
 		Gdx.app.debug(tag, "Loading json");
-		BlenderLoader loader = new BlenderLoader("models/test.json");
+		BlenderComponentsLoader loader = new BlenderComponentsLoader(
+				"models/test_model.json",
+				"models/test_empty.json",
+				"models/test_light.json"
+		);
 
 		Gdx.app.debug(tag, "Adding entities");
 		for (Entity entity : loader.entities) {
