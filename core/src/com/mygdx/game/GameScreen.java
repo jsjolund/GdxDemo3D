@@ -75,7 +75,7 @@ public class GameScreen extends AbstractScreen {
 				break;
 			}
 			if (modelCmp.id.endsWith("ball")) {
-				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
+//				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
 				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);
 
 				Entity billboard = new Entity();
