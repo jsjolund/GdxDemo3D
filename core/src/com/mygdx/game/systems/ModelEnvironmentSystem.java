@@ -27,6 +27,7 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, a, a, a, 1.f));
 	}
 
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 		for (int i = 0; i < entities.size(); ++i) {

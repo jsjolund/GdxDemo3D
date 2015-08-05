@@ -14,24 +14,24 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 /**
  * Created by user on 8/3/15.
  */
-public class BillboardTextureComponent extends Component {
+public class TextureComponent extends Component {
 
-	public TextureRegion textureRegion;
 	public static final int TEX_WIDTH = 1024;
 	public static final int TEX_HEIGHT = 1024;
+	public TextureRegion textureRegion;
 
-	public BillboardTextureComponent(Pixmap pixmap) {
+	public TextureComponent(Pixmap pixmap) {
 		textureRegion = new TextureRegion(new Texture(pixmap), pixmap.getWidth(), pixmap.getHeight());
 	}
 
-	public BillboardTextureComponent() {
+	public TextureComponent() {
 		textureRegion = new TextureRegion(new Texture(TEX_WIDTH, TEX_HEIGHT,
 				Pixmap.Format.RGBA8888));
 	}
 
 
-	public BillboardTextureComponent(String msg, Color textColor, Color bkgColor,
-									 BitmapFont font) {
+	public TextureComponent(String msg, Color textColor, Color bkgColor,
+							BitmapFont font) {
 		SpriteBatch spriteBatch = new SpriteBatch();
 		FrameBuffer fbo = null;
 		// Draw string on texture

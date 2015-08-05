@@ -82,7 +82,7 @@ public class GameScreen extends AbstractScreen {
 				billboard.add(ballMotionState);
 
 				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
-				BillboardTextureComponent billboardTexture = new BillboardTextureComponent(billboardPixmap);
+				TextureComponent billboardTexture = new TextureComponent(billboardPixmap);
 				billboard.add(billboardTexture);
 
 				Material material = new Material();
@@ -115,7 +115,7 @@ public class GameScreen extends AbstractScreen {
 
 		Gdx.app.debug(tag, "Adding billboard system");
 		Family billFamily = Family.all(
-				BillboardTextureComponent.class,
+				TextureComponent.class,
 				MotionStateComponent.class,
 				ModelComponent.class).get();
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);

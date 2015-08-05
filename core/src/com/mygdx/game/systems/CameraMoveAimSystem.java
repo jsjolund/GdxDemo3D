@@ -24,6 +24,7 @@ public class CameraMoveAimSystem extends EntitySystem {
 		camera.update();
 	}
 
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 	}

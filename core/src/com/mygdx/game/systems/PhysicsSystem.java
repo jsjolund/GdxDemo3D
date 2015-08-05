@@ -59,6 +59,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		systemFamily = Family.all(PhysicsComponent.class).get();
 	}
 
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 	}
@@ -114,18 +115,16 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	public class CollisionContactListener extends ContactListener {
 
-		@Override
-		public boolean onContactAdded(btManifoldPoint cp,
-									  btCollisionObject colObj0, int partId0, int index0,
-									  btCollisionObject colObj1, int partId1, int index1) {
-
-			long entityId0 = colObj0.getUserPointer();
-			long entityId1 = colObj1.getUserPointer();
-
-//			System.out.println(entityId0 + " " + entityId1);
-
-			return true;
-		}
+//		@Override
+//		public boolean onContactAdded(btManifoldPoint cp,
+//									  btCollisionObject colObj0, int partId0, int index0,
+//									  btCollisionObject colObj1, int partId1, int index1) {
+//
+//			long entityId0 = colObj0.getUserPointer();
+//			long entityId1 = colObj1.getUserPointer();
+//
+//			return true;
+//		}
 	}
 
 	public class PhysicsListener implements EntityListener {

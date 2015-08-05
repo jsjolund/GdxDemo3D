@@ -3,6 +3,7 @@ package com.mygdx.game.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -18,13 +19,16 @@ public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
 	private final IntIntMap keys = new IntIntMap();
 	public Family systemFamily;
 
-	Vector3 directionAim = new Vector3(Vector3.X);
-	Vector3 directionAimOld = new Vector3(Vector3.X);
-	Vector3 xzRotationAim = new Vector3();
-	Vector2 screenCenter = new Vector2();
-	Vector3 directionMove = new Vector3();
-	Vector3 moveVector = new Vector3();
-	Vector3 up = new Vector3(Vector3.Y);
+	private Vector3 directionAim = new Vector3(Vector3.X);
+	private Vector3 directionAimOld = new Vector3(Vector3.X);
+	private Vector3 directionMove = new Vector3();
+	private Vector3 xzRotationAim = new Vector3();
+	private Vector3 moveVector = new Vector3();
+	private Vector3 up = new Vector3(Vector3.Y);
+
+	private Vector2 screenCenter = new Vector2();
+
+	private boolean captureMouse = false;
 
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<MoveAimComponent> moveComponents = ComponentMapper.getFor(MoveAimComponent.class);
@@ -33,14 +37,26 @@ public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
 		systemFamily = Family.all(MoveAimComponent.class).get();
 	}
 
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 		Gdx.input.setCursorCatched(true);
+		captureMouse = true;
+
 	}
 
 	@Override
 	public boolean keyDown(int keycode) {
 		keys.put(keycode, keycode);
+		if (keycode == Input.Keys.ESCAPE) {
+			if (captureMouse) {
+				Gdx.input.setCursorCatched(false);
+				captureMouse = false;
+			} else {
+				Gdx.input.setCursorCatched(true);
+				captureMouse = true;
+			}
+		}
 		return true;
 	}
 

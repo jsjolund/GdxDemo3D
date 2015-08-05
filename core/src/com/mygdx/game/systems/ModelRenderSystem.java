@@ -15,7 +15,7 @@ import com.mygdx.game.components.ModelComponent;
 public class ModelRenderSystem extends EntitySystem {
 
 	public Family systemFamily;
-	Vector3 pos = new Vector3();
+	private Vector3 pos = new Vector3();
 	private ModelBatch modelBatch;
 	private ImmutableArray<Entity> entities;
 	private Camera camera;
@@ -30,6 +30,7 @@ public class ModelRenderSystem extends EntitySystem {
 
 	}
 
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 	}

@@ -18,8 +18,8 @@ import com.badlogic.gdx.math.Vector3;
 public class ModelFactory {
 
 	public static Model buildPlaneModel(final float width,
-										  final float height, final Material material, final float u1,
-										  final float v1, final float u2, final float v2) {
+										final float height, final Material material, final float u1,
+										final float v1, final float u2, final float v2) {
 
 		ModelBuilder modelBuilder = new ModelBuilder();
 		modelBuilder.begin();
