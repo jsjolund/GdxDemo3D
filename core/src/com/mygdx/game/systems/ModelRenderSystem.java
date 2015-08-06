@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.MoveAimComponent;
 
 
 /**
@@ -23,7 +24,7 @@ public class ModelRenderSystem extends EntitySystem {
 	private Environment environment;
 
 	public ModelRenderSystem(Camera camera, Environment environment) {
-		systemFamily = Family.all(ModelComponent.class).get();
+		systemFamily = Family.all(ModelComponent.class).exclude(MoveAimComponent.class).get();
 		modelBatch = new ModelBatch();
 		this.camera = camera;
 		this.environment = environment;

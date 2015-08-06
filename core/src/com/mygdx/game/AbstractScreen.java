@@ -107,9 +107,10 @@ public class AbstractScreen implements Screen {
 		Gdx.graphics.getGL20().glClearColor(viewportBorderColor.r,
 				viewportBorderColor.g, viewportBorderColor.b, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		shapeRenderer.setProjectionMatrix(uiMatrix);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(viewportBackgroundColor);
-		shapeRenderer.rect(getLeftGutterWidth(), getBottomGutterWidth(), getViewportWidth(), getViewportHeight());
+		shapeRenderer.rect(0, 0, getViewportWidth(), getViewportHeight());
 		shapeRenderer.end();
 
 	}

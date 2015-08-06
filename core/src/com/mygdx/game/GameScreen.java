@@ -34,7 +34,7 @@ public class GameScreen extends AbstractScreen {
 		camera.position.set(100, 100, 100);
 		camera.lookAt(0, 0, 0);
 		camera.near = 1e-3f;
-		camera.far = 3000f;
+		camera.far = 1e5f;
 		camera.update();
 
 		Gdx.app.debug(tag, "Loading environment system");
@@ -126,7 +126,7 @@ public class GameScreen extends AbstractScreen {
 	public void render(float delta) {
 		super.render(delta);
 		engine.update(Gdx.graphics.getDeltaTime());
-//		engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+		engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
 	}
 
 }

@@ -71,13 +71,15 @@ public class PhysicsMoveAimSystem extends IteratingSystem {
 			newXZVelocity.y = 0;
 			velocity.add(newXZVelocity);
 		}
-		phyCmp.body.setLinearVelocity(velocity);
 
 		phyCmp.body.getWorldTransform(transform);
 		transform.getTranslation(moveCmp.position);
-//		transform.setToLookAt(xzRotation.set(moveCmp.directionAim).scl(1, 0, 1), moveCmp.up).inv();
+		transform.setToLookAt(xzRotation.set(moveCmp.directionAim).scl(1, 0, 1), moveCmp.up).inv();
 		transform.setTranslation(moveCmp.position);
 		phyCmp.body.proceedToTransform(transform);
+
+		phyCmp.body.setLinearVelocity(velocity);
+		phyCmp.body.setAngularVelocity(Vector3.Zero);
 
 	}
 

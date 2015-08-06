@@ -86,6 +86,48 @@ public class BlenderComponentsLoader {
 		instance.calculateTransforms();
 	}
 
+
+	private Entity createModelEntity(BlenderModelComponent cmp, ArrayList<BlenderEmptyComponent> empties) {
+		Entity entity = new Entity();
+
+		assets.finishLoadingAsset(cmp.model_file_name);
+		Model model = assets.get(cmp.model_file_name, Model.class);
+		entity.add(new ModelComponent(model, cmp.name));
+		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+		setInstanceTransform(instance, cmp.position, cmp.rotation, cmp.scale);
+
+		btCollisionShape shape = loadCollisionShape(cmp.name, empties);
+
+		if (shape == null) {
+			// No shape defined. Load as static object.
+			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
+			shape = Bullet.obtainStaticNodeShape(instance.nodes);
+			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
+			PhysicsComponent phyCmp = new PhysicsComponent(
+					shape, null, 0,
+					PhysicsSystem.GROUND_FLAG,
+					PhysicsSystem.ALL_FLAG,
+					false, false);
+			entity.add(phyCmp);
+			phyCmp.body.setWorldTransform(instance.transform);
+
+		} else {
+			// Load as dynamic object with mass and motion state.
+			float mass = loadMass(cmp, empties);
+			Gdx.app.debug(tag, String.format("Created active model entity %s with %.2f mass.", cmp.name, mass));
+
+			MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+			entity.add(motionStateCmp);
+
+			entity.add(new PhysicsComponent(
+					shape, motionStateCmp.motionState, mass,
+					PhysicsSystem.OBJECT_FLAG,
+					PhysicsSystem.ALL_FLAG,
+					true, false));
+		}
+		return entity;
+	}
+
 	private Entity createLightEntity(BlenderLightComponent cmp) {
 		Entity entity = null;
 		Matrix4 transform = new Matrix4();
@@ -133,47 +175,6 @@ public class BlenderComponentsLoader {
 							cmp.lamp_color.b, direction.x, direction.y, direction.z)));
 		}
 
-		return entity;
-	}
-
-	private Entity createModelEntity(BlenderModelComponent cmp, ArrayList<BlenderEmptyComponent> empties) {
-		Entity entity = new Entity();
-
-		assets.finishLoadingAsset(cmp.model_file_name);
-		Model model = assets.get(cmp.model_file_name, Model.class);
-		entity.add(new ModelComponent(model, cmp.name));
-		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
-		setInstanceTransform(instance, cmp.position, cmp.rotation, cmp.scale);
-
-		btCollisionShape shape = loadCollisionShape(cmp.name, empties);
-		boolean isActiveObject = true;
-
-		if (shape == null) {
-			shape = Bullet.obtainStaticNodeShape(model.nodes);
-			isActiveObject = false;
-		}
-
-		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
-		entity.add(motionStateCmp);
-
-		float mass = loadMass(cmp, empties);
-
-		if (isActiveObject && mass > 0) {
-			Gdx.app.debug(tag, String.format("Created active model entity %s with %.2f mass.", cmp.name, mass));
-			entity.add(new PhysicsComponent(
-					shape, motionStateCmp.motionState, mass,
-					PhysicsSystem.OBJECT_FLAG,
-					PhysicsSystem.ALL_FLAG,
-					true, false));
-
-		} else {
-			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name, mass));
-			entity.add(new PhysicsComponent(
-					shape, motionStateCmp.motionState, 0,
-					PhysicsSystem.GROUND_FLAG,
-					PhysicsSystem.ALL_FLAG,
-					false, false));
-		}
 		return entity;
 	}
 

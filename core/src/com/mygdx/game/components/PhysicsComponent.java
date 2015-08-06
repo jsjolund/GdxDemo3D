@@ -49,7 +49,9 @@ public class PhysicsComponent extends Component implements Disposable {
 		if (noDeactivate) {
 			body.setActivationState(Collision.DISABLE_DEACTIVATION);
 		}
-		body.setMotionState(motionState);
+		if (motionState != null) {
+			body.setMotionState(motionState);
+		}
 	}
 
 
