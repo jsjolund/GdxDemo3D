@@ -1,45 +1,42 @@
 package com.mygdx.game.systems;
 
-import com.badlogic.ashley.core.*;
-import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.Family;
+import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.MoveAimComponent;
 
 /**
  * Created by user on 8/1/15.
  */
-public class CameraMoveAimSystem extends EntitySystem {
+public class CameraMoveAimSystem extends IteratingSystem {
 
-	public Family systemFamily;
-	private ImmutableArray<Entity> entities;
 	private Camera camera;
 	private ComponentMapper<MoveAimComponent> moveCmps = ComponentMapper.getFor(MoveAimComponent.class);
+	private ComponentMapper<MotionStateComponent> motionCmps = ComponentMapper.getFor(MotionStateComponent.class);
+	private Vector3 interpolatedPosition = new Vector3();
 
-	public CameraMoveAimSystem(Camera camera) {
-		systemFamily = Family.all(MoveAimComponent.class).get();
+	public CameraMoveAimSystem(Family family, Camera camera) {
+		super(family);
 
 		this.camera = camera;
-		camera.lookAt(Vector3.X);
+		camera.lookAt(Vector3.X.cpy().scl(-1));
 		camera.update();
 	}
 
 	@Override
-	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(systemFamily);
-	}
-
-	@Override
-	public void update(float deltaTime) {
-		if (entities.size() > 0) {
-			Entity entity = entities.get(0);
-			MoveAimComponent cmp = moveCmps.get(entity);
-			camera.position.set(cmp.position);
-			camera.position.add(cmp.cameraPosOffset);
-			camera.direction.set(cmp.directionAim);
-			camera.up.set(cmp.up);
-			camera.update();
-		}
+	protected void processEntity(Entity entity, float deltaTime) {
+		MoveAimComponent moveAim = moveCmps.get(entity);
+		MotionStateComponent motionState = motionCmps.get(entity);
+		motionState.transform.getTranslation(interpolatedPosition);
+		camera.position.set(interpolatedPosition);
+		camera.position.add(moveAim.cameraPosOffset);
+		camera.direction.set(moveAim.directionAim);
+		camera.up.set(moveAim.up);
+		camera.update();
 	}
 
 }

@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -75,26 +74,14 @@ public class BlenderComponentsLoader {
 		return v.set(v.x, v.z, -v.y);
 	}
 
-	private void setInstanceTransform(ModelInstance instance, Vector3 location, Vector3 rotation, Vector3 scale) {
-		for (Node node : instance.nodes) {
-			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-		}
-		instance.transform.rotate(Vector3.Y, rotation.y);
-		instance.transform.rotate(Vector3.X, rotation.x);
-		instance.transform.rotate(Vector3.Z, rotation.z);
-		instance.transform.setTranslation(location);
-		instance.calculateTransforms();
-	}
-
-
 	private Entity createModelEntity(BlenderModelComponent cmp, ArrayList<BlenderEmptyComponent> empties) {
+
 		Entity entity = new Entity();
 
 		assets.finishLoadingAsset(cmp.model_file_name);
 		Model model = assets.get(cmp.model_file_name, Model.class);
-		entity.add(new ModelComponent(model, cmp.name));
+		entity.add(new ModelComponent(model, cmp.name, cmp.position, cmp.rotation, cmp.scale));
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
-		setInstanceTransform(instance, cmp.position, cmp.rotation, cmp.scale);
 
 		btCollisionShape shape = loadCollisionShape(cmp.name, empties);
 
@@ -102,7 +89,8 @@ public class BlenderComponentsLoader {
 			// No shape defined. Load as static object.
 			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
 			shape = Bullet.obtainStaticNodeShape(instance.nodes);
-			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
+//			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
+//			shape.setLocalScaling(cmp.scale.cpy().scl(cmp.scale.x, cmp.scale.y, -cmp.scale.z));
 			PhysicsComponent phyCmp = new PhysicsComponent(
 					shape, null, 0,
 					PhysicsSystem.GROUND_FLAG,

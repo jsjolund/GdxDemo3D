@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
@@ -91,7 +92,7 @@ public class GameScreen extends AbstractScreen {
 				material.set(blendAttrib);
 
 				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(5, 5, material, 0, 0,
-						1, 1), "plane");
+						1, 1), "plane", new Vector3(), new Vector3(), new Vector3());
 				billboard.add(billboardModel);
 
 				engine.addEntity(billboard);
@@ -104,7 +105,8 @@ public class GameScreen extends AbstractScreen {
 		Gdx.input.setInputProcessor(moveSys);
 
 		Gdx.app.debug(tag, "Adding camera system");
-		CameraMoveAimSystem camSys = new CameraMoveAimSystem(camera);
+		Family camFamily = Family.all(MoveAimComponent.class, MotionStateComponent.class).get();
+		CameraMoveAimSystem camSys = new CameraMoveAimSystem(camFamily, camera);
 		engine.addSystem(camSys);
 
 		Gdx.app.debug(tag, "Adding movement system");
