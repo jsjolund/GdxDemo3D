@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.MoveAimComponent;
+import com.mygdx.game.components.SelectableComponent;
 
 
 /**
@@ -21,14 +21,17 @@ public class ModelRenderSystem extends EntitySystem {
 	private ImmutableArray<Entity> entities;
 	private Camera camera;
 	private ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
+	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private Environment environment;
 
+	private Environment environmentTest;
+
 	public ModelRenderSystem(Camera camera, Environment environment) {
-		systemFamily = Family.all(ModelComponent.class).exclude(MoveAimComponent.class).get();
+		systemFamily = Family.all(ModelComponent.class).get();
 		modelBatch = new ModelBatch();
 		this.camera = camera;
 		this.environment = environment;
-
+		environmentTest = new Environment();
 	}
 
 	@Override
@@ -49,9 +52,19 @@ public class ModelRenderSystem extends EntitySystem {
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
-			if (isVisible(camera, cmp)) {
-				modelBatch.render(cmp.modelInstance, environment);
+
+			SelectableComponent selCmp = selectables.get(entity);
+			if (selCmp != null) {
+				if (selCmp.isSelected) {
+					modelBatch.render(cmp.modelInstance);
+				} else {
+					modelBatch.render(cmp.modelInstance, environment);
+				}
 			}
+
+//			if (isVisible(camera, cmp)) {
+//				modelBatch.render(cmp.modelInstance, environment);
+//			}
 		}
 		modelBatch.end();
 	}

@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
@@ -41,7 +42,7 @@ public class GameScreen implements Screen {
 
 		camera = new PerspectiveCamera(60, reqWidth, reqHeight);
 		camera.near = 1e-3f;
-		camera.far = 3000f;
+		camera.far = 100f;
 		camera.update();
 
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -94,14 +95,14 @@ public class GameScreen implements Screen {
 //				break;
 //			}
 			if (modelCmp.id.endsWith("ball")) {
-//				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
+////				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
 				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);
 
 				Entity billboard = new Entity();
 				billboard.add(ballMotionState);
 
 				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
-				BillboardTextureComponent billboardTexture = new BillboardTextureComponent(billboardPixmap);
+				TextureComponent billboardTexture = new TextureComponent(billboardPixmap);
 				billboard.add(billboardTexture);
 
 				Material material = new Material();
@@ -109,12 +110,16 @@ public class GameScreen implements Screen {
 				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
 				material.set(blendAttrib);
 
+//				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(50, 50, material, 0, 0,
+//						1, 1), "billboard");
 				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(5, 5, material, 0, 0,
 						1, 1), "plane");
 				billboard.add(billboardModel);
 
 				engine.addEntity(billboard);
+
 			}
+
 		}
 
 		Gdx.app.debug(tag, "Adding input controller");
@@ -140,11 +145,16 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding billboard system");
 		Family billFamily = Family.all(
-				BillboardTextureComponent.class,
+				TextureComponent.class,
 				MotionStateComponent.class,
 				ModelComponent.class).get();
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
 		engine.addSystem(billSys);
+
+
+//		ComponentMapper<ModelComponent> modelCmps = ComponentMapper.getFor(ModelComponent.class);
+//		float numModels = engine.getEntitiesFor(Family.all(ModelComponent.class).get()).size();
+
 	}
 
 	@Override
@@ -154,7 +164,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		Gdx.graphics.getGL20().glClearColor(0, 0, 0, 0.5f);
+		Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -167,8 +177,6 @@ public class GameScreen implements Screen {
 
 		stage.act(delta);
 		stage.draw();
-
-		stage.btn.drawDebug(shapeRenderer);
 	}
 
 	@Override

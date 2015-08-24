@@ -45,4 +45,17 @@ public class ModelComponent extends Component {
 		radius = dimensions.len() / 2f;
 	}
 
+	public ModelComponent(Model model, String id) {
+		this.id = id;
+		this.modelInstance = new ModelInstance(model);
+		try {
+			modelInstance.calculateBoundingBox(bounds);
+		} catch (Exception e) {
+			Gdx.app.debug(tag, "Error when calculating bounding box.", e);
+		}
+		bounds.getCenter(center);
+		bounds.getDimensions(dimensions);
+		radius = dimensions.len() / 2f;
+	}
+
 }

@@ -60,12 +60,27 @@ public class UserInputSystem extends EntitySystem implements InputProcessor {
 		return false;
 	}
 
+	public Vector3 screenPointToViewport(Vector3 screen) {
+		screen.x = screenXtoViewportX(screen.x);
+		screen.y = screenYtoViewportY(screen.y);
+		return screen;
+	}
+
+	public float screenXtoViewportX(float screenX) {
+		return screenX - viewport.getRightGutterWidth();
+	}
+
+	public float screenYtoViewportY(float screenY) {
+		return viewport.getWorldHeight() - (screenY- viewport.getBottomGutterHeight());
+	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		ray = viewport.getCamera().getPickRay(screenX, screenY);
-		float distance = 1000;
-		Gdx.app.debug(tag, String.format("Pick ray: origin: %s, direction: %s.", ray.origin, ray.direction));
+		ray.set(viewport.getPickRay(screenX, screenY));
+		float distance = 100;
+		Gdx.app.debug(tag, String.format(
+				"Mouse: %s, %s, Pick ray: origin: %s, direction: %s.",
+				screenX, screenY, ray.origin, ray.direction));
 
 		Entity hitEntity = phySys.rayTest(ray, tmp,
 				(short) (PhysicsSystem.GROUND_FLAG
