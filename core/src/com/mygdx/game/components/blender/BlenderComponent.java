@@ -1,7 +1,6 @@
 package com.mygdx.game.components.blender;
 
 import com.badlogic.ashley.core.Component;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ArrayMap;
 

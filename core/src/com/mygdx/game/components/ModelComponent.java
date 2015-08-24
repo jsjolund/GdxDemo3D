@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
@@ -20,11 +21,22 @@ public class ModelComponent extends Component {
 	public ModelInstance modelInstance;
 	public String id;
 
-	public ModelComponent(Model model, String id) {
+	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {
 		this.id = id;
-		this.modelInstance = new ModelInstance(model);
+		modelInstance = new ModelInstance(model);
+
+		for (Node node : modelInstance.nodes) {
+			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
+		}
+		modelInstance.transform.rotate(Vector3.Y, rotation.y);
+		modelInstance.transform.rotate(Vector3.X, rotation.x);
+		modelInstance.transform.rotate(Vector3.Z, rotation.z);
+		modelInstance.transform.setTranslation(location);
+		modelInstance.transform.scl(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
+		modelInstance.calculateTransforms();
+
 		try {
-			modelInstance.calculateBoundingBox(bounds);
+			modelInstance.calculateBoundingBox(bounds).mul(modelInstance.transform);
 		} catch (Exception e) {
 			Gdx.app.debug(tag, "Error when calculating bounding box.", e);
 		}

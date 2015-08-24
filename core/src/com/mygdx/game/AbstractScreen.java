@@ -27,13 +27,12 @@ public class AbstractScreen implements Screen {
 	protected Camera camera;
 	protected SpriteBatch spriteBatch;
 	protected Matrix4 uiMatrix;
+	protected Color viewportBorderColor = Color.BLACK;
+	protected Color viewportBackgroundColor = Color.LIGHT_GRAY;
 	private Vector3 screenCenter = new Vector3();
 	private int reqHeight;
 	private int reqWidth;
 	private ShapeRenderer shapeRenderer;
-
-	protected Color viewportBorderColor = Color.BLACK;
-	protected Color viewportBackgroundColor = Color.LIGHT_GRAY;
 
 	public AbstractScreen(int reqWidth, int reqHeight) {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
@@ -108,6 +107,7 @@ public class AbstractScreen implements Screen {
 		Gdx.graphics.getGL20().glClearColor(viewportBorderColor.r,
 				viewportBorderColor.g, viewportBorderColor.b, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		shapeRenderer.setProjectionMatrix(uiMatrix);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(viewportBackgroundColor);
 		shapeRenderer.rect(0, 0, getViewportWidth(), getViewportHeight());

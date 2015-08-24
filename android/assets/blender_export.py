@@ -1,4 +1,4 @@
-#!/bin/bash/python
+#!/usr/bin/python
 
 # Creates a CSV file listing the names of each blender object
 # in the .blend along with its position and rotation.
@@ -32,9 +32,9 @@ class BlenderObject(object):
         self.custom_properties = {}
         for obj in (o for o in bobj.keys() if not o in '_RNA_UI'):
             self.custom_properties[obj] = bobj[obj]
+        self.entry = {}
 
     def serialize(self):
-        self.entry = {}
         self.entry["name"] = self.name_array[0]
         self.entry["type"] = self.type_name
         self.entry["position"] = {"x": self.loc.x, "y": self.loc.y, "z": self.loc.z}
@@ -122,7 +122,7 @@ def write_obj(obj_dir, export_objects):
 
     for gobj in export_objects:
         bobj0 = gobj.bobj
-        obj_file_path = os.path.join(obj_dir, gobj.get_model_name() + ".obj")
+        obj_file_path = os.path.join(obj_dir, gobj.get_model_name() + ".fbx")
         obj_file_paths.append(obj_file_path)
 
         # Select object, set loc & rot to zero, export to obj, restore loc & rot, unselect
@@ -131,7 +131,12 @@ def write_obj(obj_dir, export_objects):
         bobj0.location.zero()
         bobj0.rotation_euler.zero()
         bobj0.scale = Vector((1.0, 1.0, 1.0))
-        bpy.ops.export_scene.obj(filepath=obj_file_path, use_selection=True)
+        bpy.ops.export_scene.fbx(filepath=obj_file_path,
+                                 use_selection=True,
+                                 object_types={'MESH'},
+                                 axis_forward='Y',
+                                 axis_up='Z')
+        # bpy.ops.export_scene.obj(filepath=obj_file_path, use_selection=True)
         bobj0.location = gobj.loc.copy()
         bobj0.rotation_euler = gobj.rote.copy()
         bobj0.scale = gobj.scl.copy()
@@ -145,9 +150,9 @@ def convert_to_g3db(obj_file_paths):
     for obj_file_path in obj_file_paths:
         subprocess.call(["fbx-conv", "-f", obj_file_path])
         file_path_noext, file_ext = os.path.splitext(obj_file_path)
-        os.remove(file_path_noext + ".obj")
-        os.remove(file_path_noext + ".mtl")
+        os.remove(file_path_noext + ".fbx")
         g3db_file_paths.append(file_path_noext + ".g3db")
+    return g3db_file_paths
 
 
 def get_export_objects(blender_object_map):
@@ -165,7 +170,7 @@ def get_export_objects(blender_object_map):
             export_objects.append(obj)
 
     for key in mesh_objects:
-        if (len(mesh_objects[key]) > 1):
+        if len(mesh_objects[key]) > 1:
             print("Error: Conflicting meshes for export object: '{}'.\nRename objects or link the meshes: {}\n".format(
                 key, str(mesh_objects[key])))
             return []
@@ -194,7 +199,7 @@ def create_blender_object_map(filename, scene_objects):
             gobj = BlenderLight(scene_obj)
             category = BlenderLight.map_name
 
-        if (category == "unknown"):
+        if category == "unknown":
             print("Warning: {} not supported".format(str(scene_obj.data.__class__.__name__)))
             continue
 
@@ -240,9 +245,11 @@ def main():
     obj_file_paths = write_obj(basedir, export_objects)
     print()
     g3db_file_paths = convert_to_g3db(obj_file_paths)
+    print("\nCreated g3db model files:")
+    for f in g3db_file_paths:
+        print(f)
     print("\nFinished.")
     print("\n\n")
-
 
 if __name__ == "__main__":
     main()

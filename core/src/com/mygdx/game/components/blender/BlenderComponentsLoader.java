@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -16,7 +15,10 @@ import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.utils.Json;
-import com.mygdx.game.components.*;
+import com.mygdx.game.components.LightComponent;
+import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.MotionStateComponent;
+import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.systems.PhysicsSystem;
 
 import java.util.ArrayList;
@@ -29,66 +31,6 @@ public class BlenderComponentsLoader {
 	public static final String tag = "BlenderComponentsLoader";
 	public ArrayList<Entity> entities = new ArrayList<Entity>();
 	AssetManager assets;
-
-	private void setInstanceTransform(ModelInstance instance, Vector3 location, Vector3 rotation, Vector3 scale) {
-		for (Node node : instance.nodes) {
-			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-		}
-		instance.transform.rotate(Vector3.Y, rotation.y);
-		instance.transform.rotate(Vector3.X, rotation.x);
-		instance.transform.rotate(Vector3.Z, rotation.z);
-		instance.transform.setTranslation(location);
-		instance.calculateTransforms();
-	}
-
-	private Entity createLightEntity(BlenderLightComponent cmp) {
-		Entity entity = null;
-		Matrix4 transform = new Matrix4();
-
-		if (cmp.type.equals("PointLamp")) {
-			entity = new Entity();
-
-			transform.translate(cmp.position);
-			entity.add(new LightComponent(
-					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
-							cmp.position, cmp.lamp_energy * cmp.lamp_distance / 2)));
-
-
-		} else if (cmp.type.equals("SpotLamp")) {
-			entity = new Entity();
-
-			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, cmp.rotation.x);
-			transform.rotate(Vector3.Z, cmp.rotation.z);
-			direction.rot(transform);
-
-			transform.translate(cmp.position);
-
-			float intensity = cmp.lamp_energy;
-			float cutoffAngle = cmp.lamp_falloff;
-			float exponent = 1;
-
-			entity.add(new LightComponent(
-					new SpotLight().set(cmp.lamp_color, cmp.position,
-							direction, intensity, cutoffAngle, exponent)));
-
-
-		} else if (cmp.type.equals("SunLamp")) {
-			entity = new Entity();
-
-			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, -cmp.rotation.x);
-			transform.rotate(Vector3.Z, -cmp.rotation.z);
-			direction.rot(transform);
-
-			transform.translate(cmp.position);
-			entity.add(new LightComponent(
-					new DirectionalLight().set(cmp.lamp_color.r, cmp.lamp_color.g,
-							cmp.lamp_color.b, direction.x, direction.y, direction.z)));
-		}
-
-		return entity;
-	}
 
 	public BlenderComponentsLoader(String modelsJsonPath, String emptiesJsonPath, String lightsJsonPath) {
 		assets = new AssetManager();
@@ -133,43 +75,94 @@ public class BlenderComponentsLoader {
 	}
 
 	private Entity createModelEntity(BlenderModelComponent cmp, ArrayList<BlenderEmptyComponent> empties) {
+
 		Entity entity = new Entity();
 
 		assets.finishLoadingAsset(cmp.model_file_name);
 		Model model = assets.get(cmp.model_file_name, Model.class);
-		entity.add(new ModelComponent(model, cmp.name));
+		entity.add(new ModelComponent(model, cmp.name, cmp.position, cmp.rotation, cmp.scale));
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
-		setInstanceTransform(instance, cmp.position, cmp.rotation, cmp.scale);
 
 		btCollisionShape shape = loadCollisionShape(cmp.name, empties);
-		boolean isActiveObject = true;
 
 		if (shape == null) {
-			shape = Bullet.obtainStaticNodeShape(model.nodes);
-			isActiveObject = false;
-		}
+			// No shape defined. Load as static object.
+			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
+			shape = Bullet.obtainStaticNodeShape(instance.nodes);
+//			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
+//			shape.setLocalScaling(cmp.scale.cpy().scl(cmp.scale.x, cmp.scale.y, -cmp.scale.z));
+			PhysicsComponent phyCmp = new PhysicsComponent(
+					shape, null, 0,
+					PhysicsSystem.GROUND_FLAG,
+					PhysicsSystem.ALL_FLAG,
+					false, false);
+			entity.add(phyCmp);
+			phyCmp.body.setWorldTransform(instance.transform);
 
-		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
-		entity.add(motionStateCmp);
-
-		float mass = loadMass(cmp, empties);
-
-		if (isActiveObject && mass > 0) {
+		} else {
+			// Load as dynamic object with mass and motion state.
+			float mass = loadMass(cmp, empties);
 			Gdx.app.debug(tag, String.format("Created active model entity %s with %.2f mass.", cmp.name, mass));
+
+			MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+			entity.add(motionStateCmp);
+
 			entity.add(new PhysicsComponent(
 					shape, motionStateCmp.motionState, mass,
 					PhysicsSystem.OBJECT_FLAG,
 					PhysicsSystem.ALL_FLAG,
 					true, false));
-
-		} else {
-			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name, mass));
-			entity.add(new PhysicsComponent(
-					shape, motionStateCmp.motionState, 0,
-					PhysicsSystem.GROUND_FLAG,
-					PhysicsSystem.ALL_FLAG,
-					false, false));
 		}
+		return entity;
+	}
+
+	private Entity createLightEntity(BlenderLightComponent cmp) {
+		Entity entity = null;
+		Matrix4 transform = new Matrix4();
+
+		if (cmp.type.equals("PointLamp")) {
+			entity = new Entity();
+
+			transform.translate(cmp.position);
+			entity.add(new LightComponent(
+					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
+							cmp.position, cmp.lamp_energy * cmp.lamp_distance / 2)));
+
+
+		} else if (cmp.type.equals("SpotLamp")) {
+			entity = new Entity();
+
+			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
+			transform.rotate(Vector3.X, cmp.rotation.x);
+			transform.rotate(Vector3.Z, cmp.rotation.z);
+			direction.rot(transform);
+
+			transform.translate(cmp.position);
+
+			float intensity = cmp.lamp_energy;
+			float cutoffAngle = cmp.lamp_falloff;
+			float exponent = 1;
+
+			entity.add(new LightComponent(
+					new SpotLight().set(cmp.lamp_color, cmp.position,
+							direction, intensity, cutoffAngle, exponent)));
+
+
+		} else if (cmp.type.equals("SunLamp")) {
+			entity = new Entity();
+
+			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
+			transform.rotate(Vector3.X, -cmp.rotation.x);
+			transform.rotate(Vector3.Z, -cmp.rotation.z);
+			direction.rot(transform);
+
+			transform.translate(cmp.position);
+
+			entity.add(new LightComponent(
+					new DirectionalLight().set(cmp.lamp_color.r, cmp.lamp_color.g,
+							cmp.lamp_color.b, direction.x, direction.y, direction.z)));
+		}
+
 		return entity;
 	}
 
