@@ -3,6 +3,7 @@ package com.mygdx.game;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Pixmap;
 
 public class MyGdxGame extends Game {
@@ -10,7 +11,7 @@ public class MyGdxGame extends Game {
 	public static final String tag = "MyGdxGame";
 	public static int reqWidth = 1280;
 	public static int reqHeight = 720;
-	AbstractScreen currentScreen;
+	//	AbstractScreen currentScreen;
 	Pixmap screenshot;
 
 	public void toggleFullscreen() {
@@ -25,15 +26,18 @@ public class MyGdxGame extends Game {
 		}
 	}
 
-	public void getScreenshot() {
-		screenshot = AbstractScreen.getScreenshot(currentScreen.getLeftGutterWidth(), currentScreen.getBottomGutterWidth(),
-				currentScreen.getViewportWidth(), currentScreen.getViewportHeight(), true);
-	}
+//	public void getScreenshot() {
+//		screenshot = AbstractScreen.getScreenshot(currentScreen.getLeftGutterWidth(), currentScreen.getBottomGutterWidth(),
+//				currentScreen.getViewportWidth(), currentScreen.getViewportHeight(), true);
+//	}
 
 	@Override
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
-		currentScreen = new GameScreen(reqWidth, reqHeight);
+		Screen currentScreen = new GameScreen(reqWidth, reqHeight);
+//		setScreen(currentScreen);
+
+//		Screen currentScreen = new WidgetScreen(reqWidth, reqHeight);
 		setScreen(currentScreen);
 	}
 

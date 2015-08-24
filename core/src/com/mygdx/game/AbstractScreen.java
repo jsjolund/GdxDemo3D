@@ -112,7 +112,6 @@ public class AbstractScreen implements Screen {
 		shapeRenderer.setColor(viewportBackgroundColor);
 		shapeRenderer.rect(0, 0, getViewportWidth(), getViewportHeight());
 		shapeRenderer.end();
-
 	}
 
 	@Override
@@ -172,3 +171,5 @@ public class AbstractScreen implements Screen {
 		return viewport.getWorldHeight() - viewport.getBottomGutterHeight() - screenY;
 	}
 }
+
+
