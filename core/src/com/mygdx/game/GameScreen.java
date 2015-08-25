@@ -1,6 +1,5 @@
 package com.mygdx.game;
 
-import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
@@ -40,16 +39,23 @@ public class GameScreen implements Screen {
 
 		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
 
-		camera = new PerspectiveCamera(60, reqWidth, reqHeight);
-		camera.near = 1e-3f;
-		camera.far = 100f;
-		camera.update();
-
+		camera = new PerspectiveCamera(40, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
-		shapeRenderer = new ShapeRenderer();
-
 		stage = new GameStage(viewport);
 
+		camera.position.set(10, 20, 10);
+		camera.lookAt(0, 0, 0);
+		camera.near = 1e-3f;
+		camera.far = 1000f;
+		camera.update();
+
+		IntentComponent inputCmp = new IntentComponent();
+		Entity interactionEntity = engine.createEntity();
+		interactionEntity.add(new CameraTargetingComponent(camera, viewport));
+		interactionEntity.add(inputCmp);
+		engine.addEntity(interactionEntity);
+
+		shapeRenderer = new ShapeRenderer();
 
 		Gdx.app.debug(tag, "Loading environment system");
 		ModelEnvironmentSystem envSys = new ModelEnvironmentSystem();
@@ -119,24 +125,21 @@ public class GameScreen implements Screen {
 				engine.addEntity(billboard);
 
 			}
-
 		}
 
 		Gdx.app.debug(tag, "Adding input controller");
-		UserInputSystem inputSys = new UserInputSystem(viewport, phySys);
-		engine.addSystem(inputSys);
-//		Gdx.input.setInputProcessor(inputSys);
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
+		GameInputSystem inputSys = new GameInputSystem();
+		engine.addSystem(inputSys);
 		multiplexer.addProcessor(inputSys);
 		Gdx.input.setInputProcessor(multiplexer);
-//		Gdx.input.setInputProcessor(stage);
 
 		Gdx.app.debug(tag, "Adding camera system");
-		OverheadCameraSystem camSys = new OverheadCameraSystem(camera);
+		OverheadCameraSystem camSys = new OverheadCameraSystem();
 		engine.addSystem(camSys);
-//
+
 //		Gdx.app.debug(tag, "Adding movement system");
 //		Family phyFamily = Family.all(MoveAimComponent.class, PhysicsComponent.class).get();
 //		PhysicsMoveAimSystem phyMoveSys = new PhysicsMoveAimSystem(phyFamily);
@@ -154,6 +157,7 @@ public class GameScreen implements Screen {
 
 //		ComponentMapper<ModelComponent> modelCmps = ComponentMapper.getFor(ModelComponent.class);
 //		float numModels = engine.getEntitiesFor(Family.all(ModelComponent.class).get()).size();
+
 
 	}
 

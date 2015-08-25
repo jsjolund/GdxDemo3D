@@ -92,21 +92,21 @@ public class FPSMoveAimSystem extends EntitySystem implements InputProcessor {
 	private void calculateMoveDirection() {
 		directionMove.setZero();
 
-		if (keys.containsKey(GameSettings.FORWARD)) {
-			directionMove.add(directionAim);
-		}
-		if (keys.containsKey(GameSettings.BACKWARD)) {
-			directionMove.sub(directionAim);
-		}
-		if (keys.containsKey(GameSettings.STRAFE_LEFT)) {
-			moveVector.setZero().sub(directionAim).crs(up);
-			directionMove.add(moveVector);
-		}
-		if (keys.containsKey(GameSettings.STRAFE_RIGHT)) {
-			moveVector.setZero().add(directionAim).crs(up);
-			directionMove.add(moveVector);
-		}
-		directionMove.nor();
+//		if (keys.containsKey(GameSettings.FORWARD)) {
+//			directionMove.add(directionAim);
+//		}
+//		if (keys.containsKey(GameSettings.BACKWARD)) {
+//			directionMove.sub(directionAim);
+//		}
+//		if (keys.containsKey(GameSettings.STRAFE_LEFT)) {
+//			moveVector.setZero().sub(directionAim).crs(up);
+//			directionMove.add(moveVector);
+//		}
+//		if (keys.containsKey(GameSettings.STRAFE_RIGHT)) {
+//			moveVector.setZero().add(directionAim).crs(up);
+//			directionMove.add(moveVector);
+//		}
+//		directionMove.nor();
 	}
 
 	@Override

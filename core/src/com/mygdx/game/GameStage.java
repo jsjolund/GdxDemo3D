@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -25,14 +24,15 @@ public class GameStage extends Stage {
 
 	public GameStage(Viewport viewport) {
 		super(viewport);
-		this.viewport = viewport;
-		batch = new SpriteBatch();
 
+		this.viewport = viewport;
+
+		camera3D = viewport.getCamera();
 		cameraUI = new OrthographicCamera(viewport.getScreenWidth(), viewport.getScreenHeight());
 		cameraUI.position.set(viewport.getScreenWidth() / 2, viewport.getScreenHeight() / 2, 0);
 		cameraUI.update();
 
-		camera3D = viewport.getCamera();
+		batch = new SpriteBatch();
 
 		Skin skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
 

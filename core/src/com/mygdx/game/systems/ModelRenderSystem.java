@@ -58,13 +58,12 @@ public class ModelRenderSystem extends EntitySystem {
 				if (selCmp.isSelected) {
 					modelBatch.render(cmp.modelInstance);
 				} else {
+//					if (isVisible(camera, cmp)) {
 					modelBatch.render(cmp.modelInstance, environment);
+//					}
 				}
 			}
 
-//			if (isVisible(camera, cmp)) {
-//				modelBatch.render(cmp.modelInstance, environment);
-//			}
 		}
 		modelBatch.end();
 	}

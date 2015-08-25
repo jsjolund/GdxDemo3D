@@ -70,7 +70,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	@Override
 	public void update(float deltaTime) {
-//		Gdx.app.debug(tag, "");
 		dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f);
 	}
 

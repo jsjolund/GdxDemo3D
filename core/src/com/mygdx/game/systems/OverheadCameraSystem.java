@@ -1,59 +1,120 @@
 package com.mygdx.game.systems;
 
-import com.badlogic.ashley.core.*;
-import com.badlogic.ashley.utils.ImmutableArray;
-import com.badlogic.gdx.Gdx;
+import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.core.Family;
+import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.components.PhysicsComponent;
-import com.mygdx.game.components.SelectableComponent;
+import com.badlogic.gdx.math.collision.Ray;
+import com.mygdx.game.GameSettings;
+import com.mygdx.game.components.CameraTargetingComponent;
+import com.mygdx.game.components.IntentComponent;
 
 /**
  * Created by user on 8/24/15.
  */
-public class OverheadCameraSystem extends EntitySystem {
+public class OverheadCameraSystem extends IteratingSystem {
 
 	public static final String tag = "OverheadCameraSystem";
 
-	public Family family;
-	private ImmutableArray<Entity> entities;
-	private Camera camera;
 
-	private ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
-	private ComponentMapper<PhysicsComponent> phyCmps = ComponentMapper.getFor(PhysicsComponent.class);
+	private ComponentMapper<CameraTargetingComponent> camCmps =
+			ComponentMapper.getFor(CameraTargetingComponent.class);
+	private ComponentMapper<IntentComponent> inputCmps =
+			ComponentMapper.getFor(IntentComponent.class);
 
-	private Vector3 pos = new Vector3();
 
-	float cameraDst = 10;
-	Vector3 cameraDir = new Vector3(0.5f, -1, 0.5f);
-	Vector3 cameraOffset = new Vector3();
-
-	public OverheadCameraSystem(Camera camera) {
-		family = Family.all(SelectableComponent.class, PhysicsComponent.class).get();
-
-		this.camera = camera;
-		cameraOffset.set(cameraDir.cpy().scl(cameraDst, -cameraDst, cameraDst));
-		camera.position.set(Vector3.Zero).add(cameraOffset);
-		camera.lookAt(cameraDir);
-		camera.update();
+	public OverheadCameraSystem() {
+		super(Family.all(CameraTargetingComponent.class, IntentComponent.class).get());
 	}
 
-	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(family);
-	}
+	Vector3 panDirection = new Vector3();
+	Vector3 panResult = new Vector3();
+	Vector3 tmp = new Vector3();
+	float currentPanSpeed = 0;
+
+
+	Vector3 worldDragCurrent = new Vector3();
+	Vector3 worldDragLast = new Vector3();
+	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
+	Ray ray = new Ray();
+
+	float currentZoom = 10;
+	Vector3 cameraGroundTarget = new Vector3();
+
+	Vector2 lastDragProcessed = new Vector2();
+
 
 	@Override
-	public void update(float deltaTime) {
-		for (Entity entity : entities) {
-			SelectableComponent selCmp = selCmps.get(entity);
-			if (selCmp.isSelected && !selCmp.hasCameraFocus) {
-				selCmp.hasCameraFocus = true;
-				PhysicsComponent phyCmp = phyCmps.get(entity);
-				phyCmp.body.getWorldTransform().getTranslation(pos);
-				camera.position.set(pos.add(cameraOffset));
-				camera.update();
-				Gdx.app.debug(tag, "Moving camera to " + camera.position);
+	public void processEntity(Entity entity, float deltaTime) {
+		IntentComponent intent = inputCmps.get(entity);
+
+		CameraTargetingComponent camCmp = camCmps.get(entity);
+		Camera cam = camCmp.camera;
+
+		panDirection.setZero();
+		if (intent.moveDirection.len() >= 0) {
+			tmp.set(cam.direction).scl(intent.moveDirection.y);
+			panDirection.add(tmp);
+			tmp.set(cam.direction).crs(cam.up).scl(intent.moveDirection.x);
+			panDirection.add(tmp);
+			panDirection.y = 0;
+			panDirection.nor();
+		}
+
+		if (panDirection.isZero()) {
+			camCmp.velocity.nor();
+			currentPanSpeed -= GameSettings.CAMERA_PAN_DECELERATION * deltaTime;
+			if (currentPanSpeed < 0) {
+				currentPanSpeed = 0;
+			}
+		} else {
+			camCmp.velocity.set(panDirection);
+			currentPanSpeed += GameSettings.CAMERA_PAN_ACCELERATION * deltaTime;
+		}
+
+		if (currentPanSpeed > GameSettings.CAMERA_MAX_PAN_VELOCITY) {
+			currentPanSpeed = GameSettings.CAMERA_MAX_PAN_VELOCITY;
+		}
+		camCmp.velocity.scl(currentPanSpeed);
+
+		panResult.set(camCmp.velocity).scl(deltaTime);
+
+		if (intent.zoom != currentZoom) {
+
+			ray.set(cam.position, cam.direction);
+			Intersector.intersectRayPlane(ray, worldGroundPlane, cameraGroundTarget);
+			float zoomLength = cameraGroundTarget.dst(cam.position)/currentZoom;
+			float zoomSteps = currentZoom-intent.zoom;
+			cam.position.add(tmp.set(cam.direction).nor().scl(zoomLength*zoomSteps));
+			currentZoom = intent.zoom;
+		}
+
+		if (!intent.isDragging) {
+			lastDragProcessed.setZero();
+		} else {
+			if (!lastDragProcessed.equals(intent.dragCurrent)) {
+				if (!lastDragProcessed.isZero()) {
+					ray.set(camCmp.viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
+
+					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
+					ray.set(camCmp.viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
+
+					panResult.set(worldDragLast).sub(worldDragCurrent);
+					panResult.y = 0;
+
+				}
+				lastDragProcessed.set(intent.dragCurrent);
 			}
 		}
+
+
+		cam.position.add(panResult);
+		cam.update();
 	}
 }
