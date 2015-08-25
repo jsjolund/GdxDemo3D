@@ -8,6 +8,5 @@ import com.badlogic.ashley.core.Component;
 public class SelectableComponent extends Component {
 
 	public boolean isSelected = false;
-	public boolean hasCameraFocus = false;
 
 }

@@ -39,14 +39,14 @@ public class GameScreen implements Screen {
 
 		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
 
-		camera = new PerspectiveCamera(40, reqWidth, reqHeight);
+		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
 		stage = new GameStage(viewport);
 
 		camera.position.set(10, 20, 10);
 		camera.lookAt(0, 0, 0);
-		camera.near = 1e-3f;
-		camera.far = 1000f;
+		camera.near = GameSettings.CAMERA_NEAR;
+		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
 
 		IntentComponent inputCmp = new IntentComponent();
@@ -89,12 +89,9 @@ public class GameScreen implements Screen {
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
 
-			SelectableComponent cmp = new SelectableComponent();
-			entity.add(cmp);
-			if (s) {
-				cmp.isSelected = true;
-				s = false;
-			}
+			entity.add(new SelectableComponent());
+			entity.add(inputCmp);
+
 
 			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
 //			if (modelCmp.id.endsWith("human")) {
@@ -116,9 +113,7 @@ public class GameScreen implements Screen {
 				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
 				material.set(blendAttrib);
 
-//				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(50, 50, material, 0, 0,
-//						1, 1), "billboard");
-				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(5, 5, material, 0, 0,
+				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(2, 2, material, 0, 0,
 						1, 1), "plane");
 				billboard.add(billboardModel);
 
@@ -139,6 +134,10 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Adding camera system");
 		OverheadCameraSystem camSys = new OverheadCameraSystem();
 		engine.addSystem(camSys);
+
+		Gdx.app.debug(tag, "Adding selection system");
+		ModelSelectionSystem selSys = new ModelSelectionSystem(phySys, viewport);
+		engine.addSystem(selSys);
 
 //		Gdx.app.debug(tag, "Adding movement system");
 //		Family phyFamily = Family.all(MoveAimComponent.class, PhysicsComponent.class).get();

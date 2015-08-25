@@ -42,7 +42,6 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	public void update(float deltaTime) {
 
 		moveDirection.setZero();
-		float movementSpeedFactor = 1;
 		if (keys.containsKey(GameSettings.PAN_FORWARD)) {
 			moveDirection.y += 1;
 		}
@@ -112,7 +111,6 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-//		System.out.println(String.format("Down button %s, pointer %s, coords (%s,%s)", button, pointer, screenX,screenY));
 		if (!touchMap.containsKey(pointer)) {
 			touchMap.put(pointer, new TouchData());
 		}
@@ -148,20 +146,26 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-//		System.out.println(String.format("Up button %s, pointer %s, coords (%s,%s)", button, pointer, screenX, screenY));
+
+		// TODO: Assuming only one intent component...
+		if (entities.size() == 0) {
+			return false;
+		}
+
+		IntentComponent intent = inputCmps.get(entities.get(0));
+		if (!intent.isDragging) {
+			intent.click.set(screenX, screenY);
+		}
+		intent.dragStart.setZero();
+		intent.dragCurrent.setZero();
+		intent.isDragging = false;
 		touchMap.get(pointer).reset();
-		for (Entity entity : entities) {
-			IntentComponent intent = inputCmps.get(entity);
-			intent.dragStart.setZero();
-			intent.dragCurrent.setZero();
-			intent.isDragging = false;
-	}
+
 		return true;
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-//		System.out.println(String.format("Drag (%s,%s), pointer %s", screenX, screenY, pointer));
 		TouchData data = touchMap.get(pointer);
 		data.lastDrag.set(screenX, screenY);
 		data.isDragging = true;

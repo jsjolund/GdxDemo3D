@@ -24,14 +24,11 @@ public class ModelRenderSystem extends EntitySystem {
 	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private Environment environment;
 
-	private Environment environmentTest;
-
 	public ModelRenderSystem(Camera camera, Environment environment) {
 		systemFamily = Family.all(ModelComponent.class).get();
 		modelBatch = new ModelBatch();
 		this.camera = camera;
 		this.environment = environment;
-		environmentTest = new Environment();
 	}
 
 	@Override
@@ -41,12 +38,13 @@ public class ModelRenderSystem extends EntitySystem {
 
 	private boolean isVisible(final Camera camera, final ModelComponent cmp) {
 		cmp.modelInstance.transform.getTranslation(pos);
-		pos.add(cmp.center);
+//		pos.add(cmp.center);
 		return camera.frustum.sphereInFrustum(pos, cmp.radius);
 	}
 
 	@Override
 	public void update(float deltaTime) {
+
 		camera.update();
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
@@ -58,9 +56,9 @@ public class ModelRenderSystem extends EntitySystem {
 				if (selCmp.isSelected) {
 					modelBatch.render(cmp.modelInstance);
 				} else {
-//					if (isVisible(camera, cmp)) {
-					modelBatch.render(cmp.modelInstance, environment);
-//					}
+					if (isVisible(camera, cmp)) {
+						modelBatch.render(cmp.modelInstance, environment);
+					}
 				}
 			}
 

@@ -14,6 +14,8 @@ public class IntentComponent extends Component {
 	public Vector2 dragStart = new Vector2();
 	public Vector2 dragCurrent = new Vector2();
 
+	public Vector2 click = new Vector2();
+
 	public float zoom = 0;
 
 }

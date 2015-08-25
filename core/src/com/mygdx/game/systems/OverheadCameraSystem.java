@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.CameraTargetingComponent;
 import com.mygdx.game.components.IntentComponent;
@@ -55,6 +56,8 @@ public class OverheadCameraSystem extends IteratingSystem {
 
 		CameraTargetingComponent camCmp = camCmps.get(entity);
 		Camera cam = camCmp.camera;
+		Viewport viewport = camCmp.viewport;
+		Vector3 velocity = camCmp.velocity;
 
 		panDirection.setZero();
 		if (intent.moveDirection.len() >= 0) {
@@ -67,30 +70,30 @@ public class OverheadCameraSystem extends IteratingSystem {
 		}
 
 		if (panDirection.isZero()) {
-			camCmp.velocity.nor();
+			velocity.nor();
 			currentPanSpeed -= GameSettings.CAMERA_PAN_DECELERATION * deltaTime;
 			if (currentPanSpeed < 0) {
 				currentPanSpeed = 0;
 			}
 		} else {
-			camCmp.velocity.set(panDirection);
+			velocity.set(panDirection);
 			currentPanSpeed += GameSettings.CAMERA_PAN_ACCELERATION * deltaTime;
 		}
 
 		if (currentPanSpeed > GameSettings.CAMERA_MAX_PAN_VELOCITY) {
 			currentPanSpeed = GameSettings.CAMERA_MAX_PAN_VELOCITY;
 		}
-		camCmp.velocity.scl(currentPanSpeed);
+		velocity.scl(currentPanSpeed);
 
-		panResult.set(camCmp.velocity).scl(deltaTime);
+		panResult.set(velocity).scl(deltaTime);
 
 		if (intent.zoom != currentZoom) {
 
 			ray.set(cam.position, cam.direction);
 			Intersector.intersectRayPlane(ray, worldGroundPlane, cameraGroundTarget);
-			float zoomLength = cameraGroundTarget.dst(cam.position)/currentZoom;
-			float zoomSteps = currentZoom-intent.zoom;
-			cam.position.add(tmp.set(cam.direction).nor().scl(zoomLength*zoomSteps));
+			float zoomLength = cameraGroundTarget.dst(cam.position) / currentZoom;
+			float zoomSteps = currentZoom - intent.zoom;
+			cam.position.add(tmp.set(cam.direction).nor().scl(zoomLength * zoomSteps));
 			currentZoom = intent.zoom;
 		}
 
@@ -99,10 +102,10 @@ public class OverheadCameraSystem extends IteratingSystem {
 		} else {
 			if (!lastDragProcessed.equals(intent.dragCurrent)) {
 				if (!lastDragProcessed.isZero()) {
-					ray.set(camCmp.viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
+					ray.set(viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
 
 					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
-					ray.set(camCmp.viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+					ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
 					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
 
 					panResult.set(worldDragLast).sub(worldDragCurrent);

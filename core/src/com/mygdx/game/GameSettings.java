@@ -11,6 +11,9 @@ public class GameSettings {
 	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F12;
 
 	public static final float CAMERA_FOV = 60;
+	public static final float CAMERA_FAR = 100;
+	public static final float CAMERA_NEAR = 1E-3f;
+
 	public static final float CAMERA_MAX_PAN_VELOCITY = 30;
 	public static final float CAMERA_PAN_ACCELERATION = 60;
 	public static final float CAMERA_PAN_DECELERATION = 200;
