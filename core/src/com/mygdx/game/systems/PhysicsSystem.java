@@ -28,12 +28,11 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	public static final String tag = "PhysicsSystem";
 	public PhysicsListener listener;
 	public Family systemFamily;
+	public btDynamicsWorld dynamicsWorld;
 	private ImmutableArray<Entity> entities;
-
 	private CollisionContactListener contactListener;
 	private btCollisionConfiguration collisionConfig;
 	private btDispatcher dispatcher;
-	public btDynamicsWorld dynamicsWorld;
 	private btConstraintSolver constraintSolver;
 	private btDbvtBroadphase broadphase;
 	private DebugDrawer debugDrawer;

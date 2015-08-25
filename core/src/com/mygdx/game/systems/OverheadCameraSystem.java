@@ -21,34 +21,25 @@ import com.mygdx.game.components.IntentComponent;
 public class OverheadCameraSystem extends IteratingSystem {
 
 	public static final String tag = "OverheadCameraSystem";
-
-
+	Vector3 panDirection = new Vector3();
+	Vector3 panResult = new Vector3();
+	Vector3 tmp = new Vector3();
+	float currentPanSpeed = 0;
+	Vector3 worldDragCurrent = new Vector3();
+	Vector3 worldDragLast = new Vector3();
+	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
+	Ray ray = new Ray();
+	float currentZoom = 10;
+	Vector3 cameraGroundTarget = new Vector3();
+	Vector2 lastDragProcessed = new Vector2();
 	private ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
 	private ComponentMapper<IntentComponent> inputCmps =
 			ComponentMapper.getFor(IntentComponent.class);
 
-
 	public OverheadCameraSystem() {
 		super(Family.all(CameraTargetingComponent.class, IntentComponent.class).get());
 	}
-
-	Vector3 panDirection = new Vector3();
-	Vector3 panResult = new Vector3();
-	Vector3 tmp = new Vector3();
-	float currentPanSpeed = 0;
-
-
-	Vector3 worldDragCurrent = new Vector3();
-	Vector3 worldDragLast = new Vector3();
-	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
-	Ray ray = new Ray();
-
-	float currentZoom = 10;
-	Vector3 cameraGroundTarget = new Vector3();
-
-	Vector2 lastDragProcessed = new Vector2();
-
 
 	@Override
 	public void processEntity(Entity entity, float deltaTime) {

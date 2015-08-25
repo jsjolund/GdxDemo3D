@@ -16,18 +16,15 @@ import com.mygdx.game.components.SelectableComponent;
 public class ModelSelectionSystem extends EntitySystem {
 
 	public static final String tag = "ModelSelectionSystem";
-
+	private final Vector3 tmp = new Vector3();
 	public Family systemFamily;
+	PhysicsSystem phySys;
+	Viewport viewport;
+	Vector2 lastClick = new Vector2();
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<IntentComponent> intentCmps = ComponentMapper.getFor(IntentComponent.class);
 	private ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
-
-	PhysicsSystem phySys;
-	Viewport viewport;
-
-	Vector2 lastClick = new Vector2();
 	private Ray ray = new Ray();
-	private final Vector3 tmp = new Vector3();
 
 	public ModelSelectionSystem(PhysicsSystem phySys, Viewport viewport) {
 		systemFamily = Family.all(IntentComponent.class, SelectableComponent.class).get();

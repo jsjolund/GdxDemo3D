@@ -18,25 +18,23 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	public static final String tag = "GameInputSystem";
 
 	public final IntIntMap keys = new IntIntMap();
-	Vector2 moveDirection = new Vector2();
-	float zoom;
-
 	public final Family family;
-	private ImmutableArray<Entity> entities;
 	private final ComponentMapper<IntentComponent> inputCmps = ComponentMapper.getFor(IntentComponent
 			.class);
-
-
-	@Override
-	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(family);
-	}
+	Vector2 moveDirection = new Vector2();
+	float zoom;
+	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
+	private ImmutableArray<Entity> entities;
 
 	public GameInputSystem() {
 		family = Family.all(IntentComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 	}
 
+	@Override
+	public void addedToEngine(Engine engine) {
+		entities = engine.getEntitiesFor(family);
+	}
 
 	@Override
 	public void update(float deltaTime) {
@@ -122,28 +120,6 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 		return true;
 	}
 
-	private class TouchData {
-		int dragHistoryCursor = 0;
-		Vector2 down = new Vector2();
-		Vector2 lastDrag = new Vector2();
-		int button;
-		boolean isDragging = false;
-
-		public TouchData() {
-			reset();
-		}
-
-		public void reset() {
-			down.setZero();
-			lastDrag.setZero();
-			isDragging = false;
-			button = -1;
-			dragHistoryCursor = 0;
-		}
-	}
-
-	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
-
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 
@@ -181,6 +157,26 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	public boolean scrolled(int amount) {
 		zoom += GameSettings.CAMERA_ZOOM_STEP * amount;
 		return true;
+	}
+
+	private class TouchData {
+		int dragHistoryCursor = 0;
+		Vector2 down = new Vector2();
+		Vector2 lastDrag = new Vector2();
+		int button;
+		boolean isDragging = false;
+
+		public TouchData() {
+			reset();
+		}
+
+		public void reset() {
+			down.setZero();
+			lastDrag.setZero();
+			isDragging = false;
+			button = -1;
+			dragHistoryCursor = 0;
+		}
 	}
 
 //	@Override

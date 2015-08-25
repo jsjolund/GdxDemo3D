@@ -17,10 +17,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class GameStage extends Stage {
 
 	private final Viewport viewport;
-	Camera cameraUI;
-	Camera camera3D;
 	private final Batch batch;
 	public TextButton btn;
+	Camera cameraUI;
+	Camera camera3D;
 
 	public GameStage(Viewport viewport) {
 		super(viewport);

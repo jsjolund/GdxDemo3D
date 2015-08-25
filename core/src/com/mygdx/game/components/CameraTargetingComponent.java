@@ -11,7 +11,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class CameraTargetingComponent extends Component {
 
 	public final Viewport viewport;
-	public  final Camera camera;
+	public final Camera camera;
 	public Vector3 directionTarget = new Vector3();
 	public Vector3 positionTarget = new Vector3();
 

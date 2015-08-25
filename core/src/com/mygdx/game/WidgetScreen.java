@@ -15,6 +15,28 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * Created by user on 8/21/15.
  */
 public class WidgetScreen implements Screen {
+	private Viewport viewport;
+	private Camera camera;
+	private Stage stage;
+
+	public WidgetScreen(int reqWidth, int reqHeight) {
+//		super(reqWidth, reqHeight);
+		camera = new OrthographicCamera(reqWidth, reqHeight);
+		camera.position.set(reqWidth / 2, reqHeight / 2, 0);
+		camera.update();
+//		camera = new PerspectiveCamera();
+		viewport = new FitViewport(reqWidth, reqHeight, camera);
+		stage = new Stage(viewport);
+		Gdx.input.setInputProcessor(stage);
+
+		Skin skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+		TextButton btn = new TextButton("test", skin);
+		btn.setPosition(100, 100);
+		btn.setSize(300, 100);
+
+		stage.addActor(btn);
+	}
+
 	@Override
 	public void show() {
 
@@ -38,28 +60,6 @@ public class WidgetScreen implements Screen {
 	@Override
 	public void hide() {
 
-	}
-
-	private Viewport viewport;
-	private Camera camera;
-	private Stage stage;
-
-	public WidgetScreen(int reqWidth, int reqHeight) {
-//		super(reqWidth, reqHeight);
-		camera = new OrthographicCamera(reqWidth, reqHeight);
-		camera.position.set(reqWidth / 2, reqHeight / 2, 0);
-		camera.update();
-//		camera = new PerspectiveCamera();
-		viewport = new FitViewport(reqWidth, reqHeight, camera);
-		stage = new Stage(viewport);
-		Gdx.input.setInputProcessor(stage);
-
-		Skin skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
-		TextButton btn = new TextButton("test", skin);
-		btn.setPosition(100, 100);
-		btn.setSize(300, 100);
-
-		stage.addActor(btn);
 	}
 
 	@Override
