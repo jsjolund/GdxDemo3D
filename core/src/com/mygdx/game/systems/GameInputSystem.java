@@ -1,7 +1,8 @@
 package com.mygdx.game.systems;
 
-import com.badlogic.ashley.core.*;
-import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.ashley.core.Engine;
+import com.badlogic.ashley.core.EntitySystem;
+import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
@@ -19,21 +20,21 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 
 	public final IntIntMap keys = new IntIntMap();
 	public final Family family;
-	private final ComponentMapper<IntentComponent> inputCmps = ComponentMapper.getFor(IntentComponent
-			.class);
+	IntentComponent intent;
 	Vector2 moveDirection = new Vector2();
 	float zoom;
 	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
-	private ImmutableArray<Entity> entities;
+//	private ImmutableArray<Entity> entities;
 
-	public GameInputSystem() {
+	public GameInputSystem(IntentComponent intent) {
 		family = Family.all(IntentComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
+		this.intent = intent;
 	}
 
 	@Override
 	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(family);
+//		entities = engine.getEntitiesFor(family);
 	}
 
 	@Override
@@ -60,31 +61,29 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 			zoom = GameSettings.CAMERA_MIN_ZOOM;
 		}
 
-		for (Entity entity : entities) {
-			IntentComponent intent = inputCmps.get(entity);
-			intent.moveDirection.set(moveDirection);
-			intent.zoom = zoom;
-		}
+		intent.moveDirection.set(moveDirection);
+		intent.zoom = zoom;
 
 		if (moveDirection.isZero() && touchMap.containsKey(0)) {
 			TouchData data = touchMap.get(0);
 			if (data.isDragging) {
+				intent.dragStart.set(data.down);
+				intent.dragCurrent.set(data.lastDrag);
+				intent.isDragging = true;
+				intent.pan = false;
+				intent.rotate = false;
 				switch (data.button) {
 					case Input.Buttons.LEFT:
-						for (Entity entity : entities) {
-							IntentComponent intent = inputCmps.get(entity);
-							intent.dragStart.set(data.down);
-							intent.dragCurrent.set(data.lastDrag);
-							intent.isDragging = true;
-						}
-						data.isDragging = false;
+						intent.pan = true;
 						break;
 					case Input.Buttons.RIGHT:
+						intent.rotate = true;
 						break;
 					default:
 						break;
 				}
 			}
+			data.isDragging = false;
 		}
 
 
@@ -116,25 +115,21 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 		if (data.button == -1) {
 			data.down.set(screenX, screenY);
 			data.button = button;
+			data.isDragging = false;
 		}
 		return true;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-
-		// TODO: Assuming only one intent component...
-		if (entities.size() == 0) {
-			return false;
-		}
-
-		IntentComponent intent = inputCmps.get(entities.get(0));
 		if (!intent.isDragging) {
 			intent.click.set(screenX, screenY);
 		}
 		intent.dragStart.setZero();
 		intent.dragCurrent.setZero();
 		intent.isDragging = false;
+		intent.pan = false;
+		intent.rotate = false;
 		touchMap.get(pointer).reset();
 
 		return true;
@@ -171,11 +166,11 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 		}
 
 		public void reset() {
+			dragHistoryCursor = 0;
 			down.setZero();
 			lastDrag.setZero();
-			isDragging = false;
 			button = -1;
-			dragHistoryCursor = 0;
+			isDragging = false;
 		}
 	}
 

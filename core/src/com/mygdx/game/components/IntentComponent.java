@@ -18,4 +18,17 @@ public class IntentComponent extends Component {
 
 	public float zoom = 0;
 
+	public boolean pan = false;
+	public boolean rotate = false;
+
+//	public void reset() {
+//		moveDirection.setZero();
+//		dragStart.setZero();
+//		dragCurrent.setZero();
+//		click.setZero();
+//		isDragging = false;
+//		pan = false;
+//		rotate = false;
+//		// zoom = 0;
+//	}
 }

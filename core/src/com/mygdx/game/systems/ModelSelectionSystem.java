@@ -44,10 +44,10 @@ public class ModelSelectionSystem extends EntitySystem {
 			return;
 		}
 		IntentComponent intent = intentCmps.get(entities.get(0));
+
 		if (intent.click.equals(lastClick)) {
 			return;
 		}
-
 		float screenX = intent.click.x;
 		float screenY = intent.click.y;
 

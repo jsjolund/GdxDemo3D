@@ -49,10 +49,10 @@ public class GameScreen implements Screen {
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
 
-		IntentComponent inputCmp = new IntentComponent();
+		IntentComponent intentCmp = new IntentComponent();
 		Entity interactionEntity = engine.createEntity();
 		interactionEntity.add(new CameraTargetingComponent(camera, viewport));
-		interactionEntity.add(inputCmp);
+		interactionEntity.add(intentCmp);
 		engine.addEntity(interactionEntity);
 
 		shapeRenderer = new ShapeRenderer();
@@ -90,7 +90,7 @@ public class GameScreen implements Screen {
 		for (Entity entity : modelEntities) {
 
 			entity.add(new SelectableComponent());
-			entity.add(inputCmp);
+			entity.add(intentCmp);
 
 
 			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
@@ -126,7 +126,7 @@ public class GameScreen implements Screen {
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		GameInputSystem inputSys = new GameInputSystem();
+		GameInputSystem inputSys = new GameInputSystem(intentCmp);
 		engine.addSystem(inputSys);
 		multiplexer.addProcessor(inputSys);
 		Gdx.input.setInputProcessor(multiplexer);

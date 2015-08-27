@@ -25,12 +25,17 @@ public class OverheadCameraSystem extends IteratingSystem {
 	Vector3 panResult = new Vector3();
 	Vector3 tmp = new Vector3();
 	float currentPanSpeed = 0;
+
+	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
 	Vector3 worldDragCurrent = new Vector3();
 	Vector3 worldDragLast = new Vector3();
-	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
+	Vector3 worldGroundTarget = new Vector3();
+	float worldGroundTargetDst;
+
+	Vector2 cursorDelta = new Vector2();
+	Vector3 perpendicular = new Vector3();
 	Ray ray = new Ray();
 	float currentZoom = 10;
-	Vector3 cameraGroundTarget = new Vector3();
 	Vector2 lastDragProcessed = new Vector2();
 	private ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
@@ -41,6 +46,13 @@ public class OverheadCameraSystem extends IteratingSystem {
 		super(Family.all(CameraTargetingComponent.class, IntentComponent.class).get());
 	}
 
+
+	private boolean poleIsCrossed(Vector3 direction1, Vector3 direction2) {
+		return (Math.signum(direction1.x) != Math.signum(direction2.x))
+				&& Math.signum(direction1.z) != Math.signum(direction2.z);
+	}
+
+
 	@Override
 	public void processEntity(Entity entity, float deltaTime) {
 		IntentComponent intent = inputCmps.get(entity);
@@ -50,6 +62,7 @@ public class OverheadCameraSystem extends IteratingSystem {
 		Viewport viewport = camCmp.viewport;
 		Vector3 velocity = camCmp.velocity;
 
+		// Keyboard pan
 		panDirection.setZero();
 		if (intent.moveDirection.len() >= 0) {
 			tmp.set(cam.direction).scl(intent.moveDirection.y);
@@ -77,38 +90,88 @@ public class OverheadCameraSystem extends IteratingSystem {
 		velocity.scl(currentPanSpeed);
 
 		panResult.set(velocity).scl(deltaTime);
+		cam.position.add(panResult);
 
+		// Scroll wheel zoom
 		if (intent.zoom != currentZoom) {
-
 			ray.set(cam.position, cam.direction);
-			Intersector.intersectRayPlane(ray, worldGroundPlane, cameraGroundTarget);
-			float zoomLength = cameraGroundTarget.dst(cam.position) / currentZoom;
+			Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
+			float zoomLength = worldGroundTarget.dst(cam.position) / currentZoom;
 			float zoomSteps = currentZoom - intent.zoom;
 			cam.position.add(tmp.set(cam.direction).nor().scl(zoomLength * zoomSteps));
 			currentZoom = intent.zoom;
 		}
 
+		// Mouse dragging
 		if (!intent.isDragging) {
 			lastDragProcessed.setZero();
 		} else {
 			if (!lastDragProcessed.equals(intent.dragCurrent)) {
-				if (!lastDragProcessed.isZero()) {
-					ray.set(viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
+				if (lastDragProcessed.isZero()) {
+					// This is run every time the user starts dragging
+					ray.set(cam.position, cam.direction);
+					Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
+					worldGroundTargetDst = cam.position.dst(worldGroundTarget);
 
-					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
-					ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
-					Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
+				} else {
+					// Mouse drag pan
+					if (intent.pan) {
+						ray.set(viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
 
-					panResult.set(worldDragLast).sub(worldDragCurrent);
-					panResult.y = 0;
+						Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
+						ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+						Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
 
+						panResult.set(worldDragLast).sub(worldDragCurrent);
+						panResult.y = 0;
+						cam.position.add(panResult);
+
+					}
+
+					// Mouse drag rotation
+					if (intent.rotate) {
+						Vector3 oldPosition = new Vector3();
+						Vector3 oldDirection = new Vector3();
+						Vector3 oldUp = new Vector3();
+
+						float southPoleDst = tmp.set(cam.direction).nor().dst(Vector3.Y);
+						float northPoleDst = tmp.set(cam.direction).scl(-1).nor().dst(Vector3.Y);
+						float poleDst = Math.min(northPoleDst, southPoleDst);
+
+						oldPosition.set(cam.position);
+						oldDirection.set(cam.direction);
+						oldUp.set(cam.up);
+
+						cursorDelta.set(lastDragProcessed).sub(intent.dragCurrent).scl(GameSettings.MOUSE_SENSITIVITY);
+						perpendicular.set(cam.direction).crs(cam.up).nor();
+
+						panResult.setZero().add(cam.up).nor().scl(-cursorDelta.y);
+						cam.position.add(panResult);
+						panResult.setZero().add(perpendicular).nor().scl(cursorDelta.x * poleDst/2);
+						cam.position.add(panResult);
+						panResult.setZero().add(cam.direction).nor().scl(cam.position.dst
+								(worldGroundTarget) - worldGroundTargetDst);
+						cam.position.add(panResult);
+
+						cam.up.set(Vector3.Y);
+						cam.lookAt(worldGroundTarget);
+
+						boolean poleIsCrossed = (Math.signum(cam.direction.x) != Math.signum(oldDirection.x))
+								&& Math.signum(cam.direction.z) != Math.signum(oldDirection.z);
+
+						if (poleIsCrossed) {
+							cam.direction.set(oldDirection);
+							cam.position.set(oldPosition);
+							cam.up.set(oldUp);
+							cam.normalizeUp();
+						}
+
+					}
 				}
 				lastDragProcessed.set(intent.dragCurrent);
 			}
 		}
 
-
-		cam.position.add(panResult);
 		cam.update();
 	}
 }

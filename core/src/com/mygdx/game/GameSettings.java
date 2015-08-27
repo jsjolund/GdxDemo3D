@@ -17,7 +17,7 @@ public class GameSettings {
 	public static final float CAMERA_ZOOM_STEP = 1;
 	public static final float CAMERA_MAX_ZOOM = 20;
 
-	public static final float MOUSE_SENSITIVITY = 0.01f;
+	public static final float MOUSE_SENSITIVITY = 0.1f;
 
 	public static boolean DRAW_COLLISION_DEBUG = false;
 	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F12;
