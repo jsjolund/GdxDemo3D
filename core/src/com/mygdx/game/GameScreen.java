@@ -7,12 +7,19 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
@@ -157,8 +164,36 @@ public class GameScreen implements Screen {
 //		ComponentMapper<ModelComponent> modelCmps = ComponentMapper.getFor(ModelComponent.class);
 //		float numModels = engine.getEntitiesFor(Family.all(ModelComponent.class).get()).size();
 
+		AssetManager assets = new AssetManager();
+		assets.load("models/man.g3db", Model.class);
+		assets.finishLoading();
+		Model model = assets.get("models/man.g3db", Model.class);
+		Entity entity = new Entity();
+		entity.add(new ModelComponent(model, "man", new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1,
+				1)));
+		entity.add(new SelectableComponent());
+		engine.addEntity(entity);
 
+		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+
+		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
+		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+		PhysicsComponent phyCmp = new PhysicsComponent(
+				shape, motionStateCmp.motionState, 100,
+				PhysicsSystem.OBJECT_FLAG,
+				PhysicsSystem.ALL_FLAG,
+				true, false);
+		phyCmp.body.setAngularFactor(Vector3.Y);
+
+		entity.add(motionStateCmp);
+		entity.add(phyCmp);
+
+
+		controller = new AnimationController(instance);
+		controller.setAnimation("Armature|run", -1);
 	}
+
+	AnimationController controller;
 
 	@Override
 	public void show() {
@@ -176,10 +211,15 @@ public class GameScreen implements Screen {
 		shapeRenderer.end();
 
 		engine.update(Gdx.graphics.getDeltaTime());
-//		engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+
+		if (GameSettings.DRAW_COLLISION_DEBUG) {
+			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+		}
 
 		stage.act(delta);
 		stage.draw();
+
+		controller.update(delta);
 	}
 
 	@Override

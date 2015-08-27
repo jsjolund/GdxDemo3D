@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
@@ -152,8 +153,8 @@ public class BlenderComponentsLoader {
 			entity = new Entity();
 
 			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, -cmp.rotation.x);
-			transform.rotate(Vector3.Z, -cmp.rotation.z);
+			transform.rotate(Vector3.X, cmp.rotation.x);
+			transform.rotate(Vector3.Z, cmp.rotation.z);
 			direction.rot(transform);
 
 			transform.translate(cmp.position);
@@ -196,6 +197,13 @@ public class BlenderComponentsLoader {
 							Math.max(Math.abs(empty.scale.x), Math.abs(empty.scale.y)),
 							Math.abs(empty.scale.z));
 					shape = new btSphereShape(radius);
+
+				} else if (shapeType.equals("box")) {
+					Vector3 halfExtents = new Vector3(empty.scale);
+					halfExtents.x = Math.abs(halfExtents.x);
+					halfExtents.y = Math.abs(halfExtents.y);
+					halfExtents.z = Math.abs(halfExtents.z);
+					shape = new btBoxShape(halfExtents);
 				}
 			}
 		}

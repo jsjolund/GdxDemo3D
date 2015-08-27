@@ -8,7 +8,7 @@ import com.badlogic.gdx.Input;
 public class GameSettings {
 
 	public static final float CAMERA_FOV = 60;
-	public static final float CAMERA_FAR = 100;
+	public static final float CAMERA_FAR = 1E3f;
 	public static final float CAMERA_NEAR = 1E-3f;
 	public static final float CAMERA_MAX_PAN_VELOCITY = 30;
 	public static final float CAMERA_PAN_ACCELERATION = 60;

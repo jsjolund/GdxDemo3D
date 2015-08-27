@@ -48,20 +48,22 @@ public class ModelRenderSystem extends EntitySystem {
 		camera.update();
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
+
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
 
-			SelectableComponent selCmp = selectables.get(entity);
-			if (selCmp != null) {
-				if (selCmp.isSelected) {
-					modelBatch.render(cmp.modelInstance);
-				} else {
-					if (isVisible(camera, cmp)) {
-						modelBatch.render(cmp.modelInstance, environment);
-					}
-				}
-			}
+//			if (cmp.id.equals("man")) {
+//				System.out.println("man");
+//			}
 
+//			if (isVisible(camera, cmp)) {
+			modelBatch.render(cmp.modelInstance, environment);
+//			}
+
+			SelectableComponent selCmp = selectables.get(entity);
+			if (selCmp != null && selCmp.isSelected) {
+				modelBatch.render(cmp.modelInstance);
+			}
 		}
 		modelBatch.end();
 	}

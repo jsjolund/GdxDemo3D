@@ -39,7 +39,6 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 
 	@Override
 	public void update(float deltaTime) {
-
 		moveDirection.setZero();
 		if (keys.containsKey(GameSettings.PAN_FORWARD)) {
 			moveDirection.y += 1;
@@ -92,6 +91,10 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	@Override
 	public boolean keyDown(int keycode) {
 		keys.put(keycode, keycode);
+
+		if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
+			GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
+		}
 		return true;
 	}
 
