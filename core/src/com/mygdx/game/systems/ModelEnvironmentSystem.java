@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.LightComponent;
 
 /**
@@ -23,8 +24,8 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		systemFamily = Family.all(LightComponent.class).get();
 		lightListener = new LightListener();
 
-		float a = 0.2f;
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, a, a, a, 1.f));
+		float c = GameSettings.SCENE_AMBIENT_LIGHT;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
 	}
 
 	@Override

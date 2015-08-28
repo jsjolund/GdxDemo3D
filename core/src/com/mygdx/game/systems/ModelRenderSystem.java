@@ -2,7 +2,9 @@ package com.mygdx.game.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector3;
@@ -24,11 +26,24 @@ public class ModelRenderSystem extends EntitySystem {
 	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private Environment environment;
 
+	private Camera cameraLight;
+
 	public ModelRenderSystem(Camera camera, Environment environment) {
 		systemFamily = Family.all(ModelComponent.class).get();
-		modelBatch = new ModelBatch();
+
 		this.camera = camera;
 		this.environment = environment;
+
+		modelBatch = new ModelBatch(Gdx.files.internal("shaders/vertex.glsl"),
+				Gdx.files.internal("shaders/fragment.glsl"));
+
+		cameraLight = new PerspectiveCamera(120f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		cameraLight.near = 1f;
+		cameraLight.far = 100;
+		cameraLight.position.set(33, 10, 3);
+		cameraLight.lookAt(-1, 0, 0);
+		cameraLight.update();
+
 	}
 
 	@Override
@@ -52,17 +67,14 @@ public class ModelRenderSystem extends EntitySystem {
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
 
-//			if (cmp.id.equals("man")) {
-//				System.out.println("man");
-//			}
 
-//			if (isVisible(camera, cmp)) {
-			modelBatch.render(cmp.modelInstance, environment);
-//			}
+			if (isVisible(camera, cmp)) {
+				modelBatch.render(cmp.modelInstance, environment);
+			}
 
 			SelectableComponent selCmp = selectables.get(entity);
 			if (selCmp != null && selCmp.isSelected) {
-				modelBatch.render(cmp.modelInstance);
+//				modelBatch.render(cmp.modelInstance);
 			}
 		}
 		modelBatch.end();

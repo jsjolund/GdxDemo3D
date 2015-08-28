@@ -159,11 +159,11 @@ public class BlenderComponentsLoader {
 
 			transform.translate(cmp.position);
 
+			float s = cmp.lamp_energy;
 			entity.add(new LightComponent(
-					new DirectionalLight().set(cmp.lamp_color.r, cmp.lamp_color.g,
-							cmp.lamp_color.b, direction.x, direction.y, direction.z)));
+					new DirectionalLight().set(s*cmp.lamp_color.r, s*cmp.lamp_color.g,
+							s*cmp.lamp_color.b, direction.x, direction.y, direction.z)));
 		}
-
 		return entity;
 	}
 

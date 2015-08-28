@@ -17,15 +17,17 @@ public class GameSettings {
 	public static final float CAMERA_ZOOM_STEP = 1;
 	public static final float CAMERA_MAX_ZOOM = 20;
 
-	public static final float MOUSE_SENSITIVITY = 0.1f;
+	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
 	public static boolean DRAW_COLLISION_DEBUG = false;
-	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F12;
 
-	public static int PAN_FORWARD = Input.Keys.W;
-	public static int PAN_LEFT = Input.Keys.A;
-	public static int PAN_BACKWARD = Input.Keys.S;
-	public static int PAN_RIGHT = Input.Keys.D;
+	public static float MOUSE_SENSITIVITY = 0.1f;
+
+	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F12;
+	public static int KEY_PAN_FORWARD = Input.Keys.W;
+	public static int KEY_PAN_LEFT = Input.Keys.A;
+	public static int KEY_PAN_BACKWARD = Input.Keys.S;
+	public static int KEY_PAN_RIGHT = Input.Keys.D;
 
 	public static float SOUND_VOLUME = 1f;
 	public static float MUSIC_VOLUME = 1f;

@@ -133,6 +133,8 @@ def write_obj(obj_dir, export_objects):
         bobj0.scale = Vector((1.0, 1.0, 1.0))
         bpy.ops.export_scene.fbx(filepath=obj_file_path,
                                  use_selection=True,
+                                 use_tspace=True,
+                                 use_mesh_modifiers=True,
                                  object_types={'MESH'},
                                  axis_forward='Y',
                                  axis_up='Z')
@@ -186,6 +188,9 @@ def create_blender_object_map(filename, scene_objects):
     blender_object_map = {}
 
     for scene_obj in scene_objects:
+        if scene_obj.hide:
+            continue
+
         category = "unknown"
         if type(scene_obj.data) is bpy.types.Mesh:
             gobj = BlenderModel(scene_obj, filename)
@@ -250,6 +255,7 @@ def main():
         print(f)
     print("\nFinished.")
     print("\n\n")
+
 
 if __name__ == "__main__":
     main()

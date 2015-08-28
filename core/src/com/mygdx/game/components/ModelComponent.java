@@ -2,11 +2,16 @@ package com.mygdx.game.components;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+
+import java.util.Iterator;
 
 /**
  * Created by user on 7/31/15.
@@ -45,6 +50,17 @@ public class ModelComponent extends Component {
 		bounds.getCenter(center);
 		bounds.getDimensions(dimensions);
 		radius = dimensions.len() / 2f;
+
+//		for (int m = 0; m < modelInstance.materials.size; m++) {
+//			Material mat = modelInstance.materials.get(m);
+//			for (Iterator<Attribute> ai = mat.iterator(); ai.hasNext(); ) {
+//				Attribute att = ai.next();
+//				System.out.println(att.toString());
+//				if (att.type == TextureAttribute.Normal) {
+//				}
+//
+//			}
+//		}
 	}
 
 	public ModelComponent(Model model, String id) {
@@ -58,6 +74,7 @@ public class ModelComponent extends Component {
 		bounds.getCenter(center);
 		bounds.getDimensions(dimensions);
 		radius = dimensions.len() / 2f;
+
 	}
 
 }

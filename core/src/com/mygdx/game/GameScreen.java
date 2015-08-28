@@ -44,7 +44,8 @@ public class GameScreen implements Screen {
 		engine = new PooledEngine();
 		Bullet.init();
 
-		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
+//		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
+		viewportBackgroundColor = new Color(0.49f, 0.49f, 0.49f, 1);
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -161,20 +162,17 @@ public class GameScreen implements Screen {
 		engine.addSystem(billSys);
 
 
-//		ComponentMapper<ModelComponent> modelCmps = ComponentMapper.getFor(ModelComponent.class);
-//		float numModels = engine.getEntitiesFor(Family.all(ModelComponent.class).get()).size();
+		Entity entity = new Entity();
+		engine.addEntity(entity);
 
 		AssetManager assets = new AssetManager();
 		assets.load("models/man.g3db", Model.class);
 		assets.finishLoading();
 		Model model = assets.get("models/man.g3db", Model.class);
-		Entity entity = new Entity();
-		entity.add(new ModelComponent(model, "man", new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(1, 1,
+		entity.add(new ModelComponent(model, "man", new Vector3(0, 1, -3), new Vector3(0, 0, 0), new Vector3(1, 1,
 				1)));
-		entity.add(new SelectableComponent());
-		engine.addEntity(entity);
-
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+
 
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
 		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
@@ -184,13 +182,17 @@ public class GameScreen implements Screen {
 				PhysicsSystem.ALL_FLAG,
 				true, false);
 		phyCmp.body.setAngularFactor(Vector3.Y);
+		phyCmp.body.setWorldTransform(instance.transform);
 
 		entity.add(motionStateCmp);
 		entity.add(phyCmp);
+		entity.add(intentCmp);
+		entity.add(new SelectableComponent());
 
+		phyCmp.body.getWorldTransform().translate(5,0,0);
 
 		controller = new AnimationController(instance);
-		controller.setAnimation("Armature|run", -1);
+		controller.setAnimation("Armature|walk", -1);
 	}
 
 	AnimationController controller;

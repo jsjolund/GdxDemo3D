@@ -34,9 +34,9 @@ public class GameStage extends Stage {
 
 		batch = new SpriteBatch();
 
-		Skin skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
+		Skin skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
-		btn = new TextButton("test", skin);
+		btn = new TextButton("Test", skin);
 		btn.setPosition(0, 0);
 		btn.setSize(100, 50);
 		addActor(btn);

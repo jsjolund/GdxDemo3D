@@ -40,16 +40,16 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	@Override
 	public void update(float deltaTime) {
 		moveDirection.setZero();
-		if (keys.containsKey(GameSettings.PAN_FORWARD)) {
+		if (keys.containsKey(GameSettings.KEY_PAN_FORWARD)) {
 			moveDirection.y += 1;
 		}
-		if (keys.containsKey(GameSettings.PAN_BACKWARD)) {
+		if (keys.containsKey(GameSettings.KEY_PAN_BACKWARD)) {
 			moveDirection.y -= 1;
 		}
-		if (keys.containsKey(GameSettings.PAN_LEFT)) {
+		if (keys.containsKey(GameSettings.KEY_PAN_LEFT)) {
 			moveDirection.x -= 1;
 		}
-		if (keys.containsKey(GameSettings.PAN_RIGHT)) {
+		if (keys.containsKey(GameSettings.KEY_PAN_RIGHT)) {
 			moveDirection.x += 1;
 		}
 		moveDirection.nor();
