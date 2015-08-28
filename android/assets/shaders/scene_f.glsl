@@ -39,16 +39,16 @@ void main()
             // Horizontal
             if(lenDepthMap<lenToLight-0){
                 finalColor.rgb*=0.4;
-                finalColor.b = 1;
+//                finalColor.b = 1;
             }else{
                 finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
-                finalColor.r = 1;
+//                finalColor.r = 1;
             }
         } else {
             // Vertical
             if(lenDepthMap<lenToLight-0.003){
                 finalColor.rgb*=0.4;
-                finalColor.g = 1;
+//                finalColor.g = 1;
             }else{
                 finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
             }
