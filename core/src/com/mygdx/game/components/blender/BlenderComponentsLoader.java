@@ -3,6 +3,8 @@ package com.mygdx.game.components.blender;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
@@ -38,7 +40,7 @@ public class BlenderComponentsLoader {
 
 		ArrayList<BlenderModelComponent> models = loadModels(modelsJsonPath);
 		for (BlenderModelComponent cmp : models) {
-			cmp.model_file_name = String.format("models/%s.g3db", cmp.model_file_name);
+			cmp.model_file_name = String.format("models/g3db/%s.g3db", cmp.model_file_name);
 			Gdx.app.debug(tag, "Loading " + cmp.model_file_name);
 			assets.load(cmp.model_file_name, Model.class);
 		}

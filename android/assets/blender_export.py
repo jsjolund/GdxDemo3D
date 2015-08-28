@@ -99,9 +99,12 @@ class Color(object):
         self.b = 0.0
 
 
-def write_json(basedir, filename, blender_object_map):
+def write_json(blender_file_basedir, blender_filename_noext, blender_object_map):
+    json_dir_path = os.path.join(os.path.dirname(blender_file_basedir), "json")
+    if not os.path.exists(json_dir_path):
+        os.makedirs(json_dir_path)
     for category in blender_object_map:
-        json_file_path = os.path.join(basedir, "{}_{}.json".format(filename, category))
+        json_file_path = os.path.join(json_dir_path, "{}_{}.json".format(blender_filename_noext, category))
         json_out = []
         for obj in blender_object_map[category]:
             json_out.append(obj.serialize())
@@ -113,7 +116,7 @@ def write_json(basedir, filename, blender_object_map):
         json_file.close()
 
 
-def write_obj(obj_dir, export_objects):
+def write_fbx(blender_file_basedir, export_objects):
     obj_file_paths = []
 
     # unselect all
@@ -122,7 +125,7 @@ def write_obj(obj_dir, export_objects):
 
     for gobj in export_objects:
         bobj0 = gobj.bobj
-        obj_file_path = os.path.join(obj_dir, gobj.get_model_name() + ".fbx")
+        obj_file_path = os.path.join(blender_file_basedir, gobj.get_model_name() + ".fbx")
         obj_file_paths.append(obj_file_path)
 
         # Select object, set loc & rot to zero, export to obj, restore loc & rot, unselect
@@ -132,13 +135,13 @@ def write_obj(obj_dir, export_objects):
         bobj0.rotation_euler.zero()
         bobj0.scale = Vector((1.0, 1.0, 1.0))
         bpy.ops.export_scene.fbx(filepath=obj_file_path,
+                                 path_mode="RELATIVE",
                                  use_selection=True,
                                  use_tspace=True,
                                  use_mesh_modifiers=True,
                                  object_types={'MESH'},
                                  axis_forward='Y',
                                  axis_up='Z')
-        # bpy.ops.export_scene.obj(filepath=obj_file_path, use_selection=True)
         bobj0.location = gobj.loc.copy()
         bobj0.rotation_euler = gobj.rote.copy()
         bobj0.scale = gobj.scl.copy()
@@ -147,14 +150,20 @@ def write_obj(obj_dir, export_objects):
     return obj_file_paths
 
 
-def convert_to_g3db(obj_file_paths):
-    g3db_file_paths = []
-    for obj_file_path in obj_file_paths:
-        subprocess.call(["fbx-conv", "-f", obj_file_path])
-        file_path_noext, file_ext = os.path.splitext(obj_file_path)
-        os.remove(file_path_noext + ".fbx")
-        g3db_file_paths.append(file_path_noext + ".g3db")
-    return g3db_file_paths
+def convert_to_g3db(blender_file_basedir, fbx_file_paths):
+    g3db_output_file_paths = []
+    g3db_output_path = os.path.join(os.path.dirname(blender_file_basedir), "g3db")
+    if not os.path.exists(g3db_output_path):
+        os.makedirs(g3db_output_path)
+
+    for fbx_file_path in fbx_file_paths:
+        basename_ext = os.path.basename(fbx_file_path)
+        basename_no_ext, fbx_ext = os.path.splitext(basename_ext)
+        g3db_output_file_path = os.path.join(g3db_output_path, basename_no_ext + ".g3db")
+        subprocess.call(["fbx-conv", "-f", fbx_file_path, g3db_output_file_path])
+        os.remove(fbx_file_path)
+        g3db_output_file_paths.append(g3db_output_file_path)
+    return g3db_output_file_paths
 
 
 def get_export_objects(blender_object_map):
@@ -192,6 +201,7 @@ def create_blender_object_map(filename, scene_objects):
             continue
 
         category = "unknown"
+
         if type(scene_obj.data) is bpy.types.Mesh:
             gobj = BlenderModel(scene_obj, filename)
             category = BlenderModel.map_name
@@ -232,24 +242,23 @@ def reset_origins():
 
 def main():
     print("\nStarting level export...")
-    basedir = os.path.dirname(bpy.data.filepath)
-    filename = bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0]
+    blender_file_basedir = os.path.dirname(bpy.data.filepath)
+    blender_filename_noext = bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0]
 
-    if not basedir:
+    if not blender_file_basedir:
         raise Exception("Blend file is not saved")
 
-    # reset_origins()
-    blender_object_map = create_blender_object_map(filename, bpy.data.objects)
+    blender_object_map = create_blender_object_map(blender_filename_noext, bpy.data.objects)
 
-    print()
-    write_json(basedir, filename, blender_object_map)
+    print(blender_file_basedir)
+    write_json(blender_file_basedir, blender_filename_noext, blender_object_map)
 
     print()
     export_objects = get_export_objects(blender_object_map);
     print()
-    obj_file_paths = write_obj(basedir, export_objects)
+    fbx_file_paths = write_fbx(blender_file_basedir, export_objects)
     print()
-    g3db_file_paths = convert_to_g3db(obj_file_paths)
+    g3db_file_paths = convert_to_g3db(blender_file_basedir, fbx_file_paths)
     print("\nCreated g3db model files:")
     for f in g3db_file_paths:
         print(f)

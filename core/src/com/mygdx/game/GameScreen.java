@@ -81,9 +81,9 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Loading json");
 		BlenderComponentsLoader loader = new BlenderComponentsLoader(
-				"models/test_model.json",
-				"models/test_empty.json",
-				"models/test_light.json"
+				"models/json/test_model.json",
+				"models/json/test_empty.json",
+				"models/json/test_light.json"
 		);
 
 		Gdx.app.debug(tag, "Adding entities");
@@ -166,9 +166,9 @@ public class GameScreen implements Screen {
 		engine.addEntity(entity);
 
 		AssetManager assets = new AssetManager();
-		assets.load("models/man.g3db", Model.class);
+		assets.load("models/g3db/man.g3db", Model.class);
 		assets.finishLoading();
-		Model model = assets.get("models/man.g3db", Model.class);
+		Model model = assets.get("models/g3db/man.g3db", Model.class);
 		entity.add(new ModelComponent(model, "man", new Vector3(0, 1, -3), new Vector3(0, 0, 0), new Vector3(1, 1,
 				1)));
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
@@ -189,7 +189,7 @@ public class GameScreen implements Screen {
 		entity.add(intentCmp);
 		entity.add(new SelectableComponent());
 
-		phyCmp.body.getWorldTransform().translate(5,0,0);
+		phyCmp.body.getWorldTransform().translate(5, 0, 0);
 
 		controller = new AnimationController(instance);
 		controller.setAnimation("Armature|walk", -1);
