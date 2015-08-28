@@ -95,6 +95,9 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 		if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
 			GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
 		}
+		if (keycode== GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
+			GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
+		}
 		return true;
 	}
 

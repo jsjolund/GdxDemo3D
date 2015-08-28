@@ -71,7 +71,7 @@ public class GameScreen implements Screen {
 		engine.addSystem(envSys);
 
 		Gdx.app.debug(tag, "Loading models system");
-		ModelRenderSystem modelSys = new ModelRenderSystem(camera, envSys.environment);
+		ModelRenderSystem modelSys = new ModelRenderSystem(viewport, camera, envSys.environment);
 		engine.addSystem(modelSys);
 
 		Gdx.app.debug(tag, "Loading physics system");

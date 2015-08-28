@@ -18,7 +18,7 @@ public class GameStage extends Stage {
 
 	private final Viewport viewport;
 	private final Batch batch;
-	public TextButton btn;
+//	public TextButton btn;
 	Camera cameraUI;
 	Camera camera3D;
 
@@ -34,12 +34,12 @@ public class GameStage extends Stage {
 
 		batch = new SpriteBatch();
 
-		Skin skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
+//		Skin skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
-		btn = new TextButton("Test", skin);
-		btn.setPosition(0, 0);
-		btn.setSize(100, 50);
-		addActor(btn);
+//		btn = new TextButton("Test", skin);
+//		btn.setPosition(0, 0);
+//		btn.setSize(100, 50);
+//		addActor(btn);
 
 	}
 
@@ -62,8 +62,8 @@ public class GameStage extends Stage {
 
 	@Override
 	public void draw() {
-		batch.begin();
-		btn.draw(batch, 1);
-		batch.end();
+//		batch.begin();
+//		btn.draw(batch, 1);
+//		batch.end();
 	}
 }

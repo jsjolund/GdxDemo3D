@@ -23,7 +23,10 @@ public class GameSettings {
 
 	public static float MOUSE_SENSITIVITY = 0.1f;
 
-	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F12;
+	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F1;
+	public static int KEY_DISPLAY_SHADOWBUFFER = Input.Keys.F2;
+	public static boolean DISPLAY_SHADOWBUFFER = false;
+
 	public static int KEY_PAN_FORWARD = Input.Keys.W;
 	public static int KEY_PAN_LEFT = Input.Keys.A;
 	public static int KEY_PAN_BACKWARD = Input.Keys.S;
