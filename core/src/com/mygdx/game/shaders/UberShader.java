@@ -16,6 +16,15 @@ public class UberShader extends DefaultShader {
 	public Renderable renderable;
 	private ModelRenderSystem.ShadowData shadowData;
 
+	public static class UberShaderSettings {
+		public static float u_hue = 1f;
+		public static float u_saturation = 0.7f;
+		public static float u_value = 1.2f;
+		public static float u_specOpacity = 0.3f;
+		public static float u_lightIntensity = 2f;
+		public static float u_shadowIntensity = 0.3f;
+	}
+
 	public UberShader(Renderable renderable, Config config, ModelRenderSystem.ShadowData shadowData) {
 		super(renderable, config);
 		this.renderable = renderable;
@@ -33,6 +42,13 @@ public class UberShader extends DefaultShader {
 		program.setUniformMatrix("u_lightTrans", shadowData.u_lightTrans);
 		program.setUniformf("u_cameraFar", shadowData.u_cameraFar);
 		program.setUniformf("u_lightPosition", shadowData.u_lightPosition);
+
+		program.setUniformf("u_hue", UberShaderSettings.u_hue);
+		program.setUniformf("u_saturation", UberShaderSettings.u_saturation);
+		program.setUniformf("u_value", UberShaderSettings.u_value);
+		program.setUniformf("u_specOpacity", UberShaderSettings.u_specOpacity);
+		program.setUniformf("u_lightIntensity", UberShaderSettings.u_lightIntensity);
+		program.setUniformf("u_shadowIntensity", UberShaderSettings.u_shadowIntensity);
 	}
 
 	@Override

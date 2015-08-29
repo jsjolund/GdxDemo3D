@@ -7,19 +7,13 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
-import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
@@ -40,12 +34,15 @@ public class GameScreen implements Screen {
 	Camera camera;
 	private ShapeRenderer shapeRenderer;
 
+	// TODO: pan-begränsningar, bättre skuggor, pathfinding, selection,
+
 	public GameScreen(int reqWidth, int reqHeight) {
 		engine = new PooledEngine();
 		Bullet.init();
 
 //		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
 		viewportBackgroundColor = new Color(0.49f, 0.49f, 0.49f, 1);
+//		viewportBackgroundColor = Color.BLACK;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -56,6 +53,7 @@ public class GameScreen implements Screen {
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
+
 
 		IntentComponent intentCmp = new IntentComponent();
 		Entity interactionEntity = engine.createEntity();

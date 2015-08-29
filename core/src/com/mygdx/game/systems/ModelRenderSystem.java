@@ -68,7 +68,6 @@ public class ModelRenderSystem extends EntitySystem {
 		depthMapCamera.lookAt(0, -5, 0);
 		depthMapCamera.update();
 
-
 		shadowData = new ShadowData();
 		shadowData.u_lightTrans = depthMapCamera.combined;
 		shadowData.u_cameraFar = depthMapCamera.far;

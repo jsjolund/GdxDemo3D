@@ -91,7 +91,7 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	@Override
 	public boolean keyDown(int keycode) {
 		keys.put(keycode, keycode);
-
+		System.out.println("recieved input");
 		if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
 			GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
 		}

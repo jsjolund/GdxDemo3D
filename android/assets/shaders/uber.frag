@@ -176,12 +176,22 @@ uniform vec4 u_reflectionColor;
 
 #define saturate(x) clamp( x, 0.0, 1.0 )
 
+// Mine
 uniform vec3 u_lightPosition;
 uniform float u_cameraFar;
 uniform sampler2D u_depthMap;
+
+uniform float u_hue;
+uniform float u_saturation;
+uniform float u_value;
+uniform float u_specOpacity;
+uniform float u_lightIntensity;
+uniform float u_shadowIntensity;
+
 varying vec4 v_positionLightTrans;
 varying vec3 normal;
 varying float v_intensity;
+
 
 vec3 rgb2hsv(vec3 c) {
 	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -204,8 +214,8 @@ vec4 mapShadows(vec4 inputColor) {
 //	inputColor.rgb   = inputColor.rgb*v_intensity;
 	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
 
-	float shadow_intensity = 0.1;
-	float light_intensity = 1.5;
+	float shadowIntensity = u_shadowIntensity;
+	float lightIntensity = u_lightIntensity;
 
 	// Make sure the point is in the field of view of the light and also that it is not behind it
 	if (v_positionLightTrans.z >= 0.0
@@ -220,30 +230,32 @@ vec4 mapShadows(vec4 inputColor) {
 			// Horizontal
 			if (lenDepthMap < lenToLight - 0) {
 				// Shadow
-				inputColor.rgb *= shadow_intensity;
+				inputColor.rgb *= shadowIntensity;
 			} else {
 				// Light
 				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
-				inputColor.rgb *= light_intensity;
+				inputColor.rgb *= lightIntensity;
 			}
 		} else {
 			// Vertical
 			if (lenDepthMap < lenToLight - 0.003) {
 				// Shadow
-				inputColor.rgb *= shadow_intensity;
+				inputColor.rgb *= shadowIntensity;
 			} else {
 				// Light
 				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
-				inputColor.rgb *= light_intensity;
+				inputColor.rgb *= lightIntensity;
 			}
 		}
 	} else {
 		inputColor.rgb *= 0.4;
 	}
 
+    // Saturation, value, like blender
 	vec3 hsv = rgb2hsv(inputColor.rgb);
-	hsv.y*=0.7;
-	hsv.z*=1.2;
+	hsv.x*=u_hue;
+	hsv.y*=u_saturation;
+	hsv.z*=u_value;
 	inputColor.rgb = hsv2rgb(hsv);
 
     return inputColor;
@@ -280,7 +292,7 @@ void main() {
 	float NL = dot(N.xyz, L);
 	float NH = max(0.0, dot(N.xyz, H));
 
-	float specOpacity = 0.5; //(1.0 - diffuse.w);
+	float specOpacity = u_specOpacity; //(1.0 - diffuse.w);
 	float spec = min(1.0, pow(NH, 10.0) * specOpacity);
 	float selfShadow = saturate(4.0 * NL);
 
