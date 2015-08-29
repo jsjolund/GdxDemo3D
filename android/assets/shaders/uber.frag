@@ -53,7 +53,6 @@ varying vec2 v_texCoord0;
 vec2 g_texCoord0 = vec2(0.0, 0.0);
 #define pullTexCoord0() (g_texCoord0 = v_texCoord0)
 
-
 // Uniforms which are always available
 uniform mat4 u_projViewTrans;
 
@@ -81,7 +80,6 @@ uniform float u_shininess;
 #else
 const float u_shininess = 20.0;
 #endif
-
 
 #ifdef diffuseColorFlag
 uniform vec4 u_diffuseColor;
@@ -119,9 +117,6 @@ uniform sampler2D u_normalTexture;
 #define separateAmbientFlag
 #endif
 
-
-
-
 #if defined(diffuseTextureFlag) && defined(diffuseColorFlag)
 #define fetchColorDiffuseTD(texCoord, defaultValue) texture2D(u_diffuseTexture, texCoord) * u_diffuseColor
 #elif defined(diffuseTextureFlag)
@@ -132,16 +127,14 @@ uniform sampler2D u_normalTexture;
 #define fetchColorDiffuseTD(texCoord, defaultValue) (defaultValue)
 #endif
 
-
 #define fetchColorDiffuseD(defaultValue) fetchColorDiffuseTD(g_texCoord0, defaultValue)
 #define fetchColorDiffuse() fetchColorDiffuseD(vec4(1.0))
 
 #if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
-#define applyColorDiffuse(baseColor) ((baseColor) * fetchColorDiffuseD(vec4(1.0)) 
+#define applyColorDiffuse(baseColor) ((baseColor) * fetchColorDiffuseD(vec4(1.0))
 #else
 #define applyColorDiffuse(baseColor) (baseColor)
 #endif
-
 
 #if defined(specularTextureFlag) && defined(specularColorFlag)
 #define fetchColorSpecularTD(texCoord, defaultValue) (texture2D(u_specularTexture, texCoord).rgb * u_specularColor.rgb)
@@ -152,7 +145,6 @@ uniform sampler2D u_normalTexture;
 #else
 #define fetchColorSpecularTD(texCoord, defaultValue) (defaultValue)
 #endif
-
 
 #define fetchColorSpecularD(defaultValue) fetchColorSpecularTD(g_texCoord0, defaultValue)
 #define fetchColorSpecular() fetchColorSpecularD(vec3(0.0))
@@ -184,7 +176,6 @@ uniform vec4 u_reflectionColor;
 
 #define saturate(x) clamp( x, 0.0, 1.0 )
 
-
 uniform vec3 u_lightPosition;
 uniform float u_cameraFar;
 uniform sampler2D u_depthMap;
@@ -192,90 +183,119 @@ varying vec4 v_positionLightTrans;
 varying vec3 normal;
 varying float v_intensity;
 
-void main() {
-  g_color = v_color ;//pullColor();
-  g_texCoord0 = v_texCoord0 ;//pullTexCoord0();
+vec3 rgb2hsv(vec3 c) {
+	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+	vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
 
-  #if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
-    vec4 diffuse = g_color * fetchColorDiffuseD(vec4(1.0));
-  #else
-    vec4 diffuse = g_color;
-  #endif
+	float d = q.x - min(q.w, q.y);
+	float e = 1.0e-10;
+	return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
 
-  vec3 specular = fetchColorSpecularD(vec3(0.0));
+vec3 hsv2rgb(vec3 c) {
+	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
-  #ifdef normalTextureFlag
-    vec4 N = vec4(normalize(texture2D(u_normalTexture, g_texCoord0).xyz * 2.0 - 1.0), 1.0);
-    #ifdef environmentCubemapFlag
-      vec3 reflectDir = normalize(v_reflect + (vec3(0.0, 0.0, 1.0) - N.xyz));
-    #endif
-  #else
-    vec4 N = vec4(0.0, 0.0, 1.0, 1.0);
-    #ifdef environmentCubemapFlag
-      vec3 reflectDir = normalize(v_reflect);
-    #endif
-  #endif
+vec4 mapShadows(vec4 inputColor) {
 
-  vec3 L = normalize(v_lightDir);
-  vec3 V = normalize(v_viewDir);
-  vec3 H = normalize(L + V);
-  float NL = dot(N.xyz, L);
-  float NH = max(0.0, dot(N.xyz, H));
+//	inputColor.rgb   = inputColor.rgb*v_intensity;
+	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
 
-  float specOpacity = 0.5; //(1.0 - diffuse.w);
-  float spec = min(1.0, pow(NH, 10.0) * specOpacity);
-  float selfShadow = saturate(4.0 * NL);
+	float shadow_intensity = 0.1;
+	float light_intensity = 1.5;
 
-  #ifdef environmentCubemapFlag
-    vec3 environment = textureCube(u_environmentCubemap, reflectDir).rgb;
-    specular *= environment;
-    #ifdef reflectionColorFlag
-      diffuse.rgb = saturate(vec3(1.0) - u_reflectionColor.rgb) * diffuse.rgb + environment * u_reflectionColor.rgb;
-    #endif
-  #endif
+	// Make sure the point is in the field of view of the light and also that it is not behind it
+	if (v_positionLightTrans.z >= 0.0
+	        && (depth.x >= 0.0) && (depth.x <= 1.0)
+            && (depth.y >= 0.0) && (depth.y <= 1.0)) {
 
-  vec4 finalColor = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
-  finalColor.rgb += v_ambientLight * diffuse.rgb;
-  finalColor.rgb += (selfShadow * spec) * specular;
+		float lenToLight = length(v_position.xyz - u_lightPosition) / u_cameraFar;
+		float lenDepthMap = texture2D(u_depthMap, depth.xy).a;
 
-
-//	finalColor.rgb   = finalColor.rgb*v_intensity;
-    vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w)*0.5+0.5;
-
-	// Make sure the point is in the field of view of the light
-	// and also that it is not behind it
-	if (v_positionLightTrans.z>=0.0 &&
-			(depth.x >= 0.0) && (depth.x <= 1.0) &&
-			(depth.y >= 0.0) && (depth.y <= 1.0) ) {
-		float lenToLight=length(v_position.xyz-u_lightPosition)/u_cameraFar;
-		float lenDepthMap= texture2D(u_depthMap, depth.xy).a;
 		// If can not be viewed by light > shadows
-        if (normal.y > 0.5) {
-            // Horizontal
-            if(lenDepthMap<lenToLight-0){
-                finalColor.rgb*=0.4;
-//                shadow.rgb*=0.4;
-
-            }else{
-                finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
-//                shadow.rgb*=0.4+0.6*(1.0-lenToLight);
-            }
-        } else {
-            // Vertical
-            if(lenDepthMap<lenToLight-0.003){
-                finalColor.rgb*=0.4;
-//                shadow.rgb*=0.4;
-            }else{
-                finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
-//                shadow.rgb*=0.4+0.6*(1.0-lenToLight);
-            }
-        }
-	}else{
-		finalColor.rgb*=0.4;
-//		shadow.rgb*=0.4;
+		if (normal.y > 0.5) {
+			// Horizontal
+			if (lenDepthMap < lenToLight - 0) {
+				// Shadow
+				inputColor.rgb *= shadow_intensity;
+			} else {
+				// Light
+				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
+				inputColor.rgb *= light_intensity;
+			}
+		} else {
+			// Vertical
+			if (lenDepthMap < lenToLight - 0.003) {
+				// Shadow
+				inputColor.rgb *= shadow_intensity;
+			} else {
+				// Light
+				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
+				inputColor.rgb *= light_intensity;
+			}
+		}
+	} else {
+		inputColor.rgb *= 0.4;
 	}
 
+	vec3 hsv = rgb2hsv(inputColor.rgb);
+	hsv.y*=0.7;
+	hsv.z*=1.2;
+	inputColor.rgb = hsv2rgb(hsv);
 
-//	gl_FragColor = shadow;
-	gl_FragColor = finalColor;
+    return inputColor;
 }
+
+
+void main() {
+	g_color = v_color; //pullColor();
+	g_texCoord0 = v_texCoord0; //pullTexCoord0();
+
+#if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
+	vec4 diffuse = g_color * fetchColorDiffuseD(vec4(1.0));
+#else
+	vec4 diffuse = g_color;
+#endif
+
+	vec3 specular = fetchColorSpecularD(vec3(0.0));
+
+#ifdef normalTextureFlag
+	vec4 N = vec4(normalize(texture2D(u_normalTexture, g_texCoord0).xyz * 2.0 - 1.0), 1.0);
+#ifdef environmentCubemapFlag
+	vec3 reflectDir = normalize(v_reflect + (vec3(0.0, 0.0, 1.0) - N.xyz));
+#endif
+#else
+	vec4 N = vec4(0.0, 0.0, 1.0, 1.0);
+#ifdef environmentCubemapFlag
+	vec3 reflectDir = normalize(v_reflect);
+#endif
+#endif
+
+	vec3 L = normalize(v_lightDir);
+	vec3 V = normalize(v_viewDir);
+	vec3 H = normalize(L + V);
+	float NL = dot(N.xyz, L);
+	float NH = max(0.0, dot(N.xyz, H));
+
+	float specOpacity = 0.5; //(1.0 - diffuse.w);
+	float spec = min(1.0, pow(NH, 10.0) * specOpacity);
+	float selfShadow = saturate(4.0 * NL);
+
+#ifdef environmentCubemapFlag
+	vec3 environment = textureCube(u_environmentCubemap, reflectDir).rgb;
+	specular *= environment;
+#ifdef reflectionColorFlag
+	diffuse.rgb = saturate(vec3(1.0) - u_reflectionColor.rgb) * diffuse.rgb + environment * u_reflectionColor.rgb;
+#endif
+#endif
+
+	vec4 finalColor = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
+	finalColor.rgb += v_ambientLight * diffuse.rgb;
+	finalColor.rgb += (selfShadow * spec) * specular;
+
+	gl_FragColor = mapShadows(finalColor);
+}
+

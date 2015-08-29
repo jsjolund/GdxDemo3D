@@ -15,11 +15,11 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.shaders.DepthMapShader;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
+import com.mygdx.game.shaders.DepthMapShader;
+import com.mygdx.game.shaders.UberShader;
 
 
 /**
@@ -76,8 +76,9 @@ public class ModelRenderSystem extends EntitySystem {
 
 		ShaderProgram.pedantic = false;
 
-		depthMapShaderProgram = new ShaderProgram(Gdx.files.internal("shaders/depthmap_v.glsl"),
-				Gdx.files.internal("shaders/depthmap_f.glsl"));
+		depthMapShaderProgram = new ShaderProgram(
+				Gdx.files.internal("shaders/depthmap.vert"),
+				Gdx.files.internal("shaders/depthmap.frag"));
 		depthMapModelBatch = new ModelBatch(new DefaultShaderProvider() {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
@@ -85,8 +86,8 @@ public class ModelRenderSystem extends EntitySystem {
 			}
 		});
 
-		final String vert = Gdx.files.internal("shaders/vertex.glsl").readString();
-		final String frag = Gdx.files.internal("shaders/fragment.glsl").readString();
+		final String vert = Gdx.files.internal("shaders/uber.vert").readString();
+		final String frag = Gdx.files.internal("shaders/uber.frag").readString();
 		modelBatch = new ModelBatch(new DefaultShaderProvider(vert, frag) {
 			@Override
 			protected Shader createShader(final Renderable renderable) {

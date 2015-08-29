@@ -160,37 +160,37 @@ public class GameScreen implements Screen {
 		engine.addSystem(billSys);
 
 
-		Entity entity = new Entity();
-		engine.addEntity(entity);
-
-		AssetManager assets = new AssetManager();
-		assets.load("models/g3db/man.g3db", Model.class);
-		assets.finishLoading();
-		Model model = assets.get("models/g3db/man.g3db", Model.class);
-		entity.add(new ModelComponent(model, "man", new Vector3(0, 1, -3), new Vector3(0, 0, 0), new Vector3(1, 1,
-				1)));
-		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
-
-
-		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
-		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
-		PhysicsComponent phyCmp = new PhysicsComponent(
-				shape, motionStateCmp.motionState, 100,
-				PhysicsSystem.OBJECT_FLAG,
-				PhysicsSystem.ALL_FLAG,
-				true, false);
-		phyCmp.body.setAngularFactor(Vector3.Y);
-		phyCmp.body.setWorldTransform(instance.transform);
-
-		entity.add(motionStateCmp);
-		entity.add(phyCmp);
-		entity.add(intentCmp);
-		entity.add(new SelectableComponent());
-
-		phyCmp.body.getWorldTransform().translate(5, 0, 0);
-
-		controller = new AnimationController(instance);
-		controller.setAnimation("Armature|walk", -1);
+//		Entity entity = new Entity();
+//		engine.addEntity(entity);
+//
+//		AssetManager assets = new AssetManager();
+//		assets.load("models/g3db/man.g3db", Model.class);
+//		assets.finishLoading();
+//		Model model = assets.get("models/g3db/man.g3db", Model.class);
+//		entity.add(new ModelComponent(model, "man", new Vector3(0, 1, -3), new Vector3(0, 0, 0), new Vector3(1, 1,
+//				1)));
+//		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+//
+//
+//		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
+//		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+//		PhysicsComponent phyCmp = new PhysicsComponent(
+//				shape, motionStateCmp.motionState, 100,
+//				PhysicsSystem.OBJECT_FLAG,
+//				PhysicsSystem.ALL_FLAG,
+//				true, false);
+//		phyCmp.body.setAngularFactor(Vector3.Y);
+//		phyCmp.body.setWorldTransform(instance.transform);
+//
+//		entity.add(motionStateCmp);
+//		entity.add(phyCmp);
+//		entity.add(intentCmp);
+//		entity.add(new SelectableComponent());
+//
+//		phyCmp.body.getWorldTransform().translate(5, 0, 0);
+//
+//		controller = new AnimationController(instance);
+//		controller.setAnimation("Armature|walk", -1);
 	}
 
 	AnimationController controller;
@@ -219,7 +219,9 @@ public class GameScreen implements Screen {
 		stage.act(delta);
 		stage.draw();
 
-		controller.update(delta);
+		if (controller != null) {
+			controller.update(delta);
+		}
 	}
 
 	@Override
