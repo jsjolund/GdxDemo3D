@@ -425,6 +425,11 @@ varying vec3 v_ambientLight;
 varying vec3 v_reflect;
 #endif
 
+uniform mat4 u_lightTrans;
+varying vec4 v_positionLightTrans;
+varying vec3 normal;
+varying float v_intensity;
+
 void main() {
   g_position = applySkinning(g_position);
   g_normal = normalize(u_normalMatrix * applySkinning(g_normal));
@@ -453,4 +458,17 @@ void main() {
   pushColorValue(g_color);//pushColor();
   pushTexCoord0Value(g_texCoord0);//pushTexCoord0();
 
+    v_position = u_worldTrans * vec4(a_position, 1.0);
+  normal = normalize(u_normalMatrix * a_normal);
+  v_positionLightTrans = u_lightTrans * v_position;
+
+
+    // Just add some basic self shadow
+	v_intensity=1.0;
+   	if(normal.y<0.5){
+		if(normal.x>0.5 || normal.x<-0.5)
+			v_intensity*=0.8;
+		if(normal.z>0.5 || normal.z<-0.5)
+			v_intensity*=0.6;
+	}
 }

@@ -10,9 +10,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D u_diffuseTexture;
-uniform sampler2D u_depthMap;
-uniform float u_cameraFar;
-uniform vec3 u_lightPosition;
+uniform sampler2D u_diffuseColor;
 uniform vec2 resolution;
 
 varying vec2 v_texCoords0;
@@ -20,10 +18,21 @@ varying float v_intensity;
 varying vec4 v_positionLightTrans;
 varying vec4 v_position;
 varying vec3 normal;
+//varying vec4 v_color;
+
+
+
+
+uniform vec3 u_lightPosition;
+uniform float u_cameraFar;
+uniform sampler2D u_depthMap;
+
+
+
 
 void main()
 {
-    vec4 finalColor = vec4(1,1,1,0);
+    vec4 finalColor  = texture2D(u_diffuseTexture, v_texCoords0);
 	finalColor.rgb   = finalColor.rgb*v_intensity;
 	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w)*0.5+0.5;
 
@@ -39,16 +48,13 @@ void main()
             // Horizontal
             if(lenDepthMap<lenToLight-0){
                 finalColor.rgb*=0.4;
-//                finalColor.b = 1;
             }else{
                 finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
-//                finalColor.r = 1;
             }
         } else {
             // Vertical
             if(lenDepthMap<lenToLight-0.003){
                 finalColor.rgb*=0.4;
-//                finalColor.g = 1;
             }else{
                 finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
             }

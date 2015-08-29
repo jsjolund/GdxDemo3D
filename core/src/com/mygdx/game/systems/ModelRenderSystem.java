@@ -9,15 +9,15 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.DepthMapShader;
+import com.mygdx.game.shaders.DepthMapShader;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.MyShaderProvider;
+import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 
@@ -43,15 +43,16 @@ public class ModelRenderSystem extends EntitySystem {
 	private SpriteBatch depthMapBatch = new SpriteBatch();
 	private ShaderProgram depthMapShaderProgram;
 	public Texture depthMap;
-
-	private ShaderProgram sceneShaderProgram;
-	private ModelBatch shadowModelBatch;
-
-//	private ShaderProgram shaderProgramNormalMap;
-
+	private ShadowData shadowData;
 
 	Viewport viewport;
 
+	public class ShadowData {
+		public final int u_depthMap = 1000;
+		public Matrix4 u_lightTrans;
+		public float u_cameraFar;
+		public Vector3 u_lightPosition;
+	}
 
 	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -59,35 +60,21 @@ public class ModelRenderSystem extends EntitySystem {
 		this.camera = camera;
 		this.environment = environment;
 
-		String vert = Gdx.files.internal("shaders/vertex.glsl").readString();
-		String frag = Gdx.files.internal("shaders/fragment.glsl").readString();
-		DefaultShader.Config config = new DefaultShader.Config(vert, frag);
-		DefaultShaderProvider p = new MyShaderProvider(config);
-		modelBatch = new ModelBatch(p);
+		depthMapCamera = new OrthographicCamera(Gdx.graphics.getWidth() / 12, Gdx.graphics.getHeight() / 12);
+		depthMapCamera.zoom = 1f;
+		depthMapCamera.near = 1f;
+		depthMapCamera.far = 100;
+		depthMapCamera.position.set(40, 50, -40);
+		depthMapCamera.lookAt(0, -5, 0);
+		depthMapCamera.update();
 
 
-//		final DefaultShader.Config aconfig = new DefaultShader.Config();
-//		shaderProgramNormalMap = new MyShader();
+		shadowData = new ShadowData();
+		shadowData.u_lightTrans = depthMapCamera.combined;
+		shadowData.u_cameraFar = depthMapCamera.far;
+		shadowData.u_lightPosition = depthMapCamera.position;
 
-//		modelBatch = new ModelBatch(new DefaultShaderProvider() {
-//			@Override
-//			protected Shader createShader(final Renderable renderable) {
-////				Shader shader = new DefaultShader(renderable, config, shaderProgramNormalMap);
-//				return new MyShader(renderable, aconfig);
-////				return  new DefaultShader(renderable, config, shaderProgramNormalMap);
-//			}
-//		});
-//
-		sceneShaderProgram = new ShaderProgram(Gdx.files.internal("shaders/scene_v.glsl"),
-				Gdx.files.internal("shaders/scene_f.glsl"));
-
-		shadowModelBatch = new ModelBatch(new DefaultShaderProvider() {
-			@Override
-			protected Shader createShader(final Renderable renderable) {
-				return new DepthMapShader(renderable, sceneShaderProgram, false);
-			}
-		});
-
+		ShaderProgram.pedantic = false;
 
 		depthMapShaderProgram = new ShaderProgram(Gdx.files.internal("shaders/depthmap_v.glsl"),
 				Gdx.files.internal("shaders/depthmap_f.glsl"));
@@ -98,16 +85,14 @@ public class ModelRenderSystem extends EntitySystem {
 			}
 		});
 
-//		depthMapCamera = new PerspectiveCamera(25f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		depthMapCamera = new OrthographicCamera(Gdx.graphics.getWidth()/12, Gdx.graphics.getHeight()/12);
-//		depthMapCamera = new OrthographicCamera(viewport.getScreenWidth(), viewport.getScreenHeight());
-//		depthMapCamera = new OrthographicCamera(DEPTHMAPIZE, DEPTHMAPIZE);
-		depthMapCamera.zoom = 1f;
-		depthMapCamera.near = 1f;
-		depthMapCamera.far = 100;
-		depthMapCamera.position.set(40, 50, -40);
-		depthMapCamera.lookAt(0, -5, 0);
-		depthMapCamera.update();
+		final String vert = Gdx.files.internal("shaders/vertex.glsl").readString();
+		final String frag = Gdx.files.internal("shaders/fragment.glsl").readString();
+		modelBatch = new ModelBatch(new DefaultShaderProvider(vert, frag) {
+			@Override
+			protected Shader createShader(final Renderable renderable) {
+				return new UberShader(renderable, config, shadowData);
+			}
+		});
 
 	}
 
@@ -126,7 +111,7 @@ public class ModelRenderSystem extends EntitySystem {
 	public FrameBuffer frameBuffer;
 	public static final int DEPTHMAPIZE = 1024;
 
-	public void renderLight() {
+	public void renderShadowMap() {
 		if (frameBuffer == null) {
 			frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, DEPTHMAPIZE, DEPTHMAPIZE, true);
 //			frameBuffer = new FrameBuffer(Pixmap.Format.Alpha, DEPTHMAPIZE, DEPTHMAPIZE, true);
@@ -151,6 +136,7 @@ public class ModelRenderSystem extends EntitySystem {
 		depthMap = frameBuffer.getColorBufferTexture();
 	}
 
+
 	@Override
 	public void update(float deltaTime) {
 		int vw = viewport.getScreenWidth();
@@ -158,7 +144,7 @@ public class ModelRenderSystem extends EntitySystem {
 		int vx = viewport.getScreenX();
 		int vy = viewport.getScreenY();
 
-		renderLight();
+		renderShadowMap();
 
 		viewport.update(vw, vh);
 		viewport.setScreenX(vx);
@@ -166,17 +152,9 @@ public class ModelRenderSystem extends EntitySystem {
 		viewport.apply();
 
 
-		sceneShaderProgram.begin();
-		final int textureNum = 1000;
-		depthMap.bind(textureNum);
-		sceneShaderProgram.setUniformi("u_depthMap", textureNum);
-		sceneShaderProgram.setUniformMatrix("u_lightTrans", depthMapCamera.combined);
-		sceneShaderProgram.setUniformf("u_cameraFar", depthMapCamera.far);
-		sceneShaderProgram.setUniformf("u_lightPosition", depthMapCamera.position);
-		sceneShaderProgram.end();
-
 		camera.update();
 
+		depthMap.bind(shadowData.u_depthMap);
 
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
@@ -188,24 +166,12 @@ public class ModelRenderSystem extends EntitySystem {
 				modelBatch.render(cmp.modelInstance, environment);
 			}
 
-			SelectableComponent selCmp = selectables.get(entity);
-			if (selCmp != null && selCmp.isSelected) {
+//			SelectableComponent selCmp = selectables.get(entity);
+//			if (selCmp != null && selCmp.isSelected) {
 //				modelBatch.render(cmp.modelInstance);
-			}
-		}
-		modelBatch.flush();
-		modelBatch.end();
-
-
-		shadowModelBatch.begin(camera);
-		for (int i = 0; i < entities.size(); ++i) {
-			Entity entity = entities.get(i);
-			ModelComponent cmp = models.get(entity);
-//			if (isVisible(camera, cmp)) {
-			shadowModelBatch.render(cmp.modelInstance, environment);
 //			}
 		}
-		shadowModelBatch.end();
+		modelBatch.end();
 
 
 		if (GameSettings.DISPLAY_SHADOWBUFFER) {

@@ -12,18 +12,24 @@ precision mediump float;
 attribute vec3 a_position;
 attribute vec2 a_texCoord0;
 attribute vec3 a_normal;
+attribute vec4 a_color;
 
 
 uniform mat4 u_projViewTrans;
 uniform mat4 u_worldTrans;
 uniform mat3 u_normalMatrix;
-uniform mat4 u_lightTrans;
 
+varying vec4 v_positionLightTrans;
 varying vec2 v_texCoords0;
 varying float v_intensity;
-varying vec4 v_positionLightTrans;
 varying vec4 v_position;
 varying vec3 normal;
+//varying vec4 v_color;
+
+
+
+uniform mat4 u_lightTrans;
+
 
 void main()
 {
@@ -33,6 +39,7 @@ void main()
     gl_Position =   u_projViewTrans * v_position;
 
     v_texCoords0 = a_texCoord0;
+//    v_color = a_color;
 
     // Just add some basic self shadow
     normal = normalize(u_normalMatrix * a_normal);

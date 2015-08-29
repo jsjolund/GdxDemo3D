@@ -88,9 +88,7 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding entities");
 		for (Entity entity : loader.entities) {
-			Gdx.app.debug(tag, "Adding" + entity.toString());
 			engine.addEntity(entity);
-			Gdx.app.debug(tag, "Finished adding" + entity.toString());
 		}
 
 		boolean s = true;

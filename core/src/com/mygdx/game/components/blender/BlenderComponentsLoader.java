@@ -41,7 +41,7 @@ public class BlenderComponentsLoader {
 		ArrayList<BlenderModelComponent> models = loadModels(modelsJsonPath);
 		for (BlenderModelComponent cmp : models) {
 			cmp.model_file_name = String.format("models/g3db/%s.g3db", cmp.model_file_name);
-			Gdx.app.debug(tag, "Loading " + cmp.model_file_name);
+//			Gdx.app.debug(tag, "Loading " + cmp.model_file_name);
 			assets.load(cmp.model_file_name, Model.class);
 		}
 
@@ -90,7 +90,7 @@ public class BlenderComponentsLoader {
 
 		if (shape == null) {
 			// No shape defined. Load as static object.
-			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
+//			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
 			shape = Bullet.obtainStaticNodeShape(instance.nodes);
 //			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
 //			shape.setLocalScaling(cmp.scale.cpy().scl(cmp.scale.x, cmp.scale.y, -cmp.scale.z));

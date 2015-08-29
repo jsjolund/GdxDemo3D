@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package com.mygdx.game.shaders;
 
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
@@ -28,6 +28,8 @@ public class DepthMapShader extends BaseShader {
 		register(Inputs.worldTrans, Setters.worldTrans);
 		register(Inputs.projViewTrans, Setters.projViewTrans);
 		register(Inputs.normalMatrix, Setters.normalMatrix);
+		register(Inputs.diffuseTexture, Setters.diffuseTexture);
+		register(Inputs.diffuseColor, Setters.diffuseColor);
 
 	}
 

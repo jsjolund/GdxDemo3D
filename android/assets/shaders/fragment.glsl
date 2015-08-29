@@ -184,12 +184,20 @@ uniform vec4 u_reflectionColor;
 
 #define saturate(x) clamp( x, 0.0, 1.0 )
 
+
+uniform vec3 u_lightPosition;
+uniform float u_cameraFar;
+uniform sampler2D u_depthMap;
+varying vec4 v_positionLightTrans;
+varying vec3 normal;
+varying float v_intensity;
+
 void main() {
   g_color = v_color ;//pullColor();
   g_texCoord0 = v_texCoord0 ;//pullTexCoord0();
 
   #if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
-    vec4 diffuse = g_color * fetchColorDiffuseD(vec4(1.0)); 
+    vec4 diffuse = g_color * fetchColorDiffuseD(vec4(1.0));
   #else
     vec4 diffuse = g_color;
   #endif
@@ -217,7 +225,7 @@ void main() {
   float specOpacity = 0.5; //(1.0 - diffuse.w);
   float spec = min(1.0, pow(NH, 10.0) * specOpacity);
   float selfShadow = saturate(4.0 * NL);
-  
+
   #ifdef environmentCubemapFlag
     vec3 environment = textureCube(u_environmentCubemap, reflectDir).rgb;
     specular *= environment;
@@ -226,7 +234,48 @@ void main() {
     #endif
   #endif
 
-  gl_FragColor = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
-  gl_FragColor.rgb += v_ambientLight * diffuse.rgb;
-  gl_FragColor.rgb += (selfShadow * spec) * specular;
+  vec4 finalColor = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
+  finalColor.rgb += v_ambientLight * diffuse.rgb;
+  finalColor.rgb += (selfShadow * spec) * specular;
+
+
+//	finalColor.rgb   = finalColor.rgb*v_intensity;
+    vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w)*0.5+0.5;
+
+	// Make sure the point is in the field of view of the light
+	// and also that it is not behind it
+	if (v_positionLightTrans.z>=0.0 &&
+			(depth.x >= 0.0) && (depth.x <= 1.0) &&
+			(depth.y >= 0.0) && (depth.y <= 1.0) ) {
+		float lenToLight=length(v_position.xyz-u_lightPosition)/u_cameraFar;
+		float lenDepthMap= texture2D(u_depthMap, depth.xy).a;
+		// If can not be viewed by light > shadows
+        if (normal.y > 0.5) {
+            // Horizontal
+            if(lenDepthMap<lenToLight-0){
+                finalColor.rgb*=0.4;
+//                shadow.rgb*=0.4;
+
+            }else{
+                finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
+//                shadow.rgb*=0.4+0.6*(1.0-lenToLight);
+            }
+        } else {
+            // Vertical
+            if(lenDepthMap<lenToLight-0.003){
+                finalColor.rgb*=0.4;
+//                shadow.rgb*=0.4;
+            }else{
+                finalColor.rgb*=0.4+0.6*(1.0-lenToLight);
+//                shadow.rgb*=0.4+0.6*(1.0-lenToLight);
+            }
+        }
+	}else{
+		finalColor.rgb*=0.4;
+//		shadow.rgb*=0.4;
+	}
+
+
+//	gl_FragColor = shadow;
+	gl_FragColor = finalColor;
 }

@@ -10,10 +10,8 @@ precision mediump float;
 #endif
 
 attribute vec3 a_position;
-
 uniform mat4 u_projViewTrans;
 uniform mat4 u_worldTrans;
-
 varying vec4 v_position;
 
 
