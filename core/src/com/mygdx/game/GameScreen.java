@@ -96,32 +96,28 @@ public class GameScreen implements Screen {
 			entity.add(new SelectableComponent());
 			entity.add(intentCmp);
 
-
 			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
-//			if (modelCmp.id.endsWith("human")) {
-//				break;
-//			}
 			if (modelCmp.id.endsWith("ball")) {
 ////				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
 				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);
 
-				Entity billboard = new Entity();
-				billboard.add(ballMotionState);
-
-				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
-				TextureComponent billboardTexture = new TextureComponent(billboardPixmap);
-				billboard.add(billboardTexture);
-
-				Material material = new Material();
-				material.set(new TextureAttribute(TextureAttribute.Diffuse, billboardTexture.textureRegion));
-				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
-				material.set(blendAttrib);
-
-				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(2, 2, material, 0, 0,
-						1, 1), "plane");
-				billboard.add(billboardModel);
-
-				engine.addEntity(billboard);
+//				Entity billboard = new Entity();
+//				billboard.add(ballMotionState);
+//
+//				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
+//				TextureComponent billboardTexture = new TextureComponent(billboardPixmap);
+//				billboard.add(billboardTexture);
+//
+//				Material material = new Material();
+//				material.set(new TextureAttribute(TextureAttribute.Diffuse, billboardTexture.textureRegion));
+//				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
+//				material.set(blendAttrib);
+//
+//				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(2, 2, material, 0, 0,
+//						1, 1), "plane");
+//				billboard.add(billboardModel);
+//
+//				engine.addEntity(billboard);
 
 			}
 		}

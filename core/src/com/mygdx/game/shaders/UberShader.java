@@ -1,5 +1,6 @@
 package com.mygdx.game.shaders;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
@@ -21,8 +22,8 @@ public class UberShader extends DefaultShader {
 		public static float u_saturation = 0.7f;
 		public static float u_value = 1.2f;
 		public static float u_specOpacity = 0.3f;
-		public static float u_lightIntensity = 2f;
-		public static float u_shadowIntensity = 0.3f;
+		public static float u_lightIntensity = 0.5f;
+		public static float u_shadowIntensity = 0.5f;
 	}
 
 	public UberShader(Renderable renderable, Config config, ModelRenderSystem.ShadowData shadowData) {
@@ -31,6 +32,9 @@ public class UberShader extends DefaultShader {
 		this.shadowData = shadowData;
 		String prefix = DefaultShader.createPrefix(renderable, config);
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
+//		if (!program.isCompiled()) {
+			Gdx.app.debug("Shader", program.getLog());
+//		}
 	}
 
 	@Override
@@ -42,6 +46,7 @@ public class UberShader extends DefaultShader {
 		program.setUniformMatrix("u_lightTrans", shadowData.u_lightTrans);
 		program.setUniformf("u_cameraFar", shadowData.u_cameraFar);
 		program.setUniformf("u_lightPosition", shadowData.u_lightPosition);
+		program.setUniformf("u_lightDirection", shadowData.u_lightDirection);
 
 		program.setUniformf("u_hue", UberShaderSettings.u_hue);
 		program.setUniformf("u_saturation", UberShaderSettings.u_saturation);

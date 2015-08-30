@@ -129,7 +129,7 @@ public class BlenderComponentsLoader {
 			transform.translate(cmp.position);
 			entity.add(new LightComponent(
 					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
-							cmp.position, cmp.lamp_energy * cmp.lamp_distance / 2)));
+							cmp.position, cmp.lamp_energy * cmp.lamp_distance *1000)));
 
 
 		} else if (cmp.type.equals("SpotLamp")) {

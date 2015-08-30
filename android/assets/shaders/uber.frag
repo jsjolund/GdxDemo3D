@@ -187,6 +187,7 @@ uniform float u_value;
 uniform float u_specOpacity;
 uniform float u_lightIntensity;
 uniform float u_shadowIntensity;
+uniform vec3 u_lightDirection;
 
 varying vec4 v_positionLightTrans;
 varying vec3 normal;
@@ -208,59 +209,6 @@ vec3 hsv2rgb(vec3 c) {
 	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
 	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
-
-vec4 mapShadows(vec4 inputColor) {
-
-//	inputColor.rgb   = inputColor.rgb*v_intensity;
-	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
-
-	float shadowIntensity = u_shadowIntensity;
-	float lightIntensity = u_lightIntensity;
-
-	// Make sure the point is in the field of view of the light and also that it is not behind it
-	if (v_positionLightTrans.z >= 0.0
-	        && (depth.x >= 0.0) && (depth.x <= 1.0)
-            && (depth.y >= 0.0) && (depth.y <= 1.0)) {
-
-		float lenToLight = length(v_position.xyz - u_lightPosition) / u_cameraFar;
-		float lenDepthMap = texture2D(u_depthMap, depth.xy).a;
-
-		// If can not be viewed by light > shadows
-		if (normal.y > 0.5) {
-			// Horizontal
-			if (lenDepthMap < lenToLight - 0) {
-				// Shadow
-				inputColor.rgb *= shadowIntensity;
-			} else {
-				// Light
-				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
-				inputColor.rgb *= lightIntensity;
-			}
-		} else {
-			// Vertical
-			if (lenDepthMap < lenToLight - 0.003) {
-				// Shadow
-				inputColor.rgb *= shadowIntensity;
-			} else {
-				// Light
-				inputColor.rgb *= 0.4 + 0.6 * (1.0 - lenToLight);
-				inputColor.rgb *= lightIntensity;
-			}
-		}
-	} else {
-		inputColor.rgb *= 0.4;
-	}
-
-    // Saturation, value, like blender
-	vec3 hsv = rgb2hsv(inputColor.rgb);
-	hsv.x*=u_hue;
-	hsv.y*=u_saturation;
-	hsv.z*=u_value;
-	inputColor.rgb = hsv2rgb(hsv);
-
-    return inputColor;
-}
-
 
 void main() {
 	g_color = v_color; //pullColor();
@@ -304,10 +252,75 @@ void main() {
 #endif
 #endif
 
-	vec4 finalColor = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
-	finalColor.rgb += v_ambientLight * diffuse.rgb;
-	finalColor.rgb += (selfShadow * spec) * specular;
 
-	gl_FragColor = mapShadows(finalColor);
+//	inputColor.w = 1;
+//	inputColor.xyz = vec3(0.6);
+
+	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
+	depth.y += 0.005;
+
+	float shadow = 0;
+	// Make sure the point is in the field of view of the light and also that it is not behind it
+	if (v_positionLightTrans.z >= 0.0
+	        && (depth.x >= 0.0) && (depth.x <= 1.0)
+            && (depth.y >= 0.0) && (depth.y <= 1.0)) {
+
+		float lenToLight = length(v_position.xyz - u_lightPosition) / u_cameraFar;
+		float lenDepthMap = texture2D(u_depthMap, depth.xy).a;
+		float d = dot(u_lightDirection, normal);
+
+		if (normal.y > 0.5) {
+			if (lenDepthMap > lenToLight -0) {
+				// Horizontal surface exposed to light
+//                inputColor.rgb = vec3(1);
+                shadow = 0;
+			} else {
+				// Horizontal surface which recieves shadow
+				shadow = 1;
+//				inputColor.rgb = vec3(0,1,0)*(1-d*2);
+			}
+		} else {
+            if ((d > 0) ){
+            	// Vertical surface facing away from the light
+				shadow = d*2;
+//				inputColor.rgb = vec3(1,1,1)*(1-d*2);
+
+            } else {
+            	lenDepthMap = texture2D(u_depthMap, depth.xy).a;
+            	if (lenDepthMap < lenToLight - 0.005) {
+            		// Vertical surface which recieves shadow
+            		shadow = 1;
+//            		inputColor.rgb = vec3(0,0,1);
+
+            	} else {
+            		// Vertical surface exposed to light
+            		shadow = 0;
+//            		inputColor.rgb = vec3(1);
+            	}
+            }
+		}
+	} else {
+	    // Outside field of view of light
+	    shadow = 0;
+	}
+
+	vec4 inputColor = vec4(0);
+	inputColor.w = diffuse.w;
+
+	inputColor.rgb = saturate((v_lightCol * diffuse.rgb) * (NL-shadow));
+	inputColor.rgb += (selfShadow * spec) * specular;
+	inputColor.rgb += v_ambientLight * diffuse.rgb;
+	inputColor.rgb*=(1-shadow*u_shadowIntensity);
+
+    // Hue, saturation, value setting
+	vec3 hsv = rgb2hsv(inputColor.rgb);
+	hsv.x*=u_hue;
+	hsv.y*=u_saturation;
+	hsv.z*=u_value;
+	inputColor.rgb = hsv2rgb(hsv);
+
+	gl_FragColor = inputColor;
+
+
 }
 

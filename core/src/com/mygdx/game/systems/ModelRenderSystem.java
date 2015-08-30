@@ -52,6 +52,7 @@ public class ModelRenderSystem extends EntitySystem {
 		public Matrix4 u_lightTrans;
 		public float u_cameraFar;
 		public Vector3 u_lightPosition;
+		public Vector3 u_lightDirection;
 	}
 
 	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment) {
@@ -72,12 +73,17 @@ public class ModelRenderSystem extends EntitySystem {
 		shadowData.u_lightTrans = depthMapCamera.combined;
 		shadowData.u_cameraFar = depthMapCamera.far;
 		shadowData.u_lightPosition = depthMapCamera.position;
+		shadowData.u_lightDirection = depthMapCamera.direction;
+		shadowData.u_lightDirection.nor();
 
 		ShaderProgram.pedantic = false;
 
 		depthMapShaderProgram = new ShaderProgram(
 				Gdx.files.internal("shaders/depthmap.vert"),
 				Gdx.files.internal("shaders/depthmap.frag"));
+		if (!depthMapShaderProgram.isCompiled()) {
+			Gdx.app.debug("Shader", depthMapShaderProgram.getLog());
+		}
 		depthMapModelBatch = new ModelBatch(new DefaultShaderProvider() {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
@@ -175,8 +181,8 @@ public class ModelRenderSystem extends EntitySystem {
 
 
 		if (GameSettings.DISPLAY_SHADOWBUFFER) {
-//			Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1f);
-//			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+			Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1f);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 			float size = Math.min(vw, vh) / 2;
 			depthMapBatch.begin();
 			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
