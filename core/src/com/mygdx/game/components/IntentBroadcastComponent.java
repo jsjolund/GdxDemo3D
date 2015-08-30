@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 /**
  * Created by user on 8/25/15.
  */
-public class IntentComponent extends Component {
+public class IntentBroadcastComponent extends Component {
 
 	public Vector2 moveDirection = new Vector2();
 

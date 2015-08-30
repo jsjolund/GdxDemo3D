@@ -21,7 +21,7 @@ public class UberShader extends DefaultShader {
 		public static float u_hue = 1f;
 		public static float u_saturation = 0.7f;
 		public static float u_value = 1.2f;
-		public static float u_specOpacity = 0.3f;
+		public static float u_specOpacity = 0.25f;
 		public static float u_lightIntensity = 0.5f;
 		public static float u_shadowIntensity = 0.5f;
 	}
@@ -32,9 +32,9 @@ public class UberShader extends DefaultShader {
 		this.shadowData = shadowData;
 		String prefix = DefaultShader.createPrefix(renderable, config);
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
-//		if (!program.isCompiled()) {
+		if (!program.isCompiled()) {
 			Gdx.app.debug("Shader", program.getLog());
-//		}
+		}
 	}
 
 	@Override

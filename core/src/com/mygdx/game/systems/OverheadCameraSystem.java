@@ -13,7 +13,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.CameraTargetingComponent;
-import com.mygdx.game.components.IntentComponent;
+import com.mygdx.game.components.IntentBroadcastComponent;
 
 /**
  * Created by user on 8/24/15.
@@ -39,11 +39,11 @@ public class OverheadCameraSystem extends IteratingSystem {
 	Vector2 lastDragProcessed = new Vector2();
 	private ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
-	private ComponentMapper<IntentComponent> inputCmps =
-			ComponentMapper.getFor(IntentComponent.class);
+	private ComponentMapper<IntentBroadcastComponent> inputCmps =
+			ComponentMapper.getFor(IntentBroadcastComponent.class);
 
 	public OverheadCameraSystem() {
-		super(Family.all(CameraTargetingComponent.class, IntentComponent.class).get());
+		super(Family.all(CameraTargetingComponent.class, IntentBroadcastComponent.class).get());
 	}
 
 
@@ -55,7 +55,7 @@ public class OverheadCameraSystem extends IteratingSystem {
 
 	@Override
 	public void processEntity(Entity entity, float deltaTime) {
-		IntentComponent intent = inputCmps.get(entity);
+		IntentBroadcastComponent intent = inputCmps.get(entity);
 
 		CameraTargetingComponent camCmp = camCmps.get(entity);
 		Camera cam = camCmp.camera;

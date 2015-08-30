@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -47,6 +48,8 @@ public class ModelRenderSystem extends EntitySystem {
 
 	Viewport viewport;
 
+	private Environment selectedEnvironment;
+
 	public class ShadowData {
 		public final int u_depthMap = 1000;
 		public Matrix4 u_lightTrans;
@@ -60,6 +63,10 @@ public class ModelRenderSystem extends EntitySystem {
 		this.viewport = viewport;
 		this.camera = camera;
 		this.environment = environment;
+
+		selectedEnvironment = new Environment();
+		float c = 1;
+		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
 
 		depthMapCamera = new OrthographicCamera(Gdx.graphics.getWidth() / 12, Gdx.graphics.getHeight() / 12);
 		depthMapCamera.zoom = 1f;
@@ -157,7 +164,6 @@ public class ModelRenderSystem extends EntitySystem {
 		viewport.setScreenY(vy);
 		viewport.apply();
 
-
 		camera.update();
 
 		depthMap.bind(shadowData.u_depthMap);
@@ -169,13 +175,15 @@ public class ModelRenderSystem extends EntitySystem {
 			ModelComponent cmp = models.get(entity);
 
 			if (isVisible(camera, cmp)) {
-				modelBatch.render(cmp.modelInstance, environment);
+				SelectableComponent selCmp = selectables.get(entity);
+				if (selCmp != null && selCmp.isSelected) {
+					modelBatch.render(cmp.modelInstance, selectedEnvironment);
+				} else {
+					modelBatch.render(cmp.modelInstance, environment);
+				}
 			}
 
-//			SelectableComponent selCmp = selectables.get(entity);
-//			if (selCmp != null && selCmp.isSelected) {
-//				modelBatch.render(cmp.modelInstance);
-//			}
+
 		}
 		modelBatch.end();
 

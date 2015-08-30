@@ -3,8 +3,6 @@ package com.mygdx.game.components.blender;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
@@ -47,6 +45,7 @@ public class BlenderComponentsLoader {
 
 		ArrayList<BlenderEmptyComponent> empties = loadEmpties(emptiesJsonPath);
 		ArrayList<BlenderLightComponent> lights = loadLights(lightsJsonPath);
+
 
 		for (BlenderComponent cmp : empties) {
 			blenderToGdxCoordinates(cmp);
@@ -129,7 +128,7 @@ public class BlenderComponentsLoader {
 			transform.translate(cmp.position);
 			entity.add(new LightComponent(
 					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
-							cmp.position, cmp.lamp_energy * cmp.lamp_distance *1000)));
+							cmp.position, cmp.lamp_energy * cmp.lamp_distance * 1000)));
 
 
 		} else if (cmp.type.equals("SpotLamp")) {
@@ -163,8 +162,8 @@ public class BlenderComponentsLoader {
 
 			float s = cmp.lamp_energy;
 			entity.add(new LightComponent(
-					new DirectionalLight().set(s*cmp.lamp_color.r, s*cmp.lamp_color.g,
-							s*cmp.lamp_color.b, direction.x, direction.y, direction.z)));
+					new DirectionalLight().set(s * cmp.lamp_color.r, s * cmp.lamp_color.g,
+							s * cmp.lamp_color.b, direction.x, direction.y, direction.z)));
 		}
 		return entity;
 	}

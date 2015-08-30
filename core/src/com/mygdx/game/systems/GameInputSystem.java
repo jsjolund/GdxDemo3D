@@ -9,7 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.components.IntentComponent;
+import com.mygdx.game.components.IntentBroadcastComponent;
 
 /**
  * Created by user on 8/24/15.
@@ -20,14 +20,14 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 
 	public final IntIntMap keys = new IntIntMap();
 	public final Family family;
-	IntentComponent intent;
+	IntentBroadcastComponent intent;
 	Vector2 moveDirection = new Vector2();
 	float zoom;
 	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
 //	private ImmutableArray<Entity> entities;
 
-	public GameInputSystem(IntentComponent intent) {
-		family = Family.all(IntentComponent.class).get();
+	public GameInputSystem(IntentBroadcastComponent intent) {
+		family = Family.all(IntentBroadcastComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 		this.intent = intent;
 	}
@@ -91,7 +91,6 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 	@Override
 	public boolean keyDown(int keycode) {
 		keys.put(keycode, keycode);
-		System.out.println("recieved input");
 		if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
 			GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
 		}
