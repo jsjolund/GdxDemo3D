@@ -47,7 +47,7 @@ public class ModelSelectionSystem extends EntitySystem {
 		}
 		IntentBroadcastComponent intent = intentCmps.get(entities.get(0));
 
-		if (intent.click.equals(lastClick)) {
+		if (intent.click.equals(lastClick) && !intent.doubleClick) {
 			return;
 		}
 		lastClick.set(intent.click);
@@ -92,6 +92,11 @@ public class ModelSelectionSystem extends EntitySystem {
 						pathCmp.goal = new Vector3();
 					}
 					pathCmp.goal.set(surfacePoint);
+					if (intent.doubleClick) {
+						pathCmp.run = true;
+					} else {
+						pathCmp.run = false;
+					}
 					Gdx.app.debug(tag, String.format("Path target for %s set to %s", entity, surfacePoint));
 				}
 			}

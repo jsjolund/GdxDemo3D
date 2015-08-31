@@ -6,35 +6,37 @@ import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.IntIntMap;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.IntentBroadcastComponent;
 
 /**
  * Created by user on 8/24/15.
  */
-public class GameInputSystem extends EntitySystem implements InputProcessor {
+public class GameInputSystem extends EntitySystem {
 
 	public static final String tag = "GameInputSystem";
-
 	public final IntIntMap keys = new IntIntMap();
 	public final Family family;
+	public InputProcessor inputProcessor;
 	IntentBroadcastComponent intent;
 	Vector2 moveDirection = new Vector2();
 	float zoom;
 	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
-//	private ImmutableArray<Entity> entities;
 
 	public GameInputSystem(IntentBroadcastComponent intent) {
 		family = Family.all(IntentBroadcastComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 		this.intent = intent;
+		inputProcessor = new MyInputListener();
+
 	}
 
 	@Override
 	public void addedToEngine(Engine engine) {
-//		entities = engine.getEntitiesFor(family);
 	}
 
 	@Override
@@ -83,88 +85,106 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 				}
 			}
 			data.isDragging = false;
+
+			intent.doubleClick = data.doubleClick;
 		}
 
-
 	}
 
-	@Override
-	public boolean keyDown(int keycode) {
-		keys.put(keycode, keycode);
-		if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
-			GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
+	public class MyInputListener extends ClickListener implements InputProcessor {
+
+		public MyInputListener() {
+
 		}
-		if (keycode== GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
-			GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
+
+		@Override
+		public boolean keyDown(int keycode) {
+			keys.put(keycode, keycode);
+			if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
+				GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
+			}
+			if (keycode == GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
+				GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
+			}
+			return true;
 		}
-		return true;
-	}
 
-	@Override
-	public boolean keyUp(int keycode) {
-		keys.remove(keycode, 0);
-		return true;
-	}
-
-	@Override
-	public boolean keyTyped(char character) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if (!touchMap.containsKey(pointer)) {
-			touchMap.put(pointer, new TouchData());
+		@Override
+		public boolean keyUp(int keycode) {
+			keys.remove(keycode, 0);
+			return true;
 		}
-		TouchData data = touchMap.get(pointer);
-		if (data.button == -1) {
-			data.down.set(screenX, screenY);
-			data.button = button;
-			data.isDragging = false;
+
+		@Override
+		public boolean keyTyped(char character) {
+			return false;
 		}
-		return true;
-	}
 
-	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		if (!intent.isDragging) {
-			intent.click.set(screenX, screenY);
+		@Override
+		public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+			if (!touchMap.containsKey(pointer)) {
+				touchMap.put(pointer, new TouchData());
+			}
+			TouchData data = touchMap.get(pointer);
+			if (data.button == -1) {
+				data.down.set(screenX, screenY);
+				data.button = button;
+				data.isDragging = false;
+			}
+			long clickTime = TimeUtils.millis();
+			if (clickTime - data.lastClickTime < 200) {
+				data.doubleClick = true;
+			} else {
+				data.doubleClick = false;
+			}
+			data.lastClickTime = clickTime;
+			return true;
 		}
-		intent.dragStart.setZero();
-		intent.dragCurrent.setZero();
-		intent.isDragging = false;
-		intent.pan = false;
-		intent.rotate = false;
-		touchMap.get(pointer).reset();
 
-		return true;
-	}
+		@Override
+		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+			if (!intent.isDragging) {
+				intent.click.set(screenX, screenY);
+			}
+			intent.dragStart.setZero();
+			intent.dragCurrent.setZero();
+			intent.isDragging = false;
+			intent.pan = false;
+			intent.rotate = false;
 
-	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		TouchData data = touchMap.get(pointer);
-		data.lastDrag.set(screenX, screenY);
-		data.isDragging = true;
-		return true;
-	}
+			touchMap.get(pointer).reset();
 
-	@Override
-	public boolean mouseMoved(int screenX, int screenY) {
-		return false;
-	}
+			return true;
+		}
 
-	@Override
-	public boolean scrolled(int amount) {
-		zoom += GameSettings.CAMERA_ZOOM_STEP * amount;
-		return true;
+		@Override
+		public boolean touchDragged(int screenX, int screenY, int pointer) {
+			TouchData data = touchMap.get(pointer);
+			data.lastDrag.set(screenX, screenY);
+			data.isDragging = true;
+			return true;
+		}
+
+		@Override
+		public boolean mouseMoved(int screenX, int screenY) {
+			return false;
+		}
+
+		@Override
+		public boolean scrolled(int amount) {
+			zoom += GameSettings.CAMERA_ZOOM_STEP * amount;
+			return true;
+		}
 	}
 
 	private class TouchData {
 		int dragHistoryCursor = 0;
 		Vector2 down = new Vector2();
 		Vector2 lastDrag = new Vector2();
+		long lastClickTime =0;
 		int button;
 		boolean isDragging = false;
+		boolean doubleClick = false;
 
 		public TouchData() {
 			reset();
@@ -176,6 +196,7 @@ public class GameInputSystem extends EntitySystem implements InputProcessor {
 			lastDrag.setZero();
 			button = -1;
 			isDragging = false;
+			doubleClick = false;
 		}
 	}
 

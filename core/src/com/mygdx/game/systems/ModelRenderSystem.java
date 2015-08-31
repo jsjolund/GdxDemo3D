@@ -142,7 +142,9 @@ public class ModelRenderSystem extends EntitySystem {
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
-			depthMapModelBatch.render(cmp.modelInstance);
+			if (cmp.useShadowMap) {
+				depthMapModelBatch.render(cmp.modelInstance);
+			}
 		}
 		depthMapModelBatch.end();
 		frameBuffer.end();

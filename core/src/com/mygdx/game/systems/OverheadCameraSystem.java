@@ -37,6 +37,7 @@ public class OverheadCameraSystem extends IteratingSystem {
 	Ray ray = new Ray();
 	float currentZoom = 10;
 	Vector2 lastDragProcessed = new Vector2();
+
 	private ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
 	private ComponentMapper<IntentBroadcastComponent> inputCmps =

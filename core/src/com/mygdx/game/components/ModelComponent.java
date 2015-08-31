@@ -26,6 +26,9 @@ public class ModelComponent extends Component {
 	public ModelInstance modelInstance;
 	public String id;
 
+	// TODO: use custom attribute or something
+	public boolean useShadowMap = true;
+
 	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {
 		this.id = id;
 		modelInstance = new ModelInstance(model);

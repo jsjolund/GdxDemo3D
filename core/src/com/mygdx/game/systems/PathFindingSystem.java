@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.GameSettings;
+import com.mygdx.game.components.CharacterActionComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.PhysicsComponent;
 
@@ -16,8 +17,14 @@ import com.mygdx.game.components.PhysicsComponent;
  */
 public class PathFindingSystem extends IteratingSystem {
 
-	private ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
-	private ComponentMapper<PhysicsComponent> phyCmps = ComponentMapper.getFor(PhysicsComponent.class);
+	private ComponentMapper<PathFindingComponent> pathCmps =
+			ComponentMapper.getFor(PathFindingComponent.class);
+
+	private ComponentMapper<PhysicsComponent> phyCmps =
+			ComponentMapper.getFor(PhysicsComponent.class);
+
+	private ComponentMapper<CharacterActionComponent> actionCmps =
+			ComponentMapper.getFor(CharacterActionComponent.class);
 
 	public PathFindingSystem(Family family) {
 		super(family);
@@ -42,11 +49,19 @@ public class PathFindingSystem extends IteratingSystem {
 		matrix.getTranslation(pos);
 
 		if (pathCmp.goal.equals(pathCmp.lastProcessedGoal)) {
+
+			CharacterActionComponent actionCmp = actionCmps.get(entity);
+
 			yVelocity = phyCmp.body.getLinearVelocity().y;
 			float xzDst = Vector2.dst2(pathCmp.goal.x, pathCmp.goal.z, pos.x, pos.z);
 			if (xzDst < 0.01f) {
 				phyCmp.body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
 				phyCmp.body.setAngularVelocity(Vector3.Zero);
+
+				if (actionCmp != null) {
+					actionCmp.nextAction = CharacterActionComponent.Action.IDLE;
+				}
+
 
 			} else {
 				matrix.idt();
@@ -54,9 +69,23 @@ public class PathFindingSystem extends IteratingSystem {
 				matrix.setToLookAt(goalDirection, Vector3.Y);
 				matrix.setTranslation(pos);
 				phyCmp.body.setWorldTransform(matrix);
-				newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_WALK_SPEED);
+
+
+				if (pathCmp.run) {
+					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_WALK_SPEED*2);
+					if (actionCmp != null) {
+						actionCmp.nextAction = CharacterActionComponent.Action.RUN;
+					}
+				} else {
+					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_WALK_SPEED);
+					if (actionCmp != null) {
+						actionCmp.nextAction = CharacterActionComponent.Action.WALK;
+					}
+				}
+
 				newVelocity.y = yVelocity;
 				phyCmp.body.setLinearVelocity(newVelocity);
+
 			}
 			return;
 		}

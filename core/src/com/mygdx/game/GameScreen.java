@@ -14,7 +14,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -41,7 +40,6 @@ public class GameScreen implements Screen {
 	Camera camera;
 	private ShapeRenderer shapeRenderer;
 
-	// TODO: pan-begränsningar, bättre skuggor, pathfinding, selection,
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		engine = new PooledEngine();
@@ -144,7 +142,7 @@ public class GameScreen implements Screen {
 		multiplexer.addProcessor(stage);
 		GameInputSystem inputSys = new GameInputSystem(intentCmp);
 		engine.addSystem(inputSys);
-		multiplexer.addProcessor(inputSys);
+		multiplexer.addProcessor(inputSys.inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
 
 
@@ -182,6 +180,10 @@ public class GameScreen implements Screen {
 				PhysicsComponent.class).get();
 		PathFindingSystem pathSys = new PathFindingSystem(pathFamily);
 		engine.addSystem(pathSys);
+
+		Family animFamily = Family.all(CharacterActionComponent.class).get();
+		AnimationSystem animSys = new AnimationSystem(animFamily);
+		engine.addSystem(animSys);
 	}
 
 	private void spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
@@ -191,39 +193,33 @@ public class GameScreen implements Screen {
 		assets.load("models/g3db/man.g3db", Model.class);
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/man.g3db", Model.class);
-		entity.add(new ModelComponent(model, "man", pos, new Vector3(0, 0, 0), new Vector3(1, 1,
-				1)));
-		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+		ModelComponent mdlCmp = new ModelComponent(model, "man", pos, new Vector3(0, 0, 0), new Vector3(1, 1,
+				1));
+		mdlCmp.useShadowMap = false;
+		entity.add(mdlCmp);
+		ModelInstance modelInstance = entity.getComponent(ModelComponent.class).modelInstance;
 
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
-		MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
+		MotionStateComponent motionStateCmp = new MotionStateComponent(modelInstance.transform);
 		PhysicsComponent phyCmp = new PhysicsComponent(
 				shape, motionStateCmp.motionState, 100,
 				PhysicsSystem.OBJECT_FLAG,
 				PhysicsSystem.ALL_FLAG,
 				true, true);
 		phyCmp.body.setAngularFactor(Vector3.Y);
-		phyCmp.body.setWorldTransform(instance.transform);
+		phyCmp.body.setWorldTransform(modelInstance.transform);
 		entity.add(motionStateCmp);
 		entity.add(phyCmp);
 		entity.add(intentCmp);
 		entity.add(new SelectableComponent());
 		entity.add(new PathFindingComponent());
-		if (controller1 == null) {
-			controller1 = new AnimationController(instance);
-			controller1.setAnimation("Armature|walk", -1);
-		} else {
-			controller2 = new AnimationController(instance);
-			controller2.setAnimation("Armature|walk", -1);
-		}
-	}
+		entity.add(new CharacterActionComponent(modelInstance));
 
-	AnimationController controller1;
-	AnimationController controller2;
+
+	}
 
 	@Override
 	public void show() {
-
 	}
 
 	@Override
@@ -244,14 +240,6 @@ public class GameScreen implements Screen {
 
 		stage.act(delta);
 		stage.draw();
-
-		float d = 1f;
-		if (controller1 != null) {
-			controller1.update(delta*d);
-		}
-		if (controller2 != null) {
-			controller2.update(delta*d);
-		}
 	}
 
 	@Override

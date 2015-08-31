@@ -9,4 +9,5 @@ import com.badlogic.gdx.math.Vector3;
 public class PathFindingComponent extends Component {
 	public Vector3 goal = null;
 	public Vector3 lastProcessedGoal = null;
+	public boolean run = false;
 }
