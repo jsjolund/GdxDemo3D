@@ -259,7 +259,7 @@ void main() {
 	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
 	depth.y += 0.005;
 
-	float shadow = 0;
+	float shadow = 0.0;
 	// Make sure the point is in the field of view of the light and also that it is not behind it
 	if (v_positionLightTrans.z >= 0.0
 	        && (depth.x >= 0.0) && (depth.x <= 1.0)
@@ -270,47 +270,47 @@ void main() {
 		float d = dot(u_lightDirection, normal);
 
 		if (normal.y > 0.5) {
-			if (lenDepthMap > lenToLight -0) {
+			if (lenDepthMap > lenToLight) {
 				// Horizontal surface exposed to light
 //                inputColor.rgb = vec3(1);
-                shadow = 0;
+                shadow = 0.0;
 			} else {
 				// Horizontal surface which recieves shadow
-				shadow = 1;
+				shadow = 1.0;
 //				inputColor.rgb = vec3(0,1,0)*(1-d*2);
 			}
 		} else {
-            if ((d > 0) ){
+            if ((d > 0.0) ){
             	// Vertical surface facing away from the light
-				shadow = d*2;
+				shadow = d*2.0;
 //				inputColor.rgb = vec3(1,1,1)*(1-d*2);
 
             } else {
             	lenDepthMap = texture2D(u_depthMap, depth.xy).a;
             	if (lenDepthMap < lenToLight - 0.005) {
             		// Vertical surface which recieves shadow
-            		shadow = 1;
+            		shadow = 1.0;
 //            		inputColor.rgb = vec3(0,0,1);
 
             	} else {
             		// Vertical surface exposed to light
-            		shadow = 0;
+            		shadow = 0.0;
 //            		inputColor.rgb = vec3(1);
             	}
             }
 		}
 	} else {
 	    // Outside field of view of light
-	    shadow = 0;
+	    shadow = 0.0;
 	}
 
-	vec4 inputColor = vec4(0);
+	vec4 inputColor = vec4(0.0);
 	inputColor.w = diffuse.w;
 
 	inputColor.rgb = saturate((v_lightCol * diffuse.rgb) * (NL-shadow));
 	inputColor.rgb += (selfShadow * spec) * specular;
 	inputColor.rgb += v_ambientLight * diffuse.rgb;
-	inputColor.rgb*=(1-shadow*u_shadowIntensity);
+	inputColor.rgb*=(1.0-shadow*u_shadowIntensity);
 
     // Hue, saturation, value setting
 	vec3 hsv = rgb2hsv(inputColor.rgb);
