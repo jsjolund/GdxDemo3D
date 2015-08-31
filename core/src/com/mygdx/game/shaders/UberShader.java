@@ -14,6 +14,8 @@ import com.mygdx.game.systems.ModelRenderSystem;
  */
 public class UberShader extends DefaultShader {
 
+	public static final String tag = "UberShader";
+
 	public Renderable renderable;
 	private ModelRenderSystem.ShadowData shadowData;
 
@@ -33,7 +35,7 @@ public class UberShader extends DefaultShader {
 		String prefix = DefaultShader.createPrefix(renderable, config);
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
 		if (!program.isCompiled()) {
-			Gdx.app.debug("Shader", program.getLog());
+			Gdx.app.debug(tag, program.getLog());
 		}
 	}
 

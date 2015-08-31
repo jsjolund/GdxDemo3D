@@ -42,7 +42,6 @@ public class ModelRenderSystem extends EntitySystem {
 	private OrthographicCamera depthMapCamera;
 	private ModelBatch depthMapModelBatch;
 	private SpriteBatch depthMapBatch = new SpriteBatch();
-	private ShaderProgram depthMapShaderProgram;
 	public Texture depthMap;
 	private ShadowData shadowData;
 
@@ -85,22 +84,25 @@ public class ModelRenderSystem extends EntitySystem {
 
 		ShaderProgram.pedantic = false;
 
-		depthMapShaderProgram = new ShaderProgram(
-				Gdx.files.internal("shaders/depthmap.vert"),
-				Gdx.files.internal("shaders/depthmap.frag"));
-		if (!depthMapShaderProgram.isCompiled()) {
-			Gdx.app.debug("Shader", depthMapShaderProgram.getLog());
-		}
-		depthMapModelBatch = new ModelBatch(new DefaultShaderProvider() {
+//		depthMapShaderProgram = new ShaderProgram(
+//				Gdx.files.internal("shaders/depthmap.vert"),
+//				Gdx.files.internal("shaders/depthmap.frag"));
+//		if (!depthMapShaderProgram.isCompiled()) {
+//			Gdx.app.debug("Shader", depthMapShaderProgram.getLog());
+//		}
+
+		final String vertDepthMap = Gdx.files.internal("shaders/depthmap.vert").readString();
+		final String fragDepthMap = Gdx.files.internal("shaders/depthmap.frag").readString();
+		depthMapModelBatch = new ModelBatch(new DefaultShaderProvider(vertDepthMap, fragDepthMap) {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
-				return new DepthMapShader(renderable, depthMapShaderProgram, true);
+				return new DepthMapShader(renderable, config);
 			}
 		});
 
-		final String vert = Gdx.files.internal("shaders/uber.vert").readString();
-		final String frag = Gdx.files.internal("shaders/uber.frag").readString();
-		modelBatch = new ModelBatch(new DefaultShaderProvider(vert, frag) {
+		final String vertUber = Gdx.files.internal("shaders/uber.vert").readString();
+		final String fragUber = Gdx.files.internal("shaders/uber.frag").readString();
+		modelBatch = new ModelBatch(new DefaultShaderProvider(vertUber, fragUber) {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
 				return new UberShader(renderable, config, shadowData);
@@ -133,18 +135,12 @@ public class ModelRenderSystem extends EntitySystem {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		depthMapShaderProgram.begin();
-		depthMapShaderProgram.setUniformf("u_cameraFar", depthMapCamera.far);
-		depthMapShaderProgram.setUniformf("u_lightPosition", depthMapCamera.position);
-		depthMapShaderProgram.end();
 
 		depthMapModelBatch.begin(depthMapCamera);
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
-			if (cmp.useShadowMap) {
-				depthMapModelBatch.render(cmp.modelInstance);
-			}
+			depthMapModelBatch.render(cmp.modelInstance);
 		}
 		depthMapModelBatch.end();
 		frameBuffer.end();
