@@ -72,7 +72,7 @@ public class PathFindingSystem extends IteratingSystem {
 
 
 				if (pathCmp.run) {
-					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_WALK_SPEED*2);
+					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_RUN_SPEED);
 					if (actionCmp != null) {
 						actionCmp.nextAction = CharacterActionComponent.Action.RUN;
 					}

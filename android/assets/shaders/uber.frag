@@ -272,30 +272,25 @@ void main() {
 		if (normal.y > 0.5) {
 			if (lenDepthMap > lenToLight) {
 				// Horizontal surface exposed to light
-//                inputColor.rgb = vec3(1);
                 shadow = 0.0;
 			} else {
 				// Horizontal surface which recieves shadow
 				shadow = 1.0;
-//				inputColor.rgb = vec3(0,1,0)*(1-d*2);
 			}
 		} else {
             if ((d > 0.0) ){
             	// Vertical surface facing away from the light
 				shadow = d*2.0;
-//				inputColor.rgb = vec3(1,1,1)*(1-d*2);
 
             } else {
             	lenDepthMap = texture2D(u_depthMap, depth.xy).a;
             	if (lenDepthMap < lenToLight - 0.005) {
             		// Vertical surface which recieves shadow
             		shadow = 1.0;
-//            		inputColor.rgb = vec3(0,0,1);
 
             	} else {
             		// Vertical surface exposed to light
             		shadow = 0.0;
-//            		inputColor.rgb = vec3(1);
             	}
             }
 		}

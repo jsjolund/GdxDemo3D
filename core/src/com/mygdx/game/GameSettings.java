@@ -20,6 +20,7 @@ public class GameSettings {
 	public static final float SCENE_AMBIENT_LIGHT = 0.3f;
 
 	public static final float PLAYER_WALK_SPEED = 2.5f;
+	public static final float PLAYER_RUN_SPEED = 5f;
 
 	public static boolean DRAW_COLLISION_DEBUG = false;
 
