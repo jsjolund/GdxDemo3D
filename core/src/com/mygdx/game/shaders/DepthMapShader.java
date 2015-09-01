@@ -21,7 +21,6 @@ public class DepthMapShader extends DefaultShader {
 
 		String prefix = DefaultShader.createPrefix(renderable, config);
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
-		System.out.println(prefix);
 		if (!program.isCompiled()) {
 			Gdx.app.debug(tag, program.getLog());
 		}

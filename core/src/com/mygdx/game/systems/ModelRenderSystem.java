@@ -50,14 +50,14 @@ public class ModelRenderSystem extends EntitySystem {
 	private Environment selectedEnvironment;
 
 	public class ShadowData {
-		public final int u_depthMap = 1000;
+		public final int u_depthMap = 10000;
 		public Matrix4 u_lightTrans;
 		public float u_cameraFar;
 		public Vector3 u_lightPosition;
 		public Vector3 u_lightDirection;
 	}
 
-	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment) {
+	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
 		this.viewport = viewport;
 		this.camera = camera;
@@ -67,12 +67,16 @@ public class ModelRenderSystem extends EntitySystem {
 		float c = 1;
 		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
 
-		depthMapCamera = new OrthographicCamera(Gdx.graphics.getWidth() / 12, Gdx.graphics.getHeight() / 12);
+		float t = 50;
+		depthMapCamera = new OrthographicCamera(
+				Gdx.graphics.getWidth() / 10,
+				Gdx.graphics.getHeight() / 10);
 		depthMapCamera.zoom = 1f;
 		depthMapCamera.near = 1f;
-		depthMapCamera.far = 100;
-		depthMapCamera.position.set(40, 50, -40);
-		depthMapCamera.lookAt(0, -5, 0);
+		depthMapCamera.far = t * 1.5f;
+//		depthMapCamera.position.set(40, 50, -40);
+		depthMapCamera.position.set(sunDirection).nor().scl(-1).scl(t);
+		depthMapCamera.lookAt(0, 0, 0);
 		depthMapCamera.update();
 
 		shadowData = new ShadowData();
@@ -83,13 +87,6 @@ public class ModelRenderSystem extends EntitySystem {
 		shadowData.u_lightDirection.nor();
 
 		ShaderProgram.pedantic = false;
-
-//		depthMapShaderProgram = new ShaderProgram(
-//				Gdx.files.internal("shaders/depthmap.vert"),
-//				Gdx.files.internal("shaders/depthmap.frag"));
-//		if (!depthMapShaderProgram.isCompiled()) {
-//			Gdx.app.debug("Shader", depthMapShaderProgram.getLog());
-//		}
 
 		final String vertDepthMap = Gdx.files.internal("shaders/depthmap.vert").readString();
 		final String fragDepthMap = Gdx.files.internal("shaders/depthmap.frag").readString();
@@ -108,6 +105,7 @@ public class ModelRenderSystem extends EntitySystem {
 				return new UberShader(renderable, config, shadowData);
 			}
 		});
+//		modelBatch = new ModelBatch();
 
 	}
 
@@ -129,12 +127,10 @@ public class ModelRenderSystem extends EntitySystem {
 	public void renderShadowMap() {
 		if (frameBuffer == null) {
 			frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, DEPTHMAPIZE, DEPTHMAPIZE, true);
-//			frameBuffer = new FrameBuffer(Pixmap.Format.Alpha, DEPTHMAPIZE, DEPTHMAPIZE, true);
 		}
 		frameBuffer.begin();
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
 
 		depthMapModelBatch.begin(depthMapCamera);
 		for (int i = 0; i < entities.size(); ++i) {

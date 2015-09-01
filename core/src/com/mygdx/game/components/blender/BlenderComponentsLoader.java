@@ -31,6 +31,7 @@ public class BlenderComponentsLoader {
 
 	public static final String tag = "BlenderComponentsLoader";
 	public ArrayList<Entity> entities = new ArrayList<Entity>();
+	public Vector3 sunDirection = new Vector3();
 	AssetManager assets;
 
 	public BlenderComponentsLoader(String modelsJsonPath, String emptiesJsonPath, String lightsJsonPath) {
@@ -120,26 +121,21 @@ public class BlenderComponentsLoader {
 
 	private Entity createLightEntity(BlenderLightComponent cmp) {
 		Entity entity = null;
-		Matrix4 transform = new Matrix4();
 
 		if (cmp.type.equals("PointLamp")) {
 			entity = new Entity();
-
-			transform.translate(cmp.position);
 			entity.add(new LightComponent(
 					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
-							cmp.position, cmp.lamp_energy * cmp.lamp_distance * 1000)));
+							cmp.position.setZero(), cmp.lamp_energy * cmp.lamp_distance * 1000)));
 
 
 		} else if (cmp.type.equals("SpotLamp")) {
 			entity = new Entity();
 
 			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, cmp.rotation.x);
-			transform.rotate(Vector3.Z, cmp.rotation.z);
-			direction.rot(transform);
-
-			transform.translate(cmp.position);
+			direction.rotate(Vector3.X, cmp.rotation.x);
+			direction.rotate(Vector3.Z, cmp.rotation.z);
+			direction.rotate(Vector3.Y, cmp.rotation.y);
 
 			float intensity = cmp.lamp_energy;
 			float cutoffAngle = cmp.lamp_falloff;
@@ -151,19 +147,25 @@ public class BlenderComponentsLoader {
 
 
 		} else if (cmp.type.equals("SunLamp")) {
+
 			entity = new Entity();
 
 			Vector3 direction = new Vector3(Vector3.Y).scl(-1);
-			transform.rotate(Vector3.X, cmp.rotation.x);
-			transform.rotate(Vector3.Z, cmp.rotation.z);
-			direction.rot(transform);
-
-			transform.translate(cmp.position);
+			direction.rotate(Vector3.X, cmp.rotation.x);
+			direction.rotate(Vector3.Z, cmp.rotation.z);
+			direction.rotate(Vector3.Y, cmp.rotation.y);
 
 			float s = cmp.lamp_energy;
 			entity.add(new LightComponent(
-					new DirectionalLight().set(s * cmp.lamp_color.r, s * cmp.lamp_color.g,
-							s * cmp.lamp_color.b, direction.x, direction.y, direction.z)));
+					new DirectionalLight().set(
+							s * cmp.lamp_color.r,
+							s * cmp.lamp_color.g,
+							s * cmp.lamp_color.b,
+							direction.x,
+							direction.y,
+							direction.z)));
+
+			sunDirection.set(direction);
 		}
 		return entity;
 	}

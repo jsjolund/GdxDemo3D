@@ -2,6 +2,7 @@ package com.mygdx.game.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.mygdx.game.GameSettings;
@@ -43,13 +44,19 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		@Override
 		public void entityAdded(Entity entity) {
 			LightComponent cmp = entity.getComponent(LightComponent.class);
-			environment.add(cmp.light);
+			Gdx.app.debug(tag, "Added light "+cmp);
+			if (cmp != null) {
+				environment.add(cmp.light);
+			}
 		}
 
 		@Override
 		public void entityRemoved(Entity entity) {
 			LightComponent cmp = entity.getComponent(LightComponent.class);
-			environment.remove(cmp.light);
+			Gdx.app.debug(tag, "Removed light "+cmp);
+			if (cmp != null) {
+				environment.remove(cmp.light);
+			}
 		}
 	}
 

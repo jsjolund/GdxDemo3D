@@ -1,15 +1,8 @@
 #!/usr/bin/python
 
-# Creates a CSV file listing the names of each blender object
-# in the .blend along with its position and rotation.
-# The file has the same name as the .blend file but with .csv
-# extension.
-#
-# For each model which name does NOT contain a number it also
-# exports the model to a .obj file for importing into LibGDX.
-#
-# E.g. 'box.001', 'box.002' would NOT get exported, but 'box'
-# will be exported to 'box.obj' and 'box.mtl'.
+"""
+Blender to libGDX level export script.
+"""
 
 import bpy
 import os
@@ -17,7 +10,6 @@ import math
 import subprocess
 import json
 from mathutils import Vector
-
 
 class BlenderObject(object):
     def __init__(self, bobj):

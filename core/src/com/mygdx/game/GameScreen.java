@@ -67,6 +67,12 @@ public class GameScreen implements Screen {
 		interactionEntity.add(intentCmp);
 		engine.addEntity(interactionEntity);
 
+		Gdx.app.debug(tag, "Loading json");
+		BlenderComponentsLoader blender = new BlenderComponentsLoader(
+				"models/json/test_model.json",
+				"models/json/test_empty.json",
+				"models/json/test_light.json"
+		);
 
 		Gdx.app.debug(tag, "Loading environment system");
 		ModelEnvironmentSystem envSys = new ModelEnvironmentSystem();
@@ -75,7 +81,9 @@ public class GameScreen implements Screen {
 
 
 		Gdx.app.debug(tag, "Loading models system");
-		ModelRenderSystem modelSys = new ModelRenderSystem(viewport, camera, envSys.environment);
+		ModelRenderSystem modelSys = new ModelRenderSystem(viewport, camera,
+				envSys.environment,
+				blender.sunDirection);
 		engine.addSystem(modelSys);
 
 
@@ -83,14 +91,6 @@ public class GameScreen implements Screen {
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
 		engine.addEntityListener(phySys.systemFamily, phySys.listener);
-
-
-		Gdx.app.debug(tag, "Loading json");
-		BlenderComponentsLoader blender = new BlenderComponentsLoader(
-				"models/json/test_model.json",
-				"models/json/test_empty.json",
-				"models/json/test_light.json"
-		);
 
 
 		Gdx.app.debug(tag, "Adding entities");
@@ -154,13 +154,6 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Adding selection system");
 		ModelSelectionSystem selSys = new ModelSelectionSystem(phySys, viewport);
 		engine.addSystem(selSys);
-
-
-//		Gdx.app.debug(tag, "Adding movement system");
-//		Family phyFamily = Family.all(MoveAimComponent.class, PhysicsComponent.class).get();
-//		PhysicsMoveAimSystem phyMoveSys = new PhysicsMoveAimSystem(phyFamily);
-//		engine.addEntityListener(phyFamily, phyMoveSys.listener);
-//		engine.addSystem(phyMoveSys);
 
 
 		Gdx.app.debug(tag, "Adding billboard system");

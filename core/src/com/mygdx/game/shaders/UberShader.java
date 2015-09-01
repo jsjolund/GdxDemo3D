@@ -2,6 +2,7 @@ package com.mygdx.game.shaders;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
@@ -42,7 +43,7 @@ public class UberShader extends DefaultShader {
 	@Override
 	public void begin(final Camera camera, final RenderContext context) {
 		super.begin(camera, context);
-//		context.setDepthTest(GL20.GL_LEQUAL);
+		context.setDepthTest(GL20.GL_LEQUAL);
 		program.begin();
 		program.setUniformi("u_depthMap", shadowData.u_depthMap);
 		program.setUniformMatrix("u_lightTrans", shadowData.u_lightTrans);

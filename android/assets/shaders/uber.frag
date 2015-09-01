@@ -302,10 +302,10 @@ void main() {
 	vec4 inputColor = vec4(0.0);
 	inputColor.w = diffuse.w;
 
-	inputColor.rgb = saturate((v_lightCol * diffuse.rgb) * (NL-shadow));
+	inputColor.rgb = saturate((v_lightCol * diffuse.rgb) * (NL));
 	inputColor.rgb += (selfShadow * spec) * specular;
 	inputColor.rgb += v_ambientLight * diffuse.rgb;
-	inputColor.rgb*=(1.0-shadow*u_shadowIntensity);
+	inputColor.rgb *= (1.0-shadow*u_shadowIntensity);
 
     // Hue, saturation, value setting
 	vec3 hsv = rgb2hsv(inputColor.rgb);

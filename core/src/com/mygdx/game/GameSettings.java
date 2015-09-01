@@ -24,7 +24,7 @@ public class GameSettings {
 
 	public static boolean DRAW_COLLISION_DEBUG = false;
 
-	public static float MOUSE_SENSITIVITY = 0.1f;
+	public static float MOUSE_SENSITIVITY = 0.01f;
 
 	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F1;
 	public static int KEY_DISPLAY_SHADOWBUFFER = Input.Keys.F2;

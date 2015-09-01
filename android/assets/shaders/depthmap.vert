@@ -433,6 +433,6 @@ void main() {
 	v_position = u_worldTrans * vec4(a_position, 1.0);
 //	normal = normalize(u_normalMatrix * a_normal);
 //	v_positionLightTrans = u_lightTrans * v_position;
-//
+
 
 }

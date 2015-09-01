@@ -143,7 +143,8 @@ public class OverheadCameraSystem extends IteratingSystem {
 						oldDirection.set(cam.direction);
 						oldUp.set(cam.up);
 
-						cursorDelta.set(lastDragProcessed).sub(intent.dragCurrent).scl(GameSettings.MOUSE_SENSITIVITY);
+						cursorDelta.set(lastDragProcessed).sub(intent.dragCurrent).scl(GameSettings
+								.MOUSE_SENSITIVITY).scl(worldGroundTargetDst);
 						perpendicular.set(cam.direction).crs(cam.up).nor();
 
 						panResult.setZero().add(cam.up).nor().scl(-cursorDelta.y);
