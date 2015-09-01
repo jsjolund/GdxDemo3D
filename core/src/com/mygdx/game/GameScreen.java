@@ -46,7 +46,6 @@ public class GameScreen implements Screen {
 		Bullet.init();
 
 //		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
-//		viewportBackgroundColor = new Color(0.49f, 0.49f, 0.49f, 1);
 		viewportBackgroundColor = Color.DARK_GRAY;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);

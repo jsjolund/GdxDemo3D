@@ -74,7 +74,6 @@ public class ModelRenderSystem extends EntitySystem {
 		depthMapCamera.zoom = 1f;
 		depthMapCamera.near = 1f;
 		depthMapCamera.far = t * 1.5f;
-//		depthMapCamera.position.set(40, 50, -40);
 		depthMapCamera.position.set(sunDirection).nor().scl(-1).scl(t);
 		depthMapCamera.lookAt(0, 0, 0);
 		depthMapCamera.update();
@@ -105,7 +104,6 @@ public class ModelRenderSystem extends EntitySystem {
 				return new UberShader(renderable, config, shadowData);
 			}
 		});
-//		modelBatch = new ModelBatch();
 
 	}
 
