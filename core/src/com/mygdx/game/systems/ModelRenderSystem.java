@@ -64,8 +64,7 @@ public class ModelRenderSystem extends EntitySystem {
 		this.environment = environment;
 
 		selectedEnvironment = new Environment();
-		float c = 1;
-		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
+		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 
 		float t = 50;
 		depthMapCamera = new OrthographicCamera(
@@ -162,26 +161,23 @@ public class ModelRenderSystem extends EntitySystem {
 
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
-
 			Entity entity = entities.get(i);
 			ModelComponent cmp = models.get(entity);
+			SelectableComponent selCmp = selectables.get(entity);
 
 			if (isVisible(camera, cmp)) {
-				SelectableComponent selCmp = selectables.get(entity);
 				if (selCmp != null && selCmp.isSelected) {
-					modelBatch.render(cmp.modelInstance, selectedEnvironment);
+					modelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
+					modelBatch.render(cmp.modelInstance, environment);
 				} else {
 					modelBatch.render(cmp.modelInstance, environment);
 				}
 			}
-
-
 		}
 		modelBatch.end();
 
-
 		if (GameSettings.DISPLAY_SHADOWBUFFER) {
-			Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1f);
+			Gdx.gl.glClearColor(0, 0, 0, 1f);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 			float size = Math.min(vw, vh) / 2;
 			depthMapBatch.begin();

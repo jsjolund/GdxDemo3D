@@ -3,6 +3,7 @@ package com.mygdx.game.components;
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
+import com.badlogic.gdx.utils.Array;
 
 /**
  * Created by user on 8/30/15.
@@ -10,11 +11,17 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 public class CharacterActionComponent extends Component {
 
 	public CharacterActionComponent(ModelInstance modelInstance) {
-		controller = new AnimationController(modelInstance);
-		controller.setAnimation(currentAction.animationId, -1);
+		controllers = new Array<AnimationController>();
+		addModel(modelInstance);
 	}
 
-	public AnimationController controller;
+	public void addModel(ModelInstance modelInstance) {
+		AnimationController controller = new AnimationController(modelInstance);
+		controller.setAnimation(currentAction.animationId, -1);
+		controllers.add(controller);
+	}
+
+	public Array<AnimationController> controllers;
 
 	public Action nextAction = Action.IDLE;
 	public Action currentAction = Action.IDLE;

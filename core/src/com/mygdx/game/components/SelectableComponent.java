@@ -8,5 +8,10 @@ import com.badlogic.ashley.core.Component;
 public class SelectableComponent extends Component {
 
 	public boolean isSelected = false;
+	public ModelComponent outlineModelComponent;
+
+	public SelectableComponent(ModelComponent outlineModelComponent) {
+		this.outlineModelComponent = outlineModelComponent;
+	}
 
 }

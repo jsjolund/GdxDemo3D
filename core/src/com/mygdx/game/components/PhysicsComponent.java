@@ -60,5 +60,6 @@ public class PhysicsComponent extends Component implements Disposable {
 		shape.dispose();
 		constructionInfo.dispose();
 		motionState.dispose();
+		body.dispose();
 	}
 }

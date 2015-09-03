@@ -26,23 +26,18 @@ public class ModelComponent extends Component {
 	public ModelInstance modelInstance;
 	public String id;
 
-	// TODO: use custom attribute or something
-	public boolean useShadowMap = true;
-
 	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {
 		this.id = id;
 		modelInstance = new ModelInstance(model);
 
 		for (Node node : modelInstance.nodes) {
 			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-//			node.scale.set(scale.x, -scale.y, scale.z);
 		}
 		modelInstance.transform.rotate(Vector3.Y, rotation.y);
 		modelInstance.transform.rotate(Vector3.X, rotation.x);
 		modelInstance.transform.rotate(Vector3.Z, rotation.z);
 		modelInstance.transform.setTranslation(location);
-//		modelInstance.transform.scl(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-//		modelInstance.transform.scl(scale.x, scale.y, scale.z);
+
 		modelInstance.calculateTransforms();
 
 		try {

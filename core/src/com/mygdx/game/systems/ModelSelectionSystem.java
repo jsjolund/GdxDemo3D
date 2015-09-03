@@ -46,7 +46,6 @@ public class ModelSelectionSystem extends EntitySystem {
 			return;
 		}
 		IntentBroadcastComponent intent = intentCmps.get(entities.get(0));
-
 		if (intent.click.equals(lastClick) && !intent.doubleClick) {
 			return;
 		}

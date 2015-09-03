@@ -4,22 +4,25 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
+import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
@@ -40,13 +43,13 @@ public class GameScreen implements Screen {
 	Color viewportBackgroundColor;
 	Camera camera;
 	private ShapeRenderer shapeRenderer;
-
+	AssetManager assets;
 
 	public GameScreen(int reqWidth, int reqHeight) {
+		assets = new AssetManager();
 		engine = new PooledEngine();
 		Bullet.init();
 
-//		viewportBackgroundColor = new Color(0.28f, 0.56f, 0.83f, 1);
 		viewportBackgroundColor = Color.DARK_GRAY;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
@@ -60,15 +63,16 @@ public class GameScreen implements Screen {
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
 
-
 		IntentBroadcastComponent intentCmp = new IntentBroadcastComponent();
 		Entity interactionEntity = engine.createEntity();
 		interactionEntity.add(new CameraTargetingComponent(camera, viewport));
 		interactionEntity.add(intentCmp);
 		engine.addEntity(interactionEntity);
 
+		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
 		BlenderComponentsLoader blender = new BlenderComponentsLoader(
+				assets,
 				"models/json/test_model.json",
 				"models/json/test_empty.json",
 				"models/json/test_light.json"
@@ -79,14 +83,14 @@ public class GameScreen implements Screen {
 		engine.addEntityListener(envSys.systemFamily, envSys.lightListener);
 		engine.addSystem(envSys);
 
-
+		// TODO: dispose
 		Gdx.app.debug(tag, "Loading models system");
 		ModelRenderSystem modelSys = new ModelRenderSystem(viewport, camera,
 				envSys.environment,
 				blender.sunDirection);
 		engine.addSystem(modelSys);
 
-
+		// TODO: dispose
 		Gdx.app.debug(tag, "Loading physics system");
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
@@ -135,7 +139,6 @@ public class GameScreen implements Screen {
 //				billboard.add(billboardModel);
 //
 //				engine.addEntity(billboard);
-
 			}
 		}
 
@@ -158,13 +161,13 @@ public class GameScreen implements Screen {
 		engine.addSystem(selSys);
 
 
-		Gdx.app.debug(tag, "Adding billboard system");
-		Family billFamily = Family.all(
-				TextureComponent.class,
-				MotionStateComponent.class,
-				ModelComponent.class).get();
-		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
-		engine.addSystem(billSys);
+//		Gdx.app.debug(tag, "Adding billboard system");
+//		Family billFamily = Family.all(
+//				TextureComponent.class,
+//				MotionStateComponent.class,
+//				ModelComponent.class).get();
+//		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
+//		engine.addSystem(billSys);
 
 		spawnCharacter(new Vector3(5, 1, 0), intentCmp);
 		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
@@ -184,33 +187,46 @@ public class GameScreen implements Screen {
 	private void spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
 		Entity entity = new Entity();
 		engine.addEntity(entity);
-		AssetManager assets = new AssetManager();
-		assets.load("models/g3db/man.g3db", Model.class);
-		assets.finishLoading();
-		Model model = assets.get("models/g3db/man.g3db", Model.class);
-		ModelComponent mdlCmp = new ModelComponent(model, "man", pos, new Vector3(0, 0, 0), new Vector3(1, 1,
-				1));
-		mdlCmp.useShadowMap = false;
+
+		UBJsonReader jsonReader = new UBJsonReader();
+		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
+		ModelData modelData = modelLoader.
+				loadModelData(Gdx.files.getFileHandle("models/g3db/man.g3db", Files.FileType.Internal));
+
+		// TODO: manage, dispose
+		Model model = new Model(modelData);
+		Model outlineModel = new Model(modelData);
+
+		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
+
+		ModelComponent mdlCmp = new ModelComponent(model, "man", pos,
+				new Vector3(0, 0, 0),
+				new Vector3(1, 1, 1));
 		entity.add(mdlCmp);
-		ModelInstance modelInstance = entity.getComponent(ModelComponent.class).modelInstance;
+		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "man_outline", pos,
+				new Vector3(0, 0, 0),
+				new Vector3(1, 1, 1));
+		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
+
 
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
-		MotionStateComponent motionStateCmp = new MotionStateComponent(modelInstance.transform);
+		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
 		PhysicsComponent phyCmp = new PhysicsComponent(
 				shape, motionStateCmp.motionState, 100,
 				PhysicsSystem.OBJECT_FLAG,
 				PhysicsSystem.ALL_FLAG,
 				true, true);
 		phyCmp.body.setAngularFactor(Vector3.Y);
-		phyCmp.body.setWorldTransform(modelInstance.transform);
+		phyCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
 		entity.add(motionStateCmp);
 		entity.add(phyCmp);
 		entity.add(intentCmp);
-		entity.add(new SelectableComponent());
+		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent());
-		entity.add(new CharacterActionComponent(modelInstance));
 
-
+		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
+		actionCmp.addModel(outlineMdlCmp.modelInstance);
+		entity.add(actionCmp);
 	}
 
 	@Override
@@ -219,8 +235,9 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		Gdx.graphics.getGL20().glClearColor(0, 0, 0, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glClearStencil(0);
+		Gdx.gl.glClearColor(0, 0, 0, 1f);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(viewportBackgroundColor);
@@ -259,7 +276,6 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void dispose() {
-		// TODO
 		stage.dispose();
 	}
 

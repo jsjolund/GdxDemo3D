@@ -28,6 +28,7 @@ public class GameStage extends Stage {
 	Camera cameraUI;
 	Camera camera3D;
 	Table shaderSettingsTable;
+	Skin skin;
 
 	public GameStage(Viewport viewport) {
 		super(viewport);
@@ -41,8 +42,7 @@ public class GameStage extends Stage {
 
 		batch = new SpriteBatch();
 
-		Skin skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
-
+		skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
 		shaderSettingsTable = new Table();
 

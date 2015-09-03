@@ -1,38 +1,41 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.badlogic.gdx.utils.UBJsonReader;
+import com.mygdx.game.components.ModelFactory;
+import com.mygdx.game.shaders.TestShader;
 
 
 public class TestGame extends Game {
 
 	public PerspectiveCamera cam;
 	public CameraInputController camController;
-	public Shader shader;
-	public RenderContext renderContext;
 	public Model model;
-	public Renderable renderable;
+	public Model modelBig;
+	public ModelInstance modelInstance;
+	public ModelInstance modelInstanceBig;
+	public ModelBatch batch;
+	public ModelBatch batchOutline;
+	public Environment environment;
 
-	public class TestShader extends DefaultShader {
-		public TestShader(Renderable renderable, ShaderProgram program) {
-			super(renderable, new DefaultShader.Config(), program);
-		}
-
-	}
+	public AnimationController controller;
+	public AnimationController controllerBig;
 
 	@Override
 	public void create() {
@@ -47,46 +50,83 @@ public class TestGame extends Game {
 		camController = new CameraInputController(cam);
 		Gdx.input.setInputProcessor(camController);
 
-		ModelBuilder modelBuilder = new ModelBuilder();
-		model = modelBuilder.createSphere(2f, 2f, 2f, 20, 20,
-				new Material(),
-				Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+		environment = new Environment();
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1f));
+		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
-		NodePart blockPart = model.nodes.get(0).parts.get(0);
+		UBJsonReader jsonReader = new UBJsonReader();
+		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
 
-		renderable = new Renderable();
-		blockPart.setRenderable(renderable);
-		renderable.environment = null;
-		renderable.worldTransform.idt();
+		ModelData modelData = modelLoader.loadModelData(Gdx.files.getFileHandle("models/g3db/man.g3db", Files.FileType.Internal));
 
-		renderContext = new RenderContext(new DefaultTextureBinder(DefaultTextureBinder.WEIGHTED, 1));
+		model = new Model(modelData);
+		modelBig = new Model(modelData);
+		ModelFactory.createOutlineModel(modelBig, Color.BLUE, 0.001f);
 
-		String vert = Gdx.files.internal("shaders/vertex.glsl").readString();
-		String frag = Gdx.files.internal("shaders/fragment.glsl").readString();
+		float s = 0.9f;
+		modelInstance = new ModelInstance(model);
+		for (Node node : modelInstance.nodes) {
+			node.scale.set(s, s, s);
+		}
+		modelInstance.calculateTransforms();
+		modelInstanceBig = new ModelInstance(modelBig);
+		for (Node node : modelInstanceBig.nodes) {
+			node.scale.set(s, s, s);
+		}
+		modelInstanceBig.calculateTransforms();
 
-		ShaderProgram.pedantic = false;
-		ShaderProgram program = new ShaderProgram(vert, frag);
-		shader = new TestShader(renderable, program);
-		shader.init();
+
+		controller = new AnimationController(modelInstance);
+		controller.setAnimation("Armature|run", -1);
+
+		controllerBig = new AnimationController(modelInstanceBig);
+		controllerBig.setAnimation("Armature|run", -1);
+
+		final String vert = Gdx.files.internal("shaders/xoppa.vert").readString();
+		final String frag = Gdx.files.internal("shaders/xoppa.frag").readString();
+		batch = new ModelBatch(new DefaultShaderProvider(vert, frag) {
+			@Override
+			protected Shader createShader(final Renderable renderable) {
+				return new TestShader(renderable, config);
+			}
+		});
+
+		final String vert2 = Gdx.files.internal("shaders/singlecolor.vert").readString();
+		final String frag2 = Gdx.files.internal("shaders/singlecolor.frag").readString();
+		batchOutline = new ModelBatch(new DefaultShaderProvider(vert2, frag2) {
+			@Override
+			protected Shader createShader(final Renderable renderable) {
+				return new TestShader(renderable, config);
+			}
+		});
 	}
 
 	@Override
 	public void render() {
 		camController.update();
 
+		float c = 0.5f;
+		Gdx.gl.glClearColor(c, c, c, 1f);
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		renderContext.begin();
-		shader.begin(cam, renderContext);
-		shader.render(renderable);
-		shader.end();
-		renderContext.end();
+		batchOutline.begin(cam);
+		batchOutline.render(modelInstanceBig, environment);
+		batchOutline.end();
+
+//		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
+
+		batch.begin(cam);
+//		batch.render(modelInstanceBig, environment);
+		batch.render(modelInstance, environment);
+		batch.end();
+
+		controller.update(Gdx.graphics.getDeltaTime());
+		controllerBig.update(Gdx.graphics.getDeltaTime());
 	}
 
 	@Override
 	public void dispose() {
-		shader.dispose();
 		model.dispose();
 	}
 

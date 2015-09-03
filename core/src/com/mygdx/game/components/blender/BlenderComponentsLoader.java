@@ -34,8 +34,9 @@ public class BlenderComponentsLoader {
 	public Vector3 sunDirection = new Vector3();
 	AssetManager assets;
 
-	public BlenderComponentsLoader(String modelsJsonPath, String emptiesJsonPath, String lightsJsonPath) {
-		assets = new AssetManager();
+	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
+			lightsJsonPath) {
+		this.assets = assets;
 
 		ArrayList<BlenderModelComponent> models = loadModels(modelsJsonPath);
 		for (BlenderModelComponent cmp : models) {
@@ -92,8 +93,6 @@ public class BlenderComponentsLoader {
 			// No shape defined. Load as static object.
 //			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
 			shape = Bullet.obtainStaticNodeShape(instance.nodes);
-//			shape.setLocalScaling(cmp.scale.cpy().scl(1, 1, -1));
-//			shape.setLocalScaling(cmp.scale.cpy().scl(cmp.scale.x, cmp.scale.y, -cmp.scale.z));
 			PhysicsComponent phyCmp = new PhysicsComponent(
 					shape, null, 0,
 					PhysicsSystem.GROUND_FLAG,

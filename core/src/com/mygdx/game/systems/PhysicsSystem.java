@@ -20,16 +20,21 @@ import com.mygdx.game.components.PhysicsComponent;
  */
 public class PhysicsSystem extends EntitySystem implements Disposable {
 
+	public static final String tag = "PhysicsSystem";
+
 	// Collision flags
 	public final static short NONE_FLAG = 0;
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
 	public final static short ALL_FLAG = -1;
-	public static final String tag = "PhysicsSystem";
+
+	// Ashley
 	public PhysicsListener listener;
-	public Family systemFamily;
-	public btDynamicsWorld dynamicsWorld;
 	private ImmutableArray<Entity> entities;
+	public Family systemFamily;
+
+	// Bullet classes
+	public btDynamicsWorld dynamicsWorld;
 	private CollisionContactListener contactListener;
 	private btCollisionConfiguration collisionConfig;
 	private btDispatcher dispatcher;
@@ -80,6 +85,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		broadphase.dispose();
 		constraintSolver.dispose();
 		contactListener.dispose();
+		debugDrawer.dispose();
 	}
 
 	public Entity rayTest(Ray ray, Vector3 point, short mask,

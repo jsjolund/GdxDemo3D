@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.mygdx.game.components.CharacterActionComponent;
 
 /**
@@ -22,9 +23,13 @@ public class AnimationSystem extends IteratingSystem {
 	protected void processEntity(Entity entity, float deltaTime) {
 		CharacterActionComponent actionCmp = actionCmps.get(entity);
 		if (actionCmp.currentAction != actionCmp.nextAction) {
-			actionCmp.controller.setAnimation(actionCmp.nextAction.animationId, -1);
+			for (AnimationController controller : actionCmp.controllers) {
+				controller.setAnimation(actionCmp.nextAction.animationId, -1);
+			}
 			actionCmp.currentAction = actionCmp.nextAction;
 		}
-		actionCmp.controller.update(deltaTime);
+		for (AnimationController controller : actionCmp.controllers) {
+			controller.update(deltaTime);
+		}
 	}
 }
