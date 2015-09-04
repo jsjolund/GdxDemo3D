@@ -6,6 +6,8 @@ import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
@@ -20,6 +22,8 @@ public class PhysicsComponent extends Component implements Disposable {
 	public final short collidesWithFlag;
 	private final btCollisionShape shape;
 	private final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
+
+	public Array<btTypedConstraint> constraints;
 
 	public PhysicsComponent(btCollisionShape shape,
 							MotionStateComponent.PhysicsMotionState motionState,
@@ -54,6 +58,12 @@ public class PhysicsComponent extends Component implements Disposable {
 		}
 	}
 
+	public void addConstraint(btTypedConstraint constraint) {
+		if (constraints == null) {
+			constraints = new Array<btTypedConstraint>();
+		}
+		constraints.add(constraint);
+	}
 
 	@Override
 	public void dispose() {
@@ -61,5 +71,9 @@ public class PhysicsComponent extends Component implements Disposable {
 		constructionInfo.dispose();
 		motionState.dispose();
 		body.dispose();
+		for (btTypedConstraint constraint : constraints) {
+			constraint.dispose();
+		}
+		constraints.clear();
 	}
 }

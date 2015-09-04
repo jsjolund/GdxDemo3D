@@ -122,6 +122,7 @@ public class GameScreen implements Screen {
 				hinge.enableAngularMotor(true, 0,5);
 				hinge.setDbgDrawSize(5);
 				phySys.dynamicsWorld.addConstraint(hinge);
+				phyCmp.addConstraint(hinge);
 			}
 
 			if (modelCmp.id.endsWith("ball")) {
