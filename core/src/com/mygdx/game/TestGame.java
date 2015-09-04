@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.IntAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -19,7 +18,7 @@ import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.mygdx.game.components.ModelFactory;
-import com.mygdx.game.shaders.TestShader;
+import com.mygdx.game.shaders.SimpleShader;
 
 
 public class TestGame extends Game {
@@ -87,7 +86,7 @@ public class TestGame extends Game {
 		batch = new ModelBatch(new DefaultShaderProvider(vert, frag) {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
-				return new TestShader(renderable, config);
+				return new SimpleShader(renderable, config);
 			}
 		});
 
@@ -96,7 +95,7 @@ public class TestGame extends Game {
 		batchOutline = new ModelBatch(new DefaultShaderProvider(vert2, frag2) {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
-				return new TestShader(renderable, config);
+				return new SimpleShader(renderable, config);
 			}
 		});
 	}

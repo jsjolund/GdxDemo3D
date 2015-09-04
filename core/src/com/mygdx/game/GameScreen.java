@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -112,12 +113,17 @@ public class GameScreen implements Screen {
 
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
-
-//			entity.add(new SelectableComponent());
-			entity.add(intentCmp);
-
-
+//			entity.add(intentCmp);
 			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
+
+			if (modelCmp.id.startsWith("door")) {
+				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
+				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0,0,-0.6f), Vector3.Y);
+				hinge.enableAngularMotor(true, 0,5);
+				hinge.setDbgDrawSize(5);
+				phySys.dynamicsWorld.addConstraint(hinge);
+			}
+
 			if (modelCmp.id.endsWith("ball")) {
 ////				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
 //				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);

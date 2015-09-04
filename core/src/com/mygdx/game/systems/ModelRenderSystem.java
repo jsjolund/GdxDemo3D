@@ -20,6 +20,7 @@ import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.DepthMapShader;
+import com.mygdx.game.shaders.SimpleShader;
 import com.mygdx.game.shaders.UberShader;
 
 
@@ -42,12 +43,13 @@ public class ModelRenderSystem extends EntitySystem {
 	private OrthographicCamera depthMapCamera;
 	private ModelBatch depthMapModelBatch;
 	private SpriteBatch depthMapBatch = new SpriteBatch();
-	public Texture depthMap;
+	private Texture depthMap;
 	private ShadowData shadowData;
 
-	Viewport viewport;
+	private Viewport viewport;
 
 	private Environment selectedEnvironment;
+	private ModelBatch selectedModelBatch;
 
 	public class ShadowData {
 		public final int u_depthMap = 10000;
@@ -68,8 +70,8 @@ public class ModelRenderSystem extends EntitySystem {
 
 		float t = 50;
 		depthMapCamera = new OrthographicCamera(
-				Gdx.graphics.getWidth() / 10,
-				Gdx.graphics.getHeight() / 10);
+				Gdx.graphics.getWidth() / 12,
+				Gdx.graphics.getHeight() / 12);
 		depthMapCamera.zoom = 1f;
 		depthMapCamera.near = 1f;
 		depthMapCamera.far = t * 1.5f;
@@ -101,6 +103,15 @@ public class ModelRenderSystem extends EntitySystem {
 			@Override
 			protected Shader createShader(final Renderable renderable) {
 				return new UberShader(renderable, config, shadowData);
+			}
+		});
+
+		final String vertSel = Gdx.files.internal("shaders/singlecolor.vert").readString();
+		final String fragSel = Gdx.files.internal("shaders/singlecolor.frag").readString();
+		selectedModelBatch = new ModelBatch(new DefaultShaderProvider(vertSel, fragSel) {
+			@Override
+			protected Shader createShader(final Renderable renderable) {
+				return new SimpleShader(renderable, config);
 			}
 		});
 
@@ -167,7 +178,9 @@ public class ModelRenderSystem extends EntitySystem {
 
 			if (isVisible(camera, cmp)) {
 				if (selCmp != null && selCmp.isSelected) {
-					modelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
+					selectedModelBatch.begin(camera);
+					selectedModelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
+					selectedModelBatch.end();
 					modelBatch.render(cmp.modelInstance, environment);
 				} else {
 					modelBatch.render(cmp.modelInstance, environment);
