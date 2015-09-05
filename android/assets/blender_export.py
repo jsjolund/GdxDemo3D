@@ -36,7 +36,7 @@ class BlenderObject(object):
 
 
 class BlenderModel(BlenderObject):
-    map_name = "model"
+    category = "model"
 
     def __init__(self, bobj, filename):
         super().__init__(bobj)
@@ -52,7 +52,7 @@ class BlenderModel(BlenderObject):
 
 
 class BlenderEmpty(BlenderObject):
-    map_name = "empty"
+    category = "empty"
 
     def __init__(self, bobj):
         super().__init__(bobj)
@@ -63,7 +63,7 @@ class BlenderEmpty(BlenderObject):
 
 
 class BlenderLight(BlenderObject):
-    map_name = "light"
+    category = "light"
 
     def __init__(self, bobj):
         super().__init__(bobj)
@@ -81,6 +81,17 @@ class BlenderLight(BlenderObject):
         self.entry["lamp_energy"] = self.lamp_energy
         self.entry["lamp_distance"] = self.lamp_dst
         self.entry["lamp_falloff"] = self.lamp_falloff
+        return self.entry
+
+
+class BlenderArmature(BlenderObject):
+    category = "armature"
+
+    def __init__(self, bobj):
+        super().__init__(bobj)
+
+    def serialize(self):
+        super().serialize()
         return self.entry
 
 
@@ -117,11 +128,20 @@ def write_fbx(blender_file_basedir, export_objects):
 
     for gobj in export_objects:
         bobj0 = gobj.bobj
+        bobj0.select = True
+        # Select any connected armatures
+        armatures = []
+        for mod in bobj0.modifiers:
+            if type(mod) is bpy.types.ArmatureModifier:
+                armatures.append(mod.object)
+        for armature in armatures:
+            print("selecting "+ str(armature))
+            armature.select = True
         obj_file_path = os.path.join(blender_file_basedir, gobj.get_model_name() + ".fbx")
         obj_file_paths.append(obj_file_path)
 
         # Select object, set loc & rot to zero, export to obj, restore loc & rot, unselect
-        bobj0.select = True
+        # bobj0.select = True
         bpy.context.scene.objects.active = bobj0
         bobj0.location.zero()
         bobj0.rotation_euler.zero()
@@ -131,13 +151,17 @@ def write_fbx(blender_file_basedir, export_objects):
                                  use_selection=True,
                                  use_tspace=True,
                                  use_mesh_modifiers=True,
-                                 object_types={'MESH'},
+                                 object_types={'MESH', 'ARMATURE'},
                                  axis_forward='Y',
                                  axis_up='Z')
         bobj0.location = gobj.loc.copy()
         bobj0.rotation_euler = gobj.rote.copy()
         bobj0.scale = gobj.scl.copy()
+
+        # Deselect the object and any armatures
         bobj0.select = False
+        for armature in armatures:
+            armature.select = False
 
     return obj_file_paths
 
@@ -162,7 +186,7 @@ def get_export_objects(blender_object_map):
     mesh_objects = {}
     export_objects = []
 
-    for obj in blender_object_map[BlenderModel.map_name]:
+    for obj in blender_object_map[BlenderModel.category]:
         scene_mesh_name = obj.bobj.data.name
         scene_object_name = obj.name_array[0]
         if scene_object_name in mesh_objects:
@@ -196,15 +220,19 @@ def create_blender_object_map(filename, scene_objects):
 
         if type(scene_obj.data) is bpy.types.Mesh:
             gobj = BlenderModel(scene_obj, filename)
-            category = BlenderModel.map_name
+            category = BlenderModel.category
 
         elif scene_obj.data is None:
             gobj = BlenderEmpty(scene_obj)
-            category = BlenderEmpty.map_name
+            category = BlenderEmpty.category
 
         elif type(scene_obj.data) in [bpy.types.PointLamp, bpy.types.SpotLamp, bpy.types.SunLamp]:
             gobj = BlenderLight(scene_obj)
-            category = BlenderLight.map_name
+            category = BlenderLight.category
+
+        # elif type(scene_obj.data) is bpy.types.Armature:
+        #     gobj = BlenderArmature(scene_obj)
+        #     category = BlenderArmature.category
 
         if category == "unknown":
             print("Warning: {} not supported".format(str(scene_obj.data.__class__.__name__)))
@@ -239,6 +267,8 @@ def main():
 
     if not blender_file_basedir:
         raise Exception("Blend file is not saved")
+
+    bpy.data.scenes['Scene'].render.fps = 30
 
     blender_object_map = create_blender_object_map(blender_filename_noext, bpy.data.objects)
 

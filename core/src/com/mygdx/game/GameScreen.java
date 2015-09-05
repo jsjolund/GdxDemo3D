@@ -16,6 +16,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
@@ -74,9 +76,9 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Loading json");
 		BlenderComponentsLoader blender = new BlenderComponentsLoader(
 				assets,
-				"models/json/test_model.json",
-				"models/json/test_empty.json",
-				"models/json/test_light.json"
+				"models/json/scene0_model.json",
+				"models/json/scene0_empty.json",
+				"models/json/scene0_light.json"
 		);
 
 		Gdx.app.debug(tag, "Loading environment system");
@@ -119,7 +121,8 @@ public class GameScreen implements Screen {
 			if (modelCmp.id.startsWith("door")) {
 				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
 				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0,0,-0.6f), Vector3.Y);
-				hinge.enableAngularMotor(true, 0,5);
+				hinge.enableAngularMotor(true, 0, 5);
+
 				hinge.setDbgDrawSize(5);
 				phySys.dynamicsWorld.addConstraint(hinge);
 				phyCmp.addConstraint(hinge);
@@ -198,7 +201,7 @@ public class GameScreen implements Screen {
 		UBJsonReader jsonReader = new UBJsonReader();
 		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
 		ModelData modelData = modelLoader.
-				loadModelData(Gdx.files.getFileHandle("models/g3db/man.g3db", Files.FileType.Internal));
+				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType.Internal));
 
 		// TODO: manage, dispose
 		Model model = new Model(modelData);
@@ -210,7 +213,7 @@ public class GameScreen implements Screen {
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		entity.add(mdlCmp);
-		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "man_outline", pos,
+		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
@@ -231,9 +234,19 @@ public class GameScreen implements Screen {
 		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent());
 
+		Node bones = mdlCmp.modelInstance.getNode("Armature");
+		System.out.println(bones.id);
+
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
 		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
+
+		Gdx.app.debug(tag, "Finished adding character");
+//		for (Node n : bones.getChildren()) {
+//			System.out.println(n.id);
+//		}
+//		for (NodePart p : bones.parts) {
+//		}
 	}
 
 	@Override
