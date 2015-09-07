@@ -20,15 +20,6 @@ public class UberShader extends DefaultShader {
 	public Renderable renderable;
 	private ModelRenderSystem.ShadowData shadowData;
 
-	public static class UberShaderSettings {
-		public static float u_hue = 1f;
-		public static float u_saturation = 0.7f;
-		public static float u_value = 1.2f;
-		public static float u_specOpacity = 0.25f;
-		public static float u_lightIntensity = 0.5f;
-		public static float u_shadowIntensity = 0.5f;
-	}
-
 	public UberShader(Renderable renderable, Config config, ModelRenderSystem.ShadowData shadowData) {
 		super(renderable, config);
 		this.renderable = renderable;
@@ -68,6 +59,15 @@ public class UberShader extends DefaultShader {
 	@Override
 	public void render(final Renderable renderable, final Attributes combinedAttributes) {
 		super.render(renderable, combinedAttributes);
+	}
+
+	public static class UberShaderSettings {
+		public static float u_hue = 1f;
+		public static float u_saturation = 0.7f;
+		public static float u_value = 1.2f;
+		public static float u_specOpacity = 0.25f;
+		public static float u_lightIntensity = 0.5f;
+		public static float u_shadowIntensity = 0.5f;
 	}
 
 }

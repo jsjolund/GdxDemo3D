@@ -27,6 +27,8 @@ public class GameInputSystem extends EntitySystem {
 	float zoom;
 	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
 
+	boolean killKeyBroadcasted = false;
+
 	public GameInputSystem(IntentBroadcastComponent intent) {
 		family = Family.all(IntentBroadcastComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
@@ -87,6 +89,18 @@ public class GameInputSystem extends EntitySystem {
 			data.isDragging = false;
 
 			intent.doubleClick = data.doubleClick;
+		}
+
+		if (keys.containsKey(GameSettings.KEY_KILL_SELECTED)) {
+			if (!killKeyBroadcasted) {
+				intent.killSelected = true;
+				killKeyBroadcasted = true;
+			} else {
+				intent.killSelected = false;
+			}
+		} else {
+			intent.killSelected = false;
+			killKeyBroadcasted = false;
 		}
 
 	}
@@ -181,7 +195,7 @@ public class GameInputSystem extends EntitySystem {
 		int dragHistoryCursor = 0;
 		Vector2 down = new Vector2();
 		Vector2 lastDrag = new Vector2();
-		long lastClickTime =0;
+		long lastClickTime = 0;
 		int button;
 		boolean isDragging = false;
 		boolean doubleClick = false;
@@ -199,30 +213,5 @@ public class GameInputSystem extends EntitySystem {
 			doubleClick = false;
 		}
 	}
-
-//	@Override
-//	public boolean mouseMoved(int screenX, int screenY) {
-//		// Perform camera mouse look
-//		float mouseSens = GameSettings.MOUSE_SENSITIVITY;
-//
-//		directionOld.set(player.direction);
-//
-//		float mouseDx = screenX - player.screenCenter.x;
-//		float mouseDy = screenY - player.screenCenter.y;
-//
-//		player.direction.rotate(
-//				xzMouseRotation.set(player.direction).crs(Vector3.Y),
-//				-mouseSens * mouseDy);
-//		player.direction.rotate(Vector3.Y, -mouseSens * mouseDx);
-//
-//		if ((Math.signum(player.direction.x) != Math.signum(directionOld.x))
-//				&& Math.signum(player.direction.z) != Math.signum(directionOld.z)) {
-//			player.direction.set(directionOld);
-//		}
-//
-//		player.direction.nor();
-//		centerMouseCursor();
-//		return true;
-//	}
 
 }

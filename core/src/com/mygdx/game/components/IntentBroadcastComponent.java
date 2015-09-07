@@ -23,14 +23,6 @@ public class IntentBroadcastComponent extends Component {
 
 	public boolean doubleClick = false;
 
-//	public void reset() {
-//		moveDirection.setZero();
-//		dragStart.setZero();
-//		dragCurrent.setZero();
-//		click.setZero();
-//		isDragging = false;
-//		pan = false;
-//		rotate = false;
-//		// zoom = 0;
-//	}
+	public boolean killSelected = false;
+
 }

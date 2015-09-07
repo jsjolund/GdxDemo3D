@@ -17,21 +17,26 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
+import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderComponent;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
+import com.mygdx.game.components.blender.BlenderEmptyComponent;
 import com.mygdx.game.systems.*;
+
+import java.util.ArrayList;
 
 /**
  * Created by user on 8/1/15.
@@ -45,8 +50,8 @@ public class GameScreen implements Screen {
 	PooledEngine engine;
 	Color viewportBackgroundColor;
 	Camera camera;
-	private ShapeRenderer shapeRenderer;
 	AssetManager assets;
+	private ShapeRenderer shapeRenderer;
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		assets = new AssetManager();
@@ -97,7 +102,8 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Loading physics system");
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
-		engine.addEntityListener(phySys.systemFamily, phySys.listener);
+		engine.addEntityListener(phySys.systemFamily, phySys.physicsComponentListener);
+		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
 
 
 		Gdx.app.debug(tag, "Adding entities");
@@ -120,7 +126,7 @@ public class GameScreen implements Screen {
 
 			if (modelCmp.id.startsWith("door")) {
 				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
-				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0,0,-0.6f), Vector3.Y);
+				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0, 0, -0.6f), Vector3.Y);
 				hinge.enableAngularMotor(true, 0, 5);
 
 				hinge.setDbgDrawSize(5);
@@ -183,32 +189,36 @@ public class GameScreen implements Screen {
 		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
 
 
-		Family pathFamily = Family.all(
-				PathFindingComponent.class,
-				PhysicsComponent.class).get();
-		PathFindingSystem pathSys = new PathFindingSystem(pathFamily);
-		engine.addSystem(pathSys);
+		Family pathFamily = Family.all(PathFindingComponent.class, PhysicsComponent.class).get();
+		engine.addSystem(new PathFindingSystem(pathFamily));
 
 		Family animFamily = Family.all(CharacterActionComponent.class).get();
-		AnimationSystem animSys = new AnimationSystem(animFamily);
-		engine.addSystem(animSys);
+		engine.addSystem(new AnimationSystem(animFamily));
+
+		Family ragdollFamily = Family.all(CharacterActionComponent.class, RagdollComponent.class).get();
+		engine.addSystem(new RagdollSystem(ragdollFamily));
 	}
+
 
 	private void spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
 		Entity entity = new Entity();
-		engine.addEntity(entity);
 
+		short belongsToFlag = PhysicsSystem.PC_FLAG;
+		short collidesWithFlag = (short) (PhysicsSystem.OBJECT_FLAG | PhysicsSystem.GROUND_FLAG);
+
+		// Get character model data
 		UBJsonReader jsonReader = new UBJsonReader();
 		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
 		ModelData modelData = modelLoader.
 				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType.Internal));
 
+		// Create normal model and outline model
 		// TODO: manage, dispose
 		Model model = new Model(modelData);
 		Model outlineModel = new Model(modelData);
-
 		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
 
+		// Create model components containing model instances
 		ModelComponent mdlCmp = new ModelComponent(model, "man", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
@@ -216,37 +226,118 @@ public class GameScreen implements Screen {
 		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
+		// Connect the normal modelinstance transform to outline transform, then connect them to motion state
 		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
-
-
-		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
 		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
+
+		// Create base collision shape
+		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
 		PhysicsComponent phyCmp = new PhysicsComponent(
 				shape, motionStateCmp.motionState, 100,
-				PhysicsSystem.OBJECT_FLAG,
-				PhysicsSystem.ALL_FLAG,
+				belongsToFlag,
+				collidesWithFlag,
 				true, true);
 		phyCmp.body.setAngularFactor(Vector3.Y);
 		phyCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
 		entity.add(motionStateCmp);
 		entity.add(phyCmp);
 		entity.add(intentCmp);
+
+		// Make model selectable, add pathfinding, animation components
 		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent());
-
-		Node bones = mdlCmp.modelInstance.getNode("Armature");
-		System.out.println(bones.id);
-
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
 		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
 
+
+		// Ragdoll test
+		// Animation playing -> ragdoll rigid bodies controlled by animation transforms
+		// No animation -> ragdoll rigid bodies controlled by dynamics world -> nodes controlled by rigid bodies
+
+		RagdollComponent ragCmp = new RagdollComponent();
+		ragCmp.belongsToFlag = belongsToFlag;
+		ragCmp.collidesWithFlag = collidesWithFlag;
+
+		// Load shape defs
+		String path = "models/json/character_empty.json";
+		ArrayList<BlenderEmptyComponent> empties = new Json().fromJson(ArrayList.class, BlenderEmptyComponent.class, Gdx
+				.files.local(path));
+		ArrayMap<String, btCollisionShape> shapeMap = new ArrayMap<String, btCollisionShape>();
+		for (BlenderEmptyComponent empty : empties) {
+			BlenderComponentsLoader.blenderToGdxCoordinates(empty);
+			Vector3 halfExtents = new Vector3(empty.scale);
+			halfExtents.x = Math.abs(halfExtents.x);
+			halfExtents.y = Math.abs(halfExtents.y);
+			halfExtents.z = Math.abs(halfExtents.z);
+			btCollisionShape ragdollPartShape = new btBoxShape(halfExtents);
+			shapeMap.put(empty.name, ragdollPartShape);
+		}
+
+		Node armature = mdlCmp.modelInstance.getNode("armature");
+		ragCmp.armatureNode = armature;
+
+		ragCmp.headNode = armature.getChild("head", true, true);
+		ragCmp.headBody = new PhysicsComponent(shapeMap.get("head"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.abdomenNode = armature.getChild("abdomen", true, true);
+		ragCmp.abdomenBody = new PhysicsComponent(shapeMap.get("abdomen"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.chestNode = armature.getChild("chest", true, true);
+		ragCmp.chestBody = new PhysicsComponent(shapeMap.get("chest"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.leftUpperArmNode = armature.getChild("left_upper_arm", true, true);
+		ragCmp.leftUpperArmBody = new PhysicsComponent(shapeMap.get("left_upper_arm"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.leftForearmNode = armature.getChild("left_forearm", true, true);
+		ragCmp.leftForearmBody = new PhysicsComponent(shapeMap.get("left_forearm"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.leftThighNode = armature.getChild("left_thigh", true, true);
+		ragCmp.leftThighBody = new PhysicsComponent(shapeMap.get("left_thigh"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.leftShinNode = armature.getChild("left_shin", true, true);
+		ragCmp.leftShinBody = new PhysicsComponent(shapeMap.get("left_shin"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.rightUpperArmNode = armature.getChild("right_upper_arm", true, true);
+		ragCmp.rightUpperArmBody = new PhysicsComponent(shapeMap.get("right_upper_arm"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.rightForearmNode = armature.getChild("right_forearm", true, true);
+		ragCmp.rightForearmBody = new PhysicsComponent(shapeMap.get("right_forearm"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.rightThighNode = armature.getChild("right_thigh", true, true);
+		ragCmp.rightThighBody = new PhysicsComponent(shapeMap.get("right_thigh"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+		ragCmp.rightShinNode = armature.getChild("right_shin", true, true);
+		ragCmp.rightShinBody = new PhysicsComponent(shapeMap.get("right_shin"),
+				null, 10, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.populateNodeBodyMap();
+		entity.add(ragCmp);
+
+
+		engine.addEntity(entity);
+		// Done
 		Gdx.app.debug(tag, "Finished adding character");
-//		for (Node n : bones.getChildren()) {
-//			System.out.println(n.id);
-//		}
-//		for (NodePart p : bones.parts) {
-//		}
 	}
 
 	@Override

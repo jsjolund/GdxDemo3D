@@ -2,18 +2,17 @@ package com.mygdx.game.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.collision.*;
-import com.badlogic.gdx.physics.bullet.dynamics.btConstraintSolver;
-import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
-import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
-import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
+import com.badlogic.gdx.physics.bullet.dynamics.*;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.components.RagdollComponent;
 
 /**
  * Created by user on 7/31/15.
@@ -24,17 +23,19 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	// Collision flags
 	public final static short NONE_FLAG = 0;
+	public final static short NPC_FLAG = 1 << 6;
+	public final static short PC_FLAG = 1 << 10;
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
 	public final static short ALL_FLAG = -1;
 
 	// Ashley
-	public PhysicsListener listener;
-	private ImmutableArray<Entity> entities;
+	public PhysicsListener physicsComponentListener;
+	public RagdollListener ragdollComponentListener;
 	public Family systemFamily;
-
 	// Bullet classes
 	public btDynamicsWorld dynamicsWorld;
+	private ImmutableArray<Entity> entities;
 	private CollisionContactListener contactListener;
 	private btCollisionConfiguration collisionConfig;
 	private btDispatcher dispatcher;
@@ -57,7 +58,8 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
 
 		contactListener = new CollisionContactListener();
-		listener = new PhysicsListener();
+		physicsComponentListener = new PhysicsListener();
+		ragdollComponentListener = new RagdollListener();
 		systemFamily = Family.all(PhysicsComponent.class).get();
 	}
 
@@ -98,7 +100,8 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		ClosestRayResultCallback callback = new ClosestRayResultCallback(
 				rayFrom, rayTo);
-		callback.setCollisionFilterMask(mask);
+//		callback.setCollisionFilterMask(mask);
+		callback.setCollisionFilterGroup(mask);
 		dynamicsWorld.rayTest(rayFrom, rayTo, callback);
 		if (callback.hasHit()) {
 			long entityId = callback.getCollisionObject().getUserPointer();
@@ -146,4 +149,24 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		}
 	}
 
+	public class RagdollListener implements EntityListener {
+
+		@Override
+		public void entityAdded(Entity entity) {
+			Gdx.app.debug(tag, "Adding ragdoll");
+			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
+			for (btRigidBody body : cmp.nodeBodyMap.values()) {
+				body.setUserPointer(entity.getId());
+				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
+			}
+		}
+
+		@Override
+		public void entityRemoved(Entity entity) {
+			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
+			for (btRigidBody body : cmp.nodeBodyMap.values()) {
+				dynamicsWorld.removeCollisionObject(body);
+			}
+		}
+	}
 }

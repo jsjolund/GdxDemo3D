@@ -3,12 +3,14 @@ package com.mygdx.game.components.blender;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
@@ -38,11 +40,17 @@ public class BlenderComponentsLoader {
 			lightsJsonPath) {
 		this.assets = assets;
 
+		MipMapGenerator.setUseHardwareMipMap(true);
+		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
+		param.textureParameter.genMipMaps = true;
+		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
+
 		ArrayList<BlenderModelComponent> models = loadModels(modelsJsonPath);
 		for (BlenderModelComponent cmp : models) {
 			cmp.model_file_name = String.format("models/g3db/%s.g3db", cmp.model_file_name);
 //			Gdx.app.debug(tag, "Loading " + cmp.model_file_name);
-			assets.load(cmp.model_file_name, Model.class);
+			assets.load(cmp.model_file_name, Model.class, param);
 		}
 
 		ArrayList<BlenderEmptyComponent> empties = loadEmpties(emptiesJsonPath);
@@ -64,7 +72,7 @@ public class BlenderComponentsLoader {
 		}
 	}
 
-	private static void blenderToGdxCoordinates(BlenderComponent cmp) {
+	public static void blenderToGdxCoordinates(BlenderComponent cmp) {
 		blenderToGdxCoordinates(cmp.position, cmp.rotation, cmp.scale);
 	}
 

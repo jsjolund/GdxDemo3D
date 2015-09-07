@@ -60,8 +60,7 @@ public class ModelSelectionSystem extends EntitySystem {
 				screenX, screenY, ray.origin, ray.direction));
 
 		Entity hitEntity = phySys.rayTest(ray, surfacePoint,
-				(short) (PhysicsSystem.GROUND_FLAG
-						| PhysicsSystem.OBJECT_FLAG),
+				PhysicsSystem.ALL_FLAG,
 				distance);
 
 		if (hitEntity == null) {

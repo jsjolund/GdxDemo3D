@@ -10,6 +10,10 @@ import com.badlogic.gdx.utils.Array;
  */
 public class CharacterActionComponent extends Component {
 
+	public Array<AnimationController> controllers;
+	public Action nextAction = Action.IDLE;
+	public Action currentAction = Action.NULL;
+
 	public CharacterActionComponent(ModelInstance modelInstance) {
 		controllers = new Array<AnimationController>();
 		addModel(modelInstance);
@@ -21,15 +25,12 @@ public class CharacterActionComponent extends Component {
 		controllers.add(controller);
 	}
 
-	public Array<AnimationController> controllers;
-
-	public Action nextAction = Action.IDLE;
-	public Action currentAction = Action.IDLE;
-
 	public enum Action {
-		WALK("Armature|walk"),
-		RUN("Armature|run"),
-		IDLE("Armature|stand");
+		WALK("armature|walk"),
+		WALK_RIFLE("armature|walk_rifle"),
+		RUN("armature|run"),
+		IDLE("armature|stand"),
+		NULL(null);
 
 		public final String animationId;
 

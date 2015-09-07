@@ -30,8 +30,9 @@ import com.mygdx.game.shaders.UberShader;
 public class ModelRenderSystem extends EntitySystem {
 
 	public static final String tag = "ModelRenderSystem";
-
+	public static final int DEPTHMAPIZE = 1024;
 	public Family systemFamily;
+	public FrameBuffer frameBuffer;
 	private Vector3 pos = new Vector3();
 	private ModelBatch modelBatch;
 	private ImmutableArray<Entity> entities;
@@ -39,25 +40,14 @@ public class ModelRenderSystem extends EntitySystem {
 	private ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
 	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private Environment environment;
-
 	private OrthographicCamera depthMapCamera;
 	private ModelBatch depthMapModelBatch;
 	private SpriteBatch depthMapBatch = new SpriteBatch();
 	private Texture depthMap;
 	private ShadowData shadowData;
-
 	private Viewport viewport;
-
 	private Environment selectedEnvironment;
 	private ModelBatch selectedModelBatch;
-
-	public class ShadowData {
-		public final int u_depthMap = 10000;
-		public Matrix4 u_lightTrans;
-		public float u_cameraFar;
-		public Vector3 u_lightPosition;
-		public Vector3 u_lightDirection;
-	}
 
 	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -128,10 +118,6 @@ public class ModelRenderSystem extends EntitySystem {
 		return camera.frustum.sphereInFrustum(pos, cmp.radius);
 	}
 
-
-	public FrameBuffer frameBuffer;
-	public static final int DEPTHMAPIZE = 1024;
-
 	public void renderShadowMap() {
 		if (frameBuffer == null) {
 			frameBuffer = new FrameBuffer(Pixmap.Format.RGBA8888, DEPTHMAPIZE, DEPTHMAPIZE, true);
@@ -150,7 +136,6 @@ public class ModelRenderSystem extends EntitySystem {
 		frameBuffer.end();
 		depthMap = frameBuffer.getColorBufferTexture();
 	}
-
 
 	@Override
 	public void update(float deltaTime) {
@@ -197,5 +182,17 @@ public class ModelRenderSystem extends EntitySystem {
 			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
 			depthMapBatch.end();
 		}
+
+
 	}
+
+	public class ShadowData {
+		public final int u_depthMap = 10000;
+		public Matrix4 u_lightTrans;
+		public float u_cameraFar;
+		public Vector3 u_lightPosition;
+		public Vector3 u_lightDirection;
+	}
+
+
 }

@@ -22,8 +22,15 @@ public class AnimationSystem extends IteratingSystem {
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
 		CharacterActionComponent actionCmp = actionCmps.get(entity);
+		if (actionCmp.nextAction == CharacterActionComponent.Action.NULL) {
+			for (AnimationController controller : actionCmp.controllers) {
+				controller.paused = true;
+			}
+			actionCmp.currentAction = CharacterActionComponent.Action.NULL;
+		}
 		if (actionCmp.currentAction != actionCmp.nextAction) {
 			for (AnimationController controller : actionCmp.controllers) {
+				controller.paused = false;
 				controller.setAnimation(actionCmp.nextAction.animationId, -1);
 			}
 			actionCmp.currentAction = actionCmp.nextAction;
@@ -31,5 +38,6 @@ public class AnimationSystem extends IteratingSystem {
 		for (AnimationController controller : actionCmp.controllers) {
 			controller.update(deltaTime);
 		}
+
 	}
 }

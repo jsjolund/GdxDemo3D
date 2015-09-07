@@ -149,7 +149,7 @@ public class OverheadCameraSystem extends IteratingSystem {
 
 						panResult.setZero().add(cam.up).nor().scl(-cursorDelta.y);
 						cam.position.add(panResult);
-						panResult.setZero().add(perpendicular).nor().scl(cursorDelta.x * poleDst/2);
+						panResult.setZero().add(perpendicular).nor().scl(cursorDelta.x * poleDst / 2);
 						cam.position.add(panResult);
 						panResult.setZero().add(cam.direction).nor().scl(cam.position.dst
 								(worldGroundTarget) - worldGroundTargetDst);

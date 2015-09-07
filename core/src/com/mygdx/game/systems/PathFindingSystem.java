@@ -17,24 +17,20 @@ import com.mygdx.game.components.PhysicsComponent;
  */
 public class PathFindingSystem extends IteratingSystem {
 
-	private ComponentMapper<PathFindingComponent> pathCmps =
-			ComponentMapper.getFor(PathFindingComponent.class);
-
-	private ComponentMapper<PhysicsComponent> phyCmps =
-			ComponentMapper.getFor(PhysicsComponent.class);
-
-	private ComponentMapper<CharacterActionComponent> actionCmps =
-			ComponentMapper.getFor(CharacterActionComponent.class);
-
-	public PathFindingSystem(Family family) {
-		super(family);
-	}
-
 	Matrix4 matrix = new Matrix4();
 	Vector3 pos = new Vector3();
 	Vector3 goalDirection = new Vector3();
 	Vector3 newVelocity = new Vector3();
 	float yVelocity = 0;
+	private ComponentMapper<PathFindingComponent> pathCmps =
+			ComponentMapper.getFor(PathFindingComponent.class);
+	private ComponentMapper<PhysicsComponent> phyCmps =
+			ComponentMapper.getFor(PhysicsComponent.class);
+	private ComponentMapper<CharacterActionComponent> actionCmps =
+			ComponentMapper.getFor(CharacterActionComponent.class);
+	public PathFindingSystem(Family family) {
+		super(family);
+	}
 
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {

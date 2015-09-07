@@ -44,7 +44,7 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		@Override
 		public void entityAdded(Entity entity) {
 			LightComponent cmp = entity.getComponent(LightComponent.class);
-			Gdx.app.debug(tag, "Added light "+cmp);
+			Gdx.app.debug(tag, "Added light " + cmp);
 			if (cmp != null) {
 				environment.add(cmp.light);
 			}
@@ -53,7 +53,7 @@ public class ModelEnvironmentSystem extends EntitySystem {
 		@Override
 		public void entityRemoved(Entity entity) {
 			LightComponent cmp = entity.getComponent(LightComponent.class);
-			Gdx.app.debug(tag, "Removed light "+cmp);
+			Gdx.app.debug(tag, "Removed light " + cmp);
 			if (cmp != null) {
 				environment.remove(cmp.light);
 			}
