@@ -19,9 +19,15 @@ import java.util.Iterator;
  */
 public class RagdollSystem extends IteratingSystem {
 
-	Matrix4 baseTransform = new Matrix4();
+	Matrix4 bodyTransform = new Matrix4();
 	Matrix4 nodeTransform = new Matrix4();
-	Vector3 childPosition = new Vector3();
+
+	Vector3 childNodePosition = new Vector3();
+	Vector3 instancePosition = new Vector3();
+	Vector3 bodyPosition = new Vector3();
+
+	Quaternion modelRotation = new Quaternion();
+	Quaternion bodyRotation = new Quaternion();
 
 	private ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
@@ -50,6 +56,7 @@ public class RagdollSystem extends IteratingSystem {
 
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
+
 		ModelComponent modelCmp = modelCmps.get(entity);
 		RagdollComponent ragdollCmp = ragdollCmps.get(entity);
 		PhysicsComponent phyCmp = phyCmps.get(entity);
@@ -60,69 +67,90 @@ public class RagdollSystem extends IteratingSystem {
 
 		if (ragdollCmp.physicsControl) {
 			// Let dynamicsworld control ragdoll. Update the node transforms from each ragdoll part.
-			phyCmp.body.getWorldTransform(baseTransform);
+
 			for (Iterator<ObjectMap.Entry<Node, btRigidBody>> iterator = ragdollCmp.nodeBodyMap.iterator();
 				 iterator.hasNext(); ) {
 				ObjectMap.Entry<Node, btRigidBody> entry = iterator.next();
-				btRigidBody body = entry.value;
+
 				Node node = entry.key;
+				btRigidBody body = entry.value;
 
 				node.inheritTransform = false;
 				node.isAnimated = true;
-				body.getWorldTransform(baseTransform);
-				nodeTransform.set(modelCmp.modelInstance.transform);
 
+				body.getWorldTransform(bodyTransform);
 
-				Quaternion r = new Quaternion();
-				nodeTransform.getRotation(r);
+				modelCmp.modelInstance.transform.getRotation(modelRotation, true);
+				bodyTransform.getRotation(bodyRotation, true);
 
-				Quaternion s = new Quaternion();
-				baseTransform.getRotation(s, true);
 				node.localTransform.setFromEulerAngles(
-						s.getYaw() - r.getYaw(),
-						s.getPitch() - r.getPitch(),
-						s.getRoll() - r.getRoll());
+						bodyRotation.getYaw() - modelRotation.getYaw(),
+						bodyRotation.getPitch() - modelRotation.getPitch(),
+						bodyRotation.getRoll() - modelRotation.getRoll());
 
-				Vector3 p = new Vector3();
-				baseTransform.getTranslation(p);
-				Vector3 q = new Vector3();
-				nodeTransform.getTranslation(q);
-				node.localTransform.setTranslation(p.sub(q));
+//				node.localTransform.setFromEulerAngles(
+//						modelRotation.getYaw() - bodyRotation.getYaw(),
+//						modelRotation.getPitch() - bodyRotation.getPitch(),
+//						modelRotation.getRoll() - bodyRotation.getRoll());
+
+				bodyTransform.getTranslation(bodyPosition);
+				modelCmp.modelInstance.transform.getTranslation(instancePosition);
+
+//				childNodePosition.setZero();
+//				if (node.hasChildren()) {
+//					node.getChild(0).calculateLocalTransform();
+//					node.getChild(0).localTransform.getTranslation(childNodePosition);
+//					childNodePosition.scl(0.5f);
+//				}
+
+				node.localTransform.setTranslation(bodyPosition.sub(instancePosition));
 			}
 			modelCmp.modelInstance.calculateTransforms();
 //			Xoppa: node.globalTransform.set(transform).mul(tmp.set(instance.transform).inv());
 
 		} else {
 			// Let model nodes and their animations control the ragdoll.
-			phyCmp.body.getWorldTransform(baseTransform);
 			ragdollCmp.armatureNode.calculateTransforms(true);
+			phyCmp.body.getWorldTransform(bodyTransform);
 
 			for (Iterator<ObjectMap.Entry<Node, btRigidBody>> iterator = ragdollCmp.nodeBodyMap.iterator();
 				 iterator.hasNext(); ) {
 				ObjectMap.Entry<Node, btRigidBody> entry = iterator.next();
-				btRigidBody body = entry.value;
+
 				Node node = entry.key;
+				btRigidBody body = entry.value;
 
 				node.inheritTransform = true;
-				node.isAnimated = true;
+				node.isAnimated = false;
 
-				childPosition.setZero();
+				childNodePosition.setZero();
 				if (node.hasChildren()) {
-					node.getChild(0).localTransform.getTranslation(childPosition);
-					childPosition.scl(0.5f);
+					node.getChild(0).localTransform.getTranslation(childNodePosition);
+					childNodePosition.scl(0.5f);
 				}
-				body.proceedToTransform(nodeTransform.set(baseTransform).mul(node.globalTransform).translate(childPosition));
+				body.proceedToTransform(nodeTransform.set(bodyTransform).mul(node.globalTransform).translate(childNodePosition));
 			}
 		}
 
 		if (selCmp != null && intentCmps != null && selCmp.isSelected && intentCmp.killSelected) {
-			ragdollCmp.physicsControl = !ragdollCmp.physicsControl;
-			for (btRigidBody body : ragdollCmp.nodeBodyMap.values()) {
-				body.setLinearVelocity(phyCmp.body.getLinearVelocity());
-				body.setAngularVelocity(phyCmp.body.getLinearVelocity());
+
+			if (ragdollCmp.physicsControl) {
+				// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.
+				ragdollCmp.physicsControl = false;
+				actionCmp.nextAction = CharacterActionComponent.Action.IDLE;
+				modelCmp.modelInstance.calculateTransforms();
+				entity.remove(RagdollConstraintComponent.class);
+
+			} else {
+				// Ragdoll follows animation, set it to use physics control.
+				ragdollCmp.physicsControl = true;
+				actionCmp.nextAction = CharacterActionComponent.Action.NULL;
+				for (btRigidBody body : ragdollCmp.nodeBodyMap.values()) {
+					body.setLinearVelocity(phyCmp.body.getLinearVelocity());
+					body.setAngularVelocity(phyCmp.body.getLinearVelocity());
+				}
+				entity.add(ragdollCmp.constraints);
 			}
-			actionCmp.nextAction = CharacterActionComponent.Action.NULL;
-			modelCmp.modelInstance.calculateTransforms();
 		}
 
 	}

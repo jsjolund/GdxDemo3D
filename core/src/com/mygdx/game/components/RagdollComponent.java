@@ -10,6 +10,8 @@ import com.badlogic.gdx.utils.ArrayMap;
  */
 public class RagdollComponent extends Component {
 
+	public RagdollConstraintComponent constraints;
+
 	public boolean physicsControl = false;
 	public short belongsToFlag;
 	public short collidesWithFlag;
@@ -47,6 +49,7 @@ public class RagdollComponent extends Component {
 
 
 	public void populateNodeBodyMap() {
+		nodeBodyMap.clear();
 		nodeBodyMap.put(abdomenNode, abdomenBody);
 		nodeBodyMap.put(chestNode, chestBody);
 		nodeBodyMap.put(leftUpperArmNode, leftUpperArmBody);

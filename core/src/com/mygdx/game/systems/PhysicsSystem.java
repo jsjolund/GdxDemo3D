@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
+import com.mygdx.game.components.RagdollConstraintComponent;
 
 /**
  * Created by user on 7/31/15.
@@ -32,6 +33,8 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	// Ashley
 	public PhysicsListener physicsComponentListener;
 	public RagdollListener ragdollComponentListener;
+	public RagdollConstraintListener ragdollConstraintListener;
+
 	public Family systemFamily;
 	// Bullet classes
 	public btDynamicsWorld dynamicsWorld;
@@ -57,10 +60,12 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		dynamicsWorld.setDebugDrawer(debugDrawer);
 		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
 
+		systemFamily = Family.all(PhysicsComponent.class).get();
+
 		contactListener = new CollisionContactListener();
 		physicsComponentListener = new PhysicsListener();
 		ragdollComponentListener = new RagdollListener();
-		systemFamily = Family.all(PhysicsComponent.class).get();
+		ragdollConstraintListener = new RagdollConstraintListener();
 	}
 
 	@Override
@@ -159,13 +164,40 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
 			}
+
+		}
+
+		@Override
+		public void entityRemoved(Entity entity) {
+			Gdx.app.debug(tag, "Removing ragdoll");
+			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
+			for (btRigidBody body : cmp.nodeBodyMap.values()) {
+				dynamicsWorld.removeCollisionObject(body);
+			}
+		}
+	}
+
+	public class RagdollConstraintListener implements EntityListener {
+
+		@Override
+		public void entityAdded(Entity entity) {
+			Gdx.app.debug(tag, "Adding ragdoll constraints");
+			RagdollConstraintComponent cmp = entity.getComponent(RagdollConstraintComponent.class);
+			for (btTypedConstraint constraint : cmp.constraintArray) {
+//				dynamicsWorld.addConstraint(constraint, true);
+				dynamicsWorld.addConstraint(constraint, false);
+			}
 		}
 
 		@Override
 		public void entityRemoved(Entity entity) {
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
-			for (btRigidBody body : cmp.nodeBodyMap.values()) {
-				dynamicsWorld.removeCollisionObject(body);
+			if (cmp == null) {
+				return;
+			}
+			Gdx.app.debug(tag, "Removing ragdoll constraints");
+			for (btTypedConstraint constraint : cmp.constraints.constraintArray) {
+				dynamicsWorld.removeConstraint(constraint);
 			}
 		}
 	}
