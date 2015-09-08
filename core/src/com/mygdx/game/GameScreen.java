@@ -27,6 +27,7 @@ import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btConeTwistConstraint;
+import com.badlogic.gdx.physics.bullet.dynamics.btFixedConstraint;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
@@ -68,7 +69,7 @@ public class GameScreen implements Screen {
 		stage = new GameStage(viewport);
 		shapeRenderer = new ShapeRenderer();
 
-		camera.position.set(10, 20, 10);
+		camera.position.set(5, 10, 5);
 		camera.lookAt(0, 0, 0);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
@@ -263,11 +264,12 @@ public class GameScreen implements Screen {
 		ragCmp.belongsToFlag = belongsToFlag;
 		ragCmp.collidesWithFlag = collidesWithFlag;
 
-		// Load shape defs
+		// Load shape half extent data from Blender
+		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
+		ragCmp.halfExtMap = halfExtMap;
 		String path = "models/json/character_empty.json";
 		ArrayList<BlenderEmptyComponent> empties = new Json().fromJson(ArrayList.class, BlenderEmptyComponent.class, Gdx
 				.files.local(path));
-		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
 		for (BlenderEmptyComponent empty : empties) {
 			BlenderComponentsLoader.blenderToGdxCoordinates(empty);
 			Vector3 halfExtents = new Vector3(empty.scale);
@@ -275,6 +277,7 @@ public class GameScreen implements Screen {
 			halfExtents.y = Math.abs(halfExtents.y);
 			halfExtents.z = Math.abs(halfExtents.z);
 			halfExtMap.put(empty.name, halfExtents);
+			System.out.println(empty.name);
 		}
 
 		Node armature = mdlCmp.modelInstance.getNode("armature");
@@ -284,6 +287,12 @@ public class GameScreen implements Screen {
 		ragCmp.headBody = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("head")),
 				null, bodyMass * 0.073f, ragCmp.belongsToFlag,
+				ragCmp.collidesWithFlag, false, true).body;
+
+		ragCmp.neckNode = armature.getChild("neck", true, true);
+		ragCmp.neckBody = new PhysicsComponent(
+				new btBoxShape(halfExtMap.get("neck")),
+				null, 1f, ragCmp.belongsToFlag,
 				ragCmp.collidesWithFlag, false, true).body;
 
 		ragCmp.abdomenNode = armature.getChild("abdomen", true, true);
@@ -350,64 +359,70 @@ public class GameScreen implements Screen {
 		entity.add(ragCmp);
 
 		RagdollConstraintComponent conCmp = new RagdollConstraintComponent();
-		ragCmp.constraints = conCmp;
+		ragCmp.constraintComponent = conCmp;
 
 		final Matrix4 localA = new Matrix4();
 		final Matrix4 localB = new Matrix4();
 		btHingeConstraint hingeC = null;
 		btConeTwistConstraint coneC = null;
+		btFixedConstraint fixedC = null;
 
 		// Abdomen - Chest
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("chest").y, 0);
-		conCmp.constraintArray.add(
+		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(ragCmp.abdomenBody, ragCmp.chestBody, localA, localB));
 		hingeC.setLimit(-PI4, PI2);
 
-		// Chest - Head
-		localA.setFromEulerAngles(PI2, 0, 0).trn(0, halfExtMap.get("chest").y, 0);
+		// Chest - Neck // TODO: Use fixed constraint
+		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("chest").y, 0);
+		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("neck").y, 0);
+		conCmp.typedConstraints.add(
+				hingeC = new btHingeConstraint(ragCmp.chestBody, ragCmp.neckBody, localA, localB));
+		hingeC.setLimit(0, 0);
+
+		// Neck - Head
+		localA.setFromEulerAngles(PI2, 0, 0).trn(0, halfExtMap.get("neck").y, 0);
 		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
-		conCmp.constraintArray.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.headBody, localA, localB));
+		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.neckBody, ragCmp.headBody, localA, localB));
 		coneC.setLimit(PI4, PI4, PI2);
 
 		// Abdomen - Left Thigh
 		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
-		conCmp.constraintArray.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.leftThighBody, localA, localB));
+		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.leftThighBody, localA, localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Abdomen - Right Thigh
-		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
-						("abdomen").y,
-				0);
+		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
-		conCmp.constraintArray.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.rightThighBody, localA,
+		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.rightThighBody, localA,
 				localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Left Thigh - Left Shin
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_shin").y, 0);
-		conCmp.constraintArray.add(hingeC = new btHingeConstraint(ragCmp.leftThighBody, ragCmp.leftShinBody, localA, localB));
+		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.leftThighBody, ragCmp.leftShinBody, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Right Thigh - Right Shin
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_shin").y, 0);
-		conCmp.constraintArray.add(hingeC = new btHingeConstraint(ragCmp.rightThighBody, ragCmp.rightShinBody, localA,
+		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.rightThighBody, ragCmp.rightShinBody, localA,
 				localB));
 		hingeC.setLimit(0, PI2);
 
 		// Chest - Left Upper Arm
 		localA.setFromEulerAngles(PI, 0, 0).trn(halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("left_upper_arm").y, 0);
-		conCmp.constraintArray.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.leftUpperArmBody, localA, localB));
+		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.leftUpperArmBody, localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 
 		// Chest - Right Upper Arm
 		localA.setFromEulerAngles(PI, 0, 0).trn(-halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
-		conCmp.constraintArray.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.rightUpperArmBody,
+		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.rightUpperArmBody,
 				localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 
@@ -415,17 +430,18 @@ public class GameScreen implements Screen {
 		// Left Upper Arm - Left Forearm
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
-		conCmp.constraintArray.add(hingeC = new btHingeConstraint(ragCmp.leftUpperArmBody, ragCmp.leftForearmBody, localA, localB));
+		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.leftUpperArmBody, ragCmp.leftForearmBody, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Right Upper Arm - Right Forearm
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
-		conCmp.constraintArray.add(hingeC = new btHingeConstraint(ragCmp.rightUpperArmBody, ragCmp.rightForearmBody,
+		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.rightUpperArmBody, ragCmp.rightForearmBody,
 				localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		engine.addEntity(entity);
+		entity.add(conCmp);
 		// Done
 		Gdx.app.debug(tag, "Finished adding character");
 	}

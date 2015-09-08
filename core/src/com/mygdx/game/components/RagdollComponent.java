@@ -2,6 +2,7 @@ package com.mygdx.game.components;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ArrayMap;
 
@@ -10,7 +11,7 @@ import com.badlogic.gdx.utils.ArrayMap;
  */
 public class RagdollComponent extends Component {
 
-	public RagdollConstraintComponent constraints;
+	public RagdollConstraintComponent constraintComponent;
 
 	public boolean physicsControl = false;
 	public short belongsToFlag;
@@ -18,10 +19,14 @@ public class RagdollComponent extends Component {
 
 	public Node armatureNode;
 
-	public ArrayMap<Node, btRigidBody> nodeBodyMap = new ArrayMap<Node, btRigidBody>();
+	public ArrayMap<Node, btRigidBody> nodeBodyMap;
+	public ArrayMap<String, Vector3> halfExtMap;
 
 	public Node headNode;
 	public btRigidBody headBody;
+
+	public Node neckNode;
+	public btRigidBody neckBody;
 
 	public Node chestNode;
 	public btRigidBody chestBody;
@@ -49,8 +54,12 @@ public class RagdollComponent extends Component {
 
 
 	public void populateNodeBodyMap() {
+		if (nodeBodyMap == null) {
+			nodeBodyMap = new ArrayMap<Node, btRigidBody>();
+		}
 		nodeBodyMap.clear();
 		nodeBodyMap.put(abdomenNode, abdomenBody);
+		nodeBodyMap.put(neckNode, neckBody);
 		nodeBodyMap.put(chestNode, chestBody);
 		nodeBodyMap.put(leftUpperArmNode, leftUpperArmBody);
 		nodeBodyMap.put(leftForearmNode, leftForearmBody);

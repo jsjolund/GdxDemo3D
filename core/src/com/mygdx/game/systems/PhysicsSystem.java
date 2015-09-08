@@ -181,12 +181,16 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		@Override
 		public void entityAdded(Entity entity) {
-			Gdx.app.debug(tag, "Adding ragdoll constraints");
+			Gdx.app.debug(tag, "Adding ragdoll constraintComponent");
 			RagdollConstraintComponent cmp = entity.getComponent(RagdollConstraintComponent.class);
-			for (btTypedConstraint constraint : cmp.constraintArray) {
-//				dynamicsWorld.addConstraint(constraint, true);
-				dynamicsWorld.addConstraint(constraint, false);
+			for (btTypedConstraint constraint : cmp.typedConstraints) {
+				dynamicsWorld.addConstraint(constraint, true);
+//				dynamicsWorld.addConstraint(constraint, false);
 			}
+//			for (btFixedConstraint constraint : cmp.fixedConstraints) {
+//				btTypedConstraint t = new btTypedConstraint()
+//				dynamicsWorld.addConstraint((btTypedConstraint)constraint);
+//			}
 		}
 
 		@Override
@@ -195,8 +199,8 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 			if (cmp == null) {
 				return;
 			}
-			Gdx.app.debug(tag, "Removing ragdoll constraints");
-			for (btTypedConstraint constraint : cmp.constraints.constraintArray) {
+			Gdx.app.debug(tag, "Removing ragdoll constraintComponent");
+			for (btTypedConstraint constraint : cmp.constraintComponent.typedConstraints) {
 				dynamicsWorld.removeConstraint(constraint);
 			}
 		}
