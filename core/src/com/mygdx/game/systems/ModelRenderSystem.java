@@ -10,13 +10,14 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.DepthMapShader;
@@ -48,6 +49,8 @@ public class ModelRenderSystem extends EntitySystem {
 	private Viewport viewport;
 	private Environment selectedEnvironment;
 	private ModelBatch selectedModelBatch;
+
+	private ShapeRenderer shapeRenderer = new ShapeRenderer();
 
 	public ModelRenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -166,7 +169,7 @@ public class ModelRenderSystem extends EntitySystem {
 //					selectedModelBatch.begin(camera);
 //					selectedModelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
 //					selectedModelBatch.end();
-					modelBatch.render(cmp.modelInstance, environment);
+//					modelBatch.render(cmp.modelInstance, environment);
 				} else {
 					modelBatch.render(cmp.modelInstance, environment);
 				}
@@ -174,16 +177,56 @@ public class ModelRenderSystem extends EntitySystem {
 		}
 		modelBatch.end();
 
-		if (GameSettings.DISPLAY_SHADOWBUFFER) {
-			Gdx.gl.glClearColor(0, 0, 0, 1f);
-			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-			float size = Math.min(vw, vh) / 2;
-			depthMapBatch.begin();
-			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
-			depthMapBatch.end();
+//		if (GameSettings.DISPLAY_SHADOWBUFFER) {
+//			Gdx.gl.glClearColor(0, 0, 0, 1f);
+//			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+//			float size = Math.min(vw, vh) / 2;
+//			depthMapBatch.begin();
+//			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
+//			depthMapBatch.end();
+//		}
+
+		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(1, 1, 0, 1);
+//		shapeRenderer.line(Vector3.Zero, new Vector3(2, 2, 2));
+
+		for (int i = 0; i < entities.size(); ++i) {
+			// TODO: connect hip bones to abdomen shape
+			Entity entity = entities.get(i);
+			ModelComponent cmp = models.get(entity);
+			SelectableComponent selCmp = selectables.get(entity);
+			if (selCmp != null) {
+				Node skeleton = cmp.modelInstance.getNode("armature");
+				Vector3 mpos = new Vector3();
+				cmp.modelInstance.transform.getTranslation(mpos);
+				Vector3 ppos = new Vector3();
+
+				skeleton.globalTransform.getTranslation(ppos);
+				if (skeleton != null) {
+					drawSkeleton(skeleton, mpos, ppos);
+				}
+			}
 		}
+		shapeRenderer.end();
+	}
 
+	private void drawSkeleton(Node currentNode, Vector3 modelPos, Vector3 parentNodePos) {
 
+		Vector3 tmp = new Vector3();
+		currentNode.globalTransform.getTranslation(tmp);
+		tmp.add(modelPos);
+		shapeRenderer.box(tmp.x, tmp.y, tmp.z, 0.01f, 0.01f, 0.01f);
+		if (currentNode.hasParent()) {
+			shapeRenderer.line(parentNodePos, tmp);
+		}
+		if (!currentNode.hasChildren()) {
+			return;
+		} else {
+			for (Node child : currentNode.getChildren()) {
+				drawSkeleton(child, modelPos, tmp);
+			}
+		}
 	}
 
 	public class ShadowData {

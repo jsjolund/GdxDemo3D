@@ -20,7 +20,7 @@ import java.util.Iterator;
 public class RagdollSystem extends IteratingSystem {
 
 	Matrix4 bodyTransform = new Matrix4();
-	Matrix4 nodeTransform = new Matrix4();
+	Matrix4 tmp1 = new Matrix4();
 
 	Vector3 childNodePosition = new Vector3();
 	Vector3 instancePosition = new Vector3();
@@ -73,17 +73,21 @@ public class RagdollSystem extends IteratingSystem {
 				actionCmp.nextAction = CharacterActionComponent.Action.IDLE;
 
 				modelCmp.modelInstance.calculateTransforms();
-//				entity.remove(RagdollConstraintComponent.class);
 
 			} else {
 				// Ragdoll follows animation, set it to use physics control.
+
 				ragdollCmp.physicsControl = true;
 				actionCmp.nextAction = CharacterActionComponent.Action.NULL;
+
+//				Node skeleton = modelCmp.modelInstance.getNode("armature");
+//				phyCmp.body.getWorldTransform(bodyTransform);
+//				skeleton.localTransform.set(bodyTransform);
+//				skeleton.calculateBoneTransforms(true);
 				for (btRigidBody body : ragdollCmp.nodeBodyMap.values()) {
 					body.setLinearVelocity(phyCmp.body.getLinearVelocity().scl(1, 0, 1));
 					body.setAngularVelocity(phyCmp.body.getLinearVelocity());
 				}
-//				entity.add(ragdollCmp.constraintComponent);
 			}
 		}
 
@@ -93,103 +97,61 @@ public class RagdollSystem extends IteratingSystem {
 			for (Iterator<ObjectMap.Entry<Node, btRigidBody>> iterator = ragdollCmp.nodeBodyMap.iterator();
 				 iterator.hasNext(); ) {
 				ObjectMap.Entry<Node, btRigidBody> entry = iterator.next();
+				Node skeletonNode = entry.key;
+				btRigidBody ragdollPartBody = entry.value;
 
-				Node node = entry.key;
-				btRigidBody body = entry.value;
+				skeletonNode.inheritTransform = false;
+				skeletonNode.isAnimated = true;
 
-				node.inheritTransform = false;
-				node.isAnimated = true;
-
-				body.getWorldTransform(bodyTransform);
-
-				modelCmp.modelInstance.transform.getRotation(modelRotation, true);
-//				node.localTransform.getRotation(modelRotation, true);
-
-				bodyTransform.getRotation(bodyRotation, true);
-
-				node.localTransform.setFromEulerAngles(
-						bodyRotation.getYaw() - modelRotation.getYaw(),
-						bodyRotation.getPitch() - modelRotation.getPitch(),
-						bodyRotation.getRoll() - modelRotation.getRoll()
-				);
-
-				bodyTransform.getTranslation(bodyPosition);
-
-				modelCmp.modelInstance.transform.getTranslation(instancePosition);
-//				node.localTransform.getTranslation(instancePosition);
-
-				childNodePosition.setZero();
-				if (node.hasChildren()) {
-					node.getChild(0).calculateLocalTransform();
-					node.getChild(0).globalTransform.getTranslation(childNodePosition);
-
-					node.globalTransform.getTranslation(thisNodePosition);
-					childNodePosition.sub(thisNodePosition).scl(-0.5f);
-				}
-
-				node.localTransform.setTranslation(bodyPosition.sub(instancePosition).add(childNodePosition));
-			}
-
-//			for (Iterator<ObjectMap.Entry<Node, btRigidBody>> iterator = ragdollCmp.nodeBodyMap.iterator();
-//				 iterator.hasNext(); ) {
-//				ObjectMap.Entry<Node, btRigidBody> entry = iterator.next();
-//				Node skeletonNode = entry.key;
-//				btRigidBody ragdollPartBody = entry.value;
-//
-//				skeletonNode.inheritTransform = false;
-//				skeletonNode.isAnimated = false;
-//
 //				boolean flip = false;
 //				if (skeletonNode.id.equals("left_thigh") || skeletonNode.id.equals("right_thigh") ||
 //						skeletonNode.id.equals("left_shin") || skeletonNode.id.equals("right_shin")) {
 //					flip = true;
 //				}
-//				Matrix4 ragdollPartBodyTransform = new Matrix4();
-//				ragdollPartBody.getWorldTransform(ragdollPartBodyTransform);
-//
-//				Matrix4 baseCollisionShapeTransform = new Matrix4();
-//				phyCmp.body.getWorldTransform(baseCollisionShapeTransform);
-//
-//				Quaternion ragdollPartBodyRotation = new Quaternion();
-//				ragdollPartBodyTransform.getRotation(ragdollPartBodyRotation, true);
-//
-//				Quaternion baseCollisionShapeRotation = new Quaternion();
-//				baseCollisionShapeTransform.getRotation(baseCollisionShapeRotation, true);
-//
-////				skeletonNode.localTransform.setFromEulerAngles(
-////						ragdollPartBodyRotation.getYaw() - baseCollisionShapeRotation.getYaw(),
-////						ragdollPartBodyRotation.getPitch() - baseCollisionShapeRotation.getPitch(),
-////						ragdollPartBodyRotation.getRoll() - baseCollisionShapeRotation.getRoll()
-////				);
-//
-//				Vector3 ragdollPartBodyPosition = new Vector3();
-//				ragdollPartBodyTransform.getTranslation(ragdollPartBodyPosition);
-//				Vector3 baseCollisionShapePosition = new Vector3();
-//				baseCollisionShapeTransform.getTranslation(baseCollisionShapePosition);
-//
-//				childNodePosition.setZero();
-//				if (skeletonNode.hasChildren()) {
-//					skeletonNode.getChild(0).calculateLocalTransform();
-//					skeletonNode.getChild(0).globalTransform.getTranslation(childNodePosition);
-//
-//					skeletonNode.globalTransform.getTranslation(thisNodePosition);
-//					childNodePosition.sub(thisNodePosition).scl(-0.5f);
-//				}
-//
-//
-////				skeletonNode.localTransform.setTranslation(ragdollPartBodyPosition.sub(baseCollisionShapePosition)
-////						.add(childNodePosition));
-//
-//				skeletonNode.rotation.set(ragdollPartBodyRotation);
-//				if (flip) {
-//					skeletonNode.localTransform.inv();
-//				}
-//
-//				skeletonNode.translation.set(ragdollPartBodyPosition.sub(baseCollisionShapePosition)
-//						.add(childNodePosition));
-//			}
-//
+				Matrix4 ragdollPartBodyTransform = new Matrix4();
+				ragdollPartBody.getWorldTransform(ragdollPartBodyTransform);
+
+				Matrix4 baseCollisionShapeTransform = new Matrix4();
+				phyCmp.body.getWorldTransform(baseCollisionShapeTransform);
+
+				Quaternion ragdollPartBodyRotation = new Quaternion();
+				ragdollPartBodyTransform.getRotation(ragdollPartBodyRotation, true);
+
+				Quaternion baseCollisionShapeRotation = new Quaternion();
+				baseCollisionShapeTransform.getRotation(baseCollisionShapeRotation, true);
+
+//				skeletonNode.localTransform.setFromEulerAngles(
+//						ragdollPartBodyRotation.getYaw() - baseCollisionShapeRotation.getYaw(),
+//						ragdollPartBodyRotation.getPitch() - baseCollisionShapeRotation.getPitch(),
+//						ragdollPartBodyRotation.getRoll() - baseCollisionShapeRotation.getRoll()
+//				);
+
+				Vector3 ragdollPartBodyPosition = new Vector3();
+				ragdollPartBodyTransform.getTranslation(ragdollPartBodyPosition);
+				Vector3 baseCollisionShapePosition = new Vector3();
+				baseCollisionShapeTransform.getTranslation(baseCollisionShapePosition);
+
+				childNodePosition.setZero();
+				if (skeletonNode.hasChildren()) {
+					skeletonNode.getChild(0).calculateLocalTransform();
+					skeletonNode.getChild(0).globalTransform.getTranslation(childNodePosition);
+
+					skeletonNode.globalTransform.getTranslation(thisNodePosition);
+					childNodePosition.sub(thisNodePosition).scl(-0.5f);
+				}
+
+
+				skeletonNode.localTransform.setFromEulerAngles(ragdollPartBodyRotation.getYaw(),
+						ragdollPartBodyRotation.getPitch(), ragdollPartBodyRotation.getRoll());
+
+				skeletonNode.localTransform.setTranslation(ragdollPartBodyPosition.sub(baseCollisionShapePosition)
+						.add(childNodePosition)
+				);
+			}
+
 			modelCmp.modelInstance.calculateTransforms();
+
+
 
 
 		} else {
@@ -212,7 +174,18 @@ public class RagdollSystem extends IteratingSystem {
 					node.getChild(0).localTransform.getTranslation(childNodePosition);
 					childNodePosition.scl(0.5f);
 				}
-				body.proceedToTransform(nodeTransform.set(bodyTransform).mul(node.globalTransform).translate(childNodePosition));
+//				body.proceedToTransform(node.calculateWorldTransform());
+				Vector3 pos = new Vector3();
+				tmp1.set(bodyTransform).mul(node.globalTransform).translate(childNodePosition).getTranslation(pos);
+				Quaternion q = new Quaternion();
+				node.localTransform.getRotation(q,true);
+				Matrix4 m = new Matrix4();
+				m.setFromEulerAngles(-q.getYaw(),-q.getPitch(),q.getRoll());
+				m.setTranslation(pos);
+				body.proceedToTransform(tmp1);
+
+
+//				body.proceedToTransform(tmp1.set(bodyTransform).mul(node.localTransform).translate(childNodePosition));
 			}
 		}
 

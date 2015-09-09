@@ -16,10 +16,10 @@ allprojects {
     version = '1.0'
     ext {
         appName = 'my-gdx-game'
-        gdxVersion = '1.6.4'
+        gdxVersion = '1.6.6-SNAPSHOT'
         roboVMVersion = '1.5.0'
         box2DLightsVersion = '1.4'
-        ashleyVersion = '1.4.0'
+        ashleyVersion = '1.5.0'
         aiVersion = '1.5.0'
     }
 

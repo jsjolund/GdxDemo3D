@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -227,7 +228,8 @@ public class GameScreen implements Screen {
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		entity.add(mdlCmp);
-		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", pos,
+		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", new Vector3(0,
+				0, 0),
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		// Connect the normal modelinstance transform to outline transform, then connect them to motion state
@@ -252,9 +254,11 @@ public class GameScreen implements Screen {
 		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent());
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
+		for (Animation a : mdlCmp.modelInstance.animations) {
+			Gdx.app.debug(tag, "Found animation: " + a.id);
+		}
 		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
-
 
 		// Ragdoll test
 		// Animation playing -> ragdoll rigid bodies controlled by animation transforms
@@ -277,7 +281,6 @@ public class GameScreen implements Screen {
 			halfExtents.y = Math.abs(halfExtents.y);
 			halfExtents.z = Math.abs(halfExtents.z);
 			halfExtMap.put(empty.name, halfExtents);
-			System.out.println(empty.name);
 		}
 
 		Node armature = mdlCmp.modelInstance.getNode("armature");
@@ -377,9 +380,7 @@ public class GameScreen implements Screen {
 		// Chest - Neck // TODO: Use fixed constraint
 		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("chest").y, 0);
 		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("neck").y, 0);
-		conCmp.typedConstraints.add(
-				hingeC = new btHingeConstraint(ragCmp.chestBody, ragCmp.neckBody, localA, localB));
-		hingeC.setLimit(0, 0);
+		conCmp.typedConstraints.add(fixedC = new btFixedConstraint(ragCmp.chestBody, ragCmp.neckBody, localA, localB));
 
 		// Neck - Head
 		localA.setFromEulerAngles(PI2, 0, 0).trn(0, halfExtMap.get("neck").y, 0);
@@ -389,26 +390,26 @@ public class GameScreen implements Screen {
 
 		// Abdomen - Left Thigh
 		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
+		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.leftThighBody, localA, localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Abdomen - Right Thigh
 		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
+		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.rightThighBody, localA,
 				localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Left Thigh - Left Shin
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_shin").y, 0);
+		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
+		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.leftThighBody, ragCmp.leftShinBody, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Right Thigh - Right Shin
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_shin").y, 0);
+		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
+		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.rightThighBody, ragCmp.rightShinBody, localA,
 				localB));
 		hingeC.setLimit(0, PI2);
@@ -456,6 +457,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		delta *= 0.05f;
 		Gdx.gl.glClearStencil(0);
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -465,7 +467,7 @@ public class GameScreen implements Screen {
 		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
 		shapeRenderer.end();
 
-		engine.update(Gdx.graphics.getDeltaTime());
+		engine.update(delta);
 
 		if (GameSettings.DRAW_COLLISION_DEBUG) {
 			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);

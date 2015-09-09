@@ -27,9 +27,9 @@ public class CharacterActionComponent extends Component {
 
 	public enum Action {
 		WALK("armature|walk"),
-		WALK_RIFLE("armature|walk_rifle"),
+		WALK_RIFLE("walk_rifle"),
 		RUN("armature|run"),
-		IDLE("armature|stand"),
+		IDLE("stand"),
 		NULL(null);
 
 		public final String animationId;
