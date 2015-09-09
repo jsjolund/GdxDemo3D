@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
@@ -364,79 +365,80 @@ public class GameScreen implements Screen {
 		RagdollConstraintComponent conCmp = new RagdollConstraintComponent();
 		ragCmp.constraintComponent = conCmp;
 
-		final Matrix4 localA = new Matrix4();
-		final Matrix4 localB = new Matrix4();
-		btHingeConstraint hingeC = null;
-		btConeTwistConstraint coneC = null;
-		btFixedConstraint fixedC = null;
+		final MyMatrix4 localA = new MyMatrix4();
+		final MyMatrix4 localB = new MyMatrix4();
+		btHingeConstraint hingeC;
+		btConeTwistConstraint coneC;
+		btFixedConstraint fixedC;
 
 		// Abdomen - Chest
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("chest").y, 0);
+		localA.setFromEulerAnglesRad(0, PI4, 0).trn(0, halfExtMap.get("abdomen").y, 0);
+		localB.setFromEulerAnglesRad(0, PI4, 0).trn(0, -halfExtMap.get("chest").y, 0);
 		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(ragCmp.abdomenBody, ragCmp.chestBody, localA, localB));
 		hingeC.setLimit(-PI4, PI2);
 
-		// Chest - Neck // TODO: Use fixed constraint
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("chest").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("neck").y, 0);
+		// Chest - Neck
+		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("chest").y, 0);
+		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("neck").y, 0);
 		conCmp.typedConstraints.add(fixedC = new btFixedConstraint(ragCmp.chestBody, ragCmp.neckBody, localA, localB));
 
 		// Neck - Head
-		localA.setFromEulerAngles(PI2, 0, 0).trn(0, halfExtMap.get("neck").y, 0);
-		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
+		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("neck").y, 0);
+		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.neckBody, ragCmp.headBody, localA, localB));
 		coneC.setLimit(PI4, PI4, PI2);
 
 		// Abdomen - Left Thigh
-		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
+		localA.setFromEulerAnglesRad(PI4 * 0f, 0, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
+				("abdomen").y, 0);
+		localB.setFromEulerAnglesRad(PI4 * 0f, PI, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.leftThighBody, localA, localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Abdomen - Right Thigh
-		localA.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(-PI4 * 5f, 0, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
+		localA.setFromEulerAnglesRad(PI4 * 0f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
+				("abdomen").y, 0);
+		localB.setFromEulerAnglesRad(PI4 * 0f, PI, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.abdomenBody, ragCmp.rightThighBody, localA,
 				localB));
 		coneC.setLimit(PI4, PI4, 0);
 
 		// Left Thigh - Left Shin
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
+		localA.setFromEulerAnglesRad(0, -PI2, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
+		localB.setFromEulerAnglesRad(0, -PI2, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.leftThighBody, ragCmp.leftShinBody, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Right Thigh - Right Shin
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
+		localA.setFromEulerAnglesRad(0, -PI2, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
+		localB.setFromEulerAnglesRad(0, -PI2, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.rightThighBody, ragCmp.rightShinBody, localA,
 				localB));
 		hingeC.setLimit(0, PI2);
 
-		// Chest - Left Upper Arm
-		localA.setFromEulerAngles(PI, 0, 0).trn(halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("left_upper_arm").y, 0);
+		// Chest - Left Upper Arm ////////////////////
+		localA.setFromEulerAnglesRad(PI, -PI, 0).trn(halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
+		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get("left_upper_arm").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.leftUpperArmBody, localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 
 		// Chest - Right Upper Arm
-		localA.setFromEulerAngles(PI, 0, 0).trn(-halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
-		localB.setFromEulerAngles(PI2, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
+		localA.setFromEulerAnglesRad(0, -PI, 0).trn(-halfExtMap.get("abdomen").x, halfExtMap.get("abdomen").y, 0);
+		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
 		conCmp.typedConstraints.add(coneC = new btConeTwistConstraint(ragCmp.chestBody, ragCmp.rightUpperArmBody,
 				localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 
-
 		// Left Upper Arm - Left Forearm
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
+		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.leftUpperArmBody, ragCmp.leftForearmBody, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Right Upper Arm - Right Forearm
-		localA.setFromEulerAngles(0, PI2, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
-		localB.setFromEulerAngles(0, PI2, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
+		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
 		conCmp.typedConstraints.add(hingeC = new btHingeConstraint(ragCmp.rightUpperArmBody, ragCmp.rightForearmBody,
 				localA, localB));
 		hingeC.setLimit(0, PI2);
@@ -455,9 +457,18 @@ public class GameScreen implements Screen {
 	public void show() {
 	}
 
+	public class MyMatrix4 extends Matrix4 {
+		Quaternion quat = new Quaternion();
+
+		public Matrix4 setFromEulerAnglesRad(float yaw, float pitch, float roll) {
+			quat.setEulerAnglesRad(yaw, pitch, roll);
+			return set(quat);
+		}
+	}
+
 	@Override
 	public void render(float delta) {
-		delta *= 0.05f;
+//		delta *= 0.05f;
 		Gdx.gl.glClearStencil(0);
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);

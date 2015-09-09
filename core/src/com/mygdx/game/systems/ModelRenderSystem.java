@@ -169,7 +169,7 @@ public class ModelRenderSystem extends EntitySystem {
 //					selectedModelBatch.begin(camera);
 //					selectedModelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
 //					selectedModelBatch.end();
-//					modelBatch.render(cmp.modelInstance, environment);
+					modelBatch.render(cmp.modelInstance, environment);
 				} else {
 					modelBatch.render(cmp.modelInstance, environment);
 				}

@@ -187,10 +187,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 				dynamicsWorld.addConstraint(constraint, true);
 //				dynamicsWorld.addConstraint(constraint, false);
 			}
-//			for (btFixedConstraint constraint : cmp.fixedConstraints) {
-//				btTypedConstraint t = new btTypedConstraint()
-//				dynamicsWorld.addConstraint((btTypedConstraint)constraint);
-//			}
 		}
 
 		@Override

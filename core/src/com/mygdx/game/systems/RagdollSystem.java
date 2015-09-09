@@ -103,11 +103,6 @@ public class RagdollSystem extends IteratingSystem {
 				skeletonNode.inheritTransform = false;
 				skeletonNode.isAnimated = true;
 
-//				boolean flip = false;
-//				if (skeletonNode.id.equals("left_thigh") || skeletonNode.id.equals("right_thigh") ||
-//						skeletonNode.id.equals("left_shin") || skeletonNode.id.equals("right_shin")) {
-//					flip = true;
-//				}
 				Matrix4 ragdollPartBodyTransform = new Matrix4();
 				ragdollPartBody.getWorldTransform(ragdollPartBodyTransform);
 
@@ -119,12 +114,6 @@ public class RagdollSystem extends IteratingSystem {
 
 				Quaternion baseCollisionShapeRotation = new Quaternion();
 				baseCollisionShapeTransform.getRotation(baseCollisionShapeRotation, true);
-
-//				skeletonNode.localTransform.setFromEulerAngles(
-//						ragdollPartBodyRotation.getYaw() - baseCollisionShapeRotation.getYaw(),
-//						ragdollPartBodyRotation.getPitch() - baseCollisionShapeRotation.getPitch(),
-//						ragdollPartBodyRotation.getRoll() - baseCollisionShapeRotation.getRoll()
-//				);
 
 				Vector3 ragdollPartBodyPosition = new Vector3();
 				ragdollPartBodyTransform.getTranslation(ragdollPartBodyPosition);
@@ -140,18 +129,15 @@ public class RagdollSystem extends IteratingSystem {
 					childNodePosition.sub(thisNodePosition).scl(-0.5f);
 				}
 
-
 				skeletonNode.localTransform.setFromEulerAngles(ragdollPartBodyRotation.getYaw(),
 						ragdollPartBodyRotation.getPitch(), ragdollPartBodyRotation.getRoll());
 
 				skeletonNode.localTransform.setTranslation(ragdollPartBodyPosition.sub(baseCollisionShapePosition)
-						.add(childNodePosition)
+								.add(childNodePosition)
 				);
 			}
 
 			modelCmp.modelInstance.calculateTransforms();
-
-
 
 
 		} else {
@@ -175,16 +161,7 @@ public class RagdollSystem extends IteratingSystem {
 					childNodePosition.scl(0.5f);
 				}
 //				body.proceedToTransform(node.calculateWorldTransform());
-				Vector3 pos = new Vector3();
-				tmp1.set(bodyTransform).mul(node.globalTransform).translate(childNodePosition).getTranslation(pos);
-				Quaternion q = new Quaternion();
-				node.localTransform.getRotation(q,true);
-				Matrix4 m = new Matrix4();
-				m.setFromEulerAngles(-q.getYaw(),-q.getPitch(),q.getRoll());
-				m.setTranslation(pos);
-				body.proceedToTransform(tmp1);
-
-
+				body.proceedToTransform(tmp1.set(bodyTransform).mul(node.globalTransform).translate(childNodePosition));
 //				body.proceedToTransform(tmp1.set(bodyTransform).mul(node.localTransform).translate(childNodePosition));
 			}
 		}
