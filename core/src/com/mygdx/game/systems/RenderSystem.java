@@ -179,16 +179,16 @@ public class RenderSystem extends EntitySystem {
 		}
 		modelBatch.end();
 
-		if (GameSettings.DISPLAY_SHADOWBUFFER) {
-			Gdx.gl.glClearColor(0, 0, 0, 1f);
-			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-			float size = Math.min(vw, vh) / 2;
-			depthMapBatch.begin();
-			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
-			depthMapBatch.end();
-		}
+//		if (GameSettings.DISPLAY_SHADOWBUFFER) {
+//			Gdx.gl.glClearColor(0, 0, 0, 1f);
+//			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+//			float size = Math.min(vw, vh) / 2;
+//			depthMapBatch.begin();
+//			depthMapBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0, size, size, 0, 0, 1, 1);
+//			depthMapBatch.end();
+//		}
 
-		if (GameSettings.DRAW_DEBUG) {
+		if (GameSettings.DRAW_ARMATURE) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(0, 1, 1, 1);

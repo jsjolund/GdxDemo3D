@@ -110,8 +110,14 @@ public class InputSystem extends EntitySystem {
 		@Override
 		public boolean keyDown(int keycode) {
 			keys.put(keycode, keycode);
-			if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
-				GameSettings.DRAW_DEBUG = !GameSettings.DRAW_DEBUG;
+			if (keycode == GameSettings.KEY_DRAW_COLLISION_SHAPES) {
+				GameSettings.DRAW_COLLISION_SHAPES = !GameSettings.DRAW_COLLISION_SHAPES;
+			}
+			if (keycode == GameSettings.KEY_DRAW_CONSTRAINTS) {
+				GameSettings.DRAW_CONSTRAINTS = !GameSettings.DRAW_CONSTRAINTS;
+			}
+			if (keycode == GameSettings.KEY_DRAW_ARMATURE) {
+				GameSettings.DRAW_ARMATURE = !GameSettings.DRAW_ARMATURE;
 			}
 			if (keycode == GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
 				GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;

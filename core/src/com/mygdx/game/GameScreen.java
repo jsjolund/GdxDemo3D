@@ -64,17 +64,20 @@ public class GameScreen implements Screen {
 
 		engine.update(delta);
 
-		if (GameSettings.DRAW_DEBUG) {
+		if (GameSettings.DRAW_COLLISION_SHAPES || GameSettings.DRAW_CONSTRAINTS) {
 			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
 			btIDebugDraw debugDraw = engine.getSystem(PhysicsSystem.class).dynamicsWorld.getDebugDrawer();
 			btIDebugDraw.DebugDrawModes modes = new btIDebugDraw.DebugDrawModes();
-			debugDraw.setDebugMode
-					(
-							modes.DBG_DrawConstraints
-									| modes.DBG_DrawConstraintLimits
-									| modes.DBG_DrawWireframe
-					);
-//			boolean drawFrames = (debugDraw.getDebugMode() & btIDebugDraw.DebugDrawModes.DBG_DrawConstraints) != 0;
+			int mode = 0;
+			if (GameSettings.DRAW_COLLISION_SHAPES) {
+				mode |= modes.DBG_DrawWireframe;
+			}
+			if (GameSettings.DRAW_CONSTRAINTS) {
+				mode |= modes.DBG_DrawConstraints;
+				mode |= modes.DBG_DrawConstraintLimits;
+			}
+			debugDraw.setDebugMode(mode);
+
 		}
 
 		stage.act(delta);
@@ -86,7 +89,7 @@ public class GameScreen implements Screen {
 		engine = new PooledEngine();
 		Bullet.init();
 
-		viewportBackgroundColor = Color.DARK_GRAY;
+		viewportBackgroundColor = Color.BLACK;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);

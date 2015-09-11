@@ -22,15 +22,20 @@ public class GameSettings {
 	public static final float PLAYER_WALK_SPEED = 3.5f;
 	public static final float PLAYER_RUN_SPEED = 8f;
 
-	public static boolean DRAW_DEBUG = true;
+	public static boolean DRAW_COLLISION_SHAPES = false;
+	public static boolean DRAW_ARMATURE = false;
+	public static boolean DRAW_CONSTRAINTS = false;
 
 	public static float MOUSE_SENSITIVITY = 0.01f;
 
 	public static int KEY_PAUSE = Input.Keys.SPACE;
 	public static float GAME_SPEED = 1;
 
-	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F2;
-	public static int KEY_DISPLAY_SHADOWBUFFER = Input.Keys.F3;
+	public static int KEY_DRAW_ARMATURE = Input.Keys.F1;
+	public static int KEY_DRAW_COLLISION_SHAPES = Input.Keys.F2;
+	public static int KEY_DRAW_CONSTRAINTS = Input.Keys.F3;
+
+	public static int KEY_DISPLAY_SHADOWBUFFER = Input.Keys.F12;
 	public static int KEY_KILL_SELECTED = Input.Keys.F4;
 	public static boolean DISPLAY_SHADOWBUFFER = false;
 

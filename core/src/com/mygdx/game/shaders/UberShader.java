@@ -64,7 +64,7 @@ public class UberShader extends DefaultShader {
 	public static class UberShaderSettings {
 		public static float u_hue = 1f;
 		public static float u_saturation = 0.7f;
-		public static float u_value = 1.2f;
+		public static float u_value = 1f;
 		public static float u_specOpacity = 0.25f;
 		public static float u_lightIntensity = 0.0f;
 		public static float u_shadowIntensity = 0.0f;
