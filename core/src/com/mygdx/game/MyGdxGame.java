@@ -11,8 +11,6 @@ public class MyGdxGame extends Game {
 	public static final String tag = "MyGdxGame";
 	public static int reqWidth = 1280;
 	public static int reqHeight = 720;
-	//	AbstractScreen currentScreen;
-	Pixmap screenshot;
 
 	public void toggleFullscreen() {
 		if (Gdx.graphics.isFullscreen()) {
@@ -35,9 +33,6 @@ public class MyGdxGame extends Game {
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
 		Screen currentScreen = new GameScreen(reqWidth, reqHeight);
-//		setScreen(currentScreen);
-
-//		Screen currentScreen = new WidgetScreen(reqWidth, reqHeight);
 		setScreen(currentScreen);
 	}
 

@@ -160,7 +160,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		public void entityAdded(Entity entity) {
 			Gdx.app.debug(tag, "Adding ragdoll");
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
-			for (btRigidBody body : cmp.nodeBodyMap.values()) {
+			for (btRigidBody body : cmp.map.keys()) {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
 			}
@@ -171,7 +171,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		public void entityRemoved(Entity entity) {
 			Gdx.app.debug(tag, "Removing ragdoll");
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
-			for (btRigidBody body : cmp.nodeBodyMap.values()) {
+			for (btRigidBody body : cmp.map.keys()) {
 				dynamicsWorld.removeCollisionObject(body);
 			}
 		}

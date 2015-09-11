@@ -13,6 +13,7 @@ public class CharacterActionComponent extends Component {
 	public Array<AnimationController> controllers;
 	public Action nextAction = Action.IDLE;
 	public Action currentAction = Action.NULL;
+	public boolean ragdollControl = false;
 
 	public CharacterActionComponent(ModelInstance modelInstance) {
 		controllers = new Array<AnimationController>();
@@ -27,9 +28,9 @@ public class CharacterActionComponent extends Component {
 
 	public enum Action {
 		WALK("armature|walk"),
-		WALK_RIFLE("walk_rifle"),
+		WALK_RIFLE("armature|walk_rifle"),
 		RUN("armature|run"),
-		IDLE("stand"),
+		IDLE("armature|stand"),
 		NULL(null);
 
 		public final String animationId;

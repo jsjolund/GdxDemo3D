@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.mygdx.game.systems.ModelRenderSystem;
+import com.mygdx.game.systems.RenderSystem;
 
 /**
  * Created by user on 8/29/15.
@@ -18,9 +18,9 @@ public class UberShader extends DefaultShader {
 	public static final String tag = "UberShader";
 
 	public Renderable renderable;
-	private ModelRenderSystem.ShadowData shadowData;
+	private RenderSystem.ShadowData shadowData;
 
-	public UberShader(Renderable renderable, Config config, ModelRenderSystem.ShadowData shadowData) {
+	public UberShader(Renderable renderable, Config config, RenderSystem.ShadowData shadowData) {
 		super(renderable, config);
 		this.renderable = renderable;
 		this.shadowData = shadowData;
@@ -66,8 +66,8 @@ public class UberShader extends DefaultShader {
 		public static float u_saturation = 0.7f;
 		public static float u_value = 1.2f;
 		public static float u_specOpacity = 0.25f;
-		public static float u_lightIntensity = 0.5f;
-		public static float u_shadowIntensity = 0.5f;
+		public static float u_lightIntensity = 0.0f;
+		public static float u_shadowIntensity = 0.0f;
 	}
 
 }

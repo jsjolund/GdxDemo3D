@@ -107,18 +107,17 @@ public class GameInputSystem extends EntitySystem {
 
 	public class MyInputListener extends ClickListener implements InputProcessor {
 
-		public MyInputListener() {
-
-		}
-
 		@Override
 		public boolean keyDown(int keycode) {
 			keys.put(keycode, keycode);
 			if (keycode == GameSettings.KEY_DRAW_COLLISION_DEBUG) {
-				GameSettings.DRAW_COLLISION_DEBUG = !GameSettings.DRAW_COLLISION_DEBUG;
+				GameSettings.DRAW_DEBUG = !GameSettings.DRAW_DEBUG;
 			}
 			if (keycode == GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
 				GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
+			}
+			if (keycode == GameSettings.KEY_PAUSE) {
+				GameSettings.GAME_SPEED = (GameSettings.GAME_SPEED == 0) ? 1 : 0;
 			}
 			return true;
 		}

@@ -2,8 +2,10 @@ package com.mygdx.game.components;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 
 /**
@@ -11,64 +13,54 @@ import com.badlogic.gdx.utils.ArrayMap;
  */
 public class RagdollComponent extends Component {
 
+	public ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
+	public Array<Node> nodes = new Array<Node>();
 	public RagdollConstraintComponent constraintComponent;
 
-	public boolean physicsControl = false;
+	public Matrix4 baseBodyTransform = new Matrix4();
+	public Vector3 partTrans = new Vector3();
+	public Vector3 baseTrans = new Vector3();
+
+	public boolean ragdollControl = false;
 	public short belongsToFlag;
 	public short collidesWithFlag;
 
-	public Node armatureNode;
-
-	public ArrayMap<Node, btRigidBody> nodeBodyMap;
-	public ArrayMap<String, Vector3> halfExtMap;
-
-	public Node headNode;
-	public btRigidBody headBody;
-
-	public Node neckNode;
-	public btRigidBody neckBody;
-
-	public Node chestNode;
-	public btRigidBody chestBody;
-
-	public Node abdomenNode;
-	public btRigidBody abdomenBody;
-
-	public Node leftUpperArmNode;
-	public btRigidBody leftUpperArmBody;
-	public Node leftForearmNode;
-	public btRigidBody leftForearmBody;
-	public Node leftThighNode;
-	public btRigidBody leftThighBody;
-	public Node leftShinNode;
-	public btRigidBody leftShinBody;
-
-	public Node rightUpperArmNode;
-	public btRigidBody rightUpperArmBody;
-	public Node rightForearmNode;
-	public btRigidBody rightForearmBody;
-	public Node rightThighNode;
-	public btRigidBody rightThighBody;
-	public Node rightShinNode;
-	public btRigidBody rightShinBody;
-
-
-	public void populateNodeBodyMap() {
-		if (nodeBodyMap == null) {
-			nodeBodyMap = new ArrayMap<Node, btRigidBody>();
+	public void addPart(btRigidBody body, Node node, Matrix4 nodeBodyOffset) {
+		if (!map.containsKey(body)) {
+			map.put(body, new NodeConnection());
 		}
-		nodeBodyMap.clear();
-		nodeBodyMap.put(abdomenNode, abdomenBody);
-		nodeBodyMap.put(neckNode, neckBody);
-		nodeBodyMap.put(chestNode, chestBody);
-		nodeBodyMap.put(leftUpperArmNode, leftUpperArmBody);
-		nodeBodyMap.put(leftForearmNode, leftForearmBody);
-		nodeBodyMap.put(rightUpperArmNode, rightUpperArmBody);
-		nodeBodyMap.put(rightForearmNode, rightForearmBody);
-		nodeBodyMap.put(headNode, headBody);
-		nodeBodyMap.put(leftThighNode, leftThighBody);
-		nodeBodyMap.put(leftShinNode, leftShinBody);
-		nodeBodyMap.put(rightThighNode, rightThighBody);
-		nodeBodyMap.put(rightShinNode, rightShinBody);
+		NodeConnection conn = map.get(body);
+		conn.bodyNodeOffsets.put(node, new Matrix4(nodeBodyOffset));
+
+		if (!nodes.contains(node, true)) {
+			nodes.add(node);
+		}
 	}
+
+	public void addFollowPart(btRigidBody body, Node node) {
+		if (!map.containsKey(body)) {
+			map.put(body, new NodeConnection());
+		}
+		NodeConnection conn = map.get(body);
+		Matrix4 nodeBodyOffset = new Matrix4();
+
+		conn.followNode = node;
+		// Set the follow offset to the middle of the armature bone
+		Vector3 offsetTranslation = new Vector3();
+		node.getChild(0).localTransform.getTranslation(offsetTranslation).scl(0.5f);
+		nodeBodyOffset.translate(offsetTranslation);
+		conn.bodyNodeOffsets.put(node, nodeBodyOffset);
+
+		if (!nodes.contains(node, true)) {
+			nodes.add(node);
+		}
+	}
+
+	public class NodeConnection {
+		// Stores the offset from the center of a rigid body to the node which connects to it
+		public ArrayMap<Node, Matrix4> bodyNodeOffsets = new ArrayMap<Node, Matrix4>();
+		// The node this bone should follow in animation mode
+		public Node followNode = null;
+	}
+
 }

@@ -20,6 +20,7 @@ public class ModelComponent extends Component {
 	private final BoundingBox bounds = new BoundingBox();
 	public ModelInstance modelInstance;
 	public String id;
+	public boolean ignoreCulling = false;
 
 	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {
 		this.id = id;
@@ -43,17 +44,6 @@ public class ModelComponent extends Component {
 		bounds.getCenter(center);
 		bounds.getDimensions(dimensions);
 		radius = dimensions.len() / 2f;
-
-//		for (int m = 0; m < modelInstance.materials.size; m++) {
-//			Material mat = modelInstance.materials.get(m);
-//			for (Iterator<Attribute> ai = mat.iterator(); ai.hasNext(); ) {
-//				Attribute att = ai.next();
-//				System.out.println(att.toString());
-//				if (att.type == TextureAttribute.Normal) {
-//				}
-//
-//			}
-//		}
 	}
 
 	public ModelComponent(Model model, String id) {

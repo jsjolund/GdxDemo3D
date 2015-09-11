@@ -22,9 +22,12 @@ public class GameSettings {
 	public static final float PLAYER_WALK_SPEED = 3.5f;
 	public static final float PLAYER_RUN_SPEED = 8f;
 
-	public static boolean DRAW_COLLISION_DEBUG = false;
+	public static boolean DRAW_DEBUG = false;
 
 	public static float MOUSE_SENSITIVITY = 0.01f;
+
+	public static int KEY_PAUSE = Input.Keys.SPACE;
+	public static float GAME_SPEED = 1;
 
 	public static int KEY_DRAW_COLLISION_DEBUG = Input.Keys.F2;
 	public static int KEY_DISPLAY_SHADOWBUFFER = Input.Keys.F3;
