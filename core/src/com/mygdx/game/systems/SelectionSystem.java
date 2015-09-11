@@ -14,9 +14,9 @@ import com.mygdx.game.components.SelectableComponent;
 /**
  * Created by user on 8/25/15.
  */
-public class ModelSelectionSystem extends EntitySystem {
+public class SelectionSystem extends EntitySystem {
 
-	public static final String tag = "ModelSelectionSystem";
+	public static final String tag = "SelectionSystem";
 	private final Vector3 surfacePoint = new Vector3();
 	public Family systemFamily;
 	PhysicsSystem phySys;
@@ -28,7 +28,7 @@ public class ModelSelectionSystem extends EntitySystem {
 	private ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private Ray ray = new Ray();
 
-	public ModelSelectionSystem(PhysicsSystem phySys, Viewport viewport) {
+	public SelectionSystem(PhysicsSystem phySys, Viewport viewport) {
 		systemFamily = Family.all(IntentBroadcastComponent.class, SelectableComponent.class).get();
 		this.phySys = phySys;
 		this.viewport = viewport;

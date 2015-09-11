@@ -24,6 +24,7 @@ import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
+import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -51,8 +52,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-//		delta *= 0.02f;
-		delta = delta * GameSettings.GAME_SPEED;
+		delta *= GameSettings.GAME_SPEED;
 		Gdx.gl.glClearStencil(0);
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -66,6 +66,15 @@ public class GameScreen implements Screen {
 
 		if (GameSettings.DRAW_DEBUG) {
 			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+			btIDebugDraw debugDraw = engine.getSystem(PhysicsSystem.class).dynamicsWorld.getDebugDrawer();
+			btIDebugDraw.DebugDrawModes modes = new btIDebugDraw.DebugDrawModes();
+			debugDraw.setDebugMode
+					(
+							modes.DBG_DrawConstraints
+									| modes.DBG_DrawConstraintLimits
+									| modes.DBG_DrawWireframe
+					);
+//			boolean drawFrames = (debugDraw.getDebugMode() & btIDebugDraw.DebugDrawModes.DBG_DrawConstraints) != 0;
 		}
 
 		stage.act(delta);
@@ -106,7 +115,7 @@ public class GameScreen implements Screen {
 		);
 
 		Gdx.app.debug(tag, "Loading environment system");
-		ModelEnvironmentSystem envSys = new ModelEnvironmentSystem();
+		EnvironmentSystem envSys = new EnvironmentSystem();
 		engine.addEntityListener(envSys.systemFamily, envSys.lightListener);
 		engine.addSystem(envSys);
 
@@ -148,7 +157,7 @@ public class GameScreen implements Screen {
 				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0, 0, -0.6f), Vector3.Y);
 				hinge.enableAngularMotor(true, 0, 5);
 
-				hinge.setDbgDrawSize(5);
+				hinge.setDbgDrawSize(1);
 				phySys.dynamicsWorld.addConstraint(hinge);
 				phyCmp.addConstraint(hinge);
 			}
@@ -180,7 +189,7 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Adding input controller");
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		GameInputSystem inputSys = new GameInputSystem(intentCmp);
+		InputSystem inputSys = new InputSystem(intentCmp);
 		engine.addSystem(inputSys);
 		multiplexer.addProcessor(inputSys.inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
@@ -192,7 +201,7 @@ public class GameScreen implements Screen {
 
 
 		Gdx.app.debug(tag, "Adding selection system");
-		ModelSelectionSystem selSys = new ModelSelectionSystem(phySys, viewport);
+		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
 		engine.addSystem(selSys);
 
 
@@ -219,7 +228,7 @@ public class GameScreen implements Screen {
 	}
 
 
-	private void spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
+	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
 		Entity entity = new Entity();
 
 		short belongsToFlag = PhysicsSystem.PC_FLAG;
@@ -277,19 +286,30 @@ public class GameScreen implements Screen {
 		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
 
+		// Ragdoll
 		RagdollFactory ragdoll = new RagdollFactory(mdlCmp.modelInstance, bodyMass, belongsToFlag, collidesWithFlag);
 		entity.add(ragdoll.ragCmp);
 		entity.add(ragdoll.conCmp);
 		engine.addEntity(entity);
-		// Done
+
+
+//		assets.load("models/g3db/character_lbe_0.g3db", Model.class);
+//		assets.load("models/g3db/character_sunglesses.g3db", Model.class);
+//		assets.load("models/g3db/character_hat_0.g3db", Model.class);
+//		assets.finishLoading();
+//		Model lbeModel = assets.get("models/g3db/character_lbe_0.g3db", Model.class);
+//		ModelComponent lbeModelCmp = new ModelComponent(lbeModel, "lbe");
+
+
 		Gdx.app.debug(tag, "Finished adding character");
+		return entity;
+
 	}
 
 
 	@Override
 	public void show() {
 	}
-
 
 
 	@Override

@@ -22,7 +22,7 @@ public class GameSettings {
 	public static final float PLAYER_WALK_SPEED = 3.5f;
 	public static final float PLAYER_RUN_SPEED = 8f;
 
-	public static boolean DRAW_DEBUG = false;
+	public static boolean DRAW_DEBUG = true;
 
 	public static float MOUSE_SENSITIVITY = 0.01f;
 

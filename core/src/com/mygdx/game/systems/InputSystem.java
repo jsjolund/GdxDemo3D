@@ -16,9 +16,9 @@ import com.mygdx.game.components.IntentBroadcastComponent;
 /**
  * Created by user on 8/24/15.
  */
-public class GameInputSystem extends EntitySystem {
+public class InputSystem extends EntitySystem {
 
-	public static final String tag = "GameInputSystem";
+	public static final String tag = "InputSystem";
 	public final IntIntMap keys = new IntIntMap();
 	public final Family family;
 	public InputProcessor inputProcessor;
@@ -29,7 +29,7 @@ public class GameInputSystem extends EntitySystem {
 
 	boolean killKeyBroadcasted = false;
 
-	public GameInputSystem(IntentBroadcastComponent intent) {
+	public InputSystem(IntentBroadcastComponent intent) {
 		family = Family.all(IntentBroadcastComponent.class).get();
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 		this.intent = intent;
@@ -117,7 +117,15 @@ public class GameInputSystem extends EntitySystem {
 				GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
 			}
 			if (keycode == GameSettings.KEY_PAUSE) {
-				GameSettings.GAME_SPEED = (GameSettings.GAME_SPEED == 0) ? 1 : 0;
+
+				if (GameSettings.GAME_SPEED == 1) {
+					GameSettings.GAME_SPEED = 0;
+				} else if (GameSettings.GAME_SPEED == 0) {
+					GameSettings.GAME_SPEED = 0.05f;
+				} else if (GameSettings.GAME_SPEED == 0.05f) {
+					GameSettings.GAME_SPEED = 1;
+				}
+
 			}
 			return true;
 		}
