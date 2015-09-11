@@ -33,6 +33,8 @@ public class RenderSystem extends EntitySystem {
 
 	public static final String tag = "RenderSystem";
 	public static final int DEPTHMAPIZE = 1024;
+	private final Vector3 debugNodePos = new Vector3();
+	private final Vector3 debugModelPos = new Vector3();
 	public Family systemFamily;
 	public FrameBuffer frameBuffer;
 	private Vector3 pos = new Vector3();
@@ -50,7 +52,6 @@ public class RenderSystem extends EntitySystem {
 	private Viewport viewport;
 	private Environment selectedEnvironment;
 	private ModelBatch selectedModelBatch;
-
 	private ShapeRenderer shapeRenderer = new ShapeRenderer();
 
 	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
@@ -210,9 +211,6 @@ public class RenderSystem extends EntitySystem {
 			shapeRenderer.end();
 		}
 	}
-
-	private final Vector3 debugNodePos = new Vector3();
-	private final Vector3 debugModelPos = new Vector3();
 
 	private void drawSkeleton(Node currentNode, Vector3 modelPos, Vector3 parentNodePos) {
 

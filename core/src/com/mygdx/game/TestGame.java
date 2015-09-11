@@ -17,8 +17,8 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.utils.UBJsonReader;
-import com.mygdx.game.utilities.ModelFactory;
 import com.mygdx.game.shaders.SimpleShader;
+import com.mygdx.game.utilities.ModelFactory;
 
 
 public class TestGame extends Game {

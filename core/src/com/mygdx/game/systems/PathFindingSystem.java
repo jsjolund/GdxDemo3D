@@ -28,6 +28,7 @@ public class PathFindingSystem extends IteratingSystem {
 			ComponentMapper.getFor(PhysicsComponent.class);
 	private ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
+
 	public PathFindingSystem(Family family) {
 		super(family);
 	}

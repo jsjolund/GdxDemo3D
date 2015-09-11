@@ -26,12 +26,11 @@ import java.util.ArrayList;
  */
 public class RagdollFactory {
 
-	public RagdollComponent ragCmp = new RagdollComponent();
-	public RagdollConstraintComponent conCmp = new RagdollConstraintComponent();
-
 	final static float PI = MathUtils.PI;
 	final static float PI2 = 0.5f * PI;
 	final static float PI4 = 0.25f * PI;
+	public RagdollComponent ragCmp = new RagdollComponent();
+	public RagdollConstraintComponent conCmp = new RagdollConstraintComponent();
 
 
 	public RagdollFactory(ModelInstance model, float bodyMass, short belongsToFlag, short collidesWithFlag) {
@@ -185,8 +184,7 @@ public class RagdollFactory {
 		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
 		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
 		conCmp.typedConstraints.add(
-				hingeC = new btHingeConstraint(rightThigh, rightShin, localA,
-						localB));
+				hingeC = new btHingeConstraint(rightThigh, rightShin, localA, localB));
 		hingeC.setLimit(0, PI2);
 
 		// Chest - Left Upper Arm
