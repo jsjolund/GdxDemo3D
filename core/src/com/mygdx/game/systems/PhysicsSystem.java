@@ -185,7 +185,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 			RagdollConstraintComponent cmp = entity.getComponent(RagdollConstraintComponent.class);
 			for (btTypedConstraint constraint : cmp.typedConstraints) {
 				dynamicsWorld.addConstraint(constraint, true);
-//				dynamicsWorld.addConstraint(constraint, false);
 			}
 		}
 

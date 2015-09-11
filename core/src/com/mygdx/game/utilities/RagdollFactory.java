@@ -155,37 +155,39 @@ public class RagdollFactory {
 		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
 		conCmp.typedConstraints.add(
 				coneC = new btConeTwistConstraint(neck, head, localA, localB));
-		coneC.setLimit(-PI4, -PI4, PI2);
+		coneC.setLimit(-PI4, -PI4, PI2,0);
+
 
 		// Abdomen - Left Thigh
-		localA.setFromEulerAnglesRad(PI4 * 0f, 0, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
+		localA.setFromEulerAnglesRad(0, PI, 0).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
 				("abdomen").y, 0);
-		localB.setFromEulerAnglesRad(PI4 * 0f, PI, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
+		localB.setFromEulerAnglesRad(0, 0, 0).trn(0, -halfExtMap.get("left_thigh").y, 0);
 		conCmp.typedConstraints.add(
 				coneC = new btConeTwistConstraint(abdomen, leftThigh, localA, localB));
-		coneC.setLimit(PI4, PI4, 0);
+		coneC.setLimit(0, PI2, PI4*0.5f);
 
 		// Abdomen - Right Thigh
-		localA.setFromEulerAnglesRad(PI4 * 0f, 0, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
+		localA.setFromEulerAnglesRad(0, PI, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
 				("abdomen").y, 0);
-		localB.setFromEulerAnglesRad(PI4 * 0f, PI, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
+		localB.setFromEulerAnglesRad(0, 0, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
 		conCmp.typedConstraints.add(
 				coneC = new btConeTwistConstraint(abdomen, rightThigh, localA, localB));
-		coneC.setLimit(PI4, PI4, 0);
+		coneC.setLimit(0, PI2, PI4*0.5f);
+
 
 		// Left Thigh - Left Shin
-		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
-		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
+		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
+		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
 		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(leftThigh, leftShin, localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, PI4*3);
 
 		// Right Thigh - Right Shin
-		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
-		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
+		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
+		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
 		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(rightThigh, rightShin, localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, PI4*3);
 
 		// Chest - Left Upper Arm
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(
@@ -206,18 +208,18 @@ public class RagdollFactory {
 		coneC.setLimit(PI2, PI2, 0);
 
 		// Left Upper Arm - Left Forearm
-		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
-		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
+		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
 		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(leftUpperArm, leftForearm, localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, -PI4 * 3);
 
 		// Right Upper Arm - Right Forearm
-		localA.setFromEulerAnglesRad(0, PI2, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
-		localB.setFromEulerAnglesRad(0, PI2, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
+		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
 		conCmp.typedConstraints.add(
 				hingeC = new btHingeConstraint(rightUpperArm, rightForearm,
 						localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, -PI4 * 3);
 	}
 }

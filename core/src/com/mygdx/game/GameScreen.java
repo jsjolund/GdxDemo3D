@@ -49,6 +49,29 @@ public class GameScreen implements Screen {
 	AssetManager assets;
 	private ShapeRenderer shapeRenderer;
 
+	@Override
+	public void render(float delta) {
+//		delta *= 0.02f;
+		delta = delta * GameSettings.GAME_SPEED;
+		Gdx.gl.glClearStencil(0);
+		Gdx.gl.glClearColor(0, 0, 0, 1f);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		shapeRenderer.setColor(viewportBackgroundColor);
+		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
+		shapeRenderer.end();
+
+		engine.update(delta);
+
+		if (GameSettings.DRAW_DEBUG) {
+			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+		}
+
+		stage.act(delta);
+		stage.draw();
+	}
+
 	public GameScreen(int reqWidth, int reqHeight) {
 		assets = new AssetManager();
 		engine = new PooledEngine();
@@ -267,28 +290,7 @@ public class GameScreen implements Screen {
 	public void show() {
 	}
 
-	@Override
-	public void render(float delta) {
-//		delta *= 0.1f;
-		delta = delta * GameSettings.GAME_SPEED;
-		Gdx.gl.glClearStencil(0);
-		Gdx.gl.glClearColor(0, 0, 0, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		shapeRenderer.setColor(viewportBackgroundColor);
-		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
-		shapeRenderer.end();
-
-		engine.update(delta);
-
-		if (GameSettings.DRAW_DEBUG) {
-			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
-		}
-
-		stage.act(delta);
-		stage.draw();
-	}
 
 	@Override
 	public void resize(int width, int height) {
