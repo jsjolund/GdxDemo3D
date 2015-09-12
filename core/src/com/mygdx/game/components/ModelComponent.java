@@ -29,9 +29,9 @@ public class ModelComponent extends Component {
 		for (Node node : modelInstance.nodes) {
 			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
 		}
-		modelInstance.transform.rotate(Vector3.Y, rotation.y);
 		modelInstance.transform.rotate(Vector3.X, rotation.x);
 		modelInstance.transform.rotate(Vector3.Z, rotation.z);
+		modelInstance.transform.rotate(Vector3.Y, rotation.y);
 		modelInstance.transform.setTranslation(location);
 
 		modelInstance.calculateTransforms();

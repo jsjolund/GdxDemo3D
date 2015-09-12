@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -62,6 +63,25 @@ public class ModelFactory {
 				}
 			}
 		}
+	}
+
+	public static FloatBuffer createBlenderToGdxFloatBuffer(Mesh mesh) {
+		Vector3 pos = new Vector3();
+		FloatBuffer buf = mesh.getVerticesBuffer();
+		FloatBuffer bufNew = BufferUtils.newFloatBuffer(buf.capacity());
+		int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
+		int vertexFloats = (mesh.getVertexSize() / 4);
+		VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
+		int pOff = posAttr.offset / 4;
+		for (int i = 0; i < lastFloat; i += vertexFloats) {
+			pos.x = buf.get(pOff + i);
+			pos.y = buf.get(pOff + i + 1);
+			pos.z = buf.get(pOff + i + 2);
+			bufNew.put(pOff + i, pos.x);
+			bufNew.put(pOff + i + 1, pos.z);
+			bufNew.put(pOff + i + 2, -pos.y);
+		}
+		return bufNew;
 	}
 
 	public static void createOutlineModel(Model model, Color outlineColor, float fattenAmount) {

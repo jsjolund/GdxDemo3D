@@ -57,7 +57,7 @@ public class RagdollSystem extends IteratingSystem {
 		MotionStateComponent motionCmp = motionCmps.get(entity);
 
 		// Check if we should enable or disable physics control of the ragdoll
-		if (selCmp != null && intentCmps != null && selCmp.isSelected && intentCmp.killSelected) {
+		if (selCmp.isSelected && intentCmp.killSelected) {
 			if (ragdollCmp.ragdollControl) {
 
 				// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.

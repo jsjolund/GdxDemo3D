@@ -11,6 +11,7 @@ import subprocess
 import json
 from mathutils import Vector
 
+
 class BlenderObject(object):
     def __init__(self, bobj):
         self.bobj = bobj
@@ -135,7 +136,6 @@ def write_fbx(blender_file_basedir, export_objects):
             if type(mod) is bpy.types.ArmatureModifier:
                 armatures.append(mod.object)
         for armature in armatures:
-            print("selecting "+ str(armature))
             armature.select = True
         obj_file_path = os.path.join(blender_file_basedir, gobj.get_model_name() + ".fbx")
         obj_file_paths.append(obj_file_path)
@@ -147,13 +147,15 @@ def write_fbx(blender_file_basedir, export_objects):
         bobj0.rotation_euler.zero()
         bobj0.scale = Vector((1.0, 1.0, 1.0))
         bpy.ops.export_scene.fbx(filepath=obj_file_path,
+                                 version='BIN7400',
                                  path_mode="RELATIVE",
                                  use_selection=True,
                                  use_tspace=True,
                                  use_mesh_modifiers=True,
                                  object_types={'MESH', 'ARMATURE'},
-                                 axis_forward='Y',
-                                 axis_up='Z')
+                                 # axis_forward='-Z',
+                                 # axis_up='Y',
+                                 )
         bobj0.location = gobj.loc.copy()
         bobj0.rotation_euler = gobj.rote.copy()
         bobj0.scale = gobj.scl.copy()

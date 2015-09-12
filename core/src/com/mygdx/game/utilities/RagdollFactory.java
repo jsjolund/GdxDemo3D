@@ -241,8 +241,5 @@ public class RagdollFactory {
 		hingeC.setLimit(0, PI4 * 3);
 //		hingeC.setDbgDrawSize(0);
 
-		for (btRigidBody body : ragCmp.map.keys()) {
-			body.setGravity(Vector3.Zero);
-		}
 	}
 }

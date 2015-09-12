@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
@@ -13,17 +14,16 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
-import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
-import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
+import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.components.LightComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.systems.PhysicsSystem;
+import com.mygdx.game.utilities.ModelFactory;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 /**
@@ -95,12 +95,13 @@ public class BlenderComponentsLoader {
 		entity.add(new ModelComponent(model, cmp.name, cmp.position, cmp.rotation, cmp.scale));
 		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
 
-		btCollisionShape shape = loadCollisionShape(cmp.name, empties);
+		btCollisionShape shape = loadCollisionShape(cmp.name, empties, model);
 
 		if (shape == null) {
 			// No shape defined. Load as static object.
 //			Gdx.app.debug(tag, String.format("Created static object %s.", cmp.name));
 			shape = Bullet.obtainStaticNodeShape(instance.nodes);
+
 			PhysicsComponent phyCmp = new PhysicsComponent(
 					shape, null, 0,
 					PhysicsSystem.GROUND_FLAG,
@@ -116,7 +117,6 @@ public class BlenderComponentsLoader {
 
 			MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
 			entity.add(motionStateCmp);
-
 			entity.add(new PhysicsComponent(
 					shape, motionStateCmp.motionState, mass,
 					PhysicsSystem.OBJECT_FLAG,
@@ -189,7 +189,7 @@ public class BlenderComponentsLoader {
 	}
 
 	private btCollisionShape loadCollisionShape(String modelName, ArrayList<BlenderEmptyComponent>
-			empties) {
+			empties, Model convexHullModel) {
 		btCollisionShape shape = null;
 		for (BlenderEmptyComponent empty : empties) {
 
@@ -214,6 +214,11 @@ public class BlenderComponentsLoader {
 					halfExtents.y = Math.abs(halfExtents.y);
 					halfExtents.z = Math.abs(halfExtents.z);
 					shape = new btBoxShape(halfExtents);
+
+				} else if (shapeType.equals("convex_hull")) {
+					Mesh m = convexHullModel.meshes.get(0);
+					FloatBuffer buf = ModelFactory.createBlenderToGdxFloatBuffer(m);
+					shape = new btConvexHullShape(buf, m.getNumVertices(), m.getVertexSize());
 				}
 			}
 		}

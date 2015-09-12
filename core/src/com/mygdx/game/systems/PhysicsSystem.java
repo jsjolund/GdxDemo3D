@@ -161,6 +161,11 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		public void entityAdded(Entity entity) {
 			Gdx.app.debug(tag, "Adding ragdoll");
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
+			if (!cmp.ragdollControl) {
+				for (btRigidBody body : cmp.map.keys()) {
+					body.setGravity(Vector3.Zero);
+				}
+			}
 			for (btRigidBody body : cmp.map.keys()) {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
