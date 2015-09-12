@@ -18,7 +18,9 @@ public class RagdollComponent extends Component {
 	public RagdollConstraintComponent constraintComponent;
 
 	public Matrix4 baseBodyTransform = new Matrix4();
-	public Vector3 partTrans = new Vector3();
+	public Matrix4 resetRotationTransform = new Matrix4();
+	public Matrix4 tmp = new Matrix4();
+	public Vector3 nodeTrans = new Vector3();
 	public Vector3 baseTrans = new Vector3();
 
 	public boolean ragdollControl = false;

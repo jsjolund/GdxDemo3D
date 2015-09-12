@@ -1,11 +1,12 @@
+#define nop() {}
+
 ////////////////////////////////////////////////////////////////////////////////////
 ////////// POSITION ATTRIBUTE - VERTEX
 ////////////////////////////////////////////////////////////////////////////////////
-#define nop() {}
-
 #ifdef positionFlag
 attribute vec3 a_position;
 #endif //positionFlag
+
 varying vec4 v_position;
 #define pushPositionValue(value) (v_position = (value))
 #if defined(positionFlag)
@@ -24,6 +25,7 @@ vec4 g_position = vec4(0.0, 0.0, 0.0, 1.0);
 #ifdef colorFlag
 attribute vec4 a_color;
 #endif //colorFlag
+
 varying vec4 v_color;
 #define pushColorValue(value) (v_color = (value))
 #if defined(colorFlag)
@@ -42,6 +44,7 @@ vec4 g_color = vec4(1.0, 1.0, 1.0, 1.0);
 #ifdef normalFlag
 attribute vec3 a_normal;
 #endif //normalFlag
+
 varying vec3 v_normal;
 #define pushNormalValue(value) (v_normal = (value))
 #if defined(normalFlag)
@@ -60,6 +63,7 @@ vec3 g_normal = vec3(0.0, 0.0, 1.0);
 #ifdef binormalFlag
 attribute vec3 a_binormal;
 #endif //binormalFlag
+
 varying vec3 v_binormal;
 #define pushBinormalValue(value) (v_binormal = (value))
 #if defined(binormalFlag)
@@ -78,6 +82,7 @@ vec3 g_binormal = vec3(0.0, 1.0, 0.0);
 #ifdef tangentFlag
 attribute vec3 a_tangent;
 #endif //tangentFlag
+
 varying vec3 v_tangent;
 #define pushTangentValue(value) (v_tangent = (value))
 #if defined(tangentFlag)
@@ -114,11 +119,8 @@ vec2 g_texCoord0 = vec2(0.0, 0.0);
 
 // Uniforms which are always available
 uniform mat4 u_projViewTrans;
-
 uniform mat4 u_worldTrans;
-
 uniform vec4 u_cameraPosition;
-
 uniform mat3 u_normalMatrix;
 
 // Other uniforms
@@ -160,58 +162,65 @@ uniform sampler2D u_specularTexture;
 uniform sampler2D u_normalTexture;
 #endif
 
-// Use the macro/function applySkinning(x) to apply skinning
-// If skinning is not available, it will be a no-op,
-// otherwise it will multiply x by the skinning matrix
-
+////////////////////////////////////////////////////////////////////////////////////
+////////// SKINNING
+///////////////////////////////////////////////////////////////////////////////////
 #ifdef boneWeight0Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight0;
 #endif //boneWeight0Flag
+
 #ifdef boneWeight1Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight1;
 #endif //boneWeight1Flag
+
 #ifdef boneWeight2Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight2;
 #endif //boneWeight2Flag
+
 #ifdef boneWeight3Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight3;
 #endif //boneWeight3Flag
+
 #ifdef boneWeight4Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight4;
 #endif //boneWeight4Flag
+
 #ifdef boneWeight5Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight5;
 #endif //boneWeight5Flag
+
 #ifdef boneWeight6Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight6;
 #endif //boneWeight6Flag
+
 #ifdef boneWeight7Flag
 #ifndef boneWeightsFlag
 #define boneWeightsFlag
 #endif
 attribute vec2 a_boneWeight7;
 #endif //boneWeight7Flag
+
 // Declare the bones that are available
 #if defined(numBones)
 #if numBones > 0
@@ -254,12 +263,14 @@ mat4 skinningTransform = mat4(0.0)
 #endif //boneWeight7Flag
 ;
 #endif //skinningFlag
+
 #ifdef skinningFlag
-vec3 applySkinning(const in vec3 x) {return (skinningTransform * vec4(x, 0.0)).xyz;}
-vec4 applySkinning(const in vec4 x) {return (skinningTransform * x);}
+vec3 applySkinning(const in vec3 x) { return (skinningTransform * vec4(x, 0.0)).xyz; }
+vec4 applySkinning(const in vec4 x) { return (skinningTransform * x); }
 #else
 #define applySkinning(x) (x)
 #endif //skinningFlag
+
 #if defined(diffuseTextureFlag) || defined(specularTextureFlag)
 #define textureFlag
 #endif
@@ -273,8 +284,10 @@ vec4 applySkinning(const in vec4 x) {return (skinningTransform * x);}
 #endif
 
 #ifdef shadowMapFlag
+uniform mat4 u_shadowMapProjViewTrans;
+varying vec3 v_shadowMapUv;
 #define separateAmbientFlag
-#endif
+#endif //shadowMapFlag
 
 #if defined(normalFlag) && defined(binormalFlag) && defined(tangentFlag)
 #define calculateTangentVectors() nop()
@@ -308,7 +321,6 @@ void calculateTangentVectors() {
 #endif
 #endif
 
-// Declare all lighting uniforms
 //////////////////////////////////////////////////////
 ////// AMBIENT LIGHT
 //////////////////////////////////////////////////////
@@ -322,6 +334,7 @@ uniform vec3 u_ambientLight;
 #define getAmbientLight() (vec3(0.0))
 #endif
 
+
 //////////////////////////////////////////////////////
 ////// AMBIENT CUBEMAP
 //////////////////////////////////////////////////////
@@ -332,10 +345,10 @@ uniform vec3 u_ambientLight;
 uniform vec3 u_ambientCubemap[6];
 vec3 getAmbientCubeLight(const in vec3 normal) {
 	vec3 squaredNormal = normal * normal;
-	vec3 isPositive = step(0.0, normal);
+	vec3 isPositive  = step(0.0, normal);
 	return squaredNormal.x * mix(u_ambientCubemap[0], u_ambientCubemap[1], isPositive.x) +
-	squaredNormal.y * mix(u_ambientCubemap[2], u_ambientCubemap[3], isPositive.y) +
-	squaredNormal.z * mix(u_ambientCubemap[4], u_ambientCubemap[5], isPositive.z);
+			squaredNormal.y * mix(u_ambientCubemap[2], u_ambientCubemap[3], isPositive.y) +
+			squaredNormal.z * mix(u_ambientCubemap[4], u_ambientCubemap[5], isPositive.z);
 }
 #else
 #define getAmbientCubeLight(normal) (vec3(0.0))
@@ -359,12 +372,13 @@ vec3 getAmbientCubeLight(const in vec3 normal) {
 #define pointLightsFlag
 #endif // numPointLights
 #endif //lightingFlag
+
 #ifdef pointLightsFlag
 struct PointLight
 {
-	vec3 color;
-	vec3 position;
-	float intensity;
+vec3 color;
+vec3 position;
+float intensity;
 };
 uniform PointLight u_pointLights[numPointLights];
 #endif
@@ -377,11 +391,12 @@ uniform PointLight u_pointLights[numPointLights];
 #define directionalLightsFlag
 #endif // numDirectionalLights
 #endif //lightingFlag
+
 #ifdef directionalLightsFlag
 struct DirectionalLight
 {
-	vec3 color;
-	vec3 direction;
+vec3 color;
+vec3 direction;
 };
 uniform DirectionalLight u_dirLights[numDirectionalLights];
 #endif
@@ -389,18 +404,16 @@ uniform DirectionalLight u_dirLights[numDirectionalLights];
 varying vec3 v_lightDir;
 varying vec3 v_lightCol;
 varying vec3 v_viewDir;
-varying vec3 v_ambientLight;
-//
+
 #ifdef environmentCubemapFlag
 varying vec3 v_reflect;
 #endif
 
-uniform mat4 u_lightTrans;
-varying vec4 v_positionLightTrans;
-varying vec3 normal;
-varying float v_intensity;
+varying vec3 v_ambientLight;
 
 void main() {
+	calculateTangentVectors();
+
 	g_position = applySkinning(g_position);
 	g_normal = normalize(u_normalMatrix * applySkinning(g_normal));
 	g_binormal = normalize(u_normalMatrix * applySkinning(g_binormal));
@@ -408,6 +421,12 @@ void main() {
 
 	g_position = u_worldTrans * g_position;
 	gl_Position = u_projViewTrans * g_position;
+
+#ifdef shadowMapFlag
+	vec4 spos = u_shadowMapProjViewTrans * g_position;
+	v_shadowMapUv.xy = (spos.xy / spos.w) * 0.5 + 0.5;
+	v_shadowMapUv.z = min(spos.z * 0.5 + 0.5, 0.998);
+#endif //shadowMapFlag
 
 	mat3 worldToTangent;
 	worldToTangent[0] = g_tangent;
@@ -420,26 +439,10 @@ void main() {
 	v_lightCol = u_dirLights[0].color;
 	vec3 viewDir = normalize(u_cameraPosition.xyz - g_position.xyz);
 	v_viewDir = viewDir * worldToTangent;
-
-#ifdef environmentCubemapFlag
+	#ifdef environmentCubemapFlag
 	v_reflect = reflect(-viewDir, g_normal);
-#endif
+	#endif
 
-	pushColorValue(g_color);
-	//pushColor();
-	pushTexCoord0Value(g_texCoord0);
-	//pushTexCoord0();
-
-	v_position = u_worldTrans * vec4(a_position, 1.0);
-	normal = normalize(u_normalMatrix * a_normal);
-	v_positionLightTrans = u_lightTrans * v_position;
-
-	// Just add some basic self shadow
-	v_intensity = 1.0;
-	if (normal.y < 0.5) {
-		if (normal.x > 0.5 || normal.x < -0.5)
-			v_intensity *= 0.8;
-		if (normal.z > 0.5 || normal.z < -0.5)
-			v_intensity *= 0.6;
-	}
+	pushColor();
+	pushTexCoord0();
 }

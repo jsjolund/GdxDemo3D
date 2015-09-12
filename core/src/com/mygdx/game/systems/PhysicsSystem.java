@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.*;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
+import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
 import com.mygdx.game.components.RagdollConstraintComponent;
@@ -54,7 +55,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		constraintSolver = new btSequentialImpulseConstraintSolver();
 		dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase,
 				constraintSolver, collisionConfig);
-		dynamicsWorld.setGravity(new Vector3(0, -9.82f, 0));
+		dynamicsWorld.setGravity(GameSettings.GRAVITY);
 
 		debugDrawer = new DebugDrawer();
 		dynamicsWorld.setDebugDrawer(debugDrawer);

@@ -56,7 +56,7 @@ public class RagdollFactory {
 		}
 
 		float massHead = bodyMass * 0.073f;
-		float massNeck = bodyMass * 0.001f;
+		float massNeck = bodyMass * 0.01f;
 		float massAbdomen = bodyMass * 0.254f;
 		float massChest = bodyMass * 0.254f;
 		float massUpperArm = bodyMass * 0.027f;
@@ -167,7 +167,7 @@ public class RagdollFactory {
 		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
 		conCmp.typedConstraints.add(
 				coneC = new btConeTwistConstraint(neck, head, localA, localB));
-		coneC.setLimit(PI4, PI4, PI2);
+		coneC.setLimit(PI4, PI4, PI4);
 //		coneC.setDbgDrawSize(0);
 
 		// Abdomen - Left Thigh
@@ -240,5 +240,9 @@ public class RagdollFactory {
 						localA, localB));
 		hingeC.setLimit(0, PI4 * 3);
 //		hingeC.setDbgDrawSize(0);
+
+		for (btRigidBody body : ragCmp.map.keys()) {
+			body.setGravity(Vector3.Zero);
+		}
 	}
 }

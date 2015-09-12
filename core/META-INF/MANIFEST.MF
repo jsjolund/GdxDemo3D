@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Class-Path: jinput-platform-2.0.5-natives-osx.jar jinput-platform-2.0.
+ 5-natives-linux.jar gdx-freetype-1.6.6-SNAPSHOT.jar gdx-backend-andro
+ id-1.6.6-SNAPSHOT.jar jinput-2.0.5.jar lwjgl_util-2.9.2.jar robovm-co
+ coatouch-1.6.0.jar ashley-1.5.0.jar gdx-controllers-1.6.6-SNAPSHOT.ja
+ r gdx-controllers-android-1.6.6-SNAPSHOT.jar gdx-tools-1.6.6-SNAPSHOT
+ .jar gdx-backend-robovm-1.6.6-SNAPSHOT.jar gdx-platform-1.6.6-SNAPSHO
+ T-natives-desktop.jar gdx-1.6.6-SNAPSHOT.jar gdx-bullet-platform-1.6.
+ 6-SNAPSHOT-natives-desktop.jar jlayer-1.0.1-gdx.jar gdx-platform-1.6.
+ 6-SNAPSHOT-natives-ios.jar jinput-platform-2.0.5-natives-windows.jar 
+ lwjgl-platform-2.9.2-natives-windows.jar robovm-rt-1.6.0.jar gdx-cont
+ rollers-platform-1.6.6-SNAPSHOT-natives-desktop.jar gdx-bullet-1.6.6-
+ SNAPSHOT.jar gdx-ai-1.5.0.jar lwjgl-2.9.2.jar lwjgl-platform-2.9.2-na
+ tives-linux.jar gdx-backend-headless-1.6.6-SNAPSHOT.jar gdx-freetype-
+ platform-1.6.6-SNAPSHOT-natives-desktop.jar lwjgl-platform-2.9.2-nati
+ ves-osx.jar gdx-bullet-platform-1.6.6-SNAPSHOT-natives-ios.jar gdx-fr
+ eetype-platform-1.6.6-SNAPSHOT-natives-ios.jar robovm-objc-1.6.0.jar 
+ jorbis-0.0.17.jar gdx-controllers-desktop-1.6.6-SNAPSHOT.jar gdx-back
+ end-lwjgl-1.6.6-SNAPSHOT.jar jutils-1.0.0.jar
+Main-Class: com.mygdx.game.desktop.DesktopLauncher
+

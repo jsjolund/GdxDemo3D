@@ -53,6 +53,7 @@ varying vec2 v_texCoord0;
 vec2 g_texCoord0 = vec2(0.0, 0.0);
 #define pullTexCoord0() (g_texCoord0 = v_texCoord0)
 
+
 // Uniforms which are always available
 uniform mat4 u_projViewTrans;
 
@@ -80,6 +81,7 @@ uniform float u_shininess;
 #else
 const float u_shininess = 20.0;
 #endif
+
 
 #ifdef diffuseColorFlag
 uniform vec4 u_diffuseColor;
@@ -114,8 +116,26 @@ uniform sampler2D u_normalTexture;
 #endif
 
 #ifdef shadowMapFlag
+uniform sampler2D u_shadowTexture;
+uniform float u_shadowPCFOffset;
+varying vec3 v_shadowMapUv;
 #define separateAmbientFlag
-#endif
+
+float getShadowness(vec2 offset)
+{
+    const vec4 bitShifts = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+    return step(v_shadowMapUv.z, dot(texture2D(u_shadowTexture, v_shadowMapUv.xy + offset), bitShifts));//+(1.0/255.0));
+}
+
+float getShadow()
+{
+	return (//getShadowness(vec2(0,0)) +
+			getShadowness(vec2(u_shadowPCFOffset, u_shadowPCFOffset)) +
+			getShadowness(vec2(-u_shadowPCFOffset, u_shadowPCFOffset)) +
+			getShadowness(vec2(u_shadowPCFOffset, -u_shadowPCFOffset)) +
+			getShadowness(vec2(-u_shadowPCFOffset, -u_shadowPCFOffset))) * 0.25;
+}
+#endif //shadowMapFlag
 
 #if defined(diffuseTextureFlag) && defined(diffuseColorFlag)
 #define fetchColorDiffuseTD(texCoord, defaultValue) texture2D(u_diffuseTexture, texCoord) * u_diffuseColor
@@ -127,14 +147,16 @@ uniform sampler2D u_normalTexture;
 #define fetchColorDiffuseTD(texCoord, defaultValue) (defaultValue)
 #endif
 
+
 #define fetchColorDiffuseD(defaultValue) fetchColorDiffuseTD(g_texCoord0, defaultValue)
 #define fetchColorDiffuse() fetchColorDiffuseD(vec4(1.0))
 
 #if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
-#define applyColorDiffuse(baseColor) ((baseColor) * fetchColorDiffuseD(vec4(1.0))
+#define applyColorDiffuse(baseColor) ((baseColor) * fetchColorDiffuse())
 #else
 #define applyColorDiffuse(baseColor) (baseColor)
 #endif
+
 
 #if defined(specularTextureFlag) && defined(specularColorFlag)
 #define fetchColorSpecularTD(texCoord, defaultValue) (texture2D(u_specularTexture, texCoord).rgb * u_specularColor.rgb)
@@ -146,11 +168,12 @@ uniform sampler2D u_normalTexture;
 #define fetchColorSpecularTD(texCoord, defaultValue) (defaultValue)
 #endif
 
+
 #define fetchColorSpecularD(defaultValue) fetchColorSpecularTD(g_texCoord0, defaultValue)
 #define fetchColorSpecular() fetchColorSpecularD(vec3(0.0))
 
 #if defined(specularTextureFlag) || defined(specularColorFlag)
-#define applyColorSpecular(intensity) ((intensity) * fetchColorSpecularD(vec3(0.0))
+#define applyColorSpecular(intensity) ((intensity) * fetchColorSpecular())
 #define addColorSpecular(baseColor, intensity)	((baseColor) + applyColorSpecular(intensity))
 #else
 #define applyColorSpecular(intensity) (vec3(0.0))
@@ -160,12 +183,10 @@ uniform sampler2D u_normalTexture;
 varying vec3 v_lightDir;
 varying vec3 v_lightCol;
 varying vec3 v_viewDir;
-varying vec3 v_ambientLight;
-//
 #ifdef environmentCubemapFlag
 varying vec3 v_reflect;
 #endif
-//
+
 #ifdef environmentCubemapFlag
 uniform samplerCube u_environmentCubemap;
 #endif
@@ -174,25 +195,9 @@ uniform samplerCube u_environmentCubemap;
 uniform vec4 u_reflectionColor;
 #endif
 
+varying vec3 v_ambientLight;
+
 #define saturate(x) clamp( x, 0.0, 1.0 )
-
-// Mine
-uniform vec3 u_lightPosition;
-uniform float u_cameraFar;
-uniform sampler2D u_depthMap;
-
-uniform float u_hue;
-uniform float u_saturation;
-uniform float u_value;
-uniform float u_specOpacity;
-uniform float u_lightIntensity;
-uniform float u_shadowIntensity;
-uniform vec3 u_lightDirection;
-
-varying vec4 v_positionLightTrans;
-varying vec3 normal;
-varying float v_intensity;
-
 
 vec3 rgb2hsv(vec3 c) {
 	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -203,36 +208,34 @@ vec3 rgb2hsv(vec3 c) {
 	float e = 1.0e-10;
 	return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
-
 vec3 hsv2rgb(vec3 c) {
 	vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
 	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
 	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
+uniform float u_hue;
+uniform float u_saturation;
+uniform float u_value;
+uniform float u_specOpacity;
 
 void main() {
-	g_color = v_color; //pullColor();
-	g_texCoord0 = v_texCoord0; //pullTexCoord0();
+	pullColor();
+	pullTexCoord0();
 
-#if defined(diffuseTextureFlag) || defined(diffuseColorFlag)
-	vec4 diffuse = g_color * fetchColorDiffuseD(vec4(1.0));
-#else
-	vec4 diffuse = g_color;
-#endif
+	vec4 diffuse = applyColorDiffuse(g_color);
+	vec3 specular = fetchColorSpecular();
 
-	vec3 specular = fetchColorSpecularD(vec3(0.0));
-
-#ifdef normalTextureFlag
+	#ifdef normalTextureFlag
 	vec4 N = vec4(normalize(texture2D(u_normalTexture, g_texCoord0).xyz * 2.0 - 1.0), 1.0);
-#ifdef environmentCubemapFlag
+	#ifdef environmentCubemapFlag
 	vec3 reflectDir = normalize(v_reflect + (vec3(0.0, 0.0, 1.0) - N.xyz));
-#endif
-#else
+	#endif
+	#else
 	vec4 N = vec4(0.0, 0.0, 1.0, 1.0);
-#ifdef environmentCubemapFlag
+	#ifdef environmentCubemapFlag
 	vec3 reflectDir = normalize(v_reflect);
-#endif
-#endif
+	#endif
+	#endif
 
 	vec3 L = normalize(v_lightDir);
 	vec3 V = normalize(v_viewDir);
@@ -244,78 +247,29 @@ void main() {
 	float spec = min(1.0, pow(NH, 10.0) * specOpacity);
 	float selfShadow = saturate(4.0 * NL);
 
-#ifdef environmentCubemapFlag
+	#ifdef environmentCubemapFlag
 	vec3 environment = textureCube(u_environmentCubemap, reflectDir).rgb;
 	specular *= environment;
-#ifdef reflectionColorFlag
+	#ifdef reflectionColorFlag
 	diffuse.rgb = saturate(vec3(1.0) - u_reflectionColor.rgb) * diffuse.rgb + environment * u_reflectionColor.rgb;
-#endif
-#endif
+	#endif
+	#endif
 
-
-//	inputColor.w = 1;
-//	inputColor.xyz = vec3(0.6);
-
-	vec3 depth = (v_positionLightTrans.xyz / v_positionLightTrans.w) * 0.5 + 0.5;
-	depth.y += 0.005;
-
-	float shadow = 0.0;
-	// Make sure the point is in the field of view of the light and also that it is not behind it
-	if (v_positionLightTrans.z >= 0.0
-	        && (depth.x >= 0.0) && (depth.x <= 1.0)
-            && (depth.y >= 0.0) && (depth.y <= 1.0)) {
-
-		float lenToLight = length(v_position.xyz - u_lightPosition) / u_cameraFar;
-		float lenDepthMap = texture2D(u_depthMap, depth.xy).a;
-		float d = dot(u_lightDirection, normal);
-
-		if (normal.y > 0.5) {
-			if (lenDepthMap > lenToLight) {
-				// Horizontal surface exposed to light
-                shadow = 0.0;
-			} else {
-				// Horizontal surface which recieves shadow
-				shadow = 1.0;
-			}
-		} else {
-            if ((d > 0.0) ){
-            	// Vertical surface facing away from the light
-				shadow = d*2.0;
-
-            } else {
-            	lenDepthMap = texture2D(u_depthMap, depth.xy).a;
-            	if (lenDepthMap < lenToLight - 0.005) {
-            		// Vertical surface which recieves shadow
-            		shadow = 1.0;
-
-            	} else {
-            		// Vertical surface exposed to light
-            		shadow = 0.0;
-            	}
-            }
-		}
-	} else {
-	    // Outside field of view of light
-	    shadow = 0.0;
-	}
-
-	vec4 inputColor = vec4(0.0);
-	inputColor.w = diffuse.w;
-
-	inputColor.rgb = saturate((v_lightCol * diffuse.rgb) * (NL));
-	inputColor.rgb += (selfShadow * spec) * specular;
-	inputColor.rgb += v_ambientLight * diffuse.rgb;
-	inputColor.rgb *= (1.0-shadow*u_shadowIntensity);
+    vec4 fcol;
+	#ifdef shadowMapFlag
+	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL * getShadow()), diffuse.w);
+	#else
+	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
+	#endif
+	fcol.rgb += v_ambientLight * diffuse.rgb;
+	fcol.rgb += (selfShadow * spec) * specular;
 
     // Hue, saturation, value setting
-	vec3 hsv = rgb2hsv(inputColor.rgb);
-	hsv.x*=u_hue;
-	hsv.y*=u_saturation;
-	hsv.z*=u_value;
-	inputColor.rgb = hsv2rgb(hsv);
+    vec3 hsv = rgb2hsv(fcol.rgb);
+    hsv.x*=u_hue;
+    hsv.y*=u_saturation;
+    hsv.z*=u_value;
+    fcol.rgb = hsv2rgb(hsv);
 
-	gl_FragColor = inputColor;
-
-
+	gl_FragColor = fcol;
 }
-

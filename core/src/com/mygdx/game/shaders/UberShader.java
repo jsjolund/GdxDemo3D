@@ -18,12 +18,10 @@ public class UberShader extends DefaultShader {
 	public static final String tag = "UberShader";
 
 	public Renderable renderable;
-	private RenderSystem.ShadowData shadowData;
 
-	public UberShader(Renderable renderable, Config config, RenderSystem.ShadowData shadowData) {
+	public UberShader(Renderable renderable, Config config) {
 		super(renderable, config);
 		this.renderable = renderable;
-		this.shadowData = shadowData;
 		String prefix = DefaultShader.createPrefix(renderable, config);
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
 		if (!program.isCompiled()) {
@@ -36,18 +34,10 @@ public class UberShader extends DefaultShader {
 		super.begin(camera, context);
 		context.setDepthTest(GL20.GL_LEQUAL);
 		program.begin();
-		program.setUniformi("u_depthMap", shadowData.u_depthMap);
-		program.setUniformMatrix("u_lightTrans", shadowData.u_lightTrans);
-		program.setUniformf("u_cameraFar", shadowData.u_cameraFar);
-		program.setUniformf("u_lightPosition", shadowData.u_lightPosition);
-		program.setUniformf("u_lightDirection", shadowData.u_lightDirection);
-
 		program.setUniformf("u_hue", UberShaderSettings.u_hue);
 		program.setUniformf("u_saturation", UberShaderSettings.u_saturation);
 		program.setUniformf("u_value", UberShaderSettings.u_value);
 		program.setUniformf("u_specOpacity", UberShaderSettings.u_specOpacity);
-		program.setUniformf("u_lightIntensity", UberShaderSettings.u_lightIntensity);
-		program.setUniformf("u_shadowIntensity", UberShaderSettings.u_shadowIntensity);
 	}
 
 	@Override
@@ -63,11 +53,9 @@ public class UberShader extends DefaultShader {
 
 	public static class UberShaderSettings {
 		public static float u_hue = 1f;
-		public static float u_saturation = 0.7f;
-		public static float u_value = 1f;
-		public static float u_specOpacity = 0.25f;
-		public static float u_lightIntensity = 0.0f;
-		public static float u_shadowIntensity = 0.0f;
+		public static float u_saturation = 0.6f;
+		public static float u_value = 1.5f;
+		public static float u_specOpacity = 0.4f;
 	}
 
 }

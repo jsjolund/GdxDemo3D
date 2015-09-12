@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Vector3;
 
 /**
  * Created by user on 8/1/15.
@@ -21,6 +22,8 @@ public class GameSettings {
 
 	public static final float PLAYER_WALK_SPEED = 3.5f;
 	public static final float PLAYER_RUN_SPEED = 8f;
+
+	public static final Vector3 GRAVITY = new Vector3(0, -9.82f, 0);
 
 	public static boolean DRAW_COLLISION_SHAPES = false;
 	public static boolean DRAW_ARMATURE = false;

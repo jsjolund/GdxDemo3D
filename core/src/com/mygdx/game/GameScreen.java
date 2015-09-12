@@ -207,7 +207,6 @@ public class GameScreen implements Screen {
 		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
 		engine.addSystem(selSys);
 
-
 //		Gdx.app.debug(tag, "Adding billboard system");
 //		Family billFamily = Family.all(
 //				TextureComponent.class,
@@ -219,17 +218,22 @@ public class GameScreen implements Screen {
 		spawnCharacter(new Vector3(5, 1, 0), intentCmp);
 		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
 
-
 		Family pathFamily = Family.all(PathFindingComponent.class, PhysicsComponent.class).get();
 		engine.addSystem(new PathFindingSystem(pathFamily));
 
 		Family animFamily = Family.all(CharacterActionComponent.class).get();
 		engine.addSystem(new AnimationSystem(animFamily));
 
-		Family ragdollFamily = Family.all(CharacterActionComponent.class, RagdollComponent.class).get();
+		Family ragdollFamily = Family.all(
+				RagdollComponent.class,
+				CharacterActionComponent.class,
+				ModelComponent.class,
+				MotionStateComponent.class,
+				PhysicsComponent.class,
+				SelectableComponent.class,
+				IntentBroadcastComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 	}
-
 
 	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
 		Entity entity = new Entity();
