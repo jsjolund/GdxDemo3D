@@ -163,6 +163,7 @@ public class BlenderComponentsLoader {
 			direction.rotate(Vector3.Y, cmp.rotation.y);
 
 			float s = cmp.lamp_energy;
+//			float s = 0.01f;
 			entity.add(new LightComponent(
 					new DirectionalLight().set(
 							s * cmp.lamp_color.r,

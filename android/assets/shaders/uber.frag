@@ -217,6 +217,8 @@ uniform float u_hue;
 uniform float u_saturation;
 uniform float u_value;
 uniform float u_specOpacity;
+uniform float u_lightIntensity;
+uniform float u_ambient;
 
 void main() {
 	pullColor();
@@ -257,11 +259,11 @@ void main() {
 
     vec4 fcol;
 	#ifdef shadowMapFlag
-	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL * getShadow()), diffuse.w);
+	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL * getShadow() )* vec3(u_lightIntensity), diffuse.w);
 	#else
-	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL), diffuse.w);
+	fcol = vec4(saturate((v_lightCol * diffuse.rgb) * NL)* vec3(u_lightIntensity)), diffuse.w);
 	#endif
-	fcol.rgb += v_ambientLight * diffuse.rgb;
+	fcol.rgb += v_ambientLight * diffuse.rgb * vec3(u_ambient);
 	fcol.rgb += (selfShadow * spec) * specular;
 
     // Hue, saturation, value setting

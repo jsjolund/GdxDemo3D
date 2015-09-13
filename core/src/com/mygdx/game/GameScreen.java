@@ -10,14 +10,12 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -89,7 +87,8 @@ public class GameScreen implements Screen {
 		engine = new PooledEngine();
 		Bullet.init();
 
-		viewportBackgroundColor = Color.BLACK;
+//		viewportBackgroundColor = Color.BLACK;
+		viewportBackgroundColor = new Color(0.27f,0.57f,0.82f,1);
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -241,15 +240,26 @@ public class GameScreen implements Screen {
 		short belongsToFlag = PhysicsSystem.PC_FLAG;
 		short collidesWithFlag = (short) (PhysicsSystem.OBJECT_FLAG | PhysicsSystem.GROUND_FLAG);
 
+		MipMapGenerator.setUseHardwareMipMap(true);
+		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
+		param.textureParameter.genMipMaps = true;
+		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
+
+		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
+		assets.finishLoading();
+		Model model  = assets.get("models/g3db/character_male_base.g3db");
+
 		// Get character model data
 		UBJsonReader jsonReader = new UBJsonReader();
 		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
 		ModelData modelData = modelLoader.
-				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType.Internal));
+				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType
+						.Internal), param);
 
 		// Create normal model and outline model
 		// TODO: manage, dispose
-		Model model = new Model(modelData);
+//		Model model = new Model(modelData);
 		Model outlineModel = new Model(modelData);
 		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
 

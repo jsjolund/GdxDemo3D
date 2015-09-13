@@ -18,7 +18,7 @@ public class GameSettings {
 	public static final float CAMERA_ZOOM_STEP = 1;
 	public static final float CAMERA_MAX_ZOOM = 20;
 
-	public static final float SCENE_AMBIENT_LIGHT = 0.3f;
+	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
 	public static final float PLAYER_WALK_SPEED = 3.5f;
 	public static final float PLAYER_RUN_SPEED = 8f;

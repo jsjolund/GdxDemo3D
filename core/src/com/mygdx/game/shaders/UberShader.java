@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.mygdx.game.systems.RenderSystem;
 
 /**
  * Created by user on 8/29/15.
@@ -38,6 +37,8 @@ public class UberShader extends DefaultShader {
 		program.setUniformf("u_saturation", UberShaderSettings.u_saturation);
 		program.setUniformf("u_value", UberShaderSettings.u_value);
 		program.setUniformf("u_specOpacity", UberShaderSettings.u_specOpacity);
+		program.setUniformf("u_lightIntensity", UberShaderSettings.u_lightIntensity);
+		program.setUniformf("u_ambient", UberShaderSettings.u_ambient);
 	}
 
 	@Override
@@ -53,9 +54,10 @@ public class UberShader extends DefaultShader {
 
 	public static class UberShaderSettings {
 		public static float u_hue = 1f;
-		public static float u_saturation = 0.6f;
-		public static float u_value = 1.5f;
-		public static float u_specOpacity = 0.4f;
+		public static float u_saturation = 0.5f;
+		public static float u_value = 0.8f;
+		public static float u_specOpacity = 0.5f;
+		public static float u_lightIntensity = 3f;
+		public static float u_ambient = 5f;
 	}
-
 }
