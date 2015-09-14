@@ -87,8 +87,8 @@ public class GameScreen implements Screen {
 		engine = new PooledEngine();
 		Bullet.init();
 
-//		viewportBackgroundColor = Color.BLACK;
-		viewportBackgroundColor = new Color(0.27f,0.57f,0.82f,1);
+		viewportBackgroundColor = Color.BLACK;
+//		viewportBackgroundColor = new Color(0.27f,0.57f,0.82f,1);
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -198,7 +198,7 @@ public class GameScreen implements Screen {
 
 
 		Gdx.app.debug(tag, "Adding camera system");
-		OverheadCameraSystem camSys = new OverheadCameraSystem();
+		CameraSystem camSys = new CameraSystem();
 		engine.addSystem(camSys);
 
 

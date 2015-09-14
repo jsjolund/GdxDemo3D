@@ -30,10 +30,14 @@ public class RenderSystem extends EntitySystem {
 
 	public static final String tag = "RenderSystem";
 
-	public static final int SHADOW_MAP_WIDTH = 1024;
-	public static final int SHADOW_MAP_HEIGHT = 1024;
-	public static final float SHADOW_VIEWPORT_HEIGHT = 50;
-	public static final float SHADOW_VIEWPORT_WIDTH = 50;
+//	public static final int SHADOW_MAP_WIDTH = 1024;
+//	public static final int SHADOW_MAP_HEIGHT = 1024;
+
+	public static final int SHADOW_MAP_WIDTH = 2048;
+	public static final int SHADOW_MAP_HEIGHT = 2048;
+
+	public static final float SHADOW_VIEWPORT_HEIGHT = 60;
+	public static final float SHADOW_VIEWPORT_WIDTH = 60;
 	public static final float SHADOW_NEAR = 1;
 	public static final float SHADOW_FAR = 100;
 	public static final float SHADOW_INTENSITY = 1f;
