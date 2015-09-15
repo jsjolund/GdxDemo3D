@@ -207,6 +207,8 @@ public class GameScreen implements Screen {
 				SelectableComponent.class,
 				IntentBroadcastComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
+
+//		Gdx.app.exit();
 	}
 
 	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {

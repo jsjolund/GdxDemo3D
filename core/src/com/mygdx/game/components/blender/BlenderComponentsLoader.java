@@ -36,6 +36,9 @@ public class BlenderComponentsLoader {
 	public final Vector3 sunDirection = new Vector3();
 	private AssetManager assets;
 
+	public Vector3 gridUnitSize = new Vector3();
+	public Vector3 gridOrigin = new Vector3();
+
 	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
 			lightsJsonPath) {
 		this.assets = assets;
@@ -178,12 +181,17 @@ public class BlenderComponentsLoader {
 		return entity;
 	}
 
+
 	private float loadMass(BlenderModelComponent model, ArrayList<BlenderEmptyComponent>
 			empties) {
 		for (BlenderEmptyComponent empty : empties) {
 			if (empty.name.equals(model.name)
 					&& (empty.custom_properties.containsKey("mass"))) {
 				return Float.parseFloat(empty.custom_properties.get("mass"));
+			}
+			if (empty.name.equals("grid_unit")) {
+				gridUnitSize.set(empty.scale);
+				gridOrigin.set(empty.position);
 			}
 		}
 		return 0;
