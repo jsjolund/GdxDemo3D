@@ -17,16 +17,16 @@ import com.mygdx.game.components.PhysicsComponent;
  */
 public class PathFindingSystem extends IteratingSystem {
 
-	Matrix4 matrix = new Matrix4();
-	Vector3 pos = new Vector3();
-	Vector3 goalDirection = new Vector3();
-	Vector3 newVelocity = new Vector3();
-	float yVelocity = 0;
-	private ComponentMapper<PathFindingComponent> pathCmps =
+	private final Matrix4 matrix = new Matrix4();
+	private final Vector3 pos = new Vector3();
+	private final Vector3 goalDirection = new Vector3();
+	private final Vector3 newVelocity = new Vector3();
+	private float yVelocity = 0;
+	private final ComponentMapper<PathFindingComponent> pathCmps =
 			ComponentMapper.getFor(PathFindingComponent.class);
-	private ComponentMapper<PhysicsComponent> phyCmps =
+	private final ComponentMapper<PhysicsComponent> phyCmps =
 			ComponentMapper.getFor(PhysicsComponent.class);
-	private ComponentMapper<CharacterActionComponent> actionCmps =
+	private final ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
 
 	public PathFindingSystem(Family family) {

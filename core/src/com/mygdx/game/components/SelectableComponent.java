@@ -1,6 +1,7 @@
 package com.mygdx.game.components;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 
 /**
  * Created by user on 8/24/15.
@@ -8,10 +9,13 @@ import com.badlogic.ashley.core.Component;
 public class SelectableComponent extends Component {
 
 	public boolean isSelected = false;
-	public ModelComponent outlineModelComponent;
+	public ModelInstance selectedMarkerModel;
 
-	public SelectableComponent(ModelComponent outlineModelComponent) {
-		this.outlineModelComponent = outlineModelComponent;
+//	public SelectableComponent(ModelComponent selectedMarkerModel) {
+//		this.selectedMarkerModel = selectedMarkerModel;
+//	}
+
+	public SelectableComponent(ModelInstance selectedMarkerModel) {
+		this.selectedMarkerModel = selectedMarkerModel;
 	}
-
 }

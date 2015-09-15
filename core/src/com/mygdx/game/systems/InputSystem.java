@@ -22,12 +22,12 @@ public class InputSystem extends EntitySystem {
 	public final IntIntMap keys = new IntIntMap();
 	public final Family family;
 	public InputProcessor inputProcessor;
-	IntentBroadcastComponent intent;
-	Vector2 moveDirection = new Vector2();
-	float zoom;
-	ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
+	private final IntentBroadcastComponent intent;
+	private final Vector2 moveDirection = new Vector2();
+	private float zoom;
+	private final ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
 
-	boolean killKeyBroadcasted = false;
+	private boolean killKeyBroadcasted = false;
 
 	public InputSystem(IntentBroadcastComponent intent) {
 		family = Family.all(IntentBroadcastComponent.class).get();

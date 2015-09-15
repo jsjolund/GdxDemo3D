@@ -1,0 +1,81 @@
+package com.mygdx.game.components;
+
+import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Disposable;
+import com.mygdx.game.utilities.ModelFactory;
+
+/**
+ * Created by user on 9/14/15.
+ */
+public class BillboardComponent extends Component implements Disposable {
+
+	private final Model model;
+	public final TextureRegion textureRegion;
+	public final ModelInstance modelInstance;
+	public boolean faceUp;
+	public final Vector3 offset = new Vector3();
+
+	public BillboardComponent(Pixmap pixmap, float width, float height, boolean faceUp, Vector3 offset) {
+		textureRegion = new TextureRegion(new Texture(pixmap), pixmap.getWidth(), pixmap.getHeight());
+		Material material = new Material();
+		material.set(new TextureAttribute(TextureAttribute.Diffuse, textureRegion));
+		material.set(new ColorAttribute(ColorAttribute.Diffuse, Color.GREEN));
+		material.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
+		material.set(new BlendingAttribute());
+//		material.set(new IntAttribute(IntAttribute.CullFace, Gdx.gl.GL_NONE));
+
+		model = ModelFactory.buildPlaneModel(width, height, material, 0, 0, 1, 1);
+		modelInstance = new ModelComponent(model, "plane").modelInstance;
+
+		this.faceUp = faceUp;
+		this.offset.set(offset);
+	}
+
+	@Override
+	public void dispose() {
+		model.dispose();
+	}
+
+//	public BillboardComponent() {
+//		textureRegion = new TextureRegion(new Texture(TEX_WIDTH, TEX_HEIGHT,
+//				Pixmap.Format.RGBA8888));
+//	}
+//	public TextureComponent(String msg, Color textColor, Color bkgColor,
+//							BitmapFont font) {
+//		SpriteBatch spriteBatch = new SpriteBatch();
+//		FrameBuffer fbo = null;
+//		// Draw string on texture
+//		try {
+//			fbo = new FrameBuffer(Pixmap.Format.RGBA8888, TEX_WIDTH, TEX_HEIGHT, false);
+//		} catch (Exception e) {
+//			System.out.println("Failed to create framebuffer.");
+//			e.printStackTrace();
+//		}
+//
+//		fbo.begin();
+//		Gdx.graphics.getGL20().glClearColor(bkgColor.r, bkgColor.g, bkgColor.b,
+//				bkgColor.a);
+//		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+//		spriteBatch.getProjectionMatrix().setToOrtho2D(0, 0, TEX_WIDTH,
+//				TEX_HEIGHT);
+//		spriteBatch.begin();
+//		font.setColor(textColor);
+//		font.draw(spriteBatch, msg, 10, TEX_HEIGHT);
+//		textureRegion = new TextureRegion(fbo.getColorBufferTexture(), 0, 0,
+//				TEX_WIDTH, TEX_HEIGHT);
+//		textureRegion.flip(false, true);
+//		spriteBatch.end();
+//		fbo.end();
+//	}
+}

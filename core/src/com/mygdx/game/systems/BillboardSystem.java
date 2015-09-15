@@ -5,10 +5,10 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.BillboardComponent;
 import com.mygdx.game.components.MotionStateComponent;
-import com.mygdx.game.components.TextureComponent;
 
 /**
  * Created by user on 8/3/15.
@@ -16,11 +16,10 @@ import com.mygdx.game.components.TextureComponent;
 public class BillboardSystem extends IteratingSystem {
 
 	private final Vector3 worldPos = new Vector3();
-	private ComponentMapper<TextureComponent> texCmps = ComponentMapper.getFor(TextureComponent.class);
-	private ComponentMapper<MotionStateComponent> motionCmps = ComponentMapper.getFor(MotionStateComponent
+	private final ComponentMapper<MotionStateComponent> motionCmps = ComponentMapper.getFor(MotionStateComponent
 			.class);
-	private ComponentMapper<ModelComponent> modelCmps = ComponentMapper.getFor(ModelComponent.class);
-	private Camera camera;
+	private final ComponentMapper<BillboardComponent> billCmps = ComponentMapper.getFor(BillboardComponent.class);
+	private final Camera camera;
 
 	public BillboardSystem(Family family, Camera camera) {
 		super(family);
@@ -32,11 +31,16 @@ public class BillboardSystem extends IteratingSystem {
 		MotionStateComponent motionCmp = motionCmps.get(entity);
 		motionCmp.transform.getTranslation(worldPos);
 
-		ModelComponent modelCmp = modelCmps.get(entity);
-		modelCmp.modelInstance.transform.set(camera.view).inv();
-		modelCmp.modelInstance.transform.setTranslation(worldPos);
-		modelCmp.modelInstance.calculateTransforms();
-
+		BillboardComponent billCmp = billCmps.get(entity);
+		billCmp.modelInstance.transform.set(camera.view).inv();
+		billCmp.modelInstance.transform.setTranslation(Vector3.Zero);
+		if (billCmp.faceUp) {
+			Quaternion q = new Quaternion();
+			camera.view.getRotation(q);
+			billCmp.modelInstance.transform.setFromEulerAngles(-q.getYaw(), -90, 0);
+		}
+		billCmp.modelInstance.transform.setTranslation(worldPos.add(billCmp.offset));
+		billCmp.modelInstance.calculateTransforms();
 //		float dst = worldPos.dst(camera.position);
 //		float distanceFade = (viewDistance == 0) ? 1 : 1 - dst / viewDistance;
 //		blendAttrib.opacity = distanceFade;

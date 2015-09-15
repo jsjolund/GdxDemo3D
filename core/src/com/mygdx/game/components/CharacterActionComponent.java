@@ -10,7 +10,7 @@ import com.badlogic.gdx.utils.Array;
  */
 public class CharacterActionComponent extends Component {
 
-	public Array<AnimationController> controllers;
+	public final Array<AnimationController> controllers;
 	public Action nextAction = Action.IDLE;
 	public Action currentAction = Action.NULL;
 	public boolean ragdollControl = false;

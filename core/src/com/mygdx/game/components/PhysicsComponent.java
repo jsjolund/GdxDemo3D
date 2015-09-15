@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.Disposable;
  */
 public class PhysicsComponent extends Component implements Disposable {
 
-	private static Vector3 localInertia = new Vector3();
+	private final static Vector3 localInertia = new Vector3();
 	public final MotionStateComponent.PhysicsMotionState motionState;
 	public final btRigidBody body;
 	public final short belongsToFlag;

@@ -17,9 +17,9 @@ public class ModelComponent extends Component {
 	public final Vector3 center = new Vector3();
 	public final Vector3 dimensions = new Vector3();
 	public final float radius;
-	private final BoundingBox bounds = new BoundingBox();
+	public final BoundingBox bounds = new BoundingBox();
 	public ModelInstance modelInstance;
-	public String id;
+	public final String id;
 	public boolean ignoreCulling = false;
 
 	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {

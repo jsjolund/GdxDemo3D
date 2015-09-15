@@ -12,10 +12,10 @@ public class CameraTargetingComponent extends Component {
 
 	public final Viewport viewport;
 	public final Camera camera;
-	public Vector3 directionTarget = new Vector3();
-	public Vector3 positionTarget = new Vector3();
+	public final Vector3 directionTarget = new Vector3();
+	public final Vector3 positionTarget = new Vector3();
 
-	public Vector3 velocity = new Vector3();
+	public final Vector3 velocity = new Vector3();
 
 	public CameraTargetingComponent(Camera camera, Viewport viewport) {
 		this.viewport = viewport;

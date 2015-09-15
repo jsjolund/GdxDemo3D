@@ -8,5 +8,5 @@ import com.badlogic.gdx.utils.Array;
  * Created by user on 9/8/15.
  */
 public class RagdollConstraintComponent extends Component {
-	public Array<btTypedConstraint> typedConstraints = new Array<btTypedConstraint>();
+	public final Array<btTypedConstraint> typedConstraints = new Array<btTypedConstraint>();
 }

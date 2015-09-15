@@ -13,15 +13,15 @@ import com.badlogic.gdx.utils.ArrayMap;
  */
 public class RagdollComponent extends Component {
 
-	public ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
-	public Array<Node> nodes = new Array<Node>();
+	public final ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
+	public final Array<Node> nodes = new Array<Node>();
 	public RagdollConstraintComponent constraintComponent;
 
-	public Matrix4 baseBodyTransform = new Matrix4();
-	public Matrix4 resetRotationTransform = new Matrix4();
-	public Matrix4 tmp = new Matrix4();
-	public Vector3 nodeTrans = new Vector3();
-	public Vector3 baseTrans = new Vector3();
+	public final Matrix4 baseBodyTransform = new Matrix4();
+	public final Matrix4 resetRotationTransform = new Matrix4();
+	public final Matrix4 tmp = new Matrix4();
+	public final Vector3 nodeTrans = new Vector3();
+	public final Vector3 baseTrans = new Vector3();
 
 	public boolean ragdollControl = false;
 	public short belongsToFlag;

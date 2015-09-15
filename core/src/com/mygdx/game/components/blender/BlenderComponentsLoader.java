@@ -32,9 +32,9 @@ import java.util.ArrayList;
 public class BlenderComponentsLoader {
 
 	public static final String tag = "BlenderComponentsLoader";
-	public ArrayList<Entity> entities = new ArrayList<Entity>();
-	public Vector3 sunDirection = new Vector3();
-	AssetManager assets;
+	public final ArrayList<Entity> entities = new ArrayList<Entity>();
+	public final Vector3 sunDirection = new Vector3();
+	private AssetManager assets;
 
 	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
 			lightsJsonPath) {

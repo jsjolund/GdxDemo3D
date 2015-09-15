@@ -18,15 +18,15 @@ public class SelectionSystem extends EntitySystem {
 
 	public static final String tag = "SelectionSystem";
 	private final Vector3 surfacePoint = new Vector3();
-	public Family systemFamily;
-	PhysicsSystem phySys;
-	Viewport viewport;
-	Vector2 lastClick = new Vector2();
+	public final Family systemFamily;
+	private final PhysicsSystem phySys;
+	private final Viewport viewport;
+	private final Vector2 lastClick = new Vector2();
 	private ImmutableArray<Entity> entities;
-	private ComponentMapper<IntentBroadcastComponent> intentCmps = ComponentMapper.getFor(IntentBroadcastComponent.class);
-	private ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
-	private ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
-	private Ray ray = new Ray();
+	private final ComponentMapper<IntentBroadcastComponent> intentCmps = ComponentMapper.getFor(IntentBroadcastComponent.class);
+	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
+	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
+	private final Ray ray = new Ray();
 
 	public SelectionSystem(PhysicsSystem phySys, Viewport viewport) {
 		systemFamily = Family.all(IntentBroadcastComponent.class, SelectableComponent.class).get();

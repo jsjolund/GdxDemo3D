@@ -21,26 +21,26 @@ import com.mygdx.game.components.IntentBroadcastComponent;
 public class CameraSystem extends IteratingSystem {
 
 	public static final String tag = "CameraSystem";
-	Vector3 panDirection = new Vector3();
-	Vector3 panResult = new Vector3();
-	Vector3 tmp = new Vector3();
-	float currentPanSpeed = 0;
+	private final Vector3 panDirection = new Vector3();
+	private final Vector3 panResult = new Vector3();
+	private final Vector3 tmp = new Vector3();
+	private float currentPanSpeed = 0;
 
-	Plane worldGroundPlane = new Plane(Vector3.Y, 0);
-	Vector3 worldDragCurrent = new Vector3();
-	Vector3 worldDragLast = new Vector3();
-	Vector3 worldGroundTarget = new Vector3();
-	float worldGroundTargetDst;
+	private final Plane worldGroundPlane = new Plane(Vector3.Y, 0);
+	private final Vector3 worldDragCurrent = new Vector3();
+	private final Vector3 worldDragLast = new Vector3();
+	private final Vector3 worldGroundTarget = new Vector3();
+	private float worldGroundTargetDst;
 
-	Vector2 cursorDelta = new Vector2();
-	Vector3 perpendicular = new Vector3();
-	Ray ray = new Ray();
-	float currentZoom = 10;
-	Vector2 lastDragProcessed = new Vector2();
+	private final Vector2 cursorDelta = new Vector2();
+	private final Vector3 perpendicular = new Vector3();
+	private final Ray ray = new Ray();
+	private float currentZoom = 10;
+	private final Vector2 lastDragProcessed = new Vector2();
 
-	private ComponentMapper<CameraTargetingComponent> camCmps =
+	private final  ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
-	private ComponentMapper<IntentBroadcastComponent> inputCmps =
+	private final  ComponentMapper<IntentBroadcastComponent> inputCmps =
 			ComponentMapper.getFor(IntentBroadcastComponent.class);
 
 	public CameraSystem() {

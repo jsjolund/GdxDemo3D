@@ -164,28 +164,6 @@ public class GameScreen implements Screen {
 				phyCmp.addConstraint(hinge);
 			}
 
-			if (modelCmp.id.endsWith("ball")) {
-////				ModelComponent ballModel = entity.getComponent(ModelComponent.class);
-//				MotionStateComponent ballMotionState = entity.getComponent(MotionStateComponent.class);
-
-//				Entity billboard = new Entity();
-//				billboard.add(ballMotionState);
-//
-//				Pixmap billboardPixmap = new Pixmap(Gdx.files.local("badlogic.jpg"));
-//				TextureComponent billboardTexture = new TextureComponent(billboardPixmap);
-//				billboard.add(billboardTexture);
-//
-//				Material material = new Material();
-//				material.set(new TextureAttribute(TextureAttribute.Diffuse, billboardTexture.textureRegion));
-//				BlendingAttribute blendAttrib = new BlendingAttribute(0.5f);
-//				material.set(blendAttrib);
-//
-//				ModelComponent billboardModel = new ModelComponent(ModelFactory.buildPlaneModel(2, 2, material, 0, 0,
-//						1, 1), "plane");
-//				billboard.add(billboardModel);
-//
-//				engine.addEntity(billboard);
-			}
 		}
 
 		Gdx.app.debug(tag, "Adding input controller");
@@ -206,13 +184,10 @@ public class GameScreen implements Screen {
 		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
 		engine.addSystem(selSys);
 
-//		Gdx.app.debug(tag, "Adding billboard system");
-//		Family billFamily = Family.all(
-//				TextureComponent.class,
-//				MotionStateComponent.class,
-//				ModelComponent.class).get();
-//		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
-//		engine.addSystem(billSys);
+		Gdx.app.debug(tag, "Adding billboard system");
+		Family billFamily = Family.all(BillboardComponent.class).get();
+		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
+		engine.addSystem(billSys);
 
 		spawnCharacter(new Vector3(5, 1, 0), intentCmp);
 		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
@@ -248,35 +223,35 @@ public class GameScreen implements Screen {
 
 		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
 		assets.finishLoading();
-		Model model  = assets.get("models/g3db/character_male_base.g3db");
+		Model model = assets.get("models/g3db/character_male_base.g3db");
 
 		// Get character model data
-		UBJsonReader jsonReader = new UBJsonReader();
-		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
-		ModelData modelData = modelLoader.
-				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType
-						.Internal), param);
+//		UBJsonReader jsonReader = new UBJsonReader();
+//		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
+//		ModelData modelData = modelLoader.
+//				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType
+//						.Internal), param);
 
 		// Create normal model and outline model
 		// TODO: manage, dispose
 //		Model model = new Model(modelData);
-		Model outlineModel = new Model(modelData);
-		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
+//		Model outlineModel = new Model(modelData);
+//		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
 
 		// Create model components containing model instances
 		ModelComponent mdlCmp = new ModelComponent(model, "man", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
-		// TODO: Ragdoll problems with culling
+		// TODO: Ragdoll problems with culling. Move capsule to ragdoll.
 		mdlCmp.ignoreCulling = true;
 		entity.add(mdlCmp);
 
-		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", new Vector3(0,
-				0, 0),
-				new Vector3(0, 0, 0),
-				new Vector3(1, 1, 1));
-		// Connect the normal modelinstance transform to outline transform, then connect them to motion state
-		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
+//		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", new Vector3(0,
+//				0, 0),
+//				new Vector3(0, 0, 0),
+//				new Vector3(1, 1, 1));
+//		// Connect the normal modelinstance transform to outline transform, then connect them to motion state
+//		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
 		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
 
 		// Create base collision shape
@@ -294,13 +269,13 @@ public class GameScreen implements Screen {
 		entity.add(intentCmp);
 
 		// Make model selectable, add pathfinding, animation components
-		entity.add(new SelectableComponent(outlineMdlCmp));
+//		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent());
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
 		for (Animation a : mdlCmp.modelInstance.animations) {
 			Gdx.app.debug(tag, "Found animation: " + a.id);
 		}
-		actionCmp.addModel(outlineMdlCmp.modelInstance);
+//		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
 
 		// Ragdoll
@@ -310,13 +285,15 @@ public class GameScreen implements Screen {
 		engine.addEntity(entity);
 
 
-//		assets.load("models/g3db/character_lbe_0.g3db", Model.class);
-//		assets.load("models/g3db/character_sunglesses.g3db", Model.class);
-//		assets.load("models/g3db/character_hat_0.g3db", Model.class);
-//		assets.finishLoading();
-//		Model lbeModel = assets.get("models/g3db/character_lbe_0.g3db", Model.class);
-//		ModelComponent lbeModelCmp = new ModelComponent(lbeModel, "lbe");
-
+		// Selection billboard TODO: Dispose
+		String markerName = "marker.png";
+		assets.load(markerName, Pixmap.class);
+		assets.finishLoading();
+		Pixmap billboardPixmap = assets.get(markerName, Pixmap.class);
+		float offsetY = -mdlCmp.bounds.getHeight() + mdlCmp.bounds.getCenterY();
+		BillboardComponent billboard = new BillboardComponent(billboardPixmap, 1, 1, true, new Vector3(0, offsetY, 0));
+		entity.add(new SelectableComponent(billboard.modelInstance));
+		entity.add(billboard);
 
 		Gdx.app.debug(tag, "Finished adding character");
 		return entity;

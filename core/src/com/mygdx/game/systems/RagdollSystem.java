@@ -20,25 +20,25 @@ import java.util.Iterator;
 public class RagdollSystem extends IteratingSystem {
 
 
-	private ComponentMapper<CharacterActionComponent> actionCmps =
+	private final ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
 
-	private ComponentMapper<ModelComponent> modelCmps =
+	private final ComponentMapper<ModelComponent> modelCmps =
 			ComponentMapper.getFor(ModelComponent.class);
 
-	private ComponentMapper<MotionStateComponent> motionCmps =
+	private final ComponentMapper<MotionStateComponent> motionCmps =
 			ComponentMapper.getFor(MotionStateComponent.class);
 
-	private ComponentMapper<RagdollComponent> ragdollCmps =
+	private final ComponentMapper<RagdollComponent> ragdollCmps =
 			ComponentMapper.getFor(RagdollComponent.class);
 
-	private ComponentMapper<PhysicsComponent> phyCmps =
+	private final ComponentMapper<PhysicsComponent> phyCmps =
 			ComponentMapper.getFor(PhysicsComponent.class);
 
-	private ComponentMapper<SelectableComponent> selCmps =
+	private final ComponentMapper<SelectableComponent> selCmps =
 			ComponentMapper.getFor(SelectableComponent.class);
 
-	private ComponentMapper<IntentBroadcastComponent> intentCmps =
+	private final ComponentMapper<IntentBroadcastComponent> intentCmps =
 			ComponentMapper.getFor(IntentBroadcastComponent.class);
 
 	public RagdollSystem(Family family) {

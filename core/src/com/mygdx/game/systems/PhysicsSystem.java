@@ -32,20 +32,20 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	public final static short ALL_FLAG = -1;
 
 	// Ashley
-	public PhysicsListener physicsComponentListener;
-	public RagdollListener ragdollComponentListener;
-	public RagdollConstraintListener ragdollConstraintListener;
+	public final PhysicsListener physicsComponentListener;
+	public final RagdollListener ragdollComponentListener;
+	public final RagdollConstraintListener ragdollConstraintListener;
 
-	public Family systemFamily;
+	public final Family systemFamily;
 	// Bullet classes
-	public btDynamicsWorld dynamicsWorld;
+	public final btDynamicsWorld dynamicsWorld;
 	private ImmutableArray<Entity> entities;
-	private CollisionContactListener contactListener;
-	private btCollisionConfiguration collisionConfig;
-	private btDispatcher dispatcher;
-	private btConstraintSolver constraintSolver;
-	private btDbvtBroadphase broadphase;
-	private DebugDrawer debugDrawer;
+	private final CollisionContactListener contactListener;
+	private final btCollisionConfiguration collisionConfig;
+	private final btDispatcher dispatcher;
+	private final btConstraintSolver constraintSolver;
+	private final btDbvtBroadphase broadphase;
+	private final DebugDrawer debugDrawer;
 
 	public PhysicsSystem() {
 		super(0);

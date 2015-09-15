@@ -9,8 +9,8 @@ import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
  */
 public class MotionStateComponent extends Component {
 
-	public Matrix4 transform;
-	public PhysicsMotionState motionState;
+	public final Matrix4 transform;
+	public final PhysicsMotionState motionState;
 
 	public MotionStateComponent(Matrix4 transform) {
 		this.transform = transform;

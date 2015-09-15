@@ -116,8 +116,11 @@ public class ModelFactory {
 		ModelBuilder modelBuilder = new ModelBuilder();
 		modelBuilder.begin();
 		MeshPartBuilder bPartBuilder = modelBuilder.part("rect",
-				GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
-						| VertexAttributes.Usage.TextureCoordinates, material);
+				GL20.GL_TRIANGLES,
+				VertexAttributes.Usage.Position
+						| VertexAttributes.Usage.Normal
+						| VertexAttributes.Usage.TextureCoordinates,
+				material);
 		// NOTE ON TEXTURE REGION, MAY FILL OTHER REGIONS, USE GET region.getU()
 		// and so on
 		bPartBuilder.setUVRange(u1, v1, u2, v2);

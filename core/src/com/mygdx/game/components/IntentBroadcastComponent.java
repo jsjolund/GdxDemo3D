@@ -8,13 +8,13 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class IntentBroadcastComponent extends Component {
 
-	public Vector2 moveDirection = new Vector2();
+	public final Vector2 moveDirection = new Vector2();
 
 	public boolean isDragging = false;
-	public Vector2 dragStart = new Vector2();
-	public Vector2 dragCurrent = new Vector2();
+	public final Vector2 dragStart = new Vector2();
+	public final Vector2 dragCurrent = new Vector2();
 
-	public Vector2 click = new Vector2();
+	public final Vector2 click = new Vector2();
 
 	public float zoom = 0;
 

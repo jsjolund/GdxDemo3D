@@ -12,7 +12,7 @@ import com.mygdx.game.components.CharacterActionComponent;
  */
 public class AnimationSystem extends IteratingSystem {
 
-	private ComponentMapper<CharacterActionComponent> actionCmps =
+	private final  ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
 
 	public AnimationSystem(Family family) {

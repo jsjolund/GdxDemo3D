@@ -14,11 +14,11 @@ import com.mygdx.game.components.LightComponent;
 public class EnvironmentSystem extends EntitySystem {
 
 	public static final String tag = "ModelEnvSystem";
-	public LightListener lightListener;
-	public Family systemFamily;
-	public Environment environment;
+	public final LightListener lightListener;
+	public final Family systemFamily;
+	public final Environment environment;
 	private ImmutableArray<Entity> entities;
-	private ComponentMapper<LightComponent> lights = ComponentMapper.getFor(LightComponent.class);
+	private final ComponentMapper<LightComponent> lights = ComponentMapper.getFor(LightComponent.class);
 
 	public EnvironmentSystem() {
 		environment = new Environment();

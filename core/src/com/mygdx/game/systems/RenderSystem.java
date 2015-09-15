@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
@@ -30,9 +29,6 @@ public class RenderSystem extends EntitySystem {
 
 	public static final String tag = "RenderSystem";
 
-//	public static final int SHADOW_MAP_WIDTH = 1024;
-//	public static final int SHADOW_MAP_HEIGHT = 1024;
-
 	public static final int SHADOW_MAP_WIDTH = 2048;
 	public static final int SHADOW_MAP_HEIGHT = 2048;
 
@@ -42,20 +38,19 @@ public class RenderSystem extends EntitySystem {
 	public static final float SHADOW_FAR = 100;
 	public static final float SHADOW_INTENSITY = 1f;
 
-	public Family systemFamily;
-	private ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
+	public final Family systemFamily;
+
+	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
 	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 
-	private Vector3 pos = new Vector3();
-	private ModelBatch modelBatch;
+	private final Vector3 pos = new Vector3();
+	private final ModelBatch modelBatch;
 	private ImmutableArray<Entity> entities;
 	private Camera camera;
 
-	private Environment environment;
-	private Viewport viewport;
-	private Environment selectedEnvironment;
-	private ModelBatch selectedModelBatch;
-	private ShapeRenderer shapeRenderer;
+	private final Environment environment;
+	private final Viewport viewport;
+	private final ShapeRenderer shapeRenderer;
 
 	DirectionalShadowLight shadowLight;
 	ModelBatch shadowBatch;
@@ -71,8 +66,6 @@ public class RenderSystem extends EntitySystem {
 		this.environment = environment;
 
 		shapeRenderer = new ShapeRenderer();
-		selectedEnvironment = new Environment();
-		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
 
 		environment.add((shadowLight = new DirectionalShadowLight(
 				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
@@ -81,9 +74,7 @@ public class RenderSystem extends EntitySystem {
 				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
 		environment.shadowMap = shadowLight;
 		shadowBatch = new ModelBatch(new DepthShaderProvider());
-
 		ShaderProgram.pedantic = false;
-
 		final String vertUber = Gdx.files.internal("shaders/uber.vert").readString();
 		final String fragUber = Gdx.files.internal("shaders/uber.frag").readString();
 		modelBatch = new ModelBatch(new DefaultShaderProvider(vertUber, fragUber) {
@@ -93,6 +84,10 @@ public class RenderSystem extends EntitySystem {
 			}
 		});
 
+//		selectedModelBatch = new ModelBatch();
+//		selectedEnvironment = new Environment();
+//		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
+//		selectedEnvironment.add(new DirectionalLight().set(Color.WHITE, Vector3.Y));
 //		final String vertSel = Gdx.files.internal("shaders/singlecolor.vert").readString();
 //		final String fragSel = Gdx.files.internal("shaders/singlecolor.frag").readString();
 //		selectedModelBatch = new ModelBatch(new DefaultShaderProvider(vertSel, fragSel) {
@@ -141,18 +136,15 @@ public class RenderSystem extends EntitySystem {
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
-			ModelComponent cmp = models.get(entity);
-			SelectableComponent selCmp = selectables.get(entity);
+			ModelComponent mdlCmp = models.get(entity);
 
-			if (isVisible(camera, cmp) || cmp.ignoreCulling) {
+			if (isVisible(camera, mdlCmp) || mdlCmp.ignoreCulling) {
+
+				SelectableComponent selCmp = selectables.get(entity);
 				if (selCmp != null && selCmp.isSelected) {
-//					selectedModelBatch.begin(camera);
-//					selectedModelBatch.render(selCmp.outlineModelComponent.modelInstance, selectedEnvironment);
-//					selectedModelBatch.end();
-					modelBatch.render(cmp.modelInstance, environment);
-				} else {
-					modelBatch.render(cmp.modelInstance, environment);
+					modelBatch.render(selCmp.selectedMarkerModel, environment);
 				}
+				modelBatch.render(mdlCmp.modelInstance, environment);
 			}
 		}
 		modelBatch.end();
