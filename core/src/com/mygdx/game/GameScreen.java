@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.Family;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.ashley.utils.ImmutableArray;
-import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
@@ -12,9 +11,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
-import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
@@ -23,14 +20,12 @@ import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
-import com.badlogic.gdx.utils.UBJsonReader;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderComponent;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.systems.*;
-import com.mygdx.game.utilities.ModelFactory;
 import com.mygdx.game.utilities.RagdollFactory;
 
 /**
@@ -109,7 +104,7 @@ public class GameScreen implements Screen {
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
-		BlenderComponentsLoader blender = new BlenderComponentsLoader(
+		BlenderComponentsLoader levelBlender = new BlenderComponentsLoader(
 				assets,
 				"models/json/scene0_model.json",
 				"models/json/scene0_empty.json",
@@ -125,7 +120,7 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Loading models system");
 		RenderSystem modelSys = new RenderSystem(viewport, camera,
 				envSys.environment,
-				blender.sunDirection);
+				levelBlender.sunDirection);
 		engine.addSystem(modelSys);
 
 		// TODO: dispose
@@ -138,7 +133,7 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding entities");
 		Vector3 gridUnit = new Vector3();
-		for (Entity entity : blender.entities) {
+		for (Entity entity : levelBlender.entities) {
 			engine.addEntity(entity);
 
 			BlenderComponent cmp = entity.getComponent(BlenderComponent.class);
@@ -147,7 +142,6 @@ public class GameScreen implements Screen {
 				Gdx.app.debug(tag, "Using grid unit " + gridUnit);
 			}
 		}
-
 
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
@@ -163,7 +157,6 @@ public class GameScreen implements Screen {
 				phySys.dynamicsWorld.addConstraint(hinge);
 				phyCmp.addConstraint(hinge);
 			}
-
 		}
 
 		Gdx.app.debug(tag, "Adding input controller");
@@ -208,7 +201,19 @@ public class GameScreen implements Screen {
 				IntentBroadcastComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 
-//		Gdx.app.exit();
+//		assets.load("models/g3db/weapons_m4_carbine.g3db", Model.class);
+//		assets.finishLoading();
+//		Model model = assets.get("models/g3db/weapons_m4_carbine.g3db");
+
+		BlenderComponentsLoader weaponsBlender = new BlenderComponentsLoader(
+				assets,
+				"models/json/weapons_model.json",
+				"models/json/weapons_empty.json",
+				null
+		);
+		for (Entity entity : weaponsBlender.entities) {
+			engine.addEntity(entity);
+		}
 	}
 
 	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {

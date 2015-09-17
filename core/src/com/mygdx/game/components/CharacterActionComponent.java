@@ -28,6 +28,7 @@ public class CharacterActionComponent extends Component {
 
 	public enum Action {
 		WALK("armature|walk"),
+		CROUCH_WALK("armature|crouch"),
 		WALK_RIFLE("armature|walk_rifle"),
 		RUN("armature|run"),
 		IDLE("armature|stand"),

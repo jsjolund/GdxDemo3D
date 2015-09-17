@@ -235,16 +235,19 @@ public class BlenderComponentsLoader {
 	}
 
 	private ArrayList<BlenderModelComponent> loadModels(String path) {
-		return new Json().fromJson(ArrayList.class, BlenderModelComponent.class, Gdx.files.local(path));
+		return (path == null) ? new ArrayList<BlenderModelComponent>() :
+				new Json().fromJson(ArrayList.class, BlenderModelComponent.class, Gdx.files.local(path));
 	}
 
 	private ArrayList<BlenderEmptyComponent> loadEmpties(String path) {
-		return new Json().fromJson(ArrayList.class, BlenderEmptyComponent.class, Gdx.files.local(path));
+		return (path == null) ? new ArrayList<BlenderEmptyComponent>() :
+				new Json().fromJson(ArrayList.class, BlenderEmptyComponent.class, Gdx.files.local(path));
 	}
 
 
 	private ArrayList<BlenderLightComponent> loadLights(String path) {
-		return new Json().fromJson(ArrayList.class, BlenderLightComponent.class, Gdx.files.local(path));
+		return (path == null) ? new ArrayList<BlenderLightComponent>() :
+				new Json().fromJson(ArrayList.class, BlenderLightComponent.class, Gdx.files.local(path));
 	}
 
 }

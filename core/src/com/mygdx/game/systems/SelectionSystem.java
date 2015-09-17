@@ -29,7 +29,9 @@ public class SelectionSystem extends EntitySystem {
 	private final Ray ray = new Ray();
 
 	public SelectionSystem(PhysicsSystem phySys, Viewport viewport) {
-		systemFamily = Family.all(IntentBroadcastComponent.class, SelectableComponent.class).get();
+		systemFamily = Family.all(IntentBroadcastComponent.class,
+				PathFindingComponent.class,
+				SelectableComponent.class).get();
 		this.phySys = phySys;
 		this.viewport = viewport;
 	}
