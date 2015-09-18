@@ -46,9 +46,8 @@ public class GameScreen implements Screen {
 	@Override
 	public void render(float delta) {
 		delta *= GameSettings.GAME_SPEED;
-		Gdx.gl.glClearStencil(0);
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_STENCIL_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(viewportBackgroundColor);
@@ -110,6 +109,7 @@ public class GameScreen implements Screen {
 				"models/json/scene0_empty.json",
 				"models/json/scene0_light.json"
 		);
+		GameGrid grid = new GameGrid(levelBlender.gridOrigin, levelBlender.gridTileHalfExt, 50, 50);
 
 		Gdx.app.debug(tag, "Loading environment system");
 		EnvironmentSystem envSys = new EnvironmentSystem();
@@ -117,11 +117,12 @@ public class GameScreen implements Screen {
 		engine.addSystem(envSys);
 
 		// TODO: dispose
-		Gdx.app.debug(tag, "Loading models system");
-		RenderSystem modelSys = new RenderSystem(viewport, camera,
+		Gdx.app.debug(tag, "Loading render system");
+		RenderSystem renderSys = new RenderSystem(viewport, camera,
 				envSys.environment,
 				levelBlender.sunDirection);
-		engine.addSystem(modelSys);
+		renderSys.setGameGrid(grid);
+		engine.addSystem(renderSys);
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading physics system");

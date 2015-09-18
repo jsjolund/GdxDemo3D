@@ -36,7 +36,7 @@ public class BlenderComponentsLoader {
 	public final Vector3 sunDirection = new Vector3();
 	private AssetManager assets;
 
-	public Vector3 gridUnitSize = new Vector3();
+	public Vector3 gridTileHalfExt = new Vector3();
 	public Vector3 gridOrigin = new Vector3();
 
 	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
@@ -62,6 +62,10 @@ public class BlenderComponentsLoader {
 
 		for (BlenderComponent cmp : empties) {
 			blenderToGdxCoordinates(cmp);
+			if (cmp.name.equals("grid_unit")) {
+				gridTileHalfExt.set(cmp.scale);
+				gridOrigin.set(cmp.position);
+			}
 		}
 		for (BlenderModelComponent cmp : models) {
 			blenderToGdxCoordinates(cmp);
@@ -188,10 +192,6 @@ public class BlenderComponentsLoader {
 			if (empty.name.equals(model.name)
 					&& (empty.custom_properties.containsKey("mass"))) {
 				return Float.parseFloat(empty.custom_properties.get("mass"));
-			}
-			if (empty.name.equals("grid_unit")) {
-				gridUnitSize.set(empty.scale);
-				gridOrigin.set(empty.position);
 			}
 		}
 		return 0;

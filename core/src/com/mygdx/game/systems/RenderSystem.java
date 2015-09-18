@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
@@ -14,8 +15,10 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.GameGrid;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
@@ -57,6 +60,12 @@ public class RenderSystem extends EntitySystem {
 
 	private final Vector3 debugNodePos = new Vector3();
 	private final Vector3 debugModelPos = new Vector3();
+
+	private GameGrid gameGrid;
+
+	public void setGameGrid(GameGrid gameGrid) {
+		this.gameGrid = gameGrid;
+	}
 
 	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -112,25 +121,9 @@ public class RenderSystem extends EntitySystem {
 
 	@Override
 	public void update(float deltaTime) {
-		int vw = viewport.getScreenWidth();
-		int vh = viewport.getScreenHeight();
-		int vx = viewport.getScreenX();
-		int vy = viewport.getScreenY();
 
-		shadowLight.begin(Vector3.Zero, camera.direction);
-		shadowBatch.begin(shadowLight.getCamera());
-		for (int i = 0; i < entities.size(); ++i) {
-			Entity entity = entities.get(i);
-			ModelComponent cmp = models.get(entity);
-			shadowBatch.render(cmp.modelInstance);
-		}
-		shadowBatch.end();
-		shadowLight.end();
+		drawShadowBatch();
 
-		viewport.update(vw, vh);
-		viewport.setScreenX(vx);
-		viewport.setScreenY(vy);
-		viewport.apply();
 		camera.update();
 
 		modelBatch.begin(camera);
@@ -150,29 +143,75 @@ public class RenderSystem extends EntitySystem {
 		modelBatch.end();
 
 		if (GameSettings.DRAW_ARMATURE) {
-			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-			shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(0, 1, 1, 1);
-
-			for (int i = 0; i < entities.size(); ++i) {
-
-				Entity entity = entities.get(i);
-				ModelComponent cmp = models.get(entity);
-				SelectableComponent selCmp = selectables.get(entity);
-				if (selCmp != null) {
-					Node skeleton = cmp.modelInstance.getNode("armature");
-					if (skeleton != null) {
-						cmp.modelInstance.transform.getTranslation(debugModelPos);
-						skeleton.globalTransform.getTranslation(debugNodePos);
-						drawSkeleton(skeleton, debugModelPos, debugNodePos);
-					}
-				}
-			}
-			shapeRenderer.end();
+			drawArmature();
 		}
+		drawGrid();
+
 	}
 
-	private void drawSkeleton(Node currentNode, Vector3 modelPos, Vector3 parentNodePos) {
+	private void drawGrid() {
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+		shapeRenderer.identity();
+		shapeRenderer.rotate(1, 0, 0, 90);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(1, 1, 1, 0.5f);
+
+		for (Rectangle r : gameGrid.grid) {
+			shapeRenderer.rect(r.x, r.y, r.width, r.height);
+		}
+
+		shapeRenderer.end();
+
+		Gdx.gl.glDisable(GL20.GL_BLEND);
+	}
+
+	private void drawShadowBatch() {
+		int vw = viewport.getScreenWidth();
+		int vh = viewport.getScreenHeight();
+		int vx = viewport.getScreenX();
+		int vy = viewport.getScreenY();
+
+		shadowLight.begin(Vector3.Zero, camera.direction);
+		shadowBatch.begin(shadowLight.getCamera());
+		for (int i = 0; i < entities.size(); ++i) {
+			Entity entity = entities.get(i);
+			ModelComponent cmp = models.get(entity);
+			shadowBatch.render(cmp.modelInstance);
+		}
+		shadowBatch.end();
+		shadowLight.end();
+
+		viewport.update(vw, vh);
+		viewport.setScreenX(vx);
+		viewport.setScreenY(vy);
+		viewport.apply();
+	}
+
+	private void drawArmature() {
+		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(0, 1, 1, 1);
+
+		for (int i = 0; i < entities.size(); ++i) {
+
+			Entity entity = entities.get(i);
+			ModelComponent cmp = models.get(entity);
+			SelectableComponent selCmp = selectables.get(entity);
+			if (selCmp != null) {
+				Node skeleton = cmp.modelInstance.getNode("armature");
+				if (skeleton != null) {
+					cmp.modelInstance.transform.getTranslation(debugModelPos);
+					skeleton.globalTransform.getTranslation(debugNodePos);
+					drawArmatureNodes(skeleton, debugModelPos, debugNodePos);
+				}
+			}
+		}
+		shapeRenderer.end();
+	}
+
+	private void drawArmatureNodes(Node currentNode, Vector3 modelPos, Vector3 parentNodePos) {
 
 		Vector3 debugTmp = new Vector3();
 		currentNode.globalTransform.getTranslation(debugTmp);
@@ -188,7 +227,7 @@ public class RenderSystem extends EntitySystem {
 			return;
 		} else {
 			for (Node child : currentNode.getChildren()) {
-				drawSkeleton(child, modelPos, debugTmp);
+				drawArmatureNodes(child, modelPos, debugTmp);
 			}
 		}
 	}

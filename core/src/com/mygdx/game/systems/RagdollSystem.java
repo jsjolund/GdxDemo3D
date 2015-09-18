@@ -84,7 +84,7 @@ public class RagdollSystem extends IteratingSystem {
 				// Disallow animations for this model.
 				ragdollCmp.ragdollControl = true;
 				actionCmp.ragdollControl = true;
-				actionCmp.nextAction = CharacterActionComponent.Action.NULL;
+//				actionCmp.nextAction = CharacterActionComponent.Action.NULL;
 
 				// Get the current translation of the base collision shape (the capsule)
 				ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
