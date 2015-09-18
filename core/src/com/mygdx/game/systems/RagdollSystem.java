@@ -80,11 +80,13 @@ public class RagdollSystem extends IteratingSystem {
 				}
 
 			} else {
+
+				updateBodiesToArmature(phyCmp, ragdollCmp);
+
 				// Ragdoll follows animation currently, set it to use physics control.
 				// Disallow animations for this model.
 				ragdollCmp.ragdollControl = true;
 				actionCmp.ragdollControl = true;
-//				actionCmp.nextAction = CharacterActionComponent.Action.NULL;
 
 				// Get the current translation of the base collision shape (the capsule)
 				ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
@@ -109,55 +111,61 @@ public class RagdollSystem extends IteratingSystem {
 				}
 			}
 		}
-
 		if (ragdollCmp.ragdollControl) {
-			// Let dynamicsworld control ragdoll. Loop over all ragdoll part collision shapes
-			// and their node connection data.
-			for (Iterator<ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection>> iterator1
-				 = ragdollCmp.map.iterator(); iterator1.hasNext(); ) {
-				ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection> bodyEntry = iterator1.next();
-				btRigidBody partBody = bodyEntry.key;
-				RagdollComponent.NodeConnection connection = bodyEntry.value;
-
-				// Loop over each node connected to this collision shape
-				for (Iterator<ObjectMap.Entry<Node, Matrix4>> iterator2
-					 = connection.bodyNodeOffsets.iterator(); iterator2.hasNext(); ) {
-					ObjectMap.Entry<Node, Matrix4> nodeEntry = iterator2.next();
-					// A node which is to follow this collision shape
-					Node node = nodeEntry.key;
-					// The offset of this node from the untranslated collision shape origin
-					Matrix4 offsetMatrix = nodeEntry.value;
-					// Set the node to the transform of the collision shape it follows
-					partBody.getWorldTransform(node.localTransform);
-					// Calculate difference in translation between the node/ragdoll part and the
-					// base capsule shape.
-					node.localTransform.getTranslation(ragdollCmp.nodeTrans);
-					ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
-					ragdollCmp.nodeTrans.sub(ragdollCmp.baseTrans);
-					// Calculate the final node transform
-					node.localTransform.setTranslation(ragdollCmp.nodeTrans)
-							.mul(ragdollCmp.tmp.set(offsetMatrix).inv());
-				}
-			}
-			// Calculate the final transform of the model.
-			modelCmp.modelInstance.calculateTransforms();
-
+			updateArmatureToBodies(modelCmp, ragdollCmp);
 		} else {
-			// Ragdoll parts should follow the model animation.
-			// Loop over each part and set it to the global transform of the armature node it should follow.
-			phyCmp.body.getWorldTransform(ragdollCmp.baseBodyTransform);
-			for (Iterator<ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection>> iterator
-				 = ragdollCmp.map.iterator(); iterator.hasNext(); ) {
-				ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection> entry = iterator.next();
-				RagdollComponent.NodeConnection data = entry.value;
-				btRigidBody body = entry.key;
-				Node followNode = data.followNode;
-				Matrix4 offsetMatrix = data.bodyNodeOffsets.get(followNode);
+			updateBodiesToArmature(phyCmp, ragdollCmp);
+		}
+	}
 
-				body.proceedToTransform(ragdollCmp.tmp.set(ragdollCmp.baseBodyTransform)
-						.mul(followNode.globalTransform).mul(offsetMatrix));
+
+	private static void updateArmatureToBodies(ModelComponent modelCmp, RagdollComponent ragdollCmp) {
+		// Let dynamicsworld control ragdoll. Loop over all ragdoll part collision shapes
+		// and their node connection data.
+		for (Iterator<ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection>> iterator1
+			 = ragdollCmp.map.iterator(); iterator1.hasNext(); ) {
+			ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection> bodyEntry = iterator1.next();
+			btRigidBody partBody = bodyEntry.key;
+			RagdollComponent.NodeConnection connection = bodyEntry.value;
+
+			// Loop over each node connected to this collision shape
+			for (Iterator<ObjectMap.Entry<Node, Matrix4>> iterator2
+				 = connection.bodyNodeOffsets.iterator(); iterator2.hasNext(); ) {
+				ObjectMap.Entry<Node, Matrix4> nodeEntry = iterator2.next();
+				// A node which is to follow this collision shape
+				Node node = nodeEntry.key;
+				// The offset of this node from the untranslated collision shape origin
+				Matrix4 offsetMatrix = nodeEntry.value;
+				// Set the node to the transform of the collision shape it follows
+				partBody.getWorldTransform(node.localTransform);
+				// Calculate difference in translation between the node/ragdoll part and the
+				// base capsule shape.
+				node.localTransform.getTranslation(ragdollCmp.nodeTrans);
+				ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
+				ragdollCmp.nodeTrans.sub(ragdollCmp.baseTrans);
+				// Calculate the final node transform
+				node.localTransform.setTranslation(ragdollCmp.nodeTrans)
+						.mul(ragdollCmp.tmp.set(offsetMatrix).inv());
 			}
 		}
+		// Calculate the final transform of the model.
+		modelCmp.modelInstance.calculateTransforms();
+	}
 
+	private static void updateBodiesToArmature(PhysicsComponent phyCmp, RagdollComponent ragdollCmp) {
+		// Ragdoll parts should follow the model animation.
+		// Loop over each part and set it to the global transform of the armature node it should follow.
+		phyCmp.body.getWorldTransform(ragdollCmp.baseBodyTransform);
+		for (Iterator<ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection>> iterator
+			 = ragdollCmp.map.iterator(); iterator.hasNext(); ) {
+			ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection> entry = iterator.next();
+			RagdollComponent.NodeConnection data = entry.value;
+			btRigidBody body = entry.key;
+			Node followNode = data.followNode;
+			Matrix4 offsetMatrix = data.bodyNodeOffsets.get(followNode);
+
+			body.proceedToTransform(ragdollCmp.tmp.set(ragdollCmp.baseBodyTransform)
+					.mul(followNode.globalTransform).mul(offsetMatrix));
+		}
 	}
 }
