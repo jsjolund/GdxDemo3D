@@ -62,28 +62,33 @@ public class SelectionSystem extends EntitySystem {
 				screenX, screenY, ray.origin, ray.direction));
 
 		Entity hitEntity = phySys.rayTest(ray, surfacePoint,
+				PhysicsSystem.PC_FLAG,
 				PhysicsSystem.ALL_FLAG,
 				distance);
 
-		if (hitEntity == null) {
-			return;
+		if (hitEntity != null) {
+			Gdx.app.debug(tag, "Hit PC: " + hitEntity);
+			SelectableComponent hitEntitySelCmp = hitEntity.getComponent(SelectableComponent.class);
+			if (hitEntitySelCmp != null) {
+				// If hit entity is selectable, deselect previous, select this one
+				for (Entity entity : entities) {
+					SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
+					if (selCmp != null) {
+						selCmp.isSelected = false;
+					}
+				}
+				hitEntitySelCmp.isSelected = true;
+				return;
+			}
 		}
 
-		Gdx.app.debug(tag, "Hit entity: " + hitEntity);
-
-		SelectableComponent hitEntitySelCmp = hitEntity.getComponent(SelectableComponent.class);
-		if (hitEntitySelCmp != null) {
-			// If hit entity is selectable, deselect previous, select this one
-			for (Entity entity : entities) {
-				SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
-				if (selCmp != null) {
-					selCmp.isSelected = false;
-				}
-			}
-			hitEntitySelCmp.isSelected = true;
-
-		} else {
-			// Hit entity not selectable, set point to path goal for all selected.
+		hitEntity = phySys.rayTest(ray, surfacePoint,
+				PhysicsSystem.NAVMESH_FLAG,
+				PhysicsSystem.NAVMESH_FLAG,
+				distance);
+		System.out.println(hitEntity);
+		if (hitEntity != null) {
+			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
 			for (Entity entity : entities) {
 				PathFindingComponent pathCmp = entity.getComponent(PathFindingComponent.class);
 				SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
@@ -101,7 +106,6 @@ public class SelectionSystem extends EntitySystem {
 				}
 			}
 		}
-
 
 	}
 

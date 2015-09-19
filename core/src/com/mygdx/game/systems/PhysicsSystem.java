@@ -25,7 +25,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	// Collision flags
 	public final static short NONE_FLAG = 0;
-	public final static short NPC_FLAG = 1 << 6;
+	public final static short NAVMESH_FLAG = 1 << 6;
 	public final static short PC_FLAG = 1 << 10;
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
@@ -94,21 +94,30 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		constraintSolver.dispose();
 		contactListener.dispose();
 		debugDrawer.dispose();
+
+		callback.dispose();
 	}
 
-	public Entity rayTest(Ray ray, Vector3 point, short mask,
+	Vector3 rayFrom = new Vector3();
+	Vector3 rayTo = new Vector3();
+	Vector3 tmp = new Vector3();
+	ClosestRayResultCallback callback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
+
+	public Entity rayTest(Ray ray, Vector3 point, short belongsToFlag, short collidesWithFlag,
 						  float maxDistance) {
-		Vector3 tmp = new Vector3();
+		rayFrom.set(ray.origin);
+		rayTo.set(ray.direction).scl(maxDistance).add(rayFrom);
 
-		Vector3 rayFrom = new Vector3(ray.origin);
-		Vector3 rayTo = new Vector3(ray.direction).scl(maxDistance)
-				.add(rayFrom);
+		// Because we reuse the ClosestRayResultCallback, we need reset it's values
+		callback.setCollisionObject(null);
+		callback.setClosestHitFraction(1f);
+		callback.setRayFromWorld(rayFrom);
+		callback.setRayToWorld(rayTo);
 
-		ClosestRayResultCallback callback = new ClosestRayResultCallback(
-				rayFrom, rayTo);
-//		callback.setCollisionFilterMask(mask);
-		callback.setCollisionFilterGroup(mask);
+		callback.setCollisionFilterMask(belongsToFlag);
+		callback.setCollisionFilterGroup(collidesWithFlag);
 		dynamicsWorld.rayTest(rayFrom, rayTo, callback);
+
 		if (callback.hasHit()) {
 			long entityId = callback.getCollisionObject().getUserPointer();
 			callback.getHitPointWorld(point);
@@ -120,7 +129,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 				}
 			}
 		}
-		callback.dispose();
 		return null;
 	}
 

@@ -15,11 +15,10 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.GameGrid;
 import com.mygdx.game.GameSettings;
+import com.mygdx.game.NavMesh;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.UberShader;
@@ -61,11 +60,7 @@ public class RenderSystem extends EntitySystem {
 	private final Vector3 debugNodePos = new Vector3();
 	private final Vector3 debugModelPos = new Vector3();
 
-	private GameGrid gameGrid;
-
-	public void setGameGrid(GameGrid gameGrid) {
-		this.gameGrid = gameGrid;
-	}
+	private NavMesh navmesh;
 
 	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -93,18 +88,6 @@ public class RenderSystem extends EntitySystem {
 			}
 		});
 
-//		selectedModelBatch = new ModelBatch();
-//		selectedEnvironment = new Environment();
-//		selectedEnvironment.set(new ColorAttribute(ColorAttribute.AmbientLight, 1, 1, 1, 1));
-//		selectedEnvironment.add(new DirectionalLight().set(Color.WHITE, Vector3.Y));
-//		final String vertSel = Gdx.files.internal("shaders/singlecolor.vert").readString();
-//		final String fragSel = Gdx.files.internal("shaders/singlecolor.frag").readString();
-//		selectedModelBatch = new ModelBatch(new DefaultShaderProvider(vertSel, fragSel) {
-//			@Override
-//			protected Shader createShader(final Renderable renderable) {
-//				return new SimpleShader(renderable, config);
-//			}
-//		});
 
 	}
 
@@ -121,11 +104,8 @@ public class RenderSystem extends EntitySystem {
 
 	@Override
 	public void update(float deltaTime) {
-
 		drawShadowBatch();
-
 		camera.update();
-
 		modelBatch.begin(camera);
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
@@ -145,27 +125,32 @@ public class RenderSystem extends EntitySystem {
 		if (GameSettings.DRAW_ARMATURE) {
 			drawArmature();
 		}
-		drawGrid();
 
-	}
-
-	private void drawGrid() {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.identity();
-		shapeRenderer.rotate(1, 0, 0, 90);
+//		shapeRenderer.identity();
+//		shapeRenderer.rotate(1, 0, 0, 90);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(1, 1, 1, 0.5f);
-
-		for (Rectangle r : gameGrid.grid) {
-			shapeRenderer.rect(r.x, r.y, r.width, r.height);
+		float d = 0.05f;
+		float e = d / 2;
+		for (NavMesh.Triangle t : navmesh.triangles) {
+			shapeRenderer.setColor(1, 1, 1, 1f);
+			shapeRenderer.line(t.a, t.b);
+			shapeRenderer.line(t.b, t.c);
+			shapeRenderer.line(t.c, t.a);
+			shapeRenderer.setColor(1, 0, 0, 1f);
+			Vector3 c = t.center;
+			shapeRenderer.box(c.x - e, c.y - e, c.z - e, d, d, d);
 		}
-
+		for (Vector3[] pair : navmesh.triConnections) {
+			shapeRenderer.setColor(0, 1, 1, 1f);
+			shapeRenderer.line(pair[0], pair[1]);
+		}
 		shapeRenderer.end();
-
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
+
 
 	private void drawShadowBatch() {
 		int vw = viewport.getScreenWidth();
@@ -232,4 +217,7 @@ public class RenderSystem extends EntitySystem {
 		}
 	}
 
+	public void setNavmesh(NavMesh navmesh) {
+		this.navmesh = navmesh;
+	}
 }

@@ -11,10 +11,6 @@ public class SelectableComponent extends Component {
 	public boolean isSelected = false;
 	public ModelInstance selectedMarkerModel;
 
-//	public SelectableComponent(ModelComponent selectedMarkerModel) {
-//		this.selectedMarkerModel = selectedMarkerModel;
-//	}
-
 	public SelectableComponent(ModelInstance selectedMarkerModel) {
 		this.selectedMarkerModel = selectedMarkerModel;
 	}

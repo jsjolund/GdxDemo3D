@@ -73,7 +73,7 @@ public class ModelFactory {
 		int vertexFloats = (mesh.getVertexSize() / 4);
 		VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
 		int pOff = posAttr.offset / 4;
-		for (int i = 0; i < lastFloat; i += vertexFloats) {
+		for (int i = pOff; i < lastFloat; i += vertexFloats) {
 			pos.x = buf.get(pOff + i);
 			pos.y = buf.get(pOff + i + 1);
 			pos.z = buf.get(pOff + i + 2);

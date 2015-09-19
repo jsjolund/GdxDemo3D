@@ -23,7 +23,7 @@ public class InputSystem extends EntitySystem {
 	public final Family family;
 	public InputProcessor inputProcessor;
 	private final IntentBroadcastComponent intent;
-	private final Vector2 moveDirection = new Vector2();
+	private final Vector2 keyPanDirection = new Vector2();
 	private float zoom;
 	private final ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
 
@@ -43,20 +43,20 @@ public class InputSystem extends EntitySystem {
 
 	@Override
 	public void update(float deltaTime) {
-		moveDirection.setZero();
+		keyPanDirection.setZero();
 		if (keys.containsKey(GameSettings.KEY_PAN_FORWARD)) {
-			moveDirection.y += 1;
+			keyPanDirection.y += 1;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_BACKWARD)) {
-			moveDirection.y -= 1;
+			keyPanDirection.y -= 1;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_LEFT)) {
-			moveDirection.x -= 1;
+			keyPanDirection.x -= 1;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_RIGHT)) {
-			moveDirection.x += 1;
+			keyPanDirection.x += 1;
 		}
-		moveDirection.nor();
+		keyPanDirection.nor();
 
 		if (zoom > GameSettings.CAMERA_MAX_ZOOM) {
 			zoom = GameSettings.CAMERA_MAX_ZOOM;
@@ -64,10 +64,10 @@ public class InputSystem extends EntitySystem {
 			zoom = GameSettings.CAMERA_MIN_ZOOM;
 		}
 
-		intent.moveDirection.set(moveDirection);
+		intent.moveDirection.set(keyPanDirection);
 		intent.zoom = zoom;
 
-		if (moveDirection.isZero() && touchMap.containsKey(0)) {
+		if (keyPanDirection.isZero() && touchMap.containsKey(0)) {
 			TouchData data = touchMap.get(0);
 			if (data.isDragging) {
 				intent.dragStart.set(data.down);

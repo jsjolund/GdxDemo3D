@@ -109,7 +109,7 @@ public class GameScreen implements Screen {
 				"models/json/scene0_empty.json",
 				"models/json/scene0_light.json"
 		);
-		GameGrid grid = new GameGrid(levelBlender.gridOrigin, levelBlender.gridTileHalfExt, 50, 50);
+		NavMesh navMesh = new NavMesh(levelBlender.navmesh.model.meshes.first());
 
 		Gdx.app.debug(tag, "Loading environment system");
 		EnvironmentSystem envSys = new EnvironmentSystem();
@@ -121,7 +121,7 @@ public class GameScreen implements Screen {
 		RenderSystem renderSys = new RenderSystem(viewport, camera,
 				envSys.environment,
 				levelBlender.sunDirection);
-		renderSys.setGameGrid(grid);
+		renderSys.setNavmesh(navMesh);
 		engine.addSystem(renderSys);
 
 		// TODO: dispose

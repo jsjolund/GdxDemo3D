@@ -36,8 +36,7 @@ public class BlenderComponentsLoader {
 	public final Vector3 sunDirection = new Vector3();
 	private AssetManager assets;
 
-	public Vector3 gridTileHalfExt = new Vector3();
-	public Vector3 gridOrigin = new Vector3();
+	public ModelInstance navmesh;
 
 	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
 			lightsJsonPath) {
@@ -62,21 +61,18 @@ public class BlenderComponentsLoader {
 
 		for (BlenderComponent cmp : empties) {
 			blenderToGdxCoordinates(cmp);
-			if (cmp.name.equals("grid_unit")) {
-				gridTileHalfExt.set(cmp.scale);
-				gridOrigin.set(cmp.position);
-			}
-		}
-		for (BlenderModelComponent cmp : models) {
-			blenderToGdxCoordinates(cmp);
-			Entity entity = createModelEntity(cmp, empties);
-			entities.add(entity);
 		}
 		for (BlenderLightComponent cmp : lights) {
 			blenderToGdxCoordinates(cmp);
 			Entity entity = createLightEntity(cmp);
 			entities.add(entity);
 		}
+		for (BlenderModelComponent cmp : models) {
+			blenderToGdxCoordinates(cmp);
+			Entity entity = createModelEntity(cmp, empties);
+			entities.add(entity);
+		}
+
 	}
 
 	public static void blenderToGdxCoordinates(BlenderComponent cmp) {
@@ -96,11 +92,24 @@ public class BlenderComponentsLoader {
 	private Entity createModelEntity(BlenderModelComponent cmp, ArrayList<BlenderEmptyComponent> empties) {
 
 		Entity entity = new Entity();
-
 		assets.finishLoadingAsset(cmp.model_file_name);
 		Model model = assets.get(cmp.model_file_name, Model.class);
-		entity.add(new ModelComponent(model, cmp.name, cmp.position, cmp.rotation, cmp.scale));
-		ModelInstance instance = entity.getComponent(ModelComponent.class).modelInstance;
+		ModelComponent mdlCmp = new ModelComponent(model, cmp.name, cmp.position, cmp.rotation, cmp.scale);
+		ModelInstance instance = mdlCmp.modelInstance;
+
+		if (cmp.name.equals("navmesh")) {
+			btCollisionShape shape = Bullet.obtainStaticNodeShape(instance.nodes);
+			navmesh = instance;
+			PhysicsComponent phyCmp = new PhysicsComponent(
+					shape, null, 0,
+					PhysicsSystem.NAVMESH_FLAG,
+					PhysicsSystem.NAVMESH_FLAG,
+					false, false);
+			entity.add(phyCmp);
+			phyCmp.body.setWorldTransform(instance.transform);
+			return entity;
+		}
+		entity.add(mdlCmp);
 
 		btCollisionShape shape = loadCollisionShape(cmp.name, empties, model);
 
@@ -112,7 +121,7 @@ public class BlenderComponentsLoader {
 			PhysicsComponent phyCmp = new PhysicsComponent(
 					shape, null, 0,
 					PhysicsSystem.GROUND_FLAG,
-					PhysicsSystem.ALL_FLAG,
+					(short) (PhysicsSystem.OBJECT_FLAG | PhysicsSystem.PC_FLAG),
 					false, false);
 			entity.add(phyCmp);
 			phyCmp.body.setWorldTransform(instance.transform);
@@ -127,7 +136,7 @@ public class BlenderComponentsLoader {
 			entity.add(new PhysicsComponent(
 					shape, motionStateCmp.motionState, mass,
 					PhysicsSystem.OBJECT_FLAG,
-					PhysicsSystem.ALL_FLAG,
+					(short) (PhysicsSystem.GROUND_FLAG | PhysicsSystem.OBJECT_FLAG | PhysicsSystem.PC_FLAG),
 					true, false));
 		}
 		return entity;
