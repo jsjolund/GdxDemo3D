@@ -140,7 +140,7 @@ public class RenderSystem extends EntitySystem {
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
 			shapeRenderer.setColor(1, 0, 0, 1f);
-			Vector3 c = t.center;
+			Vector3 c = t.centroid;
 			shapeRenderer.box(c.x - e, c.y - e, c.z - e, d, d, d);
 		}
 		for (Vector3[] pair : navmesh.triConnections) {
