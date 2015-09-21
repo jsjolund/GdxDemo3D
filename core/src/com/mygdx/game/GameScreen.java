@@ -109,7 +109,7 @@ public class GameScreen implements Screen {
 				"models/json/scene0_empty.json",
 				"models/json/scene0_light.json"
 		);
-		NavMesh navMesh = new NavMesh(levelBlender.navmesh.model.meshes.first());
+//		NavMesh navMesh = new NavMesh(levelBlender.navmesh.model.meshes.first());
 
 		Gdx.app.debug(tag, "Loading environment system");
 		EnvironmentSystem envSys = new EnvironmentSystem();
@@ -121,7 +121,7 @@ public class GameScreen implements Screen {
 		RenderSystem renderSys = new RenderSystem(viewport, camera,
 				envSys.environment,
 				levelBlender.sunDirection);
-		renderSys.setNavmesh(navMesh);
+		renderSys.setNavmesh(levelBlender.navMesh);
 		engine.addSystem(renderSys);
 
 		// TODO: dispose
@@ -176,6 +176,7 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding selection system");
 		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
+		selSys.setNavMesh(levelBlender.navMesh);
 		engine.addSystem(selSys);
 
 		Gdx.app.debug(tag, "Adding billboard system");

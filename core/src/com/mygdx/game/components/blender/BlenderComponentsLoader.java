@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.utils.Json;
+import com.mygdx.game.utilities.NavMesh;
 import com.mygdx.game.components.LightComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;
@@ -36,7 +37,8 @@ public class BlenderComponentsLoader {
 	public final Vector3 sunDirection = new Vector3();
 	private AssetManager assets;
 
-	public ModelInstance navmesh;
+	//	public ModelInstance navmesh;
+	public NavMesh navMesh;
 
 	public BlenderComponentsLoader(AssetManager assets, String modelsJsonPath, String emptiesJsonPath, String
 			lightsJsonPath) {
@@ -98,15 +100,18 @@ public class BlenderComponentsLoader {
 		ModelInstance instance = mdlCmp.modelInstance;
 
 		if (cmp.name.equals("navmesh")) {
-			btCollisionShape shape = Bullet.obtainStaticNodeShape(instance.nodes);
-			navmesh = instance;
+			ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
+
+			btTriangleIndexVertexArray vertexArray = new btTriangleIndexVertexArray(instance.model.meshParts);
+			btBvhTriangleMeshShape shape = new btBvhTriangleMeshShape(vertexArray, true);
 			PhysicsComponent phyCmp = new PhysicsComponent(
 					shape, null, 0,
 					PhysicsSystem.NAVMESH_FLAG,
 					PhysicsSystem.NAVMESH_FLAG,
-					false, false);
+					true, true);
 			entity.add(phyCmp);
 			phyCmp.body.setWorldTransform(instance.transform);
+			navMesh = new NavMesh(instance.model.meshes.first(), shape);
 			return entity;
 		}
 		entity.add(mdlCmp);

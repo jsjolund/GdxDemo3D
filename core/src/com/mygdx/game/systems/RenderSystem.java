@@ -18,7 +18,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.NavMesh;
+import com.mygdx.game.utilities.NavMesh;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.UberShader;
@@ -150,7 +150,6 @@ public class RenderSystem extends EntitySystem {
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
-
 
 	private void drawShadowBatch() {
 		int vw = viewport.getScreenWidth();

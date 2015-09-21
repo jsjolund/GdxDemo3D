@@ -101,6 +101,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	Vector3 rayFrom = new Vector3();
 	Vector3 rayTo = new Vector3();
 	Vector3 tmp = new Vector3();
+
 	ClosestRayResultCallback callback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
 
 	public Entity rayTest(Ray ray, Vector3 point, short belongsToFlag, short collidesWithFlag,
@@ -116,21 +117,26 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		callback.setCollisionFilterMask(belongsToFlag);
 		callback.setCollisionFilterGroup(collidesWithFlag);
+
 		dynamicsWorld.rayTest(rayFrom, rayTo, callback);
 
+		Entity e = null;
 		if (callback.hasHit()) {
 			long entityId = callback.getCollisionObject().getUserPointer();
 			callback.getHitPointWorld(point);
 			callback.getHitNormalWorld(tmp);
 			point.add(tmp.nor());
-			for (Entity e : entities) {
-				if (e.getId() == entityId) {
-					return e;
+			for (Entity entity : entities) {
+				if (entity.getId() == entityId) {
+					e = entity;
+					break;
 				}
 			}
 		}
-		return null;
+		return e;
 	}
+
+
 
 	public class CollisionContactListener extends ContactListener {
 

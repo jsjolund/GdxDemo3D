@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.IntentBroadcastComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
+import com.mygdx.game.utilities.NavMesh;
 
 /**
  * Created by user on 8/25/15.
@@ -27,6 +28,8 @@ public class SelectionSystem extends EntitySystem {
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final Ray ray = new Ray();
+
+	private NavMesh navMesh;
 
 	public SelectionSystem(PhysicsSystem phySys, Viewport viewport) {
 		systemFamily = Family.all(IntentBroadcastComponent.class,
@@ -82,10 +85,13 @@ public class SelectionSystem extends EntitySystem {
 			}
 		}
 
+		navMesh.rayTest(ray, distance);
+
 		hitEntity = phySys.rayTest(ray, surfacePoint,
 				PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG,
 				distance);
+
 		System.out.println(hitEntity);
 		if (hitEntity != null) {
 			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
@@ -109,4 +115,7 @@ public class SelectionSystem extends EntitySystem {
 
 	}
 
+	public void setNavMesh(NavMesh navMesh) {
+		this.navMesh = navMesh;
+	}
 }
