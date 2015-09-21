@@ -18,10 +18,11 @@ import com.mygdx.game.components.PhysicsComponent;
 public class PathFindingSystem extends IteratingSystem {
 
 	private final Matrix4 matrix = new Matrix4();
-	private final Vector3 pos = new Vector3();
+	//	private final Vector3 pos = new Vector3();
 	private final Vector3 goalDirection = new Vector3();
 	private final Vector3 newVelocity = new Vector3();
 	private float yVelocity = 0;
+
 	private final ComponentMapper<PathFindingComponent> pathCmps =
 			ComponentMapper.getFor(PathFindingComponent.class);
 	private final ComponentMapper<PhysicsComponent> phyCmps =
@@ -37,60 +38,55 @@ public class PathFindingSystem extends IteratingSystem {
 	protected void processEntity(Entity entity, float deltaTime) {
 		PhysicsComponent phyCmp = phyCmps.get(entity);
 		PathFindingComponent pathCmp = pathCmps.get(entity);
+		CharacterActionComponent actionCmp = actionCmps.get(entity);
 
-		if (pathCmp.goal == null) {
+		phyCmp.body.getWorldTransform(matrix);
+		matrix.getTranslation(pathCmp.currentPosition);
+
+		if (pathCmp.currentGoal == null && pathCmp.path.size == 0) {
+			actionCmp.nextAction = CharacterActionComponent.Action.IDLE;
 			return;
 		}
 
-		phyCmp.body.getWorldTransform(matrix);
-		matrix.getTranslation(pos);
+		if (pathCmp.currentGoal == null && pathCmp.path.size > 0) {
+			pathCmp.currentGoal = pathCmp.path.pop();
+		}
 
-		if (pathCmp.goal.equals(pathCmp.lastProcessedGoal)) {
-
-			CharacterActionComponent actionCmp = actionCmps.get(entity);
-
+		if (pathCmp.currentGoal != null) {
 			yVelocity = phyCmp.body.getLinearVelocity().y;
-			float xzDst = Vector2.dst2(pathCmp.goal.x, pathCmp.goal.z, pos.x, pos.z);
+
+			float xzDst = Vector2.dst2(pathCmp.currentGoal.x, pathCmp.currentGoal.z,
+					pathCmp.currentPosition.x, pathCmp.currentPosition.z);
+
 			if (xzDst < 0.01f) {
 				phyCmp.body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
 				phyCmp.body.setAngularVelocity(Vector3.Zero);
-
-				if (actionCmp != null) {
-					actionCmp.nextAction = CharacterActionComponent.Action.IDLE;
+				// set new goal if not empty
+				pathCmp.currentGoal = null;
+				if (pathCmp.path.size != 0) {
+					pathCmp.currentGoal = pathCmp.path.pop();
 				}
-
 
 			} else {
 				matrix.idt();
-				goalDirection.set(pos).sub(pathCmp.goal).scl(-1, 0, 1).nor();
+				goalDirection.set(pathCmp.currentPosition).sub(pathCmp.currentGoal).scl(-1, 0, 1).nor();
 				matrix.setToLookAt(goalDirection, Vector3.Y);
-				matrix.setTranslation(pos);
+				matrix.setTranslation(pathCmp.currentPosition);
 				phyCmp.body.setWorldTransform(matrix);
-
 
 				if (pathCmp.run) {
 					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_RUN_SPEED);
-					if (actionCmp != null) {
-						actionCmp.nextAction = CharacterActionComponent.Action.RUN;
-					}
+					actionCmp.nextAction = CharacterActionComponent.Action.RUN;
 				} else {
 					newVelocity.set(goalDirection.scl(1, 0, -1)).scl(GameSettings.PLAYER_WALK_SPEED);
-					if (actionCmp != null) {
-						actionCmp.nextAction = CharacterActionComponent.Action.WALK;
-					}
+					actionCmp.nextAction = CharacterActionComponent.Action.WALK;
 				}
 
 				newVelocity.y = yVelocity;
 				phyCmp.body.setLinearVelocity(newVelocity);
-
 			}
-			return;
 		}
 
-		if (pathCmp.lastProcessedGoal == null) {
-			pathCmp.lastProcessedGoal = new Vector3(pathCmp.goal);
-		} else {
-			pathCmp.lastProcessedGoal.set(pathCmp.goal);
-		}
+
 	}
 }

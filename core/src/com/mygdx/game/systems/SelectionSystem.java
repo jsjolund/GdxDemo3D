@@ -71,11 +71,11 @@ public class SelectionSystem extends EntitySystem {
 
 		if (hitEntity != null) {
 			Gdx.app.debug(tag, "Hit PC: " + hitEntity);
-			SelectableComponent hitEntitySelCmp = hitEntity.getComponent(SelectableComponent.class);
+			SelectableComponent hitEntitySelCmp = selCmps.get(hitEntity);
 			if (hitEntitySelCmp != null) {
 				// If hit entity is selectable, deselect previous, select this one
 				for (Entity entity : entities) {
-					SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
+					SelectableComponent selCmp = selCmps.get(entity);
 					if (selCmp != null) {
 						selCmp.isSelected = false;
 					}
@@ -85,29 +85,32 @@ public class SelectionSystem extends EntitySystem {
 			}
 		}
 
-		navMesh.rayTest(ray, distance);
+		NavMesh.Triangle hitTriangle = navMesh.rayTest(ray, distance);
+		if (hitTriangle != null) {
+			for (Entity entity : entities) {
+				SelectableComponent selCmp = selCmps.get(entity);
+				PathFindingComponent pathCmp = pathCmps.get(entity);
+				if (selCmp.isSelected) {
+
+				}
+			}
+		}
 
 		hitEntity = phySys.rayTest(ray, surfacePoint,
 				PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG,
 				distance);
 
-		System.out.println(hitEntity);
 		if (hitEntity != null) {
 			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
 			for (Entity entity : entities) {
-				PathFindingComponent pathCmp = entity.getComponent(PathFindingComponent.class);
-				SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
-				if (pathCmp != null && selCmp != null && selCmp.isSelected) {
-					if (pathCmp.goal == null) {
-						pathCmp.goal = new Vector3();
-					}
-					pathCmp.goal.set(surfacePoint);
-					if (intent.doubleClick) {
-						pathCmp.run = true;
-					} else {
-						pathCmp.run = false;
-					}
+				SelectableComponent selCmp = selCmps.get(entity);
+				PathFindingComponent pathCmp = pathCmps.get(entity);
+				if (selCmp.isSelected) {
+					pathCmp.run = intent.doubleClick;
+					pathCmp.currentGoal = null;
+					pathCmp.path.clear();
+					pathCmp.path.add(new Vector3(surfacePoint));
 					Gdx.app.debug(tag, String.format("Path target for %s set to %s", entity, surfacePoint));
 				}
 			}

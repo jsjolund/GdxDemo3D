@@ -150,16 +150,21 @@ public class NavMesh implements Graph, Disposable {
 		triangleRaycastCallback.dispose();
 	}
 
-	public void rayTest(Ray ray, float maxDistance) {
+	public Triangle rayTest(Ray ray, float maxDistance) {
+		Triangle hitTriangle = null;
+
 		rayFrom.set(ray.origin);
 		rayTo.set(ray.direction).scl(maxDistance).add(rayFrom);
 		triangleRaycastCallback.clear();
 		triangleRaycastCallback.setFrom(rayFrom);
 		triangleRaycastCallback.setTo(rayTo);
 		collisionObject.performRaycast(triangleRaycastCallback, rayFrom, rayTo);
+
 		if (triangleRaycastCallback.triangleIndex != -1) {
-			Gdx.app.debug(tag, triangles.get(triangleRaycastCallback.triangleIndex).toString());
+			hitTriangle =  triangles.get(triangleRaycastCallback.triangleIndex);
+			Gdx.app.debug(tag, hitTriangle.toString());
 		}
+		return hitTriangle;
 	}
 
 	@Override

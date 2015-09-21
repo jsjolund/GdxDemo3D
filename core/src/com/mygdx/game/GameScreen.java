@@ -187,7 +187,10 @@ public class GameScreen implements Screen {
 		spawnCharacter(new Vector3(5, 1, 0), intentCmp);
 		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
 
-		Family pathFamily = Family.all(PathFindingComponent.class, PhysicsComponent.class).get();
+		Family pathFamily = Family.all(
+				PathFindingComponent.class,
+				PhysicsComponent.class,
+				CharacterActionComponent.class).get();
 		engine.addSystem(new PathFindingSystem(pathFamily));
 
 		Family animFamily = Family.all(CharacterActionComponent.class).get();
@@ -279,7 +282,7 @@ public class GameScreen implements Screen {
 
 		// Make model selectable, add pathfinding, animation components
 //		entity.add(new SelectableComponent(outlineMdlCmp));
-		entity.add(new PathFindingComponent());
+		entity.add(new PathFindingComponent(pos));
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
 		for (Animation a : mdlCmp.modelInstance.animations) {
 			Gdx.app.debug(tag, "Found animation: " + a.id);
