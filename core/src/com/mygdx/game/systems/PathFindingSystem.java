@@ -18,7 +18,6 @@ import com.mygdx.game.components.PhysicsComponent;
 public class PathFindingSystem extends IteratingSystem {
 
 	private final Matrix4 matrix = new Matrix4();
-	//	private final Vector3 pos = new Vector3();
 	private final Vector3 goalDirection = new Vector3();
 	private final Vector3 newVelocity = new Vector3();
 	private float yVelocity = 0;

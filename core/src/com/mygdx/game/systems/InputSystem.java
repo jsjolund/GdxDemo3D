@@ -119,8 +119,8 @@ public class InputSystem extends EntitySystem {
 			if (keycode == GameSettings.KEY_DRAW_ARMATURE) {
 				GameSettings.DRAW_ARMATURE = !GameSettings.DRAW_ARMATURE;
 			}
-			if (keycode == GameSettings.KEY_DISPLAY_SHADOWBUFFER) {
-				GameSettings.DISPLAY_SHADOWBUFFER = !GameSettings.DISPLAY_SHADOWBUFFER;
+			if (keycode == GameSettings.KEY_DRAW_NAVMESH) {
+				GameSettings.DRAW_NAVMESH = !GameSettings.DRAW_NAVMESH;
 			}
 			if (keycode == GameSettings.KEY_PAUSE) {
 

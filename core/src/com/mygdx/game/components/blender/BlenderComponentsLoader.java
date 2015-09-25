@@ -108,7 +108,7 @@ public class BlenderComponentsLoader {
 					shape, null, 0,
 					PhysicsSystem.NAVMESH_FLAG,
 					PhysicsSystem.NAVMESH_FLAG,
-					true, true);
+					false, false);
 			entity.add(phyCmp);
 			phyCmp.body.setWorldTransform(instance.transform);
 			navMesh = new NavMesh(instance.model.meshes.first(), shape);

@@ -3,6 +3,7 @@ package com.mygdx.game.systems;
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -16,12 +17,14 @@ import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.utilities.NavMesh;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.UberShader;
+import com.mygdx.game.utilities.NavMesh;
+import com.mygdx.game.utilities.Triangle;
 
 
 /**
@@ -126,6 +129,13 @@ public class RenderSystem extends EntitySystem {
 			drawArmature();
 		}
 
+		if (GameSettings.DRAW_NAVMESH) {
+			drawNavMesh();
+		}
+
+	}
+
+	private void drawNavMesh() {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
@@ -134,7 +144,8 @@ public class RenderSystem extends EntitySystem {
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		float d = 0.05f;
 		float e = d / 2;
-		for (NavMesh.Triangle t : navmesh.triangles) {
+		for (int i = 0; i < navmesh.triangleMap.size; i++) {
+			Triangle t = navmesh.triangleMap.getKeyAt(i);
 			shapeRenderer.setColor(1, 1, 1, 1f);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
@@ -143,9 +154,16 @@ public class RenderSystem extends EntitySystem {
 			Vector3 c = t.centroid;
 			shapeRenderer.box(c.x - e, c.y - e, c.z - e, d, d, d);
 		}
-		for (Vector3[] pair : navmesh.triConnections) {
+		for (int i = 0; i < navmesh.triangleMap.size; i++) {
+			Array<Connection> connections = navmesh.triangleMap.getValueAt(i);
 			shapeRenderer.setColor(0, 1, 1, 1f);
-			shapeRenderer.line(pair[0], pair[1]);
+			for (Connection<Triangle> con : connections) {
+				shapeRenderer.line(con.getFromNode().centroid, con.getToNode().centroid);
+			}
+		}
+		shapeRenderer.setColor(0, 1, 0, 1f);
+		for (int i = 0; i < navmesh.pathDebug.size - 1; i++) {
+			shapeRenderer.line(navmesh.pathDebug.get(i), navmesh.pathDebug.get(i + 1));
 		}
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);

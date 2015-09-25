@@ -11,6 +11,7 @@ import com.mygdx.game.components.IntentBroadcastComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.utilities.NavMesh;
+import com.mygdx.game.utilities.Triangle;
 
 /**
  * Created by user on 8/25/15.
@@ -85,35 +86,43 @@ public class SelectionSystem extends EntitySystem {
 			}
 		}
 
-		NavMesh.Triangle hitTriangle = navMesh.rayTest(ray, distance);
-		if (hitTriangle != null) {
-			for (Entity entity : entities) {
-				SelectableComponent selCmp = selCmps.get(entity);
-				PathFindingComponent pathCmp = pathCmps.get(entity);
-				if (selCmp.isSelected) {
-
-				}
-			}
-		}
-
 		hitEntity = phySys.rayTest(ray, surfacePoint,
 				PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG,
 				distance);
 
 		if (hitEntity != null) {
-			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
-			for (Entity entity : entities) {
-				SelectableComponent selCmp = selCmps.get(entity);
-				PathFindingComponent pathCmp = pathCmps.get(entity);
-				if (selCmp.isSelected) {
-					pathCmp.run = intent.doubleClick;
-					pathCmp.currentGoal = null;
-					pathCmp.path.clear();
-					pathCmp.path.add(new Vector3(surfacePoint));
-					Gdx.app.debug(tag, String.format("Path target for %s set to %s", entity, surfacePoint));
+			Triangle hitTriangle = navMesh.rayTest(ray, distance);
+
+			// TODO: Group movement later
+			if (hitTriangle != null) {
+				for (Entity entity : entities) {
+					SelectableComponent selCmp = selCmps.get(entity);
+					PathFindingComponent pathCmp = pathCmps.get(entity);
+					if (selCmp.isSelected) {
+						pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
+						Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, distance);
+
+						navMesh.calculatePath(pathCmp.currentPosition,
+								posTriangle, surfacePoint, hitTriangle);
+					}
 				}
 			}
+
+//			// Old
+//			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
+//			for (Entity entity : entities) {
+//				SelectableComponent selCmp = selCmps.get(entity);
+//				PathFindingComponent pathCmp = pathCmps.get(entity);
+//				if (selCmp.isSelected) {
+//					pathCmp.run = intent.doubleClick;
+//					pathCmp.currentGoal = null;
+//					pathCmp.path.clear();
+//					pathCmp.path.add(new Vector3(surfacePoint));
+//					Gdx.app.debug(tag, String.format("Path target for %s set to %s", entity, surfacePoint));
+//				}
+//			}
+
 		}
 
 	}
