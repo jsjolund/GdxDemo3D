@@ -142,26 +142,27 @@ public class RenderSystem extends EntitySystem {
 //		shapeRenderer.identity();
 //		shapeRenderer.rotate(1, 0, 0, 90);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-		float d = 0.05f;
-		float e = d / 2;
+		float vertDim = 0.05f;
+		float vertOffset = vertDim / 2;
+		float nmAlpha = 0.3f;
 		for (int i = 0; i < navmesh.triangleMap.size; i++) {
 			Triangle t = navmesh.triangleMap.getKeyAt(i);
-			shapeRenderer.setColor(1, 1, 1, 1f);
+			shapeRenderer.setColor(0, 1, 0, nmAlpha);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
-			shapeRenderer.setColor(1, 0, 0, 1f);
+			shapeRenderer.setColor(1, 0, 0, nmAlpha);
 			Vector3 c = t.centroid;
-			shapeRenderer.box(c.x - e, c.y - e, c.z - e, d, d, d);
+			shapeRenderer.box(c.x - vertOffset, c.y - vertOffset, c.z - vertOffset, vertDim, vertDim, vertDim);
 		}
 		for (int i = 0; i < navmesh.triangleMap.size; i++) {
-			Array<Connection> connections = navmesh.triangleMap.getValueAt(i);
-			shapeRenderer.setColor(0, 1, 1, 1f);
+			Array<Connection<Triangle>> connections = navmesh.triangleMap.getValueAt(i);
+			shapeRenderer.setColor(0, 1, 1, nmAlpha);
 			for (Connection<Triangle> con : connections) {
 				shapeRenderer.line(con.getFromNode().centroid, con.getToNode().centroid);
 			}
 		}
-		shapeRenderer.setColor(0, 1, 0, 1f);
+		shapeRenderer.setColor(1, 1, 1, 1f);
 		for (int i = 0; i < navmesh.pathDebug.size - 1; i++) {
 			shapeRenderer.line(navmesh.pathDebug.get(i), navmesh.pathDebug.get(i + 1));
 		}

@@ -103,8 +103,8 @@ public class SelectionSystem extends EntitySystem {
 						pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
 						Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, distance);
 
-						navMesh.calculatePath(pathCmp.currentPosition,
-								posTriangle, surfacePoint, hitTriangle);
+						navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.currentPosition,
+								surfacePoint);
 					}
 				}
 			}

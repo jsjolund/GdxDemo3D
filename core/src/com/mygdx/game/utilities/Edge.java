@@ -8,8 +8,10 @@ import com.badlogic.gdx.math.Vector3;
  */
 
 public class Edge implements Connection<Triangle> {
+
 	public Vector3 edgeVertexA;
 	public Vector3 edgeVertexB;
+
 	public Triangle fromNode;
 	public Triangle toNode;
 
@@ -23,7 +25,7 @@ public class Edge implements Connection<Triangle> {
 
 	@Override
 	public float getCost() {
-		return 0;
+		return 1;
 	}
 
 	@Override
