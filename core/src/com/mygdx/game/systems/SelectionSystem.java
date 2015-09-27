@@ -28,6 +28,8 @@ public class SelectionSystem extends EntitySystem {
 	private final ComponentMapper<IntentBroadcastComponent> intentCmps = ComponentMapper.getFor(IntentBroadcastComponent.class);
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
+
+	private final float rayDistance = 100;
 	private final Ray ray = new Ray();
 
 	private NavMesh navMesh;
@@ -45,7 +47,6 @@ public class SelectionSystem extends EntitySystem {
 		entities = engine.getEntitiesFor(systemFamily);
 	}
 
-
 	@Override
 	public void update(float deltaTime) {
 		if (entities.size() == 0) {
@@ -60,16 +61,15 @@ public class SelectionSystem extends EntitySystem {
 		float screenY = intent.click.y;
 
 		ray.set(viewport.getPickRay(screenX, screenY));
-		float distance = 100;
 		Gdx.app.debug(tag, String.format(
 				"Mouse: %s, %s, Pick ray: origin: %s, direction: %s.",
 				screenX, screenY, ray.origin, ray.direction));
 
+		// Check if player clicked a selectable entity
 		Entity hitEntity = phySys.rayTest(ray, surfacePoint,
 				PhysicsSystem.PC_FLAG,
 				PhysicsSystem.ALL_FLAG,
-				distance);
-
+				rayDistance);
 		if (hitEntity != null) {
 			Gdx.app.debug(tag, "Hit PC: " + hitEntity);
 			SelectableComponent hitEntitySelCmp = selCmps.get(hitEntity);
@@ -86,30 +86,30 @@ public class SelectionSystem extends EntitySystem {
 			}
 		}
 
+		// Check if player clicked navigation mesh
 		hitEntity = phySys.rayTest(ray, surfacePoint,
 				PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG,
-				distance);
+				rayDistance);
 
 		if (hitEntity != null) {
-			Triangle hitTriangle = navMesh.rayTest(ray, distance);
+			Triangle hitTriangle = navMesh.rayTest(ray, rayDistance);
 
-			// TODO: Group movement later
 			if (hitTriangle != null) {
 				for (Entity entity : entities) {
 					SelectableComponent selCmp = selCmps.get(entity);
 					PathFindingComponent pathCmp = pathCmps.get(entity);
 					if (selCmp.isSelected) {
 						pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
-						Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, distance);
+						Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance);
 
+						System.out.println(surfacePoint);
 						navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.currentPosition,
 								surfacePoint);
 					}
 				}
 			}
 
-//			// Old
 //			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
 //			for (Entity entity : entities) {
 //				SelectableComponent selCmp = selCmps.get(entity);

@@ -1,7 +1,6 @@
 package com.mygdx.game.navmesh;
 
 import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.math.Vector3;
@@ -28,7 +27,6 @@ public class NavMesh implements Disposable {
 
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
-
 
 	public NavMesh(Mesh mesh, btBvhTriangleMeshShape collisionShape) {
 		this.collisionShape = collisionShape;
@@ -73,13 +71,5 @@ public class NavMesh implements Disposable {
 		}
 		return hitTriangle;
 	}
-
-	private class NavMeshHeuristic implements Heuristic<Triangle> {
-		@Override
-		public float estimate(Triangle node, Triangle endNode) {
-			return node.centroid.dst2(endNode.centroid);
-		}
-	}
-
 
 }

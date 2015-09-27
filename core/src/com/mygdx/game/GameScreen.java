@@ -130,7 +130,6 @@ public class GameScreen implements Screen {
 		engine.addSystem(phySys);
 		engine.addEntityListener(phySys.systemFamily, phySys.physicsComponentListener);
 		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
-		engine.addEntityListener(Family.all(RagdollConstraintComponent.class).get(), phySys.ragdollConstraintListener);
 
 		Gdx.app.debug(tag, "Adding entities");
 		Vector3 gridUnit = new Vector3();
@@ -184,8 +183,8 @@ public class GameScreen implements Screen {
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
 		engine.addSystem(billSys);
 
-		spawnCharacter(new Vector3(5, 1, 0), intentCmp);
-		spawnCharacter(new Vector3(5, 1, 5), intentCmp);
+		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0), intentCmp));
+		engine.addEntity(spawnCharacter(new Vector3(5, 1, 5), intentCmp));
 
 		Family pathFamily = Family.all(
 				PathFindingComponent.class,
@@ -291,11 +290,9 @@ public class GameScreen implements Screen {
 		entity.add(actionCmp);
 
 		// Ragdoll
-		RagdollFactory ragdoll = new RagdollFactory(mdlCmp.modelInstance, bodyMass, belongsToFlag, collidesWithFlag);
-		entity.add(ragdoll.ragCmp);
-		entity.add(ragdoll.conCmp);
-		engine.addEntity(entity);
-
+		RagdollComponent ragCmp = RagdollFactory.createRagdoll(mdlCmp.modelInstance, bodyMass, belongsToFlag,
+				collidesWithFlag);
+		entity.add(ragCmp);
 
 		// Selection billboard TODO: Dispose
 		String markerName = "marker.png";
@@ -308,6 +305,7 @@ public class GameScreen implements Screen {
 		entity.add(billboard);
 
 		Gdx.app.debug(tag, "Finished adding character");
+
 		return entity;
 
 	}

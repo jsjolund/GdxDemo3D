@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 
@@ -13,9 +14,9 @@ import com.badlogic.gdx.utils.ArrayMap;
  */
 public class RagdollComponent extends Component {
 
+	public final Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 	public final ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
 	public final Array<Node> nodes = new Array<Node>();
-	public RagdollConstraintComponent constraintComponent;
 
 	public final Matrix4 baseBodyTransform = new Matrix4();
 	public final Matrix4 resetRotationTransform = new Matrix4();

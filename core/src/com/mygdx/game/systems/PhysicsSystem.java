@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
-import com.mygdx.game.components.RagdollConstraintComponent;
 
 /**
  * Created by user on 7/31/15.
@@ -34,9 +33,8 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	// Ashley
 	public final PhysicsListener physicsComponentListener;
 	public final RagdollListener ragdollComponentListener;
-	public final RagdollConstraintListener ragdollConstraintListener;
-
 	public final Family systemFamily;
+
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;
 	private ImmutableArray<Entity> entities;
@@ -46,6 +44,10 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	private final btConstraintSolver constraintSolver;
 	private final btDbvtBroadphase broadphase;
 	private final DebugDrawer debugDrawer;
+	private final ClosestRayResultCallback callback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
+
+	private final Vector3 rayFrom = new Vector3();
+	private final Vector3 rayTo = new Vector3();
 
 	public PhysicsSystem() {
 		super(0);
@@ -66,7 +68,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		contactListener = new CollisionContactListener();
 		physicsComponentListener = new PhysicsListener();
 		ragdollComponentListener = new RagdollListener();
-		ragdollConstraintListener = new RagdollConstraintListener();
 	}
 
 	@Override
@@ -98,13 +99,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		callback.dispose();
 	}
 
-	Vector3 rayFrom = new Vector3();
-	Vector3 rayTo = new Vector3();
-	Vector3 tmp = new Vector3();
-
-	ClosestRayResultCallback callback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
-
-	public Entity rayTest(Ray ray, Vector3 point, short belongsToFlag, short collidesWithFlag,
+	public Entity rayTest(Ray ray, Vector3 hitPointWorld, short belongsToFlag, short collidesWithFlag,
 						  float maxDistance) {
 		rayFrom.set(ray.origin);
 		rayTo.set(ray.direction).scl(maxDistance).add(rayFrom);
@@ -123,9 +118,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		Entity e = null;
 		if (callback.hasHit()) {
 			long entityId = callback.getCollisionObject().getUserPointer();
-			callback.getHitPointWorld(point);
-			callback.getHitNormalWorld(tmp);
-			point.add(tmp.nor());
+			callback.getHitPointWorld(hitPointWorld);
 			for (Entity entity : entities) {
 				if (entity.getId() == entityId) {
 					e = entity;
@@ -137,17 +130,13 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	}
 
 
-
 	public class CollisionContactListener extends ContactListener {
-
 //		@Override
 //		public boolean onContactAdded(btManifoldPoint cp,
 //									  btCollisionObject colObj0, int partId0, int index0,
 //									  btCollisionObject colObj1, int partId1, int index1) {
-//
 //			long entityId0 = colObj0.getUserPointer();
 //			long entityId1 = colObj1.getUserPointer();
-//
 //			return true;
 //		}
 	}
@@ -184,7 +173,9 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
 			}
-
+			for (btTypedConstraint constraint : cmp.constraints) {
+				dynamicsWorld.addConstraint(constraint, true);
+			}
 		}
 
 		@Override
@@ -194,30 +185,10 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 			for (btRigidBody body : cmp.map.keys()) {
 				dynamicsWorld.removeCollisionObject(body);
 			}
-		}
-	}
-
-	public class RagdollConstraintListener implements EntityListener {
-
-		@Override
-		public void entityAdded(Entity entity) {
-			Gdx.app.debug(tag, "Adding ragdoll constraintComponent");
-			RagdollConstraintComponent cmp = entity.getComponent(RagdollConstraintComponent.class);
-			for (btTypedConstraint constraint : cmp.typedConstraints) {
-				dynamicsWorld.addConstraint(constraint, true);
-			}
-		}
-
-		@Override
-		public void entityRemoved(Entity entity) {
-			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
-			if (cmp == null) {
-				return;
-			}
-			Gdx.app.debug(tag, "Removing ragdoll constraintComponent");
-			for (btTypedConstraint constraint : cmp.constraintComponent.typedConstraints) {
+			for (btTypedConstraint constraint : cmp.constraints) {
 				dynamicsWorld.removeConstraint(constraint);
 			}
 		}
 	}
+
 }

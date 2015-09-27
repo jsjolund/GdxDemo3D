@@ -15,7 +15,6 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
-import com.mygdx.game.components.RagdollConstraintComponent;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.components.blender.BlenderEmptyComponent;
 
@@ -29,17 +28,15 @@ public class RagdollFactory {
 	final static float PI = MathUtils.PI;
 	final static float PI2 = 0.5f * PI;
 	final static float PI4 = 0.25f * PI;
-	public RagdollComponent ragCmp = new RagdollComponent();
-	public RagdollConstraintComponent conCmp = new RagdollConstraintComponent();
 
 
-	public RagdollFactory(ModelInstance model, float bodyMass, short belongsToFlag, short collidesWithFlag) {
-		// Ragdoll test
-		// Animation playing -> ragdoll rigid bodies controlled by animation transforms
-		// No animation -> ragdoll rigid bodies controlled by dynamics world -> nodes controlled by rigid bodies
+	public static RagdollComponent createRagdoll(ModelInstance model, float bodyMass, short belongsToFlag, short
+			collidesWithFlag) {
 
-		ragCmp.belongsToFlag = belongsToFlag;
-		ragCmp.collidesWithFlag = collidesWithFlag;
+		RagdollComponent cmp = new RagdollComponent();
+
+		cmp.belongsToFlag = belongsToFlag;
+		cmp.collidesWithFlag = collidesWithFlag;
 
 		// Load shape half extent data from Blender
 		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
@@ -64,83 +61,80 @@ public class RagdollFactory {
 		float massThigh = bodyMass * 0.0988f;
 		float massShin = bodyMass * 0.0465f;
 
-
 		Node armature = model.getNode("armature");
 
 		btRigidBody head = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("head")),
-				null, massHead, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(head, armature.getChild("head", true, true));
+				null, massHead, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(head, armature.getChild("head", true, true));
 
 		btRigidBody neck = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("neck")),
-				null, massNeck, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(neck, armature.getChild("neck", true, true));
+				null, massNeck, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(neck, armature.getChild("neck", true, true));
 
 		btRigidBody abdomen = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("abdomen")),
-				null, massAbdomen, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(abdomen, armature.getChild("abdomen", true, true));
-		ragCmp.addPart(abdomen, armature, new Matrix4().trn(0, halfExtMap.get("abdomen").y * 1.6f, 0));
+				null, massAbdomen, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(abdomen, armature.getChild("abdomen", true, true));
+		cmp.addPart(abdomen, armature, new Matrix4().trn(0, halfExtMap.get("abdomen").y * 1.6f, 0));
 
 		btRigidBody chest = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("chest")),
-				null, massChest, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(chest, armature.getChild("chest", true, true));
+				null, massChest, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(chest, armature.getChild("chest", true, true));
 
 		btRigidBody leftUpperArm = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("left_upper_arm")),
-				null, massUpperArm, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(leftUpperArm, armature.getChild("left_upper_arm", true, true));
+				null, massUpperArm, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(leftUpperArm, armature.getChild("left_upper_arm", true, true));
 
 		btRigidBody leftForearm = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("left_forearm")),
-				null, massForearm, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(leftForearm, armature.getChild("left_forearm", true, true));
+				null, massForearm, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(leftForearm, armature.getChild("left_forearm", true, true));
 
 		btRigidBody leftThigh = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("left_thigh")),
-				null, massThigh, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(leftThigh, armature.getChild("left_thigh", true, true));
+				null, massThigh, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(leftThigh, armature.getChild("left_thigh", true, true));
 
 		btRigidBody leftShin = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("left_shin")),
-				null, massShin, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(leftShin, armature.getChild("left_shin", true, true));
+				null, massShin, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(leftShin, armature.getChild("left_shin", true, true));
 
 		btRigidBody rightUpperArm = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("right_upper_arm")),
-				null, massUpperArm, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(rightUpperArm, armature.getChild("right_upper_arm", true, true));
+				null, massUpperArm, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(rightUpperArm, armature.getChild("right_upper_arm", true, true));
 
 		btRigidBody rightForearm = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("right_forearm")),
-				null, massForearm, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(rightForearm, armature.getChild("right_forearm", true, true));
+				null, massForearm, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(rightForearm, armature.getChild("right_forearm", true, true));
 
 		btRigidBody rightThigh = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("right_thigh")),
-				null, massThigh, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(rightThigh, armature.getChild("right_thigh", true, true));
+				null, massThigh, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(rightThigh, armature.getChild("right_thigh", true, true));
 
 		btRigidBody rightShin = new PhysicsComponent(
 				new btBoxShape(halfExtMap.get("right_shin")),
-				null, massShin, ragCmp.belongsToFlag,
-				ragCmp.collidesWithFlag, false, true).body;
-		ragCmp.addFollowPart(rightShin, armature.getChild("right_shin", true, true));
-
-		ragCmp.constraintComponent = conCmp;
+				null, massShin, cmp.belongsToFlag,
+				cmp.collidesWithFlag, false, true).body;
+		cmp.addFollowPart(rightShin, armature.getChild("right_shin", true, true));
 
 		final Matrix4 localA = new Matrix4();
 		final Matrix4 localB = new Matrix4();
@@ -151,51 +145,51 @@ public class RagdollFactory {
 		// Abdomen - Chest
 		localA.setFromEulerAnglesRad(0, PI4, 0).trn(0, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(0, PI4, 0).trn(0, -halfExtMap.get("chest").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				hingeC = new btHingeConstraint(abdomen, chest, localA, localB));
 		hingeC.setLimit(-PI4, PI2);
-		hingeC.setDbgDrawSize(0);
+//		hingeC.setDbgDrawSize(0);
 
 		// Chest - Neck
 		localA.setFromEulerAnglesRad(0, 0, 0).trn(0, halfExtMap.get("chest").y, 0);
 		localB.setFromEulerAnglesRad(0, 0, 0).trn(0, -halfExtMap.get("neck").y, 0);
-		conCmp.typedConstraints.add(fixedC = new btFixedConstraint(chest, neck, localA, localB));
-		fixedC.setDbgDrawSize(0);
+		cmp.constraints.add(fixedC = new btFixedConstraint(chest, neck, localA, localB));
+//		fixedC.setDbgDrawSize(0);
 
 		// Neck - Head
 		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("neck").y, 0);
 		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("head").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				coneC = new btConeTwistConstraint(neck, head, localA, localB));
 		coneC.setLimit(PI4, PI4, PI4);
-		coneC.setDbgDrawSize(0);
+//		coneC.setDbgDrawSize(0);
 
 		// Abdomen - Left Thigh
 		localA.setFromEulerAnglesRad(0, PI, 0).scl(-1, 1, 1).trn(halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
 				("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(0, 0, 0).scl(-1, 1, 1).trn(0, -halfExtMap.get("left_thigh").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				coneC = new btConeTwistConstraint(abdomen, leftThigh, localA, localB));
 //		coneC.setLimit(PI, PI2, PI4);
 		coneC.setLimit(PI4, PI4, PI4);
 		coneC.setDamping(10);
-		coneC.setDbgDrawSize(0);
+//		coneC.setDbgDrawSize(0);
 
 		// Abdomen - Right Thigh
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(-halfExtMap.get("abdomen").x * 0.5f, -halfExtMap.get
 				("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(0, 0, 0).trn(0, -halfExtMap.get("right_thigh").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				coneC = new btConeTwistConstraint(abdomen, rightThigh, localA, localB));
 //		coneC.setLimit(PI, PI2, PI4);
 		coneC.setLimit(PI4, PI4, PI4);
 		coneC.setDamping(10);
-		coneC.setDbgDrawSize(0);
+//		coneC.setDbgDrawSize(0);
 
 		// Left Thigh - Left Shin
 		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("left_thigh").y, 0);
 		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("left_shin").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				hingeC = new btHingeConstraint(leftThigh, leftShin, localA, localB));
 		hingeC.setLimit(0, PI4 * 3);
 //		hingeC.setDbgDrawSize(0);
@@ -203,7 +197,7 @@ public class RagdollFactory {
 		// Right Thigh - Right Shin
 		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get("right_thigh").y, 0);
 		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get("right_shin").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				hingeC = new btHingeConstraint(rightThigh, rightShin, localA, localB));
 		hingeC.setLimit(0, PI4 * 3);
 //		hingeC.setDbgDrawSize(0);
@@ -214,40 +208,42 @@ public class RagdollFactory {
 				halfExtMap.get("abdomen").x + halfExtMap.get("left_upper_arm").x, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(PI4, -0, 0).trn(
 				0, -halfExtMap.get("left_upper_arm").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				coneC = new btConeTwistConstraint(chest, leftUpperArm, localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 		coneC.setDamping(10);
-		coneC.setDbgDrawSize(0);
+//		coneC.setDbgDrawSize(0);
 
 		// Chest - Right Upper Arm
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(
 				-halfExtMap.get("abdomen").x - halfExtMap.get("right_upper_arm").x, halfExtMap.get("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(-PI4, -0, 0).trn(
 				0, -halfExtMap.get("right_upper_arm").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				coneC = new btConeTwistConstraint(chest, rightUpperArm, localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 		coneC.setDamping(10);
-		coneC.setDbgDrawSize(0);
+//		coneC.setDbgDrawSize(0);
 
 
 		// Left Upper Arm - Left Forearm
 		localA.setFromEulerAnglesRad(PI2, 0, 0).trn(0, halfExtMap.get("left_upper_arm").y, 0);
 		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get("left_forearm").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				hingeC = new btHingeConstraint(leftUpperArm, leftForearm, localA, localB));
 		hingeC.setLimit(0, PI2);
-		hingeC.setDbgDrawSize(0);
+//		hingeC.setDbgDrawSize(0);
 
 		// Right Upper Arm - Right Forearm
 		localA.setFromEulerAnglesRad(PI2, 0, 0).trn(0, halfExtMap.get("right_upper_arm").y, 0);
 		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get("right_forearm").y, 0);
-		conCmp.typedConstraints.add(
+		cmp.constraints.add(
 				hingeC = new btHingeConstraint(rightUpperArm, rightForearm,
 						localA, localB));
 		hingeC.setLimit(0, PI2);
-		hingeC.setDbgDrawSize(0);
+//		hingeC.setDbgDrawSize(0);
 
+		return cmp;
 	}
+
 }
