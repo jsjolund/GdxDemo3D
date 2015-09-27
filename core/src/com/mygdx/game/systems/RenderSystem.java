@@ -5,6 +5,7 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -17,13 +18,14 @@ import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.UberShader;
+import com.mygdx.game.utilities.Edge;
 import com.mygdx.game.utilities.NavMesh;
+import com.mygdx.game.utilities.NavMeshGraphPath;
 import com.mygdx.game.utilities.Triangle;
 
 
@@ -55,7 +57,7 @@ public class RenderSystem extends EntitySystem {
 
 	private final Environment environment;
 	private final Viewport viewport;
-	private final ShapeRenderer shapeRenderer;
+	private final MyShapeRenderer shapeRenderer;
 
 	DirectionalShadowLight shadowLight;
 	ModelBatch shadowBatch;
@@ -65,6 +67,12 @@ public class RenderSystem extends EntitySystem {
 
 	private NavMesh navmesh;
 
+	private class MyShapeRenderer extends ShapeRenderer {
+		public final void line(Vector3 v0, Vector3 v1, Color c1, Color c2) {
+			super.line(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, c1, c2);
+		}
+	}
+
 	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
 
@@ -72,7 +80,7 @@ public class RenderSystem extends EntitySystem {
 		this.camera = camera;
 		this.environment = environment;
 
-		shapeRenderer = new ShapeRenderer();
+		shapeRenderer = new MyShapeRenderer();
 
 		environment.add((shadowLight = new DirectionalShadowLight(
 				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
@@ -139,8 +147,6 @@ public class RenderSystem extends EntitySystem {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-//		shapeRenderer.identity();
-//		shapeRenderer.rotate(1, 0, 0, 90);
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 		float vertDim = 0.05f;
 		float vertOffset = vertDim / 2;
@@ -155,17 +161,42 @@ public class RenderSystem extends EntitySystem {
 			Vector3 c = t.centroid;
 			shapeRenderer.box(c.x - vertOffset, c.y - vertOffset, c.z - vertOffset, vertDim, vertDim, vertDim);
 		}
-		for (int i = 0; i < navmesh.triangleMap.size; i++) {
-			Array<Connection<Triangle>> connections = navmesh.triangleMap.getValueAt(i);
-			shapeRenderer.setColor(0, 1, 1, nmAlpha);
-			for (Connection<Triangle> con : connections) {
-				shapeRenderer.line(con.getFromNode().centroid, con.getToNode().centroid);
+//		for (int i = 0; i < navmesh.triangleMap.size; i++) {
+//			Array<Connection<Triangle>> connections = navmesh.triangleMap.getValueAt(i);
+//			shapeRenderer.setColor(0, 1, 1, nmAlpha);
+//			for (Connection<Triangle> con : connections) {
+//				shapeRenderer.line(con.getFromNode().centroid, con.getToNode().centroid);
+//			}
+//		}
+		NavMeshGraphPath path = navmesh.debugPath;
+		if (path != null && path.getCount() > 0) {
+
+			// Path line
+			shapeRenderer.setColor(1, 1, 1, 1f);
+			shapeRenderer.line(path.start, path.get(0).getFromNode().centroid);
+			for (Connection<Triangle> connection : path) {
+				Edge e = (Edge) connection;
+				shapeRenderer.line(e.fromNode.centroid, e.toNode.centroid);
+			}
+			shapeRenderer.line(path.get(path.getCount() - 1).getToNode().centroid, path.end);
+
+			// Path triangles
+			shapeRenderer.setColor(1, 1, 0, 1f);
+			for (Connection<Triangle> connection : path) {
+				Edge e = (Edge) connection;
+				shapeRenderer.line(e.fromNode.a, e.fromNode.b);
+				shapeRenderer.line(e.fromNode.b, e.fromNode.c);
+				shapeRenderer.line(e.fromNode.c, e.fromNode.a);
+			}
+
+			// Shared triangle edges
+			shapeRenderer.setColor(0, 0, 1, 1f);
+			for (Connection<Triangle> connection : path) {
+				Edge e = (Edge) connection;
+				shapeRenderer.line(e.edgeVertexA, e.edgeVertexB, Color.BLUE, Color.CYAN);
 			}
 		}
-		shapeRenderer.setColor(1, 1, 1, 1f);
-		for (int i = 0; i < navmesh.pathDebug.size - 1; i++) {
-			shapeRenderer.line(navmesh.pathDebug.get(i), navmesh.pathDebug.get(i + 1));
-		}
+
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}

@@ -37,4 +37,15 @@ public class Edge implements Connection<Triangle> {
 	public Triangle getToNode() {
 		return toNode;
 	}
+
+	@Override
+	public String toString() {
+		final StringBuffer sb = new StringBuffer("Edge{");
+		sb.append("edgeVertexA=").append(edgeVertexA);
+		sb.append(", edgeVertexB=").append(edgeVertexB);
+		sb.append(", fromNode=").append(fromNode);
+		sb.append(", toNode=").append(toNode);
+		sb.append('}');
+		return sb.toString();
+	}
 }

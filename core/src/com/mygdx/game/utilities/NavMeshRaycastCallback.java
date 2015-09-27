@@ -1,4 +1,4 @@
-package com.mygdx.game.systems;
+package com.mygdx.game.utilities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector3;
@@ -8,7 +8,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btVector3;
 /**
  * Created by Johannes Sjolund on 9/21/15.
  */
-public class MyTriangleRaycastCallback extends btTriangleRaycastCallback {
+public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 
 		public Vector3 hitNormalLocal = new Vector3();
 		public float hitFraction;
@@ -18,7 +18,7 @@ public class MyTriangleRaycastCallback extends btTriangleRaycastCallback {
 		private btVector3 tmpSetFrom = new btVector3();
 		private btVector3 tmpSetTo = new btVector3();
 
-		public MyTriangleRaycastCallback (Vector3 from, Vector3 to) {
+		public NavMeshRaycastCallback(Vector3 from, Vector3 to) {
 			super(from, to);
 			clearReport();
 		}

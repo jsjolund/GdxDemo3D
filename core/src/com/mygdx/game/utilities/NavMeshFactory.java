@@ -14,13 +14,28 @@ import java.nio.FloatBuffer;
  */
 public class NavMeshFactory {
 
+	private static class IndexConnection {
+		short sharedEdgeVertex1Index;
+		short sharedEdgeVertex2Index;
+		short triAIndex;
+		short triBIndex;
+
+		public IndexConnection(short sharedEdgeVertex1Index, short sharedEdgeVertex2Index,
+							   short triAIndex, short triBIndex) {
+			this.sharedEdgeVertex1Index = sharedEdgeVertex1Index;
+			this.sharedEdgeVertex2Index = sharedEdgeVertex2Index;
+			this.triAIndex = triAIndex;
+			this.triBIndex = triBIndex;
+		}
+	}
+
 	private static final boolean useZeroWidthEdges = false;
 
 	public static ArrayMap<Triangle, Array<Connection<Triangle>>> createNavMeshConnections(Mesh mesh) {
 		short[] indices = getUniquePositionVertexIndices(mesh);
 		Array<IndexConnection> indexConnections = getIndexConnections(indices);
 		Vector3[] vertexVectors = createVertexVectors(mesh, indices);
-		Array<Triangle> triangles = createTriangles(vertexVectors);
+		Array<Triangle> triangles = createTriangles(vertexVectors, indices);
 		return createConnections(indexConnections, triangles, vertexVectors);
 	}
 
@@ -55,34 +70,40 @@ public class NavMeshFactory {
 
 	private static ArrayMap<Triangle, Array<Connection<Triangle>>> createConnections(
 			Array<IndexConnection> indexConnections, Array<Triangle> triangles, Vector3[] vertexVectors) {
+
 		ArrayMap<Triangle, Array<Connection<Triangle>>> connectionMap =
 				new ArrayMap<Triangle, Array<Connection<Triangle>>>();
 		connectionMap.ordered = true;
+
 		for (Triangle tri : triangles) {
 			connectionMap.put(tri, new Array<Connection<Triangle>>());
 		}
+
 		for (IndexConnection i : indexConnections) {
 			Triangle fromNode = triangles.get(i.triAIndex);
 			Triangle toNode = triangles.get(i.triBIndex);
 			Vector3 edgeVertexA = vertexVectors[i.sharedEdgeVertex1Index];
 			Vector3 edgeVertexB = vertexVectors[i.sharedEdgeVertex2Index];
+
 			Edge edge = new Edge(fromNode, toNode, edgeVertexA, edgeVertexB);
+			System.out.println(edge);
+
 			connectionMap.get(fromNode).add(edge);
 			fromNode.connections.add(edge);
 		}
 		return connectionMap;
 	}
 
-	private static Array<Triangle> createTriangles(Vector3[] vertexVectors) {
+	private static Array<Triangle> createTriangles(Vector3[] vertexVectors, short[] indices) {
 		Array<Triangle> triangles = new Array<Triangle>();
 		triangles.ordered = true;
 		short i = 0;
 		int triIndex = 0;
-		while (i < vertexVectors.length) {
+		while (i < indices.length) {
 			triangles.add(new Triangle(
-					vertexVectors[i++],
-					vertexVectors[i++],
-					vertexVectors[i++],
+					vertexVectors[indices[i++]],
+					vertexVectors[indices[i++]],
+					vertexVectors[indices[i++]],
 					triIndex));
 			triIndex++;
 		}
@@ -99,8 +120,8 @@ public class NavMeshFactory {
 			int a = index * vertexSize + positionOffset;
 			float x = verticesBuffer.get(a++);
 			float y = verticesBuffer.get(a++);
-			float z = verticesBuffer.get(a++);
-			vertexVectors[i] = new Vector3(x, y, z);
+			float z = verticesBuffer.get(a);
+			vertexVectors[index] = new Vector3(x, y, z);
 		}
 		return vertexVectors;
 	}
@@ -129,7 +150,7 @@ public class NavMeshFactory {
 							sharedIndices[0], sharedIndices[1],
 							triAIndex, triBIndex));
 					indexConnections.add(new IndexConnection(
-							sharedIndices[0], sharedIndices[1],
+							sharedIndices[1], sharedIndices[0],
 							triBIndex, triAIndex));
 				}
 			}
@@ -141,40 +162,26 @@ public class NavMeshFactory {
 		boolean oneShared = false;
 		boolean twoShared = false;
 		for (int i = 0; i < 3; i++) {
-			short vert = triA[i];
-			if (vert == triB[0] || vert == triB[1] || vert == triB[2]) {
+			short triAIndex = triA[i];
+			if (triAIndex == triB[0] || triAIndex == triB[1] || triAIndex == triB[2]) {
 				if (oneShared) {
-					sharedIndices[1] = vert;
+					sharedIndices[1] = triAIndex;
 					twoShared = true;
 					break;
 				} else {
-					sharedIndices[0] = vert;
+					sharedIndices[0] = triAIndex;
 					oneShared = true;
 				}
 			}
 		}
-		if (useZeroWidthEdges && oneShared) {
+		if (twoShared) {
+			return true;
+		} else if (useZeroWidthEdges && oneShared) {
 			sharedIndices[1] = sharedIndices[0];
 			return true;
 		} else {
-			return oneShared && twoShared;
+			return false;
 		}
 	}
-
-	private static class IndexConnection {
-		short sharedEdgeVertex1Index;
-		short sharedEdgeVertex2Index;
-		short triAIndex;
-		short triBIndex;
-
-		public IndexConnection(short sharedEdgeVertex1Index, short sharedEdgeVertex2Index,
-							   short triAIndex, short triBIndex) {
-			this.sharedEdgeVertex1Index = sharedEdgeVertex1Index;
-			this.sharedEdgeVertex2Index = sharedEdgeVertex2Index;
-			this.triAIndex = triAIndex;
-			this.triBIndex = triBIndex;
-		}
-	}
-
 
 }

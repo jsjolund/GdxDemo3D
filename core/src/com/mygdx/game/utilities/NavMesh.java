@@ -2,8 +2,6 @@ package com.mygdx.game.utilities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.DefaultGraphPath;
-import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
@@ -15,7 +13,6 @@ import com.badlogic.gdx.physics.bullet.collision.btTriangleRaycastCallback;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Disposable;
-import com.mygdx.game.systems.MyTriangleRaycastCallback;
 
 /**
  * Created by Johannes Sjolund on 9/19/15.
@@ -24,11 +21,12 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 
 	public static final String tag = "NavMesh";
 
-	private final MyTriangleRaycastCallback triangleRaycastCallback;
-	private final btBvhTriangleMeshShape collisionObject;
+	private NavMeshRaycastCallback raycastCallback;
+	private btBvhTriangleMeshShape collisionShape;
 
 	public ArrayMap<Triangle, Array<Connection<Triangle>>> triangleMap;
-	public Array<Vector3> pathDebug = new Array<Vector3>();
+	public NavMeshGraphPath debugPath;
+
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
 
@@ -36,10 +34,10 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 	private TriangleHeuristic heuristic;
 
 
-	public NavMesh(Mesh mesh, btBvhTriangleMeshShape collisionObject) {
-		this.collisionObject = collisionObject;
-		triangleRaycastCallback = new MyTriangleRaycastCallback(rayFrom, rayTo);
-		triangleRaycastCallback.setFlags(
+	public NavMesh(Mesh mesh, btBvhTriangleMeshShape collisionShape) {
+		this.collisionShape = collisionShape;
+		raycastCallback = new NavMeshRaycastCallback(rayFrom, rayTo);
+		raycastCallback.setFlags(
 				btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
 		triangleMap = NavMeshFactory.createNavMeshConnections(mesh);
 		pathFinder = new IndexedAStarPathFinder<Triangle>(this);
@@ -53,25 +51,21 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 
 	@Override
 	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
-		return triangleMap.get(fromNode);
+		return triangleMap.getValueAt(fromNode.index);
 	}
 
 	public void calculatePath(Triangle fromTri, Triangle toTri, Vector3 fromVec, Vector3 toVec) {
 		Gdx.app.debug(tag, String.format("From %s %s\n\tTo %s %s", fromVec, fromTri, toVec, toTri));
-		pathDebug.clear();
-		pathDebug.add(fromVec);
-		GraphPath<Triangle> path = new DefaultGraphPath<Triangle>();
-		pathFinder.searchNodePath(fromTri, toTri, heuristic, path);
-		for (Triangle tri : path) {
-			pathDebug.add(tri.centroid);
-		}
-		pathDebug.add(toVec);
+		NavMeshGraphPath path = new NavMeshGraphPath();
+		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path);
+		path.setEndpoints(fromVec, toVec);
+		debugPath = path;
 	}
 
 	@Override
 	public void dispose() {
-		collisionObject.dispose();
-		triangleRaycastCallback.dispose();
+		collisionShape.dispose();
+		raycastCallback.dispose();
 	}
 
 	public Triangle rayTest(Ray ray, float maxDistance) {
@@ -79,14 +73,14 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 
 		rayFrom.set(ray.origin);
 		rayTo.set(ray.direction).scl(maxDistance).add(rayFrom);
-		triangleRaycastCallback.setHitFraction(1);
-		triangleRaycastCallback.clearReport();
-		triangleRaycastCallback.setFrom(rayFrom);
-		triangleRaycastCallback.setTo(rayTo);
-		collisionObject.performRaycast(triangleRaycastCallback, rayFrom, rayTo);
+		raycastCallback.setHitFraction(1);
+		raycastCallback.clearReport();
+		raycastCallback.setFrom(rayFrom);
+		raycastCallback.setTo(rayTo);
+		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
 
-		if (triangleRaycastCallback.triangleIndex != -1) {
-			hitTriangle = triangleMap.getKeyAt(triangleRaycastCallback.triangleIndex);
+		if (raycastCallback.triangleIndex != -1) {
+			hitTriangle = triangleMap.getKeyAt(raycastCallback.triangleIndex);
 			Gdx.app.debug(tag, hitTriangle.toString());
 		}
 		return hitTriangle;
