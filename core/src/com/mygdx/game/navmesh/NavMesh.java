@@ -1,10 +1,8 @@
-package com.mygdx.game.utilities;
+package com.mygdx.game.navmesh;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.Heuristic;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
-import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -17,21 +15,19 @@ import com.badlogic.gdx.utils.Disposable;
 /**
  * Created by Johannes Sjolund on 9/19/15.
  */
-public class NavMesh implements IndexedGraph<Triangle>, Disposable {
+public class NavMesh implements Disposable {
 
 	public static final String tag = "NavMesh";
 
-	private NavMeshRaycastCallback raycastCallback;
-	private btBvhTriangleMeshShape collisionShape;
-
-	public ArrayMap<Triangle, Array<Connection<Triangle>>> triangleMap;
+	public NavMeshGraph graph;
 	public NavMeshGraphPath debugPath;
+	private btBvhTriangleMeshShape collisionShape;
+	private NavMeshRaycastCallback raycastCallback;
+	private NavMeshHeuristic heuristic;
+	private IndexedAStarPathFinder<Triangle> pathFinder;
 
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
-
-	private IndexedAStarPathFinder<Triangle> pathFinder;
-	private TriangleHeuristic heuristic;
 
 
 	public NavMesh(Mesh mesh, btBvhTriangleMeshShape collisionShape) {
@@ -39,23 +35,15 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 		raycastCallback = new NavMeshRaycastCallback(rayFrom, rayTo);
 		raycastCallback.setFlags(
 				btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
-		triangleMap = NavMeshFactory.createNavMeshConnections(mesh);
-		pathFinder = new IndexedAStarPathFinder<Triangle>(this);
-		heuristic = new TriangleHeuristic();
-	}
 
-	@Override
-	public int getNodeCount() {
-		return triangleMap.size;
-	}
-
-	@Override
-	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
-		return triangleMap.getValueAt(fromNode.index);
+		ArrayMap<Triangle, Array<Connection<Triangle>>> map = NavMeshFactory.createConnectionMap(mesh);
+		graph = new NavMeshGraph(map);
+		pathFinder = new IndexedAStarPathFinder<Triangle>(graph);
+		heuristic = new NavMeshHeuristic();
 	}
 
 	public void calculatePath(Triangle fromTri, Triangle toTri, Vector3 fromVec, Vector3 toVec) {
-		Gdx.app.debug(tag, String.format("From %s %s\n\tTo %s %s", fromVec, fromTri, toVec, toTri));
+//		Gdx.app.debug(tag, String.format("From %s %s\n\tTo %s %s", fromVec, fromTri, toVec, toTri));
 		NavMeshGraphPath path = new NavMeshGraphPath();
 		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path);
 		path.setEndpoints(fromVec, toVec);
@@ -80,13 +68,13 @@ public class NavMesh implements IndexedGraph<Triangle>, Disposable {
 		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
 
 		if (raycastCallback.triangleIndex != -1) {
-			hitTriangle = triangleMap.getKeyAt(raycastCallback.triangleIndex);
-			Gdx.app.debug(tag, hitTriangle.toString());
+			hitTriangle = graph.getTriangleFromIndex(raycastCallback.triangleIndex);
+//			Gdx.app.debug(tag, hitTriangle.toString());
 		}
 		return hitTriangle;
 	}
 
-	private class TriangleHeuristic implements Heuristic<Triangle> {
+	private class NavMeshHeuristic implements Heuristic<Triangle> {
 		@Override
 		public float estimate(Triangle node, Triangle endNode) {
 			return node.centroid.dst2(endNode.centroid);

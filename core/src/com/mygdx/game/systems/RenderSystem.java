@@ -21,6 +21,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
+import com.mygdx.game.navmesh.Edge;
+import com.mygdx.game.navmesh.NavMesh;
+import com.mygdx.game.navmesh.NavMeshGraphPath;
+import com.mygdx.game.navmesh.Triangle;
 import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.*;
 
@@ -143,8 +147,8 @@ public class RenderSystem extends EntitySystem {
 		float vertDim = 0.05f;
 		float vertOffset = vertDim / 2;
 		float nmAlpha = 0.3f;
-		for (int i = 0; i < navmesh.triangleMap.size; i++) {
-			Triangle t = navmesh.triangleMap.getKeyAt(i);
+		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
+			Triangle t = navmesh.graph.getTriangleFromIndex(i);
 			shapeRenderer.setColor(0, 1, 0, nmAlpha);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);

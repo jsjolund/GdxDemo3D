@@ -10,8 +10,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.IntentBroadcastComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
-import com.mygdx.game.utilities.NavMesh;
-import com.mygdx.game.utilities.Triangle;
+import com.mygdx.game.navmesh.NavMesh;
+import com.mygdx.game.navmesh.Triangle;
 
 /**
  * Created by user on 8/25/15.

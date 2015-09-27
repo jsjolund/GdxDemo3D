@@ -16,7 +16,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.utils.Json;
-import com.mygdx.game.utilities.NavMesh;
+import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.components.LightComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;

@@ -1,4 +1,4 @@
-package com.mygdx.game.utilities;
+package com.mygdx.game.navmesh;
 
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Mesh;
@@ -15,27 +15,21 @@ import java.nio.FloatBuffer;
 public class NavMeshFactory {
 
 	/**
-	 * Class for storing the edge connection data between two adjacent triangles.
+	 * Creates a map over which triangles are adjacent to each other along with the edge that connects them.
+	 * <p/>
+	 * Each vertex which has a unique position is stored in a Vector3. Triangle objects map which of these vertices
+	 * form a triangle according to the winding order in the mesh indices buffer. The winding order is assumed to
+	 * be the same for each triangle and is read from left to right in the indices buffer.
+	 * <p/>
+	 * Each triangle A which shares an edge with another triangle B is associated with an Edge/Connection object. In
+	 * this object, triangle A is stored as the fromNode, B as toNode. The object also stores the vertices which
+	 * makes up this edge, in the same winding order as triangle A. Additionally, since B is also connected to A,
+	 * a mirrored edge is also stored along with B, where the edge has the same winding order as B.
+	 *
+	 * @param mesh
+	 * @return
 	 */
-	private static class IndexConnection {
-		// The vertex indices which makes up the edge shared between two triangles.
-		short edgeVertexIndex1;
-		short edgeVertexIndex2;
-		// The indices of the two triangles sharing this edge.
-		short fromTriIndex;
-		short toTriIndex;
-
-		public IndexConnection(short sharedEdgeVertex1Index, short edgeVertexIndex2,
-							   short fromTriIndex, short toTriIndex) {
-			this.edgeVertexIndex1 = sharedEdgeVertex1Index;
-			this.edgeVertexIndex2 = edgeVertexIndex2;
-			this.fromTriIndex = fromTriIndex;
-			this.toTriIndex = toTriIndex;
-		}
-	}
-
-
-	public static ArrayMap<Triangle, Array<Connection<Triangle>>> createNavMeshConnections(Mesh mesh) {
+	public static ArrayMap<Triangle, Array<Connection<Triangle>>> createConnectionMap(Mesh mesh) {
 		short[] indices = getUniquePositionVertexIndices(mesh);
 		Array<IndexConnection> indexConnections = getIndexConnections(indices);
 		Vector3[] vertexVectors = createVertexVectors(mesh, indices);
@@ -249,6 +243,26 @@ public class NavMeshFactory {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Class for storing the edge connection data between two adjacent triangles.
+	 */
+	private static class IndexConnection {
+		// The vertex indices which makes up the edge shared between two triangles.
+		short edgeVertexIndex1;
+		short edgeVertexIndex2;
+		// The indices of the two triangles sharing this edge.
+		short fromTriIndex;
+		short toTriIndex;
+
+		public IndexConnection(short sharedEdgeVertex1Index, short edgeVertexIndex2,
+							   short fromTriIndex, short toTriIndex) {
+			this.edgeVertexIndex1 = sharedEdgeVertex1Index;
+			this.edgeVertexIndex2 = edgeVertexIndex2;
+			this.fromTriIndex = fromTriIndex;
+			this.toTriIndex = toTriIndex;
+		}
 	}
 
 

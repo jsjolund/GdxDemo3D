@@ -1,4 +1,4 @@
-package com.mygdx.game.utilities;
+package com.mygdx.game.navmesh;
 
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedNode;
