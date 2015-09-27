@@ -16,17 +16,13 @@ import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.shaders.UberShader;
-import com.mygdx.game.utilities.Edge;
-import com.mygdx.game.utilities.NavMesh;
-import com.mygdx.game.utilities.NavMeshGraphPath;
-import com.mygdx.game.utilities.Triangle;
+import com.mygdx.game.utilities.*;
 
 
 /**
@@ -67,11 +63,6 @@ public class RenderSystem extends EntitySystem {
 
 	private NavMesh navmesh;
 
-	private class MyShapeRenderer extends ShapeRenderer {
-		public final void line(Vector3 v0, Vector3 v1, Color c1, Color c2) {
-			super.line(v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, c1, c2);
-		}
-	}
 
 	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -81,6 +72,7 @@ public class RenderSystem extends EntitySystem {
 		this.environment = environment;
 
 		shapeRenderer = new MyShapeRenderer();
+		shapeRenderer.setAutoShapeType(true);
 
 		environment.add((shadowLight = new DirectionalShadowLight(
 				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
@@ -147,7 +139,7 @@ public class RenderSystem extends EntitySystem {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		float vertDim = 0.05f;
 		float vertOffset = vertDim / 2;
 		float nmAlpha = 0.3f;
@@ -171,7 +163,18 @@ public class RenderSystem extends EntitySystem {
 		NavMeshGraphPath path = navmesh.debugPath;
 		if (path != null && path.getCount() > 0) {
 
+			// Path triangles
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+			shapeRenderer.setColor(1, 1, 0, nmAlpha);
+			for (int i = 0; i < path.getCount(); i++) {
+				Edge e = (Edge) path.get(i);
+				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
+				if (i == path.getCount() - 1) {
+					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
+				}
+			}
 			// Path line
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(1, 1, 1, 1f);
 			shapeRenderer.line(path.start, path.get(0).getFromNode().centroid);
 			for (Connection<Triangle> connection : path) {
@@ -179,15 +182,6 @@ public class RenderSystem extends EntitySystem {
 				shapeRenderer.line(e.fromNode.centroid, e.toNode.centroid);
 			}
 			shapeRenderer.line(path.get(path.getCount() - 1).getToNode().centroid, path.end);
-
-			// Path triangles
-			shapeRenderer.setColor(1, 1, 0, 1f);
-			for (Connection<Triangle> connection : path) {
-				Edge e = (Edge) connection;
-				shapeRenderer.line(e.fromNode.a, e.fromNode.b);
-				shapeRenderer.line(e.fromNode.b, e.fromNode.c);
-				shapeRenderer.line(e.fromNode.c, e.fromNode.a);
-			}
 
 			// Shared triangle edges
 			shapeRenderer.setColor(0, 0, 1, 1f);
@@ -225,7 +219,7 @@ public class RenderSystem extends EntitySystem {
 
 	private void drawArmature() {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(0, 1, 1, 1);
 
 		for (int i = 0; i < entities.size(); ++i) {
