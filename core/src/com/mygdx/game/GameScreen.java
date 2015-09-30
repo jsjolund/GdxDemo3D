@@ -184,7 +184,7 @@ public class GameScreen implements Screen {
 		engine.addSystem(billSys);
 
 		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0), intentCmp));
-		engine.addEntity(spawnCharacter(new Vector3(5, 1, 5), intentCmp));
+		engine.addEntity(spawnCharacter(new Vector3(1.5f, 1, 23), intentCmp));
 
 		Family pathFamily = Family.all(
 				PathFindingComponent.class,
@@ -268,6 +268,7 @@ public class GameScreen implements Screen {
 		// Create base collision shape
 		float bodyMass = 100;
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
+
 		PhysicsComponent phyCmp = new PhysicsComponent(
 				shape, motionStateCmp.motionState, bodyMass,
 				belongsToFlag,

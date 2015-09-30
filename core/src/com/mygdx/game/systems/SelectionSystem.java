@@ -96,6 +96,7 @@ public class SelectionSystem extends EntitySystem {
 			Triangle hitTriangle = navMesh.rayTest(ray, rayDistance);
 
 			if (hitTriangle != null) {
+				Gdx.app.debug(tag, "Hit navmesh at: " + surfacePoint);
 				for (Entity entity : entities) {
 					SelectableComponent selCmp = selCmps.get(entity);
 					PathFindingComponent pathCmp = pathCmps.get(entity);
@@ -103,9 +104,11 @@ public class SelectionSystem extends EntitySystem {
 						pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
 						Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance);
 
-						System.out.println(surfacePoint);
 						navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.currentPosition,
 								surfacePoint);
+						pathCmp.path.clear();
+						pathCmp.path.addAll(navMesh.debugPath.getDirectPath());
+						pathCmp.currentGoal = pathCmp.path.pop();
 					}
 				}
 			}

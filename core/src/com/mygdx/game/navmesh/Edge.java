@@ -9,18 +9,18 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Edge implements Connection<Triangle> {
 
-	public Vector3 edgeVertexA;
-	public Vector3 edgeVertexB;
+	public Vector3 rightVertex;
+	public Vector3 leftVertex;
 
 	public Triangle fromNode;
 	public Triangle toNode;
 
 	public Edge(Triangle fromNode, Triangle toNode,
-				Vector3 edgeVertexA, Vector3 edgeVertexB) {
+				Vector3 rightVertex, Vector3 leftVertex) {
 		this.fromNode = fromNode;
 		this.toNode = toNode;
-		this.edgeVertexA = edgeVertexA;
-		this.edgeVertexB = edgeVertexB;
+		this.rightVertex = rightVertex;
+		this.leftVertex = leftVertex;
 	}
 
 	@Override
@@ -41,8 +41,8 @@ public class Edge implements Connection<Triangle> {
 	@Override
 	public String toString() {
 		final StringBuffer sb = new StringBuffer("Edge{");
-		sb.append("edgeVertexA=").append(edgeVertexA);
-		sb.append(", edgeVertexB=").append(edgeVertexB);
+		sb.append("rightVertex=").append(rightVertex);
+		sb.append(", leftVertex=").append(leftVertex);
 		sb.append(", fromNode=").append(fromNode);
 		sb.append(", toNode=").append(toNode);
 		sb.append('}');

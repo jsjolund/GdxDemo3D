@@ -20,11 +20,11 @@ public class NavMesh implements Disposable {
 
 	public NavMeshGraph graph;
 	public NavMeshGraphPath debugPath;
+	public Array<Vector3> debugPathSmooth;
 	private btBvhTriangleMeshShape collisionShape;
 	private NavMeshRaycastCallback raycastCallback;
 	private NavMeshHeuristic heuristic;
 	private IndexedAStarPathFinder<Triangle> pathFinder;
-
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
 
@@ -41,10 +41,12 @@ public class NavMesh implements Disposable {
 	}
 
 	public void calculatePath(Triangle fromTri, Triangle toTri, Vector3 fromVec, Vector3 toVec) {
-//		Gdx.app.debug(tag, String.format("From %s %s\n\tTo %s %s", fromVec, fromTri, toVec, toTri));
-		NavMeshGraphPath path = new NavMeshGraphPath();
+		if (fromTri == null || toTri == null || fromVec == null || toVec == null) {
+			return;
+		}
+		NavMeshGraphPath path = new NavMeshGraphPath(fromVec, toVec);
 		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path);
-		path.setEndpoints(fromVec, toVec);
+		debugPathSmooth = path.getDirectPath();
 		debugPath = path;
 	}
 
@@ -67,7 +69,6 @@ public class NavMesh implements Disposable {
 
 		if (raycastCallback.triangleIndex != -1) {
 			hitTriangle = graph.getTriangleFromIndex(raycastCallback.triangleIndex);
-//			Gdx.app.debug(tag, hitTriangle.toString());
 		}
 		return hitTriangle;
 	}

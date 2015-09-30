@@ -16,11 +16,11 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.utils.Json;
-import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.components.LightComponent;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.ModelFactory;
 
@@ -154,8 +154,7 @@ public class BlenderComponentsLoader {
 			entity = new Entity();
 			entity.add(new LightComponent(
 					new PointLight().set(cmp.lamp_color.r, cmp.lamp_color.g, cmp.lamp_color.b,
-							cmp.position.setZero(), cmp.lamp_energy * cmp.lamp_distance * 1000)));
-
+							cmp.position, cmp.lamp_energy * 100)));
 
 		} else if (cmp.type.equals("SpotLamp")) {
 			entity = new Entity();
@@ -184,7 +183,6 @@ public class BlenderComponentsLoader {
 			direction.rotate(Vector3.Y, cmp.rotation.y);
 
 			float s = cmp.lamp_energy;
-//			float s = 0.01f;
 			entity.add(new LightComponent(
 					new DirectionalLight().set(
 							s * cmp.lamp_color.r,
@@ -193,7 +191,6 @@ public class BlenderComponentsLoader {
 							direction.x,
 							direction.y,
 							direction.z)));
-
 			sunDirection.set(direction);
 		}
 		return entity;

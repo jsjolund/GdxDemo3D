@@ -19,7 +19,7 @@ public class NavMeshFactory {
 	 * <p/>
 	 * Each vertex which has a unique position is stored in a Vector3. Triangle objects map which of these vertices
 	 * form a triangle according to the winding order in the mesh indices buffer. The winding order is assumed to
-	 * be the same for each triangle and is read from left to right in the indices buffer.
+	 * be the same for each triangle and is read from leftPlane to rightPlane in the indices buffer.
 	 * <p/>
 	 * Each triangle A which shares an edge with another triangle B is associated with an Edge/Connection object. In
 	 * this object, triangle A is stored as the fromNode, B as toNode. The object also stores the vertices which

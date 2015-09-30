@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
@@ -26,7 +27,7 @@ import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.navmesh.NavMeshGraphPath;
 import com.mygdx.game.navmesh.Triangle;
 import com.mygdx.game.shaders.UberShader;
-import com.mygdx.game.utilities.*;
+import com.mygdx.game.utilities.MyShapeRenderer;
 
 
 /**
@@ -144,32 +145,25 @@ public class RenderSystem extends EntitySystem {
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		float vertDim = 0.05f;
-		float vertOffset = vertDim / 2;
-		float nmAlpha = 0.3f;
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
 			Triangle t = navmesh.graph.getTriangleFromIndex(i);
-			shapeRenderer.setColor(0, 1, 0, nmAlpha);
+			shapeRenderer.setColor(Color.CYAN);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
-			shapeRenderer.setColor(1, 0, 0, nmAlpha);
-			Vector3 c = t.centroid;
-			shapeRenderer.box(c.x - vertOffset, c.y - vertOffset, c.z - vertOffset, vertDim, vertDim, vertDim);
+
 		}
-//		for (int i = 0; i < navmesh.triangleMap.size; i++) {
-//			Array<Connection<Triangle>> connections = navmesh.triangleMap.getValueAt(i);
-//			shapeRenderer.setColor(0, 1, 1, nmAlpha);
-//			for (Connection<Triangle> con : connections) {
-//				shapeRenderer.line(con.getFromNode().centroid, con.getToNode().centroid);
-//			}
-//		}
+		shapeRenderer.setColor(Color.ORANGE);
+		shapeRenderer.set(MyShapeRenderer.ShapeType.Point);
+		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
+			Vector3 c = navmesh.graph.getTriangleFromIndex(i).centroid;
+			shapeRenderer.point(c.x, c.y, c.z);
+		}
 		NavMeshGraphPath path = navmesh.debugPath;
 		if (path != null && path.getCount() > 0) {
-
 			// Path triangles
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			shapeRenderer.setColor(1, 1, 0, nmAlpha);
+			shapeRenderer.setColor(1, 1, 0, 0.2f);
 			for (int i = 0; i < path.getCount(); i++) {
 				Edge e = (Edge) path.get(i);
 				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
@@ -177,24 +171,33 @@ public class RenderSystem extends EntitySystem {
 					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
 				}
 			}
-			// Path line
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(1, 1, 1, 1f);
-			shapeRenderer.line(path.start, path.get(0).getFromNode().centroid);
-			for (Connection<Triangle> connection : path) {
-				Edge e = (Edge) connection;
-				shapeRenderer.line(e.fromNode.centroid, e.toNode.centroid);
-			}
-			shapeRenderer.line(path.get(path.getCount() - 1).getToNode().centroid, path.end);
-
+//			// Path line
+//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+//			shapeRenderer.setColor(Color.YELLOW);
+//			shapeRenderer.line(path.start, path.get(0).getFromNode().centroid);
+//			for (Connection<Triangle> connection : path) {
+//				Edge e = (Edge) connection;
+//				shapeRenderer.line(e.fromNode.centroid, e.toNode.centroid);
+//			}
+//			shapeRenderer.line(path.get(path.getCount() - 1).getToNode().centroid, path.end);
 			// Shared triangle edges
-			shapeRenderer.setColor(0, 0, 1, 1f);
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
 			for (Connection<Triangle> connection : path) {
 				Edge e = (Edge) connection;
-				shapeRenderer.line(e.edgeVertexA, e.edgeVertexB, Color.BLUE, Color.CYAN);
+				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
 			}
 		}
-
+		// Smoothed path
+		Array<Vector3> smoothPath = navmesh.debugPathSmooth;
+		if (smoothPath != null && smoothPath.size > 1) {
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			shapeRenderer.setColor(Color.WHITE);
+			for (int i = 0; i < smoothPath.size - 1; i++) {
+				Vector3 p = smoothPath.get(i);
+				Vector3 q = smoothPath.get(i + 1);
+				shapeRenderer.line(p, q);
+			}
+		}
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}

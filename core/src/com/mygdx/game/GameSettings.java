@@ -16,7 +16,7 @@ public class GameSettings {
 	public static final float CAMERA_PAN_DECELERATION = 200;
 	public static final float CAMERA_MIN_ZOOM = 1;
 	public static final float CAMERA_ZOOM_STEP = 1;
-	public static final float CAMERA_MAX_ZOOM = 20;
+	public static final float CAMERA_MAX_ZOOM = 40;
 
 	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
