@@ -20,6 +20,7 @@ import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
@@ -27,6 +28,8 @@ import com.mygdx.game.components.blender.BlenderComponent;
 import com.mygdx.game.components.blender.BlenderComponentsLoader;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.RagdollFactory;
+
+import java.nio.ByteBuffer;
 
 /**
  * Created by user on 8/1/15.
@@ -109,7 +112,6 @@ public class GameScreen implements Screen {
 				"models/json/scene0_empty.json",
 				"models/json/scene0_light.json"
 		);
-//		NavMesh navMesh = new NavMesh(levelBlender.navmesh.model.meshes.first());
 
 		Gdx.app.debug(tag, "Loading environment system");
 		EnvironmentSystem envSys = new EnvironmentSystem();
@@ -145,7 +147,6 @@ public class GameScreen implements Screen {
 
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
-//			entity.add(intentCmp);
 			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
 
 			if (modelCmp.id.startsWith("door")) {
@@ -205,19 +206,6 @@ public class GameScreen implements Screen {
 				IntentBroadcastComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 
-//		assets.load("models/g3db/weapons_m4_carbine.g3db", Model.class);
-//		assets.finishLoading();
-//		Model model = assets.get("models/g3db/weapons_m4_carbine.g3db");
-
-		BlenderComponentsLoader weaponsBlender = new BlenderComponentsLoader(
-				assets,
-				"models/json/weapons_model.json",
-				"models/json/weapons_empty.json",
-				null
-		);
-		for (Entity entity : weaponsBlender.entities) {
-			engine.addEntity(entity);
-		}
 	}
 
 	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
@@ -236,19 +224,6 @@ public class GameScreen implements Screen {
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/character_male_base.g3db");
 
-		// Get character model data
-//		UBJsonReader jsonReader = new UBJsonReader();
-//		ModelLoader modelLoader = new G3dModelLoader(jsonReader);
-//		ModelData modelData = modelLoader.
-//				loadModelData(Gdx.files.getFileHandle("models/g3db/character_male_base.g3db", Files.FileType
-//						.Internal), param);
-
-		// Create normal model and outline model
-		// TODO: manage, dispose
-//		Model model = new Model(modelData);
-//		Model outlineModel = new Model(modelData);
-//		ModelFactory.createOutlineModel(outlineModel, Color.WHITE, 0.002f);
-
 		// Create model components containing model instances
 		ModelComponent mdlCmp = new ModelComponent(model, "man", pos,
 				new Vector3(0, 0, 0),
@@ -257,12 +232,6 @@ public class GameScreen implements Screen {
 		mdlCmp.ignoreCulling = true;
 		entity.add(mdlCmp);
 
-//		ModelComponent outlineMdlCmp = new ModelComponent(outlineModel, "character_male_base_outline", new Vector3(0,
-//				0, 0),
-//				new Vector3(0, 0, 0),
-//				new Vector3(1, 1, 1));
-//		// Connect the normal modelinstance transform to outline transform, then connect them to motion state
-//		outlineMdlCmp.modelInstance.transform = mdlCmp.modelInstance.transform;
 		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
 
 		// Create base collision shape
@@ -281,13 +250,11 @@ public class GameScreen implements Screen {
 		entity.add(intentCmp);
 
 		// Make model selectable, add pathfinding, animation components
-//		entity.add(new SelectableComponent(outlineMdlCmp));
 		entity.add(new PathFindingComponent(pos));
 		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
 		for (Animation a : mdlCmp.modelInstance.animations) {
 			Gdx.app.debug(tag, "Found animation: " + a.id);
 		}
-//		actionCmp.addModel(outlineMdlCmp.modelInstance);
 		entity.add(actionCmp);
 
 		// Ragdoll
@@ -341,4 +308,24 @@ public class GameScreen implements Screen {
 		stage.dispose();
 	}
 
+	public static Pixmap getScreenshot(int x, int y, int w, int h, boolean yDown) {
+		final Pixmap pixmap = ScreenUtils.getFrameBufferPixmap(x, y, w, h);
+
+		if (yDown) {
+			// Flip the pixmap upside down
+			ByteBuffer pixels = pixmap.getPixels();
+			int numBytes = w * h * 4;
+			byte[] lines = new byte[numBytes];
+			int numBytesPerLine = w * 4;
+			for (int i = 0; i < h; i++) {
+				pixels.position((h - i - 1) * numBytesPerLine);
+				pixels.get(lines, i * numBytesPerLine, numBytesPerLine);
+			}
+			pixels.clear();
+			pixels.put(lines);
+			pixels.clear();
+		}
+
+		return pixmap;
+	}
 }

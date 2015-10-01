@@ -8,6 +8,6 @@ import com.badlogic.gdx.ai.pfa.Heuristic;
 public class NavMeshHeuristic implements Heuristic<Triangle> {
 	@Override
 	public float estimate(Triangle node, Triangle endNode) {
-		return node.centroid.dst2(endNode.centroid);
+		return node.centroid.dst(endNode.centroid);
 	}
 }

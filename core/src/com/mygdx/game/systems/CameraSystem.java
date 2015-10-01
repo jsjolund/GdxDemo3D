@@ -37,6 +37,8 @@ public class CameraSystem extends IteratingSystem {
 	private final Ray ray = new Ray();
 	private float currentZoom = 10;
 	private final Vector2 lastDragProcessed = new Vector2();
+	private final Vector3 straightDown = new Vector3(Vector3.Y).scl(1,-1,1);
+	private final Vector3 straightUp = new Vector3(Vector3.Y);
 
 	private final  ComponentMapper<CameraTargetingComponent> camCmps =
 			ComponentMapper.getFor(CameraTargetingComponent.class);
@@ -158,10 +160,12 @@ public class CameraSystem extends IteratingSystem {
 						cam.up.set(Vector3.Y);
 						cam.lookAt(worldGroundTarget);
 
+						// Try to prevent camera from flipping up axis when looking close to straight up/down.
+						// Probably not a good solution...
 						boolean poleIsCrossed = (Math.signum(cam.direction.x) != Math.signum(oldDirection.x))
 								&& Math.signum(cam.direction.z) != Math.signum(oldDirection.z);
-
-						if (poleIsCrossed) {
+						if (poleIsCrossed || cam.direction.epsilonEquals(straightDown,0.001f)  || cam.direction
+								.epsilonEquals(straightUp,0.001f) ) {
 							cam.direction.set(oldDirection);
 							cam.position.set(oldPosition);
 							cam.up.set(oldUp);

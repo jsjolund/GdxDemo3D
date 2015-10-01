@@ -41,9 +41,5 @@ public class BillboardSystem extends IteratingSystem {
 		}
 		billCmp.modelInstance.transform.setTranslation(worldPos.add(billCmp.offset));
 		billCmp.modelInstance.calculateTransforms();
-//		float dst = worldPos.dst(camera.position);
-//		float distanceFade = (viewDistance == 0) ? 1 : 1 - dst / viewDistance;
-//		blendAttrib.opacity = distanceFade;
-//		modelCmp.modelInstance.materials.get(0).set(blendAttrib);
 	}
 }

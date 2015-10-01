@@ -37,8 +37,8 @@ public class RenderSystem extends EntitySystem {
 
 	public static final String tag = "RenderSystem";
 
-	public static final int SHADOW_MAP_WIDTH = 2048;
-	public static final int SHADOW_MAP_HEIGHT = 2048;
+	public static final int SHADOW_MAP_WIDTH = 1024;
+	public static final int SHADOW_MAP_HEIGHT = 1024;
 
 	public static final float SHADOW_VIEWPORT_HEIGHT = 60;
 	public static final float SHADOW_VIEWPORT_WIDTH = 60;
@@ -86,6 +86,7 @@ public class RenderSystem extends EntitySystem {
 				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
 		environment.shadowMap = shadowLight;
 		shadowBatch = new ModelBatch(new DepthShaderProvider());
+
 		ShaderProgram.pedantic = false;
 		final String vertUber = Gdx.files.internal("shaders/uber.vert").readString();
 		final String fragUber = Gdx.files.internal("shaders/uber.frag").readString();
@@ -106,7 +107,6 @@ public class RenderSystem extends EntitySystem {
 
 	private boolean isVisible(final Camera camera, final ModelComponent cmp) {
 		cmp.modelInstance.transform.getTranslation(pos);
-//		pos.add(cmp.center);
 		return camera.frustum.sphereInFrustum(pos, cmp.radius);
 	}
 
@@ -171,15 +171,6 @@ public class RenderSystem extends EntitySystem {
 					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
 				}
 			}
-//			// Path line
-//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-//			shapeRenderer.setColor(Color.YELLOW);
-//			shapeRenderer.line(path.start, path.get(0).getFromNode().centroid);
-//			for (Connection<Triangle> connection : path) {
-//				Edge e = (Edge) connection;
-//				shapeRenderer.line(e.fromNode.centroid, e.toNode.centroid);
-//			}
-//			shapeRenderer.line(path.get(path.getCount() - 1).getToNode().centroid, path.end);
 			// Shared triangle edges
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
 			for (Connection<Triangle> connection : path) {

@@ -1,7 +1,28 @@
 #!/usr/bin/python
 
 """
-Blender to libGDX level export script.
+Blender to libGDX export script.
+
+Maps the scene by object type: models, lights, empties and armatures. All models with unique meshes (models which are
+not linked by Alt+D) are exported to FBX, then converted to G3DB with the fbx-conv program (fbx-conv must be in your
+$PATH). The unique models will be exported to ../g3db/blenderfilename_modelname.g3db. These models, along with any
+linked non-unique models will have their position, rotation and scale transform recorded in a JSON file located at
+../json/blenderfilename_model.json. In order for this to work, the unique model to be exported will have its transform
+reset (position set to [0,0,0], scale to [1,1,1], etc.). Placing the linked model in the scene can then be done
+ programmatically by loading the model, reading the json file, and creating model instances according to the json file.
+
+In order to keep track of which model to use as the reference when exporting, any linked models should follow the
+naming convention modelname.number. E.g. a model called "car" will be used for exporting, while linked models named
+"car.001", "car.002" etc. will only have their transforms recorded in the json file. The naming convention is not
+enforced however. The script actually checks for linked meshes, and if no models without numbering is found, the model
+first in Blender's internal scene object data structure will be used. However, if any models "car.001" and "car.002" are
+found which do NOT share the same mesh are found, an error is thrown, since exporting both would result in a file name
+collision.
+
+Models with an armature modifier will automatically have the armature included in the exported g3db file.
+
+Lights and empties will not be exported, but only recorded in the json files ../json/blenderfilename_light.json and
+../json/blenderfilename_empty.json.
 """
 
 import bpy
@@ -13,18 +34,18 @@ from mathutils import Vector
 
 
 class BlenderObject(object):
-    def __init__(self, bobj):
-        self.bobj = bobj
-        self.name = bobj.name
-        self.name_array = str(bobj.name).split(".")
-        self.loc = bobj.location.copy()
-        self.rote = bobj.rotation_euler.copy()
-        self.rot = [math.degrees(a) for a in bobj.rotation_euler]
-        self.scl = bobj.scale.copy()
-        self.type_name = str(self.bobj.data.__class__.__name__)
+    def __init__(self, blender_object):
+        self.blender_object = blender_object
+        self.name = blender_object.name
+        self.name_array = str(blender_object.name).split(".")
+        self.loc = blender_object.location.copy()
+        self.rote = blender_object.rotation_euler.copy()
+        self.rot = [math.degrees(a) for a in blender_object.rotation_euler]
+        self.scl = blender_object.scale.copy()
+        self.type_name = str(self.blender_object.data.__class__.__name__)
         self.custom_properties = {}
-        for obj in (o for o in bobj.keys() if not o in '_RNA_UI'):
-            self.custom_properties[obj] = bobj[obj]
+        for obj in (o for o in blender_object.keys() if not o in '_RNA_UI'):
+            self.custom_properties[obj] = blender_object[obj]
         self.entry = {}
 
     def serialize(self):
@@ -39,8 +60,8 @@ class BlenderObject(object):
 class BlenderModel(BlenderObject):
     category = "model"
 
-    def __init__(self, bobj, filename):
-        super().__init__(bobj)
+    def __init__(self, blender_object, filename):
+        super().__init__(blender_object)
         self.filename = filename
 
     def get_model_name(self):
@@ -55,8 +76,8 @@ class BlenderModel(BlenderObject):
 class BlenderEmpty(BlenderObject):
     category = "empty"
 
-    def __init__(self, bobj):
-        super().__init__(bobj)
+    def __init__(self, blender_object):
+        super().__init__(blender_object)
 
     def serialize(self):
         super().serialize()
@@ -66,13 +87,13 @@ class BlenderEmpty(BlenderObject):
 class BlenderLight(BlenderObject):
     category = "light"
 
-    def __init__(self, bobj):
-        super().__init__(bobj)
-        self.lamp_color = bobj.data.color
-        self.lamp_energy = bobj.data.energy
-        self.lamp_dst = bobj.data.distance
-        if type(self.bobj.data) is bpy.types.SpotLamp:
-            self.lamp_falloff = self.bobj.data.spot_size
+    def __init__(self, blender_object):
+        super().__init__(blender_object)
+        self.lamp_color = blender_object.data.color
+        self.lamp_energy = blender_object.data.energy
+        self.lamp_dst = blender_object.data.distance
+        if type(self.blender_object.data) is bpy.types.SpotLamp:
+            self.lamp_falloff = self.blender_object.data.spot_size
         else:
             self.lamp_falloff = 0
 
@@ -88,8 +109,8 @@ class BlenderLight(BlenderObject):
 class BlenderArmature(BlenderObject):
     category = "armature"
 
-    def __init__(self, bobj):
-        super().__init__(bobj)
+    def __init__(self, blender_object):
+        super().__init__(blender_object)
 
     def serialize(self):
         super().serialize()
@@ -121,32 +142,30 @@ def write_json(blender_file_basedir, blender_filename_noext, blender_object_map)
 
 
 def write_fbx(blender_file_basedir, export_objects):
-    obj_file_paths = []
+    fbx_file_paths = []
 
-    # unselect all
+    # deselect all
     for item in bpy.context.selectable_objects:
         item.select = False
 
-    for gobj in export_objects:
-        bobj0 = gobj.bobj
-        bobj0.select = True
+    for game_object in export_objects:
+        blender_object = game_object.blender_object
+        blender_object.select = True
         # Select any connected armatures
         armatures = []
-        for mod in bobj0.modifiers:
+        for mod in blender_object.modifiers:
             if type(mod) is bpy.types.ArmatureModifier:
                 armatures.append(mod.object)
         for armature in armatures:
             armature.select = True
-        obj_file_path = os.path.join(blender_file_basedir, gobj.get_model_name() + ".fbx")
-        obj_file_paths.append(obj_file_path)
+        fbx_file_path = os.path.join(blender_file_basedir, game_object.get_model_name() + ".fbx")
+        fbx_file_paths.append(fbx_file_path)
 
-        # Select object, set loc & rot to zero, export to obj, restore loc & rot, unselect
-        # bobj0.select = True
-        bpy.context.scene.objects.active = bobj0
-        bobj0.location.zero()
-        bobj0.rotation_euler.zero()
-        bobj0.scale = Vector((1.0, 1.0, 1.0))
-        bpy.ops.export_scene.fbx(filepath=obj_file_path,
+        bpy.context.scene.objects.active = blender_object
+        blender_object.location.zero()
+        blender_object.rotation_euler.zero()
+        blender_object.scale = Vector((1.0, 1.0, 1.0))
+        bpy.ops.export_scene.fbx(filepath=fbx_file_path,
                                  version='BIN7400',
                                  path_mode="RELATIVE",
                                  use_selection=True,
@@ -156,16 +175,16 @@ def write_fbx(blender_file_basedir, export_objects):
                                  # axis_forward='-Z',
                                  # axis_up='Y',
                                  )
-        bobj0.location = gobj.loc.copy()
-        bobj0.rotation_euler = gobj.rote.copy()
-        bobj0.scale = gobj.scl.copy()
+        blender_object.location = game_object.loc.copy()
+        blender_object.rotation_euler = game_object.rote.copy()
+        blender_object.scale = game_object.scl.copy()
 
         # Deselect the object and any armatures
-        bobj0.select = False
+        blender_object.select = False
         for armature in armatures:
             armature.select = False
 
-    return obj_file_paths
+    return fbx_file_paths
 
 
 def convert_to_g3db(blender_file_basedir, fbx_file_paths):
@@ -189,7 +208,7 @@ def get_export_objects(blender_object_map):
     export_objects = []
 
     for obj in blender_object_map[BlenderModel.category]:
-        scene_mesh_name = obj.bobj.data.name
+        scene_mesh_name = obj.blender_object.data.name
         scene_object_name = obj.name_array[0]
         if scene_object_name in mesh_objects:
             if not scene_mesh_name in mesh_objects.get(scene_object_name):
@@ -246,20 +265,6 @@ def create_blender_object_map(filename, scene_objects):
             blender_object_map[category] = [gobj]
 
     return blender_object_map
-
-
-def reset_origins():
-    # unselect all
-    for item in bpy.context.selectable_objects:
-        item.select = False
-    i = 0
-    for obj in bpy.data.objects:
-        i += 1
-        print("Origin set for object {} out of {}.".format(i, len(bpy.data.objects)))
-        obj.select = True
-        bpy.context.scene.objects.active = obj
-        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-        obj.select = False
 
 
 def main():

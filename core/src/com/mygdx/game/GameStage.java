@@ -85,7 +85,7 @@ public class GameStage extends Stage {
 		shaderSettingsTable.setVisible(false);
 
 
-		final TextButton shaderSettingsButton = new TextButton("settings", skin);
+		final TextButton shaderSettingsButton = new TextButton("shader", skin);
 		shaderSettingsButton.addListener(new InputListener() {
 
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {

@@ -23,11 +23,6 @@ public class MyGdxGame extends Game {
 		}
 	}
 
-//	public void getScreenshot() {
-//		screenshot = AbstractScreen.getScreenshot(currentScreen.getLeftGutterWidth(), currentScreen.getBottomGutterWidth(),
-//				currentScreen.getViewportWidth(), currentScreen.getViewportHeight(), true);
-//	}
-
 	@Override
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
