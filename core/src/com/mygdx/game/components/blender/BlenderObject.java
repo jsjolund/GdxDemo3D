@@ -28,8 +28,13 @@ public abstract class BlenderObject {
 		public String model_file_name;
 	}
 
+	public static class BCamera extends BlenderObject {
+		public float fov;
+	}
+
 	public static class BEmpty extends BlenderObject {
 
 	}
+
 
 }

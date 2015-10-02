@@ -3,13 +3,14 @@
 """
 Blender to libGDX export script.
 
-Maps the scene by object type: models, lights, empties and armatures. All models with unique meshes (models which are
-not linked by Alt+D) are exported to FBX, then converted to G3DB with the fbx-conv program (fbx-conv must be in your
-$PATH). The unique models will be exported to ../g3db/blenderfilename_modelname.g3db. These models, along with any
-linked non-unique models will have their position, rotation and scale transform recorded in a JSON file located at
-../json/blenderfilename_model.json. In order for this to work, the unique model to be exported will have its transform
-reset (position set to [0,0,0], scale to [1,1,1], etc.). Placing the linked model in the scene can then be done
- programmatically by loading the model, reading the json file, and creating model instances according to the json file.
+Maps the scene by object type: models, lights, empties and cameras.
+All models with unique meshes (models which are not linked by Alt+D) are exported to FBX, then converted to G3DB
+with the fbx-conv program (fbx-conv must be in your $PATH). The unique models will be exported to
+../g3db/blenderfilename_modelname.g3db. These models, along with any linked non-unique models will have their
+position, rotation and scale transform recorded in a JSON file located at ../json/blenderfilename_model.json. In
+order for this to work, the unique model to be exported will have its transform reset (position set to [0,0,0],
+scale to [1,1,1], etc.). Placing the linked model in the scene can then be done  programmatically by loading the
+model, reading the json file, and creating model instances according to the json file.
 
 In order to keep track of which model to use as the reference when exporting, any linked models should follow the
 naming convention modelname.number. E.g. a model called "car" will be used for exporting, while linked models named
@@ -19,10 +20,10 @@ first in Blender's internal scene object data structure will be used. However, i
 found which do NOT share the same mesh are found, an error is thrown, since exporting both would result in a file name
 collision.
 
-Models with an armature modifier will automatically have the armature included in the exported g3db file.
+Models with an armature modifier will automatically have the armature skinning included in the exported g3db file.
 
-Lights and empties will not be exported, but only recorded in the json files ../json/blenderfilename_light.json and
-../json/blenderfilename_empty.json.
+Lights, empties and cameras will not be exported, but only recorded in the json files
+../json/blenderfilename_objecttype.json.
 """
 
 import bpy
@@ -106,14 +107,16 @@ class BlenderLight(BlenderObject):
         return self.entry
 
 
-class BlenderArmature(BlenderObject):
-    category = "armature"
+class BlenderCamera(BlenderObject):
+    category = "camera"
 
     def __init__(self, blender_object):
         super().__init__(blender_object)
+        self.fov = self.blender_object.data.angle
 
     def serialize(self):
         super().serialize()
+        self.entry["fov"] = math.degrees(self.fov)
         return self.entry
 
 
@@ -240,29 +243,29 @@ def create_blender_object_map(filename, scene_objects):
         category = "unknown"
 
         if type(scene_obj.data) is bpy.types.Mesh:
-            gobj = BlenderModel(scene_obj, filename)
+            blender_object = BlenderModel(scene_obj, filename)
             category = BlenderModel.category
 
         elif scene_obj.data is None:
-            gobj = BlenderEmpty(scene_obj)
+            blender_object = BlenderEmpty(scene_obj)
             category = BlenderEmpty.category
 
         elif type(scene_obj.data) in [bpy.types.PointLamp, bpy.types.SpotLamp, bpy.types.SunLamp]:
-            gobj = BlenderLight(scene_obj)
+            blender_object = BlenderLight(scene_obj)
             category = BlenderLight.category
 
-        # elif type(scene_obj.data) is bpy.types.Armature:
-        #     gobj = BlenderArmature(scene_obj)
-        #     category = BlenderArmature.category
+        elif type(scene_obj.data) is bpy.types.Camera:
+            blender_object = BlenderCamera(scene_obj)
+            category = BlenderCamera.category
 
         if category == "unknown":
             print("Warning: {} not supported".format(str(scene_obj.data.__class__.__name__)))
             continue
 
         if category in blender_object_map:
-            blender_object_map.get(category).append(gobj)
+            blender_object_map.get(category).append(blender_object)
         else:
-            blender_object_map[category] = [gobj]
+            blender_object_map[category] = [blender_object]
 
     return blender_object_map
 

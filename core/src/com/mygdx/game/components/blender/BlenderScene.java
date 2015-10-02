@@ -4,7 +4,9 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
@@ -46,6 +48,7 @@ public class BlenderScene implements Disposable {
 	public List<Entity> entities = new ArrayList<Entity>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
+	private BlenderObject.BCamera sceneCamera;
 
 	@Override
 	public void dispose() {
@@ -57,34 +60,50 @@ public class BlenderScene implements Disposable {
 
 	public BlenderScene(String modelsJsonPath,
 						String emptiesJsonPath,
-						String lightsJsonPath) {
+						String lightsJsonPath,
+						String cameraJsonPath) {
 
 		// Deserialize the list of model objects from the json and start loading them in asset manager.
 		// Use automatic mipmap generation.
-		List<BlenderObject.BModel> models = deserializeModels(modelsJsonPath);
+		List<BlenderObject.BModel> blenderModels = deserializeModels(modelsJsonPath);
 		MipMapGenerator.setUseHardwareMipMap(true);
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
 		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
-		for (BlenderObject.BModel obj : models) {
+		for (BlenderObject.BModel obj : blenderModels) {
 			obj.model_file_name = String.format("models/g3db/%s.g3db", obj.model_file_name);
 			modelAssets.load(obj.model_file_name, Model.class, param);
 			nameModelMap.put(obj.name, obj.model_file_name);
 		}
-		List<BlenderObject.BEmpty> empties = deserializeEmpties(emptiesJsonPath);
-		List<BlenderObject.BLight> bLights = deserializeLights(lightsJsonPath);
+		List<BlenderObject.BEmpty> blenderEmpties = deserializeEmpties(emptiesJsonPath);
+		List<BlenderObject.BLight> blenderLights = deserializeLights(lightsJsonPath);
+		List<BlenderObject.BCamera> blenderCameras = deserializeCameras(cameraJsonPath);
 
-		blenderToGdxCoordinates(models);
-		blenderToGdxCoordinates(empties);
-		blenderToGdxCoordinates(bLights);
+		blenderToGdxCoordinates(blenderModels);
+		blenderToGdxCoordinates(blenderEmpties);
+		blenderToGdxCoordinates(blenderLights);
+		blenderToGdxCoordinates(blenderCameras);
 
-		loadCollisionData(empties);
+		loadCollisionData(blenderEmpties);
+		createLights(blenderLights);
+		createEntities(blenderModels);
 
-		createLights(bLights);
-		createEntities(models);
+		if (!blenderCameras.isEmpty()) {
+			sceneCamera = blenderCameras.get(0);
+		}
 	}
 
+	public void setToSceneCamera(PerspectiveCamera camera) {
+		Vector3 direction = new Vector3(Vector3.Y).scl(-1);
+		direction.rotate(Vector3.X, sceneCamera.rotation.x);
+		direction.rotate(Vector3.Z, sceneCamera.rotation.z);
+		direction.rotate(Vector3.Y, sceneCamera.rotation.y);
+		camera.position.set(sceneCamera.position);
+		camera.direction.set(direction);
+		camera.fieldOfView = sceneCamera.fov;
+		camera.update();
+	}
 
 	private void createEntities(List<BlenderObject.BModel> models) {
 
@@ -99,7 +118,6 @@ public class BlenderScene implements Disposable {
 					cmp.position, cmp.rotation, cmp.scale);
 
 			ModelInstance instance = mdlCmp.modelInstance;
-
 
 			if (cmp.name.equals("navmesh")) {
 				// The navmesh should be handled differently than other entities.
@@ -247,6 +265,11 @@ public class BlenderScene implements Disposable {
 	private ArrayList<BlenderObject.BLight> deserializeLights(String path) {
 		return (path == null) ? new ArrayList<BlenderObject.BLight>() :
 				new Json().fromJson(ArrayList.class, BlenderObject.BLight.class, Gdx.files.local(path));
+	}
+
+	private ArrayList<BlenderObject.BCamera> deserializeCameras(String path) {
+		return (path == null) ? new ArrayList<BlenderObject.BCamera>() :
+				new Json().fromJson(ArrayList.class, BlenderObject.BCamera.class, Gdx.files.local(path));
 	}
 
 	private static void blenderToGdxCoordinates(List<? extends BlenderObject> objs) {

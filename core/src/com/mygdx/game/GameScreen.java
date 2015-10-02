@@ -10,7 +10,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
@@ -42,7 +41,7 @@ public class GameScreen implements Screen {
 	private final GameStage stage;
 	PooledEngine engine;
 	Color viewportBackgroundColor;
-	Camera camera;
+	PerspectiveCamera camera;
 	AssetManager assets;
 	private ShapeRenderer shapeRenderer;
 
@@ -87,15 +86,12 @@ public class GameScreen implements Screen {
 		viewportBackgroundColor = Color.BLACK;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
-		viewport = new FitViewport(reqWidth, reqHeight, camera);
-		stage = new GameStage(viewport);
-		shapeRenderer = new ShapeRenderer();
-
-		camera.position.set(5, 10, 5);
-		camera.lookAt(0, 0, 0);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
+		viewport = new FitViewport(reqWidth, reqHeight, camera);
+		stage = new GameStage(viewport);
+		shapeRenderer = new ShapeRenderer();
 
 		IntentBroadcastComponent intentCmp = new IntentBroadcastComponent();
 		Entity interactionEntity = engine.createEntity();
@@ -108,8 +104,11 @@ public class GameScreen implements Screen {
 		BlenderScene blenderScene = new BlenderScene(
 				"models/json/scene0_model.json",
 				"models/json/scene0_empty.json",
-				"models/json/scene0_light.json"
+				"models/json/scene0_light.json",
+				"models/json/scene0_camera.json"
 		);
+
+		blenderScene.setToSceneCamera(camera);
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading render system");
@@ -137,7 +136,7 @@ public class GameScreen implements Screen {
 			if (modelCmp.id.startsWith("door")) {
 				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
 				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0, 0, -0.6f), Vector3.Y);
-				hinge.enableAngularMotor(true, 0, 5);
+//				hinge.enableAngularMotor(true, 0, 5);
 
 				hinge.setDbgDrawSize(1);
 				phySys.dynamicsWorld.addConstraint(hinge);
