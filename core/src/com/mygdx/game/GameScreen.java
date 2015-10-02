@@ -10,6 +10,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
@@ -24,8 +25,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
-import com.mygdx.game.components.blender.BlenderComponent;
-import com.mygdx.game.components.blender.BlenderComponentsLoader;
+import com.mygdx.game.components.blender.BlenderScene;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.RagdollFactory;
 
@@ -85,7 +85,6 @@ public class GameScreen implements Screen {
 		Bullet.init();
 
 		viewportBackgroundColor = Color.BLACK;
-//		viewportBackgroundColor = new Color(0.27f,0.57f,0.82f,1);
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
@@ -106,24 +105,17 @@ public class GameScreen implements Screen {
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
-		BlenderComponentsLoader levelBlender = new BlenderComponentsLoader(
-				assets,
+		BlenderScene blenderScene = new BlenderScene(
 				"models/json/scene0_model.json",
 				"models/json/scene0_empty.json",
 				"models/json/scene0_light.json"
 		);
 
-		Gdx.app.debug(tag, "Loading environment system");
-		EnvironmentSystem envSys = new EnvironmentSystem();
-		engine.addEntityListener(envSys.systemFamily, envSys.lightListener);
-		engine.addSystem(envSys);
-
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading render system");
-		RenderSystem renderSys = new RenderSystem(viewport, camera,
-				envSys.environment,
-				levelBlender.sunDirection);
-		renderSys.setNavmesh(levelBlender.navMesh);
+		RenderSystem renderSys = new RenderSystem(viewport, camera);
+		renderSys.setNavmesh(blenderScene.navMesh);
+		renderSys.setEnvironmentLights(blenderScene.lights, blenderScene.shadowCameraDirection);
 		engine.addSystem(renderSys);
 
 		// TODO: dispose
@@ -134,15 +126,8 @@ public class GameScreen implements Screen {
 		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
 
 		Gdx.app.debug(tag, "Adding entities");
-		Vector3 gridUnit = new Vector3();
-		for (Entity entity : levelBlender.entities) {
+		for (Entity entity : blenderScene.entities) {
 			engine.addEntity(entity);
-
-			BlenderComponent cmp = entity.getComponent(BlenderComponent.class);
-			if (cmp != null && cmp.name.equals("grid_unit") && gridUnit.isZero()) {
-				gridUnit.set(Math.abs(cmp.scale.x), Math.abs(cmp.scale.y), Math.abs(cmp.scale.z));
-				Gdx.app.debug(tag, "Using grid unit " + gridUnit);
-			}
 		}
 
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
@@ -176,7 +161,7 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding selection system");
 		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
-		selSys.setNavMesh(levelBlender.navMesh);
+		selSys.setNavMesh(blenderScene.navMesh);
 		engine.addSystem(selSys);
 
 		Gdx.app.debug(tag, "Adding billboard system");

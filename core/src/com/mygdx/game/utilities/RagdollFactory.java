@@ -15,8 +15,8 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
-import com.mygdx.game.components.blender.BlenderComponentsLoader;
-import com.mygdx.game.components.blender.BlenderEmptyComponent;
+import com.mygdx.game.components.blender.BlenderObject;
+import com.mygdx.game.components.blender.BlenderScene;
 
 import java.util.ArrayList;
 
@@ -41,10 +41,10 @@ public class RagdollFactory {
 		// Load shape half extent data from Blender
 		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
 		String path = "models/json/character_empty.json";
-		ArrayList<BlenderEmptyComponent> empties =
-				new Json().fromJson(ArrayList.class, BlenderEmptyComponent.class, Gdx.files.local(path));
-		for (BlenderEmptyComponent empty : empties) {
-			BlenderComponentsLoader.blenderToGdxCoordinates(empty);
+		ArrayList<BlenderObject.BEmpty> empties =
+				new Json().fromJson(ArrayList.class, BlenderObject.BEmpty.class, Gdx.files.local(path));
+		for (BlenderObject.BEmpty empty : empties) {
+			BlenderScene.blenderToGdxCoordinates(empty);
 			Vector3 halfExtents = new Vector3(empty.scale);
 			halfExtents.x = Math.abs(halfExtents.x);
 			halfExtents.y = Math.abs(halfExtents.y);

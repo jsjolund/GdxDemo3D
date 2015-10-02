@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
@@ -28,6 +30,8 @@ import com.mygdx.game.navmesh.NavMeshGraphPath;
 import com.mygdx.game.navmesh.Triangle;
 import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
+
+import java.util.List;
 
 
 /**
@@ -56,35 +60,42 @@ public class RenderSystem extends EntitySystem {
 	private ImmutableArray<Entity> entities;
 	private Camera camera;
 
-	private final Environment environment;
 	private final Viewport viewport;
 	private final MyShapeRenderer shapeRenderer;
 
-	DirectionalShadowLight shadowLight;
-	ModelBatch shadowBatch;
+	private Environment environment;
+	private DirectionalShadowLight shadowLight;
+	private ModelBatch shadowBatch;
 
 	private final Vector3 debugNodePos = new Vector3();
 	private final Vector3 debugModelPos = new Vector3();
 
 	private NavMesh navmesh;
 
-
-	public RenderSystem(Viewport viewport, Camera camera, Environment environment, Vector3 sunDirection) {
-		systemFamily = Family.all(ModelComponent.class).get();
-
-		this.viewport = viewport;
-		this.camera = camera;
-		this.environment = environment;
-
-		shapeRenderer = new MyShapeRenderer();
-		shapeRenderer.setAutoShapeType(true);
-
+	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
+		environment = new Environment();
 		environment.add((shadowLight = new DirectionalShadowLight(
 				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
 				SHADOW_VIEWPORT_WIDTH, SHADOW_VIEWPORT_HEIGHT,
 				SHADOW_NEAR, SHADOW_FAR))
 				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
 		environment.shadowMap = shadowLight;
+
+		float c = GameSettings.SCENE_AMBIENT_LIGHT;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
+		for (BaseLight light : lights) {
+			environment.add(light);
+		}
+	}
+
+	public RenderSystem(Viewport viewport, Camera camera) {
+		systemFamily = Family.all(ModelComponent.class).get();
+		this.viewport = viewport;
+		this.camera = camera;
+
+		shapeRenderer = new MyShapeRenderer();
+		shapeRenderer.setAutoShapeType(true);
+
 		shadowBatch = new ModelBatch(new DepthShaderProvider());
 
 		ShaderProgram.pedantic = false;

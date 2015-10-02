@@ -67,7 +67,9 @@ public class PhysicsComponent extends Component implements Disposable {
 
 	@Override
 	public void dispose() {
-		shape.dispose();
+		// Let the calling class be responsible for
+		// shape.dispose();
+
 		constructionInfo.dispose();
 		motionState.dispose();
 		body.dispose();

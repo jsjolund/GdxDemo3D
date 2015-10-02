@@ -49,13 +49,6 @@ public class CameraSystem extends IteratingSystem {
 		super(Family.all(CameraTargetingComponent.class, IntentBroadcastComponent.class).get());
 	}
 
-
-	private boolean poleIsCrossed(Vector3 direction1, Vector3 direction2) {
-		return (Math.signum(direction1.x) != Math.signum(direction2.x))
-				&& Math.signum(direction1.z) != Math.signum(direction2.z);
-	}
-
-
 	@Override
 	public void processEntity(Entity entity, float deltaTime) {
 		IntentBroadcastComponent intent = inputCmps.get(entity);

@@ -88,7 +88,6 @@ public class ModelFactory {
 		Vector3 pos = new Vector3();
 		Vector3 nor = new Vector3();
 		FloatBuffer buf = mesh.getVerticesBuffer();
-//		FloatBuffer bufNew = BufferUtils.newFloatBuffer(buf.capacity());
 		int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
 		int vertexFloats = (mesh.getVertexSize() / 4);
 		VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
