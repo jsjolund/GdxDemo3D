@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -38,7 +37,8 @@ import java.util.List;
  */
 public class BlenderScene implements Disposable {
 
-	private ArrayMap<String, btCollisionShape> shapeMap = new ArrayMap<String, btCollisionShape>();
+	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
+	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
 	private ArrayMap<String, String> nameModelMap = new ArrayMap<String, String>();
 
@@ -52,7 +52,10 @@ public class BlenderScene implements Disposable {
 
 	@Override
 	public void dispose() {
-		for (btCollisionShape shape : shapeMap.values) {
+		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
+			shape.dispose();
+		}
+		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
 			shape.dispose();
 		}
 		modelAssets.dispose();
@@ -126,7 +129,7 @@ public class BlenderScene implements Disposable {
 				btTriangleIndexVertexArray vertexArray =
 						new btTriangleIndexVertexArray(instance.model.meshParts);
 				btBvhTriangleMeshShape shape = new btBvhTriangleMeshShape(vertexArray, true);
-				shapeMap.put("navmesh", shape);
+				staticGeneratedShapesMap.put("navmesh", shape);
 				PhysicsComponent phyCmp = new PhysicsComponent(
 						shape, null, 0,
 						PhysicsSystem.NAVMESH_FLAG,
@@ -140,9 +143,9 @@ public class BlenderScene implements Disposable {
 
 			entity.add(mdlCmp);
 
-			if (shapeMap.containsKey(cmp.name) && massMap.containsKey(cmp.name)) {
+			if (blenderDefinedShapesMap.containsKey(cmp.name) && massMap.containsKey(cmp.name)) {
 				// The model has a shape and mass predefined.
-				btCollisionShape shape = shapeMap.get(cmp.name);
+				btCollisionShape shape = blenderDefinedShapesMap.get(cmp.name);
 				float mass = massMap.get(cmp.name);
 
 				MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
@@ -156,9 +159,13 @@ public class BlenderScene implements Disposable {
 						true, false));
 
 			} else {
-				// No shape defined, load it as a static collision shape.
-				btCollisionShape shape = Bullet.obtainStaticNodeShape(instance.nodes);
-				// TODO
+				btCollisionShape shape;
+				if (staticGeneratedShapesMap.containsKey(cmp.name)) {
+					shape = staticGeneratedShapesMap.get(cmp.name);
+				} else {
+					shape = Bullet.obtainStaticNodeShape(instance.nodes);
+					staticGeneratedShapesMap.put(cmp.name,shape);
+				}
 				PhysicsComponent phyCmp = new PhysicsComponent(
 						shape, null, 0,
 						PhysicsSystem.GROUND_FLAG,
@@ -246,7 +253,7 @@ public class BlenderScene implements Disposable {
 					FloatBuffer buf = ModelFactory.createBlenderToGdxFloatBuffer(m);
 					shape = new btConvexHullShape(buf, m.getNumVertices(), m.getVertexSize());
 				}
-				shapeMap.put(empty.name, shape);
+				blenderDefinedShapesMap.put(empty.name, shape);
 			}
 		}
 	}
