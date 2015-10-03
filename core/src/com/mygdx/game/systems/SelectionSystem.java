@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.IntentBroadcastComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
@@ -19,27 +18,23 @@ import com.mygdx.game.navmesh.Triangle;
 public class SelectionSystem extends EntitySystem {
 
 	public static final String tag = "SelectionSystem";
-	private final Vector3 surfacePoint = new Vector3();
 	public final Family systemFamily;
+	private final Vector3 surfacePoint = new Vector3();
 	private final PhysicsSystem phySys;
-	private final Viewport viewport;
 	private final Vector2 lastClick = new Vector2();
-	private ImmutableArray<Entity> entities;
-	private final ComponentMapper<IntentBroadcastComponent> intentCmps = ComponentMapper.getFor(IntentBroadcastComponent.class);
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
-
 	private final float rayDistance = 100;
-	private final Ray ray = new Ray();
-
+	private ImmutableArray<Entity> entities;
+	private IntentBroadcastComponent intent;
 	private NavMesh navMesh;
 
-	public SelectionSystem(PhysicsSystem phySys, Viewport viewport) {
-		systemFamily = Family.all(IntentBroadcastComponent.class,
+	public SelectionSystem(PhysicsSystem phySys, IntentBroadcastComponent intent) {
+		systemFamily = Family.all(
 				PathFindingComponent.class,
 				SelectableComponent.class).get();
 		this.phySys = phySys;
-		this.viewport = viewport;
+		this.intent = intent;
 	}
 
 	@Override
@@ -52,7 +47,7 @@ public class SelectionSystem extends EntitySystem {
 		if (entities.size() == 0) {
 			return;
 		}
-		IntentBroadcastComponent intent = intentCmps.get(entities.get(0));
+//		IntentBroadcastComponent intent = intentCmps.get(entities.get(0));
 		if (intent.click.equals(lastClick) && !intent.doubleClick) {
 			return;
 		}
@@ -60,7 +55,7 @@ public class SelectionSystem extends EntitySystem {
 		float screenX = intent.click.x;
 		float screenY = intent.click.y;
 
-		ray.set(viewport.getPickRay(screenX, screenY));
+		Ray ray = intent.pickRay;
 		Gdx.app.debug(tag, String.format(
 				"Mouse: %s, %s, Pick ray: origin: %s, direction: %s.",
 				screenX, screenY, ray.origin, ray.direction));
@@ -107,24 +102,11 @@ public class SelectionSystem extends EntitySystem {
 						navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.currentPosition,
 								surfacePoint);
 						pathCmp.path.clear();
-						pathCmp.path.addAll(navMesh.debugPath.getDirectPath());
+						pathCmp.path.addAll(navMesh.debugPathSmooth);
 						pathCmp.currentGoal = pathCmp.path.pop();
 					}
 				}
 			}
-
-//			Gdx.app.debug(tag, "Hit navmesh: " + hitEntity);
-//			for (Entity entity : entities) {
-//				SelectableComponent selCmp = selCmps.get(entity);
-//				PathFindingComponent pathCmp = pathCmps.get(entity);
-//				if (selCmp.isSelected) {
-//					pathCmp.run = intent.doubleClick;
-//					pathCmp.currentGoal = null;
-//					pathCmp.path.clear();
-//					pathCmp.path.add(new Vector3(surfacePoint));
-//					Gdx.app.debug(tag, String.format("Path target for %s set to %s", entity, surfacePoint));
-//				}
-//			}
 
 		}
 

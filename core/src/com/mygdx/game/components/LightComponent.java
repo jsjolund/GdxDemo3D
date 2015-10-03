@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 /**
  * Created by user on 7/31/15.
  */
-public class LightComponent extends Component {
+public class LightComponent implements Component {
 
 	public BaseLight light = new DirectionalLight();
 

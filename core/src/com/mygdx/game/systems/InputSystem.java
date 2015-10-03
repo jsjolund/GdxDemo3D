@@ -1,8 +1,6 @@
 package com.mygdx.game.systems;
 
-import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.EntitySystem;
-import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
@@ -10,6 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.IntentBroadcastComponent;
 
@@ -20,25 +19,19 @@ public class InputSystem extends EntitySystem {
 
 	public static final String tag = "InputSystem";
 	public final IntIntMap keys = new IntIntMap();
-	public final Family family;
-	public InputProcessor inputProcessor;
 	private final IntentBroadcastComponent intent;
 	private final Vector2 keyPanDirection = new Vector2();
-	private float zoom;
 	private final ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
-
+	public InputProcessor inputProcessor;
+	private float zoom;
+	private Viewport viewport;
 	private boolean killKeyBroadcasted = false;
 
-	public InputSystem(IntentBroadcastComponent intent) {
-		family = Family.all(IntentBroadcastComponent.class).get();
+	public InputSystem(Viewport viewport, IntentBroadcastComponent intent) {
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 		this.intent = intent;
 		inputProcessor = new MyInputListener();
-
-	}
-
-	@Override
-	public void addedToEngine(Engine engine) {
+		this.viewport = viewport;
 	}
 
 	@Override
@@ -165,6 +158,7 @@ public class InputSystem extends EntitySystem {
 				data.doubleClick = false;
 			}
 			data.lastClickTime = clickTime;
+			intent.pickRay = viewport.getPickRay(screenX, screenY);
 			return true;
 		}
 

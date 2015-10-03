@@ -20,14 +20,13 @@ public class PathFindingSystem extends IteratingSystem {
 	private final Matrix4 matrix = new Matrix4();
 	private final Vector3 goalDirection = new Vector3();
 	private final Vector3 newVelocity = new Vector3();
-	private float yVelocity = 0;
-
 	private final ComponentMapper<PathFindingComponent> pathCmps =
 			ComponentMapper.getFor(PathFindingComponent.class);
 	private final ComponentMapper<PhysicsComponent> phyCmps =
 			ComponentMapper.getFor(PhysicsComponent.class);
 	private final ComponentMapper<CharacterActionComponent> actionCmps =
 			ComponentMapper.getFor(CharacterActionComponent.class);
+	private float yVelocity = 0;
 
 	public PathFindingSystem(Family family) {
 		super(family);

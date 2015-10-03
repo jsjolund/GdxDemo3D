@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 /**
  * Created by user on 8/24/15.
  */
-public class SelectableComponent extends Component {
+public class SelectableComponent implements Component {
 
 	public boolean isSelected = false;
 	public ModelInstance selectedMarkerModel;

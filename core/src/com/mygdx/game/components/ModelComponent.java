@@ -11,15 +11,15 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 /**
  * Created by user on 7/31/15.
  */
-public class ModelComponent extends Component {
+public class ModelComponent implements Component {
 
 	public static final String tag = "ModelComponent";
 	public final Vector3 center = new Vector3();
 	public final Vector3 dimensions = new Vector3();
 	public final float radius;
 	public final BoundingBox bounds = new BoundingBox();
-	public ModelInstance modelInstance;
 	public final String id;
+	public ModelInstance modelInstance;
 	public boolean ignoreCulling = false;
 
 	public ModelComponent(Model model, String id, Vector3 location, Vector3 rotation, Vector3 scale) {

@@ -37,29 +37,16 @@ import java.util.List;
  */
 public class BlenderScene implements Disposable {
 
-	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
-	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
-	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
-	private ArrayMap<String, String> nameModelMap = new ArrayMap<String, String>();
-
-	private AssetManager modelAssets = new AssetManager();
-
 	public List<BaseLight> lights = new ArrayList<BaseLight>();
 	public List<Entity> entities = new ArrayList<Entity>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
+	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
+	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
+	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
+	private ArrayMap<String, String> nameModelMap = new ArrayMap<String, String>();
+	private AssetManager modelAssets = new AssetManager();
 	private BlenderObject.BCamera sceneCamera;
-
-	@Override
-	public void dispose() {
-		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
-			shape.dispose();
-		}
-		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
-			shape.dispose();
-		}
-		modelAssets.dispose();
-	}
 
 	public BlenderScene(String modelsJsonPath,
 						String emptiesJsonPath,
@@ -95,6 +82,37 @@ public class BlenderScene implements Disposable {
 		if (!blenderCameras.isEmpty()) {
 			sceneCamera = blenderCameras.get(0);
 		}
+	}
+
+	private static void blenderToGdxCoordinates(List<? extends BlenderObject> objs) {
+		for (BlenderObject obj : objs) {
+			blenderToGdxCoordinates(obj);
+		}
+	}
+
+	public static void blenderToGdxCoordinates(BlenderObject obj) {
+		blenderToGdxCoordinates(obj.position, obj.rotation, obj.scale);
+	}
+
+	private static void blenderToGdxCoordinates(Vector3... vectors) {
+		for (Vector3 v : vectors) {
+			blenderToGdxCoordinates(v);
+		}
+	}
+
+	private static Vector3 blenderToGdxCoordinates(Vector3 vector) {
+		return vector.set(vector.x, vector.z, -vector.y);
+	}
+
+	@Override
+	public void dispose() {
+		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
+			shape.dispose();
+		}
+		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
+			shape.dispose();
+		}
+		modelAssets.dispose();
 	}
 
 	public void setToSceneCamera(PerspectiveCamera camera) {
@@ -164,7 +182,7 @@ public class BlenderScene implements Disposable {
 					shape = staticGeneratedShapesMap.get(cmp.name);
 				} else {
 					shape = Bullet.obtainStaticNodeShape(instance.nodes);
-					staticGeneratedShapesMap.put(cmp.name,shape);
+					staticGeneratedShapesMap.put(cmp.name, shape);
 				}
 				PhysicsComponent phyCmp = new PhysicsComponent(
 						shape, null, 0,
@@ -268,7 +286,6 @@ public class BlenderScene implements Disposable {
 				new Json().fromJson(ArrayList.class, BlenderObject.BEmpty.class, Gdx.files.local(path));
 	}
 
-
 	private ArrayList<BlenderObject.BLight> deserializeLights(String path) {
 		return (path == null) ? new ArrayList<BlenderObject.BLight>() :
 				new Json().fromJson(ArrayList.class, BlenderObject.BLight.class, Gdx.files.local(path));
@@ -277,26 +294,6 @@ public class BlenderScene implements Disposable {
 	private ArrayList<BlenderObject.BCamera> deserializeCameras(String path) {
 		return (path == null) ? new ArrayList<BlenderObject.BCamera>() :
 				new Json().fromJson(ArrayList.class, BlenderObject.BCamera.class, Gdx.files.local(path));
-	}
-
-	private static void blenderToGdxCoordinates(List<? extends BlenderObject> objs) {
-		for (BlenderObject obj : objs) {
-			blenderToGdxCoordinates(obj);
-		}
-	}
-
-	public static void blenderToGdxCoordinates(BlenderObject obj) {
-		blenderToGdxCoordinates(obj.position, obj.rotation, obj.scale);
-	}
-
-	private static void blenderToGdxCoordinates(Vector3... vectors) {
-		for (Vector3 v : vectors) {
-			blenderToGdxCoordinates(v);
-		}
-	}
-
-	private static Vector3 blenderToGdxCoordinates(Vector3 vector) {
-		return vector.set(vector.x, vector.z, -vector.y);
 	}
 
 

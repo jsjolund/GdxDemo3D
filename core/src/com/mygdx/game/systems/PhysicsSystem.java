@@ -37,7 +37,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;
-	private ImmutableArray<Entity> entities;
 	private final CollisionContactListener contactListener;
 	private final btCollisionConfiguration collisionConfig;
 	private final btDispatcher dispatcher;
@@ -45,9 +44,9 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	private final btDbvtBroadphase broadphase;
 	private final DebugDrawer debugDrawer;
 	private final ClosestRayResultCallback callback = new ClosestRayResultCallback(Vector3.Zero, Vector3.Z);
-
 	private final Vector3 rayFrom = new Vector3();
 	private final Vector3 rayTo = new Vector3();
+	private ImmutableArray<Entity> entities;
 
 	public PhysicsSystem() {
 		super(0);

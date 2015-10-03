@@ -45,39 +45,6 @@ public class GameScreen implements Screen {
 	AssetManager assets;
 	private ShapeRenderer shapeRenderer;
 
-	@Override
-	public void render(float delta) {
-		delta *= GameSettings.GAME_SPEED;
-		Gdx.gl.glClearColor(0, 0, 0, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		shapeRenderer.setColor(viewportBackgroundColor);
-		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
-		shapeRenderer.end();
-
-		engine.update(delta);
-
-		if (GameSettings.DRAW_COLLISION_SHAPES || GameSettings.DRAW_CONSTRAINTS) {
-			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
-			btIDebugDraw debugDraw = engine.getSystem(PhysicsSystem.class).dynamicsWorld.getDebugDrawer();
-			btIDebugDraw.DebugDrawModes modes = new btIDebugDraw.DebugDrawModes();
-			int mode = 0;
-			if (GameSettings.DRAW_COLLISION_SHAPES) {
-				mode |= modes.DBG_DrawWireframe;
-			}
-			if (GameSettings.DRAW_CONSTRAINTS) {
-				mode |= modes.DBG_DrawConstraints;
-				mode |= modes.DBG_DrawConstraintLimits;
-			}
-			debugDraw.setDebugMode(mode);
-
-		}
-
-		stage.act(delta);
-		stage.draw();
-	}
-
 	public GameScreen(int reqWidth, int reqHeight) {
 		assets = new AssetManager();
 		engine = new PooledEngine();
@@ -94,10 +61,6 @@ public class GameScreen implements Screen {
 		shapeRenderer = new ShapeRenderer();
 
 		IntentBroadcastComponent intentCmp = new IntentBroadcastComponent();
-		Entity interactionEntity = engine.createEntity();
-		interactionEntity.add(new CameraTargetingComponent(camera, viewport));
-		interactionEntity.add(intentCmp);
-		engine.addEntity(interactionEntity);
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
@@ -147,19 +110,19 @@ public class GameScreen implements Screen {
 		Gdx.app.debug(tag, "Adding input controller");
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		InputSystem inputSys = new InputSystem(intentCmp);
+		InputSystem inputSys = new InputSystem(viewport, intentCmp);
 		engine.addSystem(inputSys);
 		multiplexer.addProcessor(inputSys.inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
 
 
 		Gdx.app.debug(tag, "Adding camera system");
-		CameraSystem camSys = new CameraSystem();
+		CameraSystem camSys = new CameraSystem(viewport, camera, intentCmp);
 		engine.addSystem(camSys);
 
 
 		Gdx.app.debug(tag, "Adding selection system");
-		SelectionSystem selSys = new SelectionSystem(phySys, viewport);
+		SelectionSystem selSys = new SelectionSystem(phySys, intentCmp);
 		selSys.setNavMesh(blenderScene.navMesh);
 		engine.addSystem(selSys);
 
@@ -190,6 +153,60 @@ public class GameScreen implements Screen {
 				IntentBroadcastComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 
+	}
+
+	public static Pixmap getScreenshot(int x, int y, int w, int h, boolean yDown) {
+		final Pixmap pixmap = ScreenUtils.getFrameBufferPixmap(x, y, w, h);
+
+		if (yDown) {
+			// Flip the pixmap upside down
+			ByteBuffer pixels = pixmap.getPixels();
+			int numBytes = w * h * 4;
+			byte[] lines = new byte[numBytes];
+			int numBytesPerLine = w * 4;
+			for (int i = 0; i < h; i++) {
+				pixels.position((h - i - 1) * numBytesPerLine);
+				pixels.get(lines, i * numBytesPerLine, numBytesPerLine);
+			}
+			pixels.clear();
+			pixels.put(lines);
+			pixels.clear();
+		}
+
+		return pixmap;
+	}
+
+	@Override
+	public void render(float delta) {
+		delta *= GameSettings.GAME_SPEED;
+		Gdx.gl.glClearColor(0, 0, 0, 1f);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		shapeRenderer.setColor(viewportBackgroundColor);
+		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
+		shapeRenderer.end();
+
+		engine.update(delta);
+
+		if (GameSettings.DRAW_COLLISION_SHAPES || GameSettings.DRAW_CONSTRAINTS) {
+			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+			btIDebugDraw debugDraw = engine.getSystem(PhysicsSystem.class).dynamicsWorld.getDebugDrawer();
+			btIDebugDraw.DebugDrawModes modes = new btIDebugDraw.DebugDrawModes();
+			int mode = 0;
+			if (GameSettings.DRAW_COLLISION_SHAPES) {
+				mode |= modes.DBG_DrawWireframe;
+			}
+			if (GameSettings.DRAW_CONSTRAINTS) {
+				mode |= modes.DBG_DrawConstraints;
+				mode |= modes.DBG_DrawConstraintLimits;
+			}
+			debugDraw.setDebugMode(mode);
+
+		}
+
+		stage.act(delta);
+		stage.draw();
 	}
 
 	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
@@ -231,7 +248,6 @@ public class GameScreen implements Screen {
 		phyCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
 		entity.add(motionStateCmp);
 		entity.add(phyCmp);
-		entity.add(intentCmp);
 
 		// Make model selectable, add pathfinding, animation components
 		entity.add(new PathFindingComponent(pos));
@@ -290,26 +306,5 @@ public class GameScreen implements Screen {
 	@Override
 	public void dispose() {
 		stage.dispose();
-	}
-
-	public static Pixmap getScreenshot(int x, int y, int w, int h, boolean yDown) {
-		final Pixmap pixmap = ScreenUtils.getFrameBufferPixmap(x, y, w, h);
-
-		if (yDown) {
-			// Flip the pixmap upside down
-			ByteBuffer pixels = pixmap.getPixels();
-			int numBytes = w * h * 4;
-			byte[] lines = new byte[numBytes];
-			int numBytesPerLine = w * 4;
-			for (int i = 0; i < h; i++) {
-				pixels.position((h - i - 1) * numBytesPerLine);
-				pixels.get(lines, i * numBytesPerLine, numBytesPerLine);
-			}
-			pixels.clear();
-			pixels.put(lines);
-			pixels.clear();
-		}
-
-		return pixmap;
 	}
 }

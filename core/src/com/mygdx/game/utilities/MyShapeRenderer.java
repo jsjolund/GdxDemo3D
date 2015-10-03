@@ -30,6 +30,20 @@ package com.mygdx.game.utilities;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * <p/>
+ * Copyright 2011 See AUTHORS file.
+ * <p/>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  ******************************************************************************/
 /*******************************************************************************
  * Copyright 2011 See AUTHORS file.
@@ -110,33 +124,16 @@ import com.badlogic.gdx.utils.Disposable;
  * @author stbachmann
  * @author Nathan Sweet */
 public class MyShapeRenderer implements Disposable {
-	/** Shape types to be used with {@link #begin(ShapeType)}.
-	 * @author mzechner, stbachmann */
-	public enum ShapeType {
-		Point(GL20.GL_POINTS), Line(GL20.GL_LINES), Filled(GL20.GL_TRIANGLES);
-
-		private final int glType;
-
-		ShapeType(int glType) {
-			this.glType = glType;
-		}
-
-		public int getGlType() {
-			return glType;
-		}
-	}
-
 	private final ImmediateModeRenderer renderer;
-	private boolean matrixDirty = false;
 	private final Matrix4 projectionMatrix = new Matrix4();
 	private final Matrix4 transformMatrix = new Matrix4();
 	private final Matrix4 combinedMatrix = new Matrix4();
 	private final Vector2 tmp = new Vector2();
 	private final Color color = new Color(1, 1, 1, 1);
+	private boolean matrixDirty = false;
 	private ShapeType shapeType;
 	private boolean autoShapeType;
 	private float defaultRectLineWidth = 0.75f;
-
 	public MyShapeRenderer() {
 		this(5000);
 	}
@@ -156,11 +153,6 @@ public class MyShapeRenderer implements Disposable {
 	}
 
 	/** Sets the color to be used by the next shapes drawn. */
-	public void setColor(Color color) {
-		this.color.set(color);
-	}
-
-	/** Sets the color to be used by the next shapes drawn. */
 	public void setColor(float r, float g, float b, float a) {
 		this.color.set(r, g, b, a);
 	}
@@ -169,8 +161,18 @@ public class MyShapeRenderer implements Disposable {
 		return color;
 	}
 
+	/** Sets the color to be used by the next shapes drawn. */
+	public void setColor(Color color) {
+		this.color.set(color);
+	}
+
 	public void updateMatrices() {
 		matrixDirty = true;
+	}
+
+	/** If the matrix is modified, {@link #updateMatrices()} must be called. */
+	public Matrix4 getProjectionMatrix() {
+		return projectionMatrix;
 	}
 
 	/** Sets the projection matrix to be used for rendering. Usually this will be set to {@link Camera#combined}.
@@ -181,18 +183,13 @@ public class MyShapeRenderer implements Disposable {
 	}
 
 	/** If the matrix is modified, {@link #updateMatrices()} must be called. */
-	public Matrix4 getProjectionMatrix() {
-		return projectionMatrix;
+	public Matrix4 getTransformMatrix() {
+		return transformMatrix;
 	}
 
 	public void setTransformMatrix(Matrix4 matrix) {
 		transformMatrix.set(matrix);
 		matrixDirty = true;
-	}
-
-	/** If the matrix is modified, {@link #updateMatrices()} must be called. */
-	public Matrix4 getTransformMatrix() {
-		return transformMatrix;
 	}
 
 	/** Sets the transformation matrix to identity. */
@@ -1197,5 +1194,21 @@ public class MyShapeRenderer implements Disposable {
 
 	public void dispose() {
 		renderer.dispose();
+	}
+
+	/** Shape types to be used with {@link #begin(ShapeType)}.
+	 * @author mzechner, stbachmann */
+	public enum ShapeType {
+		Point(GL20.GL_POINTS), Line(GL20.GL_LINES), Filled(GL20.GL_TRIANGLES);
+
+		private final int glType;
+
+		ShapeType(int glType) {
+			this.glType = glType;
+		}
+
+		public int getGlType() {
+			return glType;
+		}
 	}
 }

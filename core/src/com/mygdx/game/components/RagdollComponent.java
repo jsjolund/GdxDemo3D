@@ -12,7 +12,7 @@ import com.badlogic.gdx.utils.ArrayMap;
 /**
  * Created by user on 9/6/15.
  */
-public class RagdollComponent extends Component {
+public class RagdollComponent implements Component {
 
 	public final Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 	public final ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();

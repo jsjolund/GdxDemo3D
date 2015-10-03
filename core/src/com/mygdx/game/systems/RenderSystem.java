@@ -53,40 +53,19 @@ public class RenderSystem extends EntitySystem {
 	public final Family systemFamily;
 
 	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
-	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
-
 	private final Vector3 pos = new Vector3();
 	private final ModelBatch modelBatch;
-	private ImmutableArray<Entity> entities;
-	private Camera camera;
-
 	private final Viewport viewport;
 	private final MyShapeRenderer shapeRenderer;
-
+	private final Vector3 debugNodePos = new Vector3();
+	private final Vector3 debugModelPos = new Vector3();
+	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
+	private ImmutableArray<Entity> entities;
+	private Camera camera;
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
 	private ModelBatch shadowBatch;
-
-	private final Vector3 debugNodePos = new Vector3();
-	private final Vector3 debugModelPos = new Vector3();
-
 	private NavMesh navmesh;
-
-	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
-		environment = new Environment();
-		environment.add((shadowLight = new DirectionalShadowLight(
-				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
-				SHADOW_VIEWPORT_WIDTH, SHADOW_VIEWPORT_HEIGHT,
-				SHADOW_NEAR, SHADOW_FAR))
-				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
-		environment.shadowMap = shadowLight;
-
-		float c = GameSettings.SCENE_AMBIENT_LIGHT;
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
-		for (BaseLight light : lights) {
-			environment.add(light);
-		}
-	}
 
 	public RenderSystem(Viewport viewport, Camera camera) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -109,6 +88,22 @@ public class RenderSystem extends EntitySystem {
 		});
 
 
+	}
+
+	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
+		environment = new Environment();
+		environment.add((shadowLight = new DirectionalShadowLight(
+				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
+				SHADOW_VIEWPORT_WIDTH, SHADOW_VIEWPORT_HEIGHT,
+				SHADOW_NEAR, SHADOW_FAR))
+				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
+		environment.shadowMap = shadowLight;
+
+		float c = GameSettings.SCENE_AMBIENT_LIGHT;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
+		for (BaseLight light : lights) {
+			environment.add(light);
+		}
 	}
 
 	@Override
@@ -158,17 +153,11 @@ public class RenderSystem extends EntitySystem {
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
 			Triangle t = navmesh.graph.getTriangleFromIndex(i);
-			shapeRenderer.setColor(Color.CYAN);
+			shapeRenderer.setColor(Color.GRAY);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
 
-		}
-		shapeRenderer.setColor(Color.ORANGE);
-		shapeRenderer.set(MyShapeRenderer.ShapeType.Point);
-		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
-			Vector3 c = navmesh.graph.getTriangleFromIndex(i).centroid;
-			shapeRenderer.point(c.x, c.y, c.z);
 		}
 		NavMeshGraphPath path = navmesh.debugPath;
 		if (path != null && path.getCount() > 0) {

@@ -17,10 +17,10 @@ allprojects {
     ext {
         appName = 'my-gdx-game'
         gdxVersion = '1.7.1-SNAPSHOT'
-        roboVMVersion = '1.5.0'
+        roboVMVersion = '1.8.0'
         box2DLightsVersion = '1.4'
-        ashleyVersion = '1.5.0'
-        aiVersion = '1.5.0'
+        ashleyVersion = '1.6.0'
+        aiVersion = '1.6.0'
     }
 
     repositories {

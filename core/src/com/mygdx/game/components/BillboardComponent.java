@@ -18,13 +18,13 @@ import com.mygdx.game.utilities.ModelFactory;
 /**
  * Created by user on 9/14/15.
  */
-public class BillboardComponent extends Component implements Disposable {
+public class BillboardComponent implements Component, Disposable {
 
-	private final Model model;
 	public final TextureRegion textureRegion;
 	public final ModelInstance modelInstance;
-	public boolean faceUp;
 	public final Vector3 offset = new Vector3();
+	private final Model model;
+	public boolean faceUp;
 
 	public BillboardComponent(Pixmap pixmap, float width, float height, boolean faceUp, Vector3 offset) {
 		textureRegion = new TextureRegion(new Texture(pixmap), pixmap.getWidth(), pixmap.getHeight());

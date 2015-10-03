@@ -8,7 +8,7 @@ import com.badlogic.gdx.utils.Array;
 /**
  * Created by user on 8/30/15.
  */
-public class CharacterActionComponent extends Component {
+public class CharacterActionComponent implements Component {
 
 	public final Array<AnimationController> controllers;
 	public Action nextAction = Action.IDLE;
