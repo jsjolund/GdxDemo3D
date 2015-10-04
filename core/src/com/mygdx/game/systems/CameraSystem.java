@@ -2,6 +2,7 @@ package com.mygdx.game.systems;
 
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -14,8 +15,8 @@ import com.mygdx.game.components.IntentBroadcastComponent;
 public class CameraSystem extends EntitySystem {
 
 	public static final String tag = "CameraSystem";
+
 	private final Vector3 panDirection = new Vector3();
-	private final Vector3 panResult = new Vector3();
 	private final Vector3 tmp = new Vector3();
 	private final Plane worldGroundPlane = new Plane(Vector3.Y, 0);
 	private final Vector3 worldDragCurrent = new Vector3();
@@ -24,106 +25,113 @@ public class CameraSystem extends EntitySystem {
 	private final Vector2 cursorDelta = new Vector2();
 	private final Ray ray = new Ray();
 	private final Vector2 lastDragProcessed = new Vector2();
-	private float currentPanSpeed = 0;
-	private float currentZoom = 5;
-	private Vector3 velocity = new Vector3();
-	Quaternion deltaRotation = new Quaternion();
+	private float currentZoom;
+	private final Quaternion deltaRotation = new Quaternion();
+
 	private IntentBroadcastComponent intent;
-	private Camera cam;
+	private Camera ghostCamera;
+	private Camera realCam;
 	private Viewport viewport;
 
-	public CameraSystem(Viewport viewport, Camera cam, IntentBroadcastComponent intent) {
-		this.viewport = viewport;
-		this.cam = cam;
+	public CameraSystem(Viewport viewport, Camera camera, IntentBroadcastComponent intent) {
 		this.intent = intent;
+		this.viewport = viewport;
+		this.realCam = camera;
+		this.ghostCamera = new PerspectiveCamera();
+		copyCamera(this.realCam, this.ghostCamera);
+	}
+
+	private static void copyCamera(Camera from, Camera to) {
+		to.position.set(from.position);
+		to.direction.set(from.direction);
+		to.up.set(from.up);
+		to.projection.set(from.projection);
+		to.view.set(from.view);
+		to.combined.set(from.combined);
+		to.invProjectionView.set(from.invProjectionView);
+		to.near = from.near;
+		to.far = from.near;
+		to.viewportHeight = from.viewportHeight;
+		to.viewportWidth = from.viewportWidth;
+	}
+
+	private static void lerp(Camera target, Camera to, float alpha) {
+		to.position.lerp(target.position, alpha);
+		to.direction.lerp(target.direction, alpha);
+		to.up.lerp(target.up, alpha);
+		to.view.lerp(target.view, alpha);
+	}
+
+	private void processKeyboardPan(float deltaTime) {
+		tmp.set(ghostCamera.direction).scl(intent.moveDirection.y);
+		panDirection.set(tmp);
+		tmp.set(ghostCamera.direction).crs(ghostCamera.up).scl(intent.moveDirection.x);
+		panDirection.add(tmp);
+		panDirection.y = 0;
+		panDirection.nor();
+		ghostCamera.position.add(panDirection.scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY));
+	}
+
+	private void processZoom() {
+		ray.set(ghostCamera.position, ghostCamera.direction);
+		Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
+		ghostCamera.position.set(ghostCamera.direction).nor().scl(intent.zoom * -2).add(worldGroundTarget);
+		currentZoom = intent.zoom;
+	}
+
+	private void processDragPan() {
+		ray.set(viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
+		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
+		ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
+		tmp.set(worldDragLast).sub(worldDragCurrent);
+		tmp.y = 0;
+		worldGroundTarget.add(tmp);
+		ghostCamera.position.add(tmp);
+	}
+
+	private void processDragRotation() {
+		cursorDelta.set(lastDragProcessed).sub(intent.dragCurrent).scl(GameSettings.MOUSE_SENSITIVITY);
+		tmp.set(ghostCamera.direction).crs(ghostCamera.up).nor();
+		deltaRotation.setEulerAngles(cursorDelta.x, cursorDelta.y * tmp.x, cursorDelta.y * tmp.z);
+		tmp.set(worldGroundTarget).sub(ghostCamera.position);
+		ghostCamera.translate(tmp);
+		ghostCamera.rotate(deltaRotation);
+		deltaRotation.transform(tmp);
+		ghostCamera.translate(-tmp.x, -tmp.y, -tmp.z);
 	}
 
 	@Override
 	public void update(float deltaTime) {
-		// Keyboard pan
-		panDirection.setZero();
-		if (intent.moveDirection.len() >= 0) {
-			tmp.set(cam.direction).scl(intent.moveDirection.y);
-			panDirection.add(tmp);
-			tmp.set(cam.direction).crs(cam.up).scl(intent.moveDirection.x);
-			panDirection.add(tmp);
-			panDirection.y = 0;
-			panDirection.nor();
+		if (intent.moveDirection.len() > 0) {
+			processKeyboardPan(deltaTime);
 		}
-
-		if (panDirection.isZero()) {
-			velocity.nor();
-			currentPanSpeed -= GameSettings.CAMERA_PAN_DECELERATION * deltaTime;
-			if (currentPanSpeed < 0) {
-				currentPanSpeed = 0;
-			}
-		} else {
-			velocity.set(panDirection);
-			currentPanSpeed += GameSettings.CAMERA_PAN_ACCELERATION * deltaTime;
-		}
-
-		if (currentPanSpeed > GameSettings.CAMERA_MAX_PAN_VELOCITY) {
-			currentPanSpeed = GameSettings.CAMERA_MAX_PAN_VELOCITY;
-		}
-		velocity.scl(currentPanSpeed);
-
-		panResult.set(velocity).scl(deltaTime);
-		cam.position.add(panResult);
-
-		// Scroll wheel zoom
 		if (intent.zoom != currentZoom) {
-			ray.set(cam.position, cam.direction);
-			Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
-			float zoomLength = worldGroundTarget.dst(cam.position) / currentZoom;
-			float zoomSteps = currentZoom - intent.zoom;
-			cam.position.add(tmp.set(cam.direction).nor().scl(zoomLength * zoomSteps));
-			currentZoom = intent.zoom;
+			processZoom();
 		}
-
-		// Mouse dragging
 		if (!intent.isDragging) {
 			lastDragProcessed.setZero();
-		} else {
-			if (!lastDragProcessed.equals(intent.dragCurrent)) {
-				if (lastDragProcessed.isZero()) {
-					// This is run every time the user starts dragging
-					ray.set(cam.position, cam.direction);
-					Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
 
-				} else {
-					// Mouse drag pan
-					if (intent.pan) {
-						ray.set(viewport.getPickRay(intent.dragCurrent.x, intent.dragCurrent.y));
-
-						Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
-						ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
-						Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
-
-						panResult.set(worldDragLast).sub(worldDragCurrent);
-						panResult.y = 0;
-						cam.position.add(panResult);
-
-					}
-
-					// Mouse drag rotate
-					if (intent.rotate) {
-						cursorDelta.set(lastDragProcessed).sub(intent.dragCurrent).scl(GameSettings
-								.MOUSE_SENSITIVITY).scl(10);
-						tmp.set(cam.direction).crs(cam.up).nor();
-						deltaRotation.setEulerAngles(cursorDelta.x, cursorDelta.y * tmp.x, cursorDelta.y * tmp.z);
-						tmp.set(worldGroundTarget).sub(cam.position);
-						cam.translate(tmp);
-						cam.rotate(deltaRotation);
-						deltaRotation.transform(tmp);
-						cam.translate(-tmp.x, -tmp.y, -tmp.z);
-						cam.update();
-					}
-
-				}
-				lastDragProcessed.set(intent.dragCurrent);
+		} else if (!lastDragProcessed.equals(intent.dragCurrent)) {
+			boolean newDrag = false;
+			if (lastDragProcessed.isZero()) {
+				// New dragging
+				ray.set(ghostCamera.position, ghostCamera.direction);
+				Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
+				newDrag = true;
 			}
+			if (intent.pan && !newDrag) {
+				processDragPan();
+			}
+			if (intent.rotate && !newDrag) {
+				processDragRotation();
+			}
+			lastDragProcessed.set(intent.dragCurrent);
 		}
-
-		cam.update();
+		ghostCamera.update();
+		lerp(ghostCamera, realCam, GameSettings.CAMERA_LERP_ALPHA);
+		realCam.update();
 	}
+
+
 }

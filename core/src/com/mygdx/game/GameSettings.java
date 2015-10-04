@@ -12,11 +12,11 @@ public class GameSettings {
 	public static final float CAMERA_FAR = 1E3f;
 	public static final float CAMERA_NEAR = 1E-3f;
 	public static final float CAMERA_MAX_PAN_VELOCITY = 30;
-	public static final float CAMERA_PAN_ACCELERATION = 60;
-	public static final float CAMERA_PAN_DECELERATION = 200;
 	public static final float CAMERA_MIN_ZOOM = 1;
 	public static final float CAMERA_ZOOM_STEP = 1;
 	public static final float CAMERA_MAX_ZOOM = 20;
+
+	public static final float CAMERA_LERP_ALPHA = 0.1f;
 
 	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
@@ -30,7 +30,7 @@ public class GameSettings {
 	public static boolean DRAW_CONSTRAINTS = false;
 	public static boolean DRAW_NAVMESH = false;
 
-	public static float MOUSE_SENSITIVITY = 0.01f;
+	public static float MOUSE_SENSITIVITY = 0.1f;
 
 	public static int KEY_PAUSE = Input.Keys.SPACE;
 	public static float GAME_SPEED = 1;
