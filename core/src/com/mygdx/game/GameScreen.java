@@ -149,9 +149,8 @@ public class GameScreen implements Screen {
 				ModelComponent.class,
 				MotionStateComponent.class,
 				PhysicsComponent.class,
-				SelectableComponent.class,
-				IntentBroadcastComponent.class).get();
-		engine.addSystem(new RagdollSystem(ragdollFamily));
+				SelectableComponent.class).get();
+		engine.addSystem(new RagdollSystem(ragdollFamily, intentCmp));
 
 	}
 

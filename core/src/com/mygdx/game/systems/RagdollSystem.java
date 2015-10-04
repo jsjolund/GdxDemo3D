@@ -38,11 +38,11 @@ public class RagdollSystem extends IteratingSystem {
 	private final ComponentMapper<SelectableComponent> selCmps =
 			ComponentMapper.getFor(SelectableComponent.class);
 
-	private final ComponentMapper<IntentBroadcastComponent> intentCmps =
-			ComponentMapper.getFor(IntentBroadcastComponent.class);
+	IntentBroadcastComponent intentCmp;
 
-	public RagdollSystem(Family family) {
+	public RagdollSystem(Family family, IntentBroadcastComponent intentCmp) {
 		super(family);
+		this.intentCmp = intentCmp;
 	}
 
 	private static void updateArmatureToBodies(ModelComponent modelCmp, RagdollComponent ragdollCmp) {
@@ -103,7 +103,7 @@ public class RagdollSystem extends IteratingSystem {
 		PhysicsComponent phyCmp = phyCmps.get(entity);
 		CharacterActionComponent actionCmp = actionCmps.get(entity);
 		SelectableComponent selCmp = selCmps.get(entity);
-		IntentBroadcastComponent intentCmp = intentCmps.get(entity);
+
 		MotionStateComponent motionCmp = motionCmps.get(entity);
 
 		// Check if we should enable or disable physics control of the ragdoll
