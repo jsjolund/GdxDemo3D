@@ -1,4 +1,4 @@
-package com.mygdx.game.systems;
+package com.mygdx.game.input;
 
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Input;
@@ -10,7 +10,6 @@ import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.GameSettings;
-import com.mygdx.game.components.IntentBroadcastComponent;
 
 /**
  * Created by user on 8/24/15.
@@ -19,7 +18,7 @@ public class InputSystem extends EntitySystem {
 
 	public static final String tag = "InputSystem";
 	public final IntIntMap keys = new IntIntMap();
-	private final IntentBroadcastComponent intent;
+	private final IntentBroadcast intent;
 	private final Vector2 keyPanDirection = new Vector2();
 	private final ArrayMap<Integer, TouchData> touchMap = new ArrayMap<Integer, TouchData>();
 	public InputProcessor inputProcessor;
@@ -27,7 +26,7 @@ public class InputSystem extends EntitySystem {
 	private Viewport viewport;
 	private boolean killKeyBroadcasted = false;
 
-	public InputSystem(Viewport viewport, IntentBroadcastComponent intent) {
+	public InputSystem(Viewport viewport, IntentBroadcast intent) {
 		zoom = GameSettings.CAMERA_MAX_ZOOM;
 		this.intent = intent;
 		inputProcessor = new MyInputListener();
@@ -57,7 +56,7 @@ public class InputSystem extends EntitySystem {
 			zoom = GameSettings.CAMERA_MIN_ZOOM;
 		}
 
-		intent.moveDirection.set(keyPanDirection);
+		intent.keysMoveDirection.set(keyPanDirection);
 		intent.zoom = zoom;
 
 		if (keyPanDirection.isZero() && touchMap.containsKey(0)) {

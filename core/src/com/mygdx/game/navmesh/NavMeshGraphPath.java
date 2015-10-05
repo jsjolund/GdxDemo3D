@@ -12,7 +12,6 @@ import com.badlogic.gdx.utils.Array;
 public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 
 	private final static Plane.PlaneSide Back = Plane.PlaneSide.Back;
-	private final static Plane.PlaneSide Front = Plane.PlaneSide.Front;
 	private final static Plane.PlaneSide OnPlane = Plane.PlaneSide.OnPlane;
 
 	public Vector3 start;

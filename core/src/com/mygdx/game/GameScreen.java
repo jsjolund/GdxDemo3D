@@ -25,6 +25,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderScene;
+import com.mygdx.game.input.InputSystem;
+import com.mygdx.game.input.IntentBroadcast;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.RagdollFactory;
 
@@ -60,7 +62,7 @@ public class GameScreen implements Screen {
 		stage = new GameStage(viewport);
 		shapeRenderer = new ShapeRenderer();
 
-		IntentBroadcastComponent intentCmp = new IntentBroadcastComponent();
+		IntentBroadcast intentCmp = new IntentBroadcast();
 
 		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
@@ -206,7 +208,7 @@ public class GameScreen implements Screen {
 		stage.draw();
 	}
 
-	private Entity spawnCharacter(Vector3 pos, IntentBroadcastComponent intentCmp) {
+	private Entity spawnCharacter(Vector3 pos, IntentBroadcast intentCmp) {
 		Entity entity = new Entity();
 
 		short belongsToFlag = PhysicsSystem.PC_FLAG;

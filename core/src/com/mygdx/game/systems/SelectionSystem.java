@@ -6,9 +6,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
-import com.mygdx.game.components.IntentBroadcastComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
+import com.mygdx.game.input.IntentBroadcast;
 import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.navmesh.Triangle;
 
@@ -26,10 +26,12 @@ public class SelectionSystem extends EntitySystem {
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final float rayDistance = 100;
 	private ImmutableArray<Entity> entities;
-	private IntentBroadcastComponent intent;
+	private IntentBroadcast intent;
 	private NavMesh navMesh;
 
-	public SelectionSystem(PhysicsSystem phySys, IntentBroadcastComponent intent) {
+	Vector2 click = new Vector2();
+
+	public SelectionSystem(PhysicsSystem phySys, IntentBroadcast intent) {
 		systemFamily = Family.all(
 				PathFindingComponent.class,
 				SelectableComponent.class).get();
@@ -47,15 +49,16 @@ public class SelectionSystem extends EntitySystem {
 		if (entities.size() == 0) {
 			return;
 		}
-//		IntentBroadcastComponent intent = intentCmps.get(entities.get(0));
-		if (intent.click.equals(lastClick) && !intent.doubleClick) {
+		intent.getClick(click);
+//		IntentBroadcast intent = intentCmps.get(entities.get(0));
+		if (click.equals(lastClick) && !intent.isDoubleClick()) {
 			return;
 		}
-		lastClick.set(intent.click);
-		float screenX = intent.click.x;
-		float screenY = intent.click.y;
+		lastClick.set(click);
+		float screenX = click.x;
+		float screenY = click.y;
 
-		Ray ray = intent.pickRay;
+		Ray ray = intent.getPickRay();
 		Gdx.app.debug(tag, String.format(
 				"Mouse: %s, %s, Pick ray: origin: %s, direction: %s.",
 				screenX, screenY, ray.origin, ray.direction));

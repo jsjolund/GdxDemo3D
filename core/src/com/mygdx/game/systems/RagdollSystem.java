@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.*;
+import com.mygdx.game.input.IntentBroadcast;
 
 import java.util.Iterator;
 
@@ -38,9 +39,9 @@ public class RagdollSystem extends IteratingSystem {
 	private final ComponentMapper<SelectableComponent> selCmps =
 			ComponentMapper.getFor(SelectableComponent.class);
 
-	IntentBroadcastComponent intentCmp;
+	IntentBroadcast intentCmp;
 
-	public RagdollSystem(Family family, IntentBroadcastComponent intentCmp) {
+	public RagdollSystem(Family family, IntentBroadcast intentCmp) {
 		super(family);
 		this.intentCmp = intentCmp;
 	}
@@ -107,7 +108,7 @@ public class RagdollSystem extends IteratingSystem {
 		MotionStateComponent motionCmp = motionCmps.get(entity);
 
 		// Check if we should enable or disable physics control of the ragdoll
-		if (selCmp.isSelected && intentCmp.killSelected) {
+		if (selCmp.isSelected && intentCmp.isKillSelected()) {
 			if (ragdollCmp.ragdollControl) {
 
 				// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.
