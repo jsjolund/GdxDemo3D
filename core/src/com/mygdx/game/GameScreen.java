@@ -201,9 +201,7 @@ public class GameScreen implements Screen {
 				mode |= modes.DBG_DrawConstraintLimits;
 			}
 			debugDraw.setDebugMode(mode);
-
 		}
-
 		stage.act(delta);
 		stage.draw();
 	}

@@ -24,86 +24,84 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	}
 
 	/**
-	 * Calculate the shortest path through the navmesh path triangles, using the collapsing corridor algorithm
-	 * described on page 45 in the linked document.
-	 * See <a href="http://repository.tudelft.nl/assets/uuid:f558ade0-a168-42ff-a878-09d1cf1e5eb9/Thesis_Sandy_Brand_2009.pdf">
-	 * Brand, Sandy (2009), "Efficient obstacle avoidance using autonomously generated navigation meshes"</a>
+	 * Calculate the shortest path through the navmesh path triangles, using the Simple Stupid Funnel Algorithm.
 	 *
 	 * @return
 	 */
 	public Array<Vector3> getDirectPath() {
-
 		Array<Vector3> path = new Array<Vector3>();
-
 		if (nodes.size <= 1) {
 			path.add(new Vector3(end));
 			path.add(new Vector3(start));
 			return path;
 		}
-
-		Corridor corridor = new Corridor();
-		Vector3 pivot = new Vector3(start);
+		nodes.add(new Edge(null, null, end, end));
+		Funnel funnel = new Funnel();
+		funnel.pivot.set(start);
 		Edge edge = (Edge) nodes.get(0);
-		corridor.setLeftPlane(pivot, edge.leftVertex);
-		corridor.setRightPlane(pivot, edge.rightVertex);
+		funnel.setPlanes(funnel.pivot, edge);
+		int leftIndex = 0;
+		int rightIndex = 0;
 
-		for (int i = 1; i < nodes.size; i++) {
+		for (int i = 1; i < nodes.size; ++i) {
 			edge = (Edge) nodes.get(i);
-			Plane.PlaneSide leftPlaneLeftDP = corridor.sideLeftPlane(edge.leftVertex);
-			Plane.PlaneSide leftPlaneRightDP = corridor.sideLeftPlane(edge.rightVertex);
-			Plane.PlaneSide rightPlaneLeftDP = corridor.sideRightPlane(edge.leftVertex);
-			Plane.PlaneSide rightPlaneRightDP = corridor.sideRightPlane(edge.rightVertex);
 
-			if (leftPlaneLeftDP == Back && (rightPlaneLeftDP == Front || rightPlaneLeftDP == OnPlane)) {
-				path.add(new Vector3(pivot));
-				pivot.set(corridor.rightDoorPoint);
+			Plane.PlaneSide leftPlaneLeftDP = funnel.sideLeftPlane(edge.leftVertex);
+			Plane.PlaneSide leftPlaneRightDP = funnel.sideLeftPlane(edge.rightVertex);
+			Plane.PlaneSide rightPlaneLeftDP = funnel.sideRightPlane(edge.leftVertex);
+			Plane.PlaneSide rightPlaneRightDP = funnel.sideRightPlane(edge.rightVertex);
 
-				corridor.setLeftPlane(pivot, edge.leftVertex);
-				corridor.setRightPlane(pivot, edge.rightVertex);
-
-			} else if (rightPlaneRightDP == Back && (leftPlaneRightDP == Front || leftPlaneRightDP == OnPlane)) {
-				path.add(new Vector3(pivot));
-				pivot.set(corridor.leftDoorPoint);
-				corridor.setLeftPlane(pivot, edge.leftVertex);
-				corridor.setRightPlane(pivot, edge.rightVertex);
-
-			} else {
-				if (leftPlaneLeftDP == Back || leftPlaneLeftDP == OnPlane) {
-					corridor.setLeftPlane(pivot, edge.leftVertex);
+			if (rightPlaneRightDP == Back || rightPlaneRightDP == OnPlane) {
+				if (leftPlaneRightDP == Back || leftPlaneRightDP == OnPlane) {
+					// Tighten the funnel.
+					funnel.setRightPlane(funnel.pivot, edge.rightVertex);
+					rightIndex = i;
+				} else {
+					// Right over left, insert left to path and restart scan from portal left point.
+					path.add(new Vector3(funnel.pivot));
+					funnel.pivot.set(funnel.leftDoorPoint);
+					rightIndex = leftIndex;
+					i = leftIndex;
+					if (i < nodes.size - 1) {
+						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
+						continue;
+					}
+					break;
 				}
-				if (rightPlaneRightDP == Back || rightPlaneRightDP == OnPlane) {
-					corridor.setRightPlane(pivot, edge.rightVertex);
+			}
+			if (leftPlaneLeftDP == Back || leftPlaneLeftDP == OnPlane) {
+				if (rightPlaneLeftDP == Back || rightPlaneLeftDP == OnPlane) {
+					// Tighten the funnel.
+					funnel.setLeftPlane(funnel.pivot, edge.leftVertex);
+					leftIndex = i;
+				} else {
+					// Left over right, insert right to path and restart scan from portal right point.
+					path.add(new Vector3(funnel.pivot));
+					funnel.pivot.set(funnel.rightDoorPoint);
+					leftIndex = rightIndex;
+					i = rightIndex;
+					if (i < nodes.size - 1) {
+						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
+						continue;
+					}
+					break;
 				}
 			}
 		}
-		path.add(new Vector3(pivot));
-
-		Plane.PlaneSide leftPlaneEndPoint = corridor.sideLeftPlane(end);
-		Plane.PlaneSide rightPlaneEndPoint = corridor.sideRightPlane(end);
-		if (leftPlaneEndPoint == Back && (rightPlaneEndPoint == Front || rightPlaneEndPoint == OnPlane)) {
-			path.add(new Vector3(corridor.rightDoorPoint));
-			System.out.println("r");
-		} else if (rightPlaneEndPoint == Back && (leftPlaneEndPoint == Front || leftPlaneEndPoint == OnPlane)) {
-			path.add(new Vector3(corridor.leftDoorPoint));
-			System.out.println("l");
-		}
+		path.add(new Vector3(funnel.pivot));
 		path.add(new Vector3(end));
 		path.reverse();
-
+		nodes.removeIndex(nodes.size - 1);
 		return path;
 	}
 
-	public void setStartEnd(Vector3 start, Vector3 end) {
-		this.start = new Vector3(start);
-		this.end = new Vector3(end);
-	}
-
-	private class Corridor {
-		public final Vector3 up = Vector3.Y;
-		public Plane leftPlane = new Plane();
-		public Plane rightPlane = new Plane();
-		public Vector3 leftDoorPoint = new Vector3();
-		public Vector3 rightDoorPoint = new Vector3();
+	private class Funnel {
+		private final Vector3 up = Vector3.Y;
+		public final Plane leftPlane = new Plane();
+		public final Plane rightPlane = new Plane();
+		public final Vector3 leftDoorPoint = new Vector3();
+		public final Vector3 rightDoorPoint = new Vector3();
+		public final Vector3 pivot = new Vector3();
 
 		private Vector3 tmp = new Vector3();
 
@@ -119,6 +117,11 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			rightDoorPoint.set(rightEdgeVertex);
 		}
 
+		public void setPlanes(Vector3 pivot, Edge edge) {
+			setLeftPlane(pivot, edge.leftVertex);
+			setRightPlane(pivot, edge.rightVertex);
+		}
+
 		public Plane.PlaneSide sideLeftPlane(Vector3 point) {
 			return leftPlane.testPoint(point);
 		}
@@ -127,5 +130,4 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			return rightPlane.testPoint(point);
 		}
 	}
-
 }

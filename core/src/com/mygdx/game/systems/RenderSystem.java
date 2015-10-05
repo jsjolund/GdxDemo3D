@@ -7,6 +7,8 @@ import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Renderable;
@@ -18,6 +20,8 @@ import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -51,20 +55,26 @@ public class RenderSystem extends EntitySystem {
 	public static final float SHADOW_INTENSITY = 1f;
 
 	public final Family systemFamily;
-
 	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
-	private final Vector3 pos = new Vector3();
-	private final ModelBatch modelBatch;
-	private final Viewport viewport;
-	private final MyShapeRenderer shapeRenderer;
-	private final Vector3 debugNodePos = new Vector3();
-	private final Vector3 debugModelPos = new Vector3();
 	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private ImmutableArray<Entity> entities;
+
+	private final ModelBatch modelBatch;
+	private final ModelBatch shadowBatch;
+	private final MyShapeRenderer shapeRenderer;
+	private final SpriteBatch spriteBatch;
+	private BitmapFont font;
+
+	private final Vector3 tmp = new Vector3();
+	private final Vector3 debugNodePos = new Vector3();
+	private final Vector3 debugModelPos = new Vector3();
+	private final Matrix4 tmpMatrix = new Matrix4();
+	private final Quaternion tmpQuat = new Quaternion();
+
+	private final Viewport viewport;
 	private Camera camera;
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
-	private ModelBatch shadowBatch;
 	private NavMesh navmesh;
 
 	public RenderSystem(Viewport viewport, Camera camera) {
@@ -75,6 +85,11 @@ public class RenderSystem extends EntitySystem {
 		shapeRenderer = new MyShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 
+		spriteBatch = new SpriteBatch();
+		font = new BitmapFont();
+		font.setColor(Color.WHITE);
+		font.setUseIntegerPositions(false);
+		font.getData().setScale(0.01f);
 		shadowBatch = new ModelBatch(new DepthShaderProvider());
 
 		ShaderProgram.pedantic = false;
@@ -86,8 +101,6 @@ public class RenderSystem extends EntitySystem {
 				return new UberShader(renderable, config);
 			}
 		});
-
-
 	}
 
 	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
@@ -112,8 +125,8 @@ public class RenderSystem extends EntitySystem {
 	}
 
 	private boolean isVisible(final Camera camera, final ModelComponent cmp) {
-		cmp.modelInstance.transform.getTranslation(pos);
-		return camera.frustum.sphereInFrustum(pos, cmp.radius);
+		cmp.modelInstance.transform.getTranslation(tmp);
+		return camera.frustum.sphereInFrustum(tmp, cmp.radius);
 	}
 
 	@Override
@@ -157,7 +170,6 @@ public class RenderSystem extends EntitySystem {
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
-
 		}
 		NavMeshGraphPath path = navmesh.debugPath;
 		if (path != null && path.getCount() > 0) {
@@ -191,7 +203,19 @@ public class RenderSystem extends EntitySystem {
 		}
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
+
+		spriteBatch.begin();
+		spriteBatch.setProjectionMatrix(camera.combined);
+		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
+			Triangle t = navmesh.graph.getTriangleFromIndex(i);
+			tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
+			tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
+			spriteBatch.setTransformMatrix(tmpMatrix);
+			font.draw(spriteBatch, Integer.toString(t.index), 0, 0);
+		}
+		spriteBatch.end();
 	}
+
 
 	private void drawShadowBatch() {
 		int vw = viewport.getScreenWidth();

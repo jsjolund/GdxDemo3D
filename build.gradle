@@ -90,7 +90,7 @@ project(":ios") {
 
 project(":core") {
     apply plugin: "java"
-
+    project.sourceCompatibility = "1.6"
 
     dependencies {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
