@@ -56,22 +56,19 @@ public class RenderSystem extends EntitySystem {
 
 	public final Family systemFamily;
 	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
-	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
-	private ImmutableArray<Entity> entities;
-
 	private final ModelBatch modelBatch;
 	private final ModelBatch shadowBatch;
 	private final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
-	private BitmapFont font;
-
 	private final Vector3 tmp = new Vector3();
 	private final Vector3 debugNodePos = new Vector3();
 	private final Vector3 debugModelPos = new Vector3();
 	private final Matrix4 tmpMatrix = new Matrix4();
 	private final Quaternion tmpQuat = new Quaternion();
-
 	private final Viewport viewport;
+	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
+	private ImmutableArray<Entity> entities;
+	private BitmapFont font;
 	private Camera camera;
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;

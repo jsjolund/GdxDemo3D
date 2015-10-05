@@ -25,9 +25,8 @@ public class CameraSystem extends EntitySystem {
 	private final Vector2 cursorDelta = new Vector2();
 	private final Ray ray = new Ray();
 	private final Vector2 lastDragProcessed = new Vector2();
-	private float currentZoom;
 	private final Quaternion deltaRotation = new Quaternion();
-
+	private float currentZoom;
 	private Vector2 keysMoveDirection = new Vector2();
 	private Vector2 dragCurrent = new Vector2();
 

@@ -25,11 +25,10 @@ public class SelectionSystem extends EntitySystem {
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final float rayDistance = 100;
+	Vector2 click = new Vector2();
 	private ImmutableArray<Entity> entities;
 	private IntentBroadcast intent;
 	private NavMesh navMesh;
-
-	Vector2 click = new Vector2();
 
 	public SelectionSystem(PhysicsSystem phySys, IntentBroadcast intent) {
 		systemFamily = Family.all(

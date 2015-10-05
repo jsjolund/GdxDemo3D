@@ -95,13 +95,12 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	}
 
 	private class Funnel {
-		private final Vector3 up = Vector3.Y;
 		public final Plane leftPlane = new Plane();
 		public final Plane rightPlane = new Plane();
 		public final Vector3 leftDoorPoint = new Vector3();
 		public final Vector3 rightDoorPoint = new Vector3();
 		public final Vector3 pivot = new Vector3();
-
+		private final Vector3 up = Vector3.Y;
 		private Vector3 tmp = new Vector3();
 
 		public void setLeftPlane(Vector3 pivot, Vector3 leftEdgeVertex) {
