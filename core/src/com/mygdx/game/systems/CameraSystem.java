@@ -27,10 +27,10 @@ public class CameraSystem extends EntitySystem {
 	private final Vector2 lastDragProcessed = new Vector2();
 	private final Quaternion deltaRotation = new Quaternion();
 	private float currentZoom;
-	private Vector2 keysMoveDirection = new Vector2();
-	private Vector2 dragCurrent = new Vector2();
+	private final Vector2 keysMoveDirection = new Vector2();
+	private final Vector2 dragCurrent = new Vector2();
 
-	private IntentBroadcast intent;
+	private final IntentBroadcast intent;
 	private Camera ghostCamera;
 	private Camera realCam;
 	private Viewport viewport;
@@ -96,10 +96,14 @@ public class CameraSystem extends EntitySystem {
 		cursorDelta.set(lastDragProcessed).sub(dragCurrent).scl(GameSettings.MOUSE_SENSITIVITY);
 		tmp.set(ghostCamera.direction).crs(ghostCamera.up).nor();
 		deltaRotation.setEulerAngles(cursorDelta.x, cursorDelta.y * tmp.x, cursorDelta.y * tmp.z);
-		tmp.set(worldGroundTarget).sub(ghostCamera.position);
+		rotateAround(ghostCamera, worldGroundTarget, deltaRotation);
+	}
+
+	public void rotateAround(Camera ghostCamera, Vector3 point, Quaternion quat) {
+		tmp.set(point).sub(ghostCamera.position);
 		ghostCamera.translate(tmp);
-		ghostCamera.rotate(deltaRotation);
-		deltaRotation.transform(tmp);
+		ghostCamera.rotate(quat);
+		quat.transform(tmp);
 		ghostCamera.translate(-tmp.x, -tmp.y, -tmp.z);
 	}
 
@@ -107,7 +111,6 @@ public class CameraSystem extends EntitySystem {
 	public void update(float deltaTime) {
 		intent.getKeysMoveDirection(keysMoveDirection);
 		intent.getDragCurrent(dragCurrent);
-
 
 		if (keysMoveDirection.len() > 0) {
 			processKeyboardPan(deltaTime);

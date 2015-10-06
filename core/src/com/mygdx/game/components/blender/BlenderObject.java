@@ -14,6 +14,7 @@ public abstract class BlenderObject {
 	public Vector3 position;
 	public Vector3 rotation;
 	public Vector3 scale;
+	public boolean[] layers;
 
 	public ArrayMap<String, String> custom_properties;
 

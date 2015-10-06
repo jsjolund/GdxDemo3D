@@ -44,6 +44,7 @@ class BlenderObject(object):
         self.rot = [math.degrees(a) for a in blender_object.rotation_euler]
         self.scl = blender_object.scale.copy()
         self.type_name = str(self.blender_object.data.__class__.__name__)
+        self.layers = bpy.data.objects[blender_object.name].layers[0:20]
         self.custom_properties = {}
         for obj in (o for o in blender_object.keys() if not o in '_RNA_UI'):
             self.custom_properties[obj] = blender_object[obj]
@@ -55,6 +56,7 @@ class BlenderObject(object):
         self.entry["position"] = {"x": self.loc.x, "y": self.loc.y, "z": self.loc.z}
         self.entry["rotation"] = {"x": self.rot[0], "y": self.rot[1], "z": self.rot[2]}
         self.entry["scale"] = {"x": self.scl.x, "y": self.scl.y, "z": self.scl.z}
+        self.entry["layers"] = self.layers
         self.entry["custom_properties"] = self.custom_properties
 
 
