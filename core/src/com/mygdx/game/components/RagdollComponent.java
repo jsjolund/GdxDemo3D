@@ -1,6 +1,5 @@
 package com.mygdx.game.components;
 
-import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -12,7 +11,7 @@ import com.badlogic.gdx.utils.ArrayMap;
 /**
  * Created by user on 9/6/15.
  */
-public class RagdollComponent implements Component {
+public class RagdollComponent implements DisposableComponent {
 
 	public final Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 	public final ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
@@ -57,6 +56,18 @@ public class RagdollComponent implements Component {
 		if (!nodes.contains(node, true)) {
 			nodes.add(node);
 		}
+	}
+
+	@Override
+	public void dispose() {
+		for (btTypedConstraint constraint : constraints) {
+			constraint.dispose();
+		}
+		constraints.clear();
+		for (btRigidBody body : map.keys) {
+			body.dispose();
+		}
+		map.clear();
 	}
 
 	public class NodeConnection {

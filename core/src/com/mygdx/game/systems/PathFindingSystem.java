@@ -7,10 +7,10 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.CharacterActionComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.settings.GameSettings;
 
 /**
  * Created by user on 8/30/15.

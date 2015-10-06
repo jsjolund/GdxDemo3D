@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.mygdx.game.settings.ShaderSettings;
 
 /**
  * Created by user on 8/29/15.
@@ -33,12 +34,12 @@ public class UberShader extends DefaultShader {
 		super.begin(camera, context);
 		context.setDepthTest(GL20.GL_LEQUAL);
 		program.begin();
-		program.setUniformf("u_hue", UberShaderSettings.u_hue);
-		program.setUniformf("u_saturation", UberShaderSettings.u_saturation);
-		program.setUniformf("u_value", UberShaderSettings.u_value);
-		program.setUniformf("u_specOpacity", UberShaderSettings.u_specOpacity);
-		program.setUniformf("u_lightIntensity", UberShaderSettings.u_lightIntensity);
-		program.setUniformf("u_ambient", UberShaderSettings.u_ambient);
+		program.setUniformf("u_hue", ShaderSettings.hue);
+		program.setUniformf("u_saturation", ShaderSettings.saturation);
+		program.setUniformf("u_value", ShaderSettings.value);
+		program.setUniformf("u_specOpacity", ShaderSettings.specOpacity);
+		program.setUniformf("u_lightIntensity", ShaderSettings.lightIntensity);
+		program.setUniformf("u_ambient", ShaderSettings.ambient);
 	}
 
 	@Override
@@ -52,12 +53,4 @@ public class UberShader extends DefaultShader {
 		super.render(renderable, combinedAttributes);
 	}
 
-	public static class UberShaderSettings {
-		public static float u_hue = 1f;
-		public static float u_saturation = 0.5f;
-		public static float u_value = 0.8f;
-		public static float u_specOpacity = 0.5f;
-		public static float u_lightIntensity = 3f;
-		public static float u_ambient = 5f;
-	}
 }

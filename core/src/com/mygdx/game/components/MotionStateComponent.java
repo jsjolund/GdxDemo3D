@@ -1,13 +1,12 @@
 package com.mygdx.game.components;
 
-import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 
 /**
  * Created by user on 7/31/15.
  */
-public class MotionStateComponent implements Component {
+public class MotionStateComponent implements DisposableComponent {
 
 	public final Matrix4 transform;
 	public final PhysicsMotionState motionState;
@@ -15,6 +14,11 @@ public class MotionStateComponent implements Component {
 	public MotionStateComponent(Matrix4 transform) {
 		this.transform = transform;
 		motionState = new PhysicsMotionState();
+	}
+
+	@Override
+	public void dispose() {
+		motionState.dispose();
 	}
 
 	public class PhysicsMotionState extends btMotionState {

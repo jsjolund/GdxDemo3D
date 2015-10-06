@@ -9,9 +9,9 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.*;
 import com.mygdx.game.input.IntentBroadcast;
+import com.mygdx.game.settings.GameSettings;
 
 import java.util.Iterator;
 

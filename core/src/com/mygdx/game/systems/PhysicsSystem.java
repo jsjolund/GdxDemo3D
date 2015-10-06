@@ -11,9 +11,9 @@ import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.*;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Disposable;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
+import com.mygdx.game.settings.GameSettings;
 
 /**
  * Created by user on 7/31/15.
@@ -70,6 +70,18 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	}
 
 	@Override
+	public void dispose() {
+		collisionConfig.dispose();
+		dispatcher.dispose();
+		dynamicsWorld.dispose();
+		broadphase.dispose();
+		constraintSolver.dispose();
+		contactListener.dispose();
+		debugDrawer.dispose();
+		callback.dispose();
+	}
+
+	@Override
 	public void addedToEngine(Engine engine) {
 		entities = engine.getEntitiesFor(systemFamily);
 	}
@@ -85,18 +97,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f);
 	}
 
-	@Override
-	public void dispose() {
-		collisionConfig.dispose();
-		dispatcher.dispose();
-		dynamicsWorld.dispose();
-		broadphase.dispose();
-		constraintSolver.dispose();
-		contactListener.dispose();
-		debugDrawer.dispose();
-
-		callback.dispose();
-	}
 
 	public Entity rayTest(Ray ray, Vector3 hitPointWorld, short belongsToFlag, short collidesWithFlag,
 						  float maxDistance) {

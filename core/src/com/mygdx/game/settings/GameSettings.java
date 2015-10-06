@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package com.mygdx.game.settings;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector3;
@@ -25,23 +25,15 @@ public class GameSettings {
 
 	public static final Vector3 GRAVITY = new Vector3(0, -9.82f, 0);
 
-	public static boolean DRAW_COLLISION_SHAPES = false;
-	public static boolean DRAW_ARMATURE = false;
-	public static boolean DRAW_CONSTRAINTS = false;
-	public static boolean DRAW_NAVMESH = false;
-
-	public static float MOUSE_SENSITIVITY = 0.1f;
-
-	public static int KEY_PAUSE = Input.Keys.SPACE;
 	public static float GAME_SPEED = 1;
 
+	public static float MOUSE_SENSITIVITY = 0.1f;
+	public static int KEY_PAUSE = Input.Keys.SPACE;
 	public static int KEY_DRAW_ARMATURE = Input.Keys.F1;
 	public static int KEY_DRAW_COLLISION_SHAPES = Input.Keys.F2;
 	public static int KEY_DRAW_CONSTRAINTS = Input.Keys.F3;
-	public static int KEY_KILL_SELECTED = Input.Keys.F4;
 	public static int KEY_DRAW_NAVMESH = Input.Keys.F5;
-
-
+	public static int KEY_KILL_SELECTED = Input.Keys.F4;
 	public static int KEY_PAN_FORWARD = Input.Keys.W;
 	public static int KEY_PAN_LEFT = Input.Keys.A;
 	public static int KEY_PAN_BACKWARD = Input.Keys.S;

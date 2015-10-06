@@ -9,7 +9,8 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.GameSettings;
+import com.mygdx.game.settings.DebugViewSettings;
+import com.mygdx.game.settings.GameSettings;
 
 /**
  * Created by user on 8/24/15.
@@ -103,16 +104,16 @@ public class InputSystem extends EntitySystem {
 		public boolean keyDown(int keycode) {
 			keys.put(keycode, keycode);
 			if (keycode == GameSettings.KEY_DRAW_COLLISION_SHAPES) {
-				GameSettings.DRAW_COLLISION_SHAPES = !GameSettings.DRAW_COLLISION_SHAPES;
+				DebugViewSettings.drawCollShapes = !DebugViewSettings.drawCollShapes;
 			}
 			if (keycode == GameSettings.KEY_DRAW_CONSTRAINTS) {
-				GameSettings.DRAW_CONSTRAINTS = !GameSettings.DRAW_CONSTRAINTS;
+				DebugViewSettings.drawConstraints = !DebugViewSettings.drawConstraints;
 			}
 			if (keycode == GameSettings.KEY_DRAW_ARMATURE) {
-				GameSettings.DRAW_ARMATURE = !GameSettings.DRAW_ARMATURE;
+				DebugViewSettings.drawArmature = !DebugViewSettings.drawArmature;
 			}
 			if (keycode == GameSettings.KEY_DRAW_NAVMESH) {
-				GameSettings.DRAW_NAVMESH = !GameSettings.DRAW_NAVMESH;
+				DebugViewSettings.drawNavmesh = !DebugViewSettings.drawNavmesh;
 			}
 			if (keycode == GameSettings.KEY_PAUSE) {
 

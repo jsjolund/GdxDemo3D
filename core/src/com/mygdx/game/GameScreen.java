@@ -20,6 +20,7 @@ import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -27,6 +28,8 @@ import com.mygdx.game.components.*;
 import com.mygdx.game.components.blender.BlenderScene;
 import com.mygdx.game.input.InputSystem;
 import com.mygdx.game.input.IntentBroadcast;
+import com.mygdx.game.settings.DebugViewSettings;
+import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.RagdollFactory;
 
@@ -41,17 +44,27 @@ public class GameScreen implements Screen {
 
 	private final Viewport viewport;
 	private final GameStage stage;
-	PooledEngine engine;
-	Color viewportBackgroundColor;
-	PerspectiveCamera camera;
-	AssetManager assets;
-	private ShapeRenderer shapeRenderer;
+	private final PooledEngine engine;
+	private final Color viewportBackgroundColor;
+	private final PerspectiveCamera camera;
+	private final AssetManager assets;
+	private final ShapeRenderer shapeRenderer;
+	private final btIDebugDraw.DebugDrawModes modes;
+	private final btIDebugDraw debugDraw;
+
+	Array<BlenderScene> scenes = new Array<BlenderScene>();
+	Array<Class<? extends DisposableComponent>> disposableClasses;
 
 	public GameScreen(int reqWidth, int reqHeight) {
+		disposableClasses = new Array<Class<? extends DisposableComponent>>();
+		disposableClasses.add(BillboardComponent.class);
+		disposableClasses.add(PhysicsComponent.class);
+		disposableClasses.add(RagdollComponent.class);
+		disposableClasses.add(MotionStateComponent.class);
+
 		assets = new AssetManager();
 		engine = new PooledEngine();
 		Bullet.init();
-
 		viewportBackgroundColor = Color.BLACK;
 
 		camera = new PerspectiveCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
@@ -72,22 +85,22 @@ public class GameScreen implements Screen {
 				"models/json/scene0_light.json",
 				"models/json/scene0_camera.json"
 		);
-
+		scenes.add(blenderScene);
 		blenderScene.setToSceneCamera(camera);
 
-		// TODO: dispose
 		Gdx.app.debug(tag, "Loading render system");
 		RenderSystem renderSys = new RenderSystem(viewport, camera);
 		renderSys.setNavmesh(blenderScene.navMesh);
 		renderSys.setEnvironmentLights(blenderScene.lights, blenderScene.shadowCameraDirection);
 		engine.addSystem(renderSys);
 
-		// TODO: dispose
 		Gdx.app.debug(tag, "Loading physics system");
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
 		engine.addEntityListener(phySys.systemFamily, phySys.physicsComponentListener);
 		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
+		modes = new btIDebugDraw.DebugDrawModes();
+		debugDraw = phySys.dynamicsWorld.getDebugDrawer();
 
 		Gdx.app.debug(tag, "Adding entities");
 		for (Entity entity : blenderScene.entities) {
@@ -178,6 +191,27 @@ public class GameScreen implements Screen {
 	}
 
 	@Override
+	public void dispose() {
+		stage.dispose();
+		assets.dispose();
+		shapeRenderer.dispose();
+		debugDraw.dispose();
+		engine.getSystem(RenderSystem.class).dispose();
+		engine.getSystem(PhysicsSystem.class).dispose();
+		for (BlenderScene scene : scenes) {
+			scene.dispose();
+		}
+		scenes.clear();
+		ImmutableArray<Entity> entities;
+		for (Class<? extends DisposableComponent> disposableClass : disposableClasses) {
+			entities = engine.getEntitiesFor(Family.all(disposableClass).get());
+			for (Entity entity : entities) {
+				entity.getComponent(disposableClass).dispose();
+			}
+		}
+	}
+
+	@Override
 	public void render(float delta) {
 		delta *= GameSettings.GAME_SPEED;
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
@@ -190,19 +224,16 @@ public class GameScreen implements Screen {
 
 		engine.update(delta);
 
-		if (GameSettings.DRAW_COLLISION_SHAPES || GameSettings.DRAW_CONSTRAINTS) {
-			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
-			btIDebugDraw debugDraw = engine.getSystem(PhysicsSystem.class).dynamicsWorld.getDebugDrawer();
-			btIDebugDraw.DebugDrawModes modes = new btIDebugDraw.DebugDrawModes();
+		if (DebugViewSettings.drawCollShapes || DebugViewSettings.drawConstraints) {
 			int mode = 0;
-			if (GameSettings.DRAW_COLLISION_SHAPES) {
-				mode |= modes.DBG_DrawWireframe;
-			}
-			if (GameSettings.DRAW_CONSTRAINTS) {
+			if (DebugViewSettings.drawConstraints) {
 				mode |= modes.DBG_DrawConstraints;
 				mode |= modes.DBG_DrawConstraintLimits;
+			} else if (DebugViewSettings.drawCollShapes) {
+				mode |= modes.DBG_DrawWireframe;
 			}
 			debugDraw.setDebugMode(mode);
+			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
 		}
 		stage.act(delta);
 		stage.draw();
@@ -302,8 +333,5 @@ public class GameScreen implements Screen {
 		// TODO Auto-generated method stub
 	}
 
-	@Override
-	public void dispose() {
-		stage.dispose();
-	}
+
 }

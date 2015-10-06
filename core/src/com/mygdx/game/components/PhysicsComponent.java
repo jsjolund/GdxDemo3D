@@ -1,6 +1,5 @@
 package com.mygdx.game.components;
 
-import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -8,12 +7,11 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Disposable;
 
 /**
  * Created by user on 7/31/15.
  */
-public class PhysicsComponent implements Component, Disposable {
+public class PhysicsComponent implements DisposableComponent {
 
 	private final static Vector3 localInertia = new Vector3();
 	public final MotionStateComponent.PhysicsMotionState motionState;

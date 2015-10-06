@@ -24,14 +24,16 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.navmesh.Edge;
 import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.navmesh.NavMeshGraphPath;
 import com.mygdx.game.navmesh.Triangle;
+import com.mygdx.game.settings.DebugViewSettings;
+import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
@@ -41,7 +43,7 @@ import java.util.List;
 /**
  * Created by user on 7/31/15.
  */
-public class RenderSystem extends EntitySystem {
+public class RenderSystem extends EntitySystem implements Disposable {
 
 	public static final String tag = "RenderSystem";
 
@@ -100,6 +102,16 @@ public class RenderSystem extends EntitySystem {
 		});
 	}
 
+	@Override
+	public void dispose() {
+		modelBatch.dispose();
+		shadowBatch.dispose();
+		shapeRenderer.dispose();
+		spriteBatch.dispose();
+		font.dispose();
+		shadowLight.dispose();
+	}
+
 	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
 		environment = new Environment();
 		environment.add((shadowLight = new DirectionalShadowLight(
@@ -146,11 +158,11 @@ public class RenderSystem extends EntitySystem {
 		}
 		modelBatch.end();
 
-		if (GameSettings.DRAW_ARMATURE) {
+		if (DebugViewSettings.drawArmature) {
 			drawArmature();
 		}
 
-		if (GameSettings.DRAW_NAVMESH) {
+		if (DebugViewSettings.drawNavmesh) {
 			drawNavMesh();
 		}
 
@@ -282,4 +294,6 @@ public class RenderSystem extends EntitySystem {
 	public void setNavmesh(NavMesh navmesh) {
 		this.navmesh = navmesh;
 	}
+
+
 }

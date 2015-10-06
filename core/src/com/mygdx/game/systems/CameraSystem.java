@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.GameSettings;
 import com.mygdx.game.input.IntentBroadcast;
+import com.mygdx.game.settings.GameSettings;
 
 /**
  * Created by user on 8/24/15.
@@ -26,11 +26,10 @@ public class CameraSystem extends EntitySystem {
 	private final Ray ray = new Ray();
 	private final Vector2 lastDragProcessed = new Vector2();
 	private final Quaternion deltaRotation = new Quaternion();
-	private float currentZoom;
 	private final Vector2 keysMoveDirection = new Vector2();
 	private final Vector2 dragCurrent = new Vector2();
-
 	private final IntentBroadcast intent;
+	private float currentZoom;
 	private Camera ghostCamera;
 	private Camera realCam;
 	private Viewport viewport;

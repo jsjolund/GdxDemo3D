@@ -11,8 +11,10 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.shaders.UberShader;
+import com.mygdx.game.settings.DebugViewSettings;
+import com.mygdx.game.settings.ShaderSettings;
 
 import java.lang.reflect.Field;
 
@@ -25,9 +27,10 @@ public class GameStage extends Stage {
 
 	private final Viewport viewport;
 	private final Batch batch;
+	private final Table shaderSettingsTable = new Table();
+	private final Table debugSettingsTable = new Table();
 	Camera cameraUI;
 	Camera camera3D;
-	Table shaderSettingsTable;
 	Skin skin;
 
 	public GameStage(Viewport viewport) {
@@ -44,24 +47,26 @@ public class GameStage extends Stage {
 
 		skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
-		shaderSettingsTable = new Table();
+		addShaderMenu(0, 0, 55, 200, 100);
+		addDebugViewMenu(120, 0, 180, 100, 100);
+	}
 
-		Field[] fields = UberShader.UberShaderSettings.class.getFields();
+	private void addShaderMenu(float buttonX, float buttonY, float tableX, float tableY, float width) {
+		Field[] fields = ShaderSettings.class.getFields();
 		for (final Field field : fields) {
 			final Label fieldName = new Label(field.getName(), skin);
 			float fieldValueFloat = 0;
 			try {
 				fieldValueFloat = field.getFloat(field);
 			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse float value for " + field.getName());
+				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
 			}
 			final TextField fieldValue = new TextField(String.valueOf(fieldValueFloat), skin);
 			shaderSettingsTable.add(fieldName);
 			shaderSettingsTable.row();
-			shaderSettingsTable.add(fieldValue).width(100);
+			shaderSettingsTable.add(fieldValue).width(width);
 			shaderSettingsTable.row();
 			fieldValue.addListener(new InputListener() {
-
 				@Override
 				public boolean keyTyped(InputEvent event, char character) {
 					String userInput = fieldValue.getText();
@@ -74,20 +79,17 @@ public class GameStage extends Stage {
 					try {
 						field.setFloat(field, newFieldValue);
 					} catch (IllegalAccessException e) {
-						Gdx.app.debug(tag, "Cannot set float value for " + field.getName());
+						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
 					}
 					return true;
 				}
 			});
 		}
-		shaderSettingsTable.setPosition(55, 200);
 		addActor(shaderSettingsTable);
+		shaderSettingsTable.setPosition(tableX, tableY);
 		shaderSettingsTable.setVisible(false);
-
-
-		final TextButton shaderSettingsButton = new TextButton("shader", skin);
-		shaderSettingsButton.addListener(new InputListener() {
-
+		final TextButton button = new TextButton("shader", skin);
+		button.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 				if (shaderSettingsTable.isVisible()) {
 					shaderSettingsTable.setVisible(false);
@@ -99,9 +101,56 @@ public class GameStage extends Stage {
 				return false;
 			}
 		});
-		shaderSettingsButton.setPosition(0, 0);
-		addActor(shaderSettingsButton);
+		button.setPosition(buttonX, buttonY);
+		button.setWidth(width);
+		addActor(button);
+	}
 
+	private void addDebugViewMenu(float buttonX, float buttonY, float tableX, float tableY, float width) {
+		Field[] fields = DebugViewSettings.class.getFields();
+		for (final Field field : fields) {
+			final Label fieldName = new Label(field.getName(), skin);
+			boolean fieldValueBoolean = false;
+			try {
+				fieldValueBoolean = field.getBoolean(field);
+			} catch (Exception e) {
+				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
+			}
+			final CheckBox checkBox = new CheckBox(field.getName(), skin);
+			checkBox.setChecked(fieldValueBoolean);
+			debugSettingsTable.add(checkBox).pad(5).align(Align.left);
+			debugSettingsTable.row();
+			checkBox.addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					checkBox.setChecked(!checkBox.isChecked());
+					try {
+						field.setBoolean(field, checkBox.isChecked());
+					} catch (IllegalAccessException e) {
+						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
+					}
+					return true;
+				}
+			});
+		}
+		addActor(debugSettingsTable);
+		debugSettingsTable.setPosition(tableX, tableY);
+		debugSettingsTable.setVisible(false);
+		final TextButton button = new TextButton("debug", skin);
+		button.addListener(new InputListener() {
+			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+				if (debugSettingsTable.isVisible()) {
+					debugSettingsTable.setVisible(false);
+					debugSettingsTable.remove();
+				} else {
+					debugSettingsTable.setVisible(true);
+					addActor(debugSettingsTable);
+				}
+				return false;
+			}
+		});
+		button.setPosition(buttonX, buttonY);
+		button.setWidth(width);
+		addActor(button);
 	}
 
 	public void resize(int width, int height) {

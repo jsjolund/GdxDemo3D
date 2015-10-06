@@ -1,6 +1,5 @@
 package com.mygdx.game.components;
 
-import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -12,13 +11,12 @@ import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Disposable;
 import com.mygdx.game.utilities.ModelFactory;
 
 /**
  * Created by user on 9/14/15.
  */
-public class BillboardComponent implements Component, Disposable {
+public class BillboardComponent implements DisposableComponent {
 
 	public final TextureRegion textureRegion;
 	public final ModelInstance modelInstance;
