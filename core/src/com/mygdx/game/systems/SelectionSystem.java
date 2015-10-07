@@ -49,7 +49,6 @@ public class SelectionSystem extends EntitySystem {
 			return;
 		}
 		intent.getClick(click);
-//		IntentBroadcast intent = intentCmps.get(entities.get(0));
 		if (click.equals(lastClick) && !intent.isDoubleClick()) {
 			return;
 		}

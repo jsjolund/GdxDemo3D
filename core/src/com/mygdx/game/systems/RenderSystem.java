@@ -37,8 +37,6 @@ import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
-import java.util.List;
-
 
 /**
  * Created by user on 7/31/15.
@@ -112,7 +110,7 @@ public class RenderSystem extends EntitySystem implements Disposable {
 		shadowLight.dispose();
 	}
 
-	public void setEnvironmentLights(List<BaseLight> lights, Vector3 sunDirection) {
+	public void setEnvironmentLights(Array<BaseLight> lights, Vector3 sunDirection) {
 		environment = new Environment();
 		environment.add((shadowLight = new DirectionalShadowLight(
 				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,

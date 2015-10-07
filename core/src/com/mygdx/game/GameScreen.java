@@ -52,8 +52,8 @@ public class GameScreen implements Screen {
 	private final btIDebugDraw.DebugDrawModes modes;
 	private final btIDebugDraw debugDraw;
 
-	Array<BlenderScene> scenes = new Array<BlenderScene>();
-	Array<Class<? extends DisposableComponent>> disposableClasses;
+	private final Array<BlenderScene> scenes = new Array<BlenderScene>();
+	private final Array<Class<? extends DisposableComponent>> disposableClasses;
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		disposableClasses = new Array<Class<? extends DisposableComponent>>();
@@ -77,7 +77,6 @@ public class GameScreen implements Screen {
 
 		IntentBroadcast intentCmp = new IntentBroadcast();
 
-		// TODO: dispose
 		Gdx.app.debug(tag, "Loading json");
 		BlenderScene blenderScene = new BlenderScene(
 				"models/json/scene0_model.json",
@@ -256,7 +255,7 @@ public class GameScreen implements Screen {
 		Model model = assets.get("models/g3db/character_male_base.g3db");
 
 		// Create model components containing model instances
-		ModelComponent mdlCmp = new ModelComponent(model, "man", pos,
+		ModelComponent mdlCmp = new ModelComponent(model, "male", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		// TODO: Ragdoll problems with culling. Move capsule to ragdoll.
@@ -265,8 +264,10 @@ public class GameScreen implements Screen {
 
 		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
 
+
 		// Create base collision shape
 		float bodyMass = 100;
+		// TODO: Dispose
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
 
 		PhysicsComponent phyCmp = new PhysicsComponent(
@@ -292,11 +293,10 @@ public class GameScreen implements Screen {
 				collidesWithFlag);
 		entity.add(ragCmp);
 
-		// Selection billboard TODO: Dispose
-		String markerName = "marker.png";
-		assets.load(markerName, Pixmap.class);
+		// Selection billboard
+		assets.load("marker.png", Pixmap.class);
 		assets.finishLoading();
-		Pixmap billboardPixmap = assets.get(markerName, Pixmap.class);
+		Pixmap billboardPixmap = assets.get("marker.png", Pixmap.class);
 		float offsetY = -mdlCmp.bounds.getHeight() + mdlCmp.bounds.getCenterY();
 		BillboardComponent billboard = new BillboardComponent(billboardPixmap, 1, 1, true, new Vector3(0, offsetY, 0));
 		entity.add(new SelectableComponent(billboard.modelInstance));

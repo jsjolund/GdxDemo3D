@@ -18,8 +18,8 @@ public class PhysicsComponent implements DisposableComponent {
 	public final btRigidBody body;
 	public final short belongsToFlag;
 	public final short collidesWithFlag;
-	private final btCollisionShape shape;
-	private final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
+	public final btCollisionShape shape;
+	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
 
 	public Array<btTypedConstraint> constraints;
 
@@ -65,9 +65,8 @@ public class PhysicsComponent implements DisposableComponent {
 
 	@Override
 	public void dispose() {
-		// Let the calling class be responsible for
+		// Let the calling class be responsible for shape dispose since it can be reused
 		// shape.dispose();
-
 		constructionInfo.dispose();
 		motionState.dispose();
 		body.dispose();
