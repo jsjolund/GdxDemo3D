@@ -11,9 +11,6 @@ import com.badlogic.gdx.utils.Array;
  */
 public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 
-	private final static Plane.PlaneSide Back = Plane.PlaneSide.Back;
-	private final static Plane.PlaneSide OnPlane = Plane.PlaneSide.OnPlane;
-
 	public Vector3 start;
 	public Vector3 end;
 
@@ -50,15 +47,15 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			Plane.PlaneSide rightPlaneLeftDP = funnel.sideRightPlane(edge.leftVertex);
 			Plane.PlaneSide rightPlaneRightDP = funnel.sideRightPlane(edge.rightVertex);
 
-			if (rightPlaneRightDP == Back || rightPlaneRightDP == OnPlane) {
-				if (leftPlaneRightDP == Back || leftPlaneRightDP == OnPlane) {
+			if (rightPlaneRightDP != Plane.PlaneSide.Front) {
+				if (leftPlaneRightDP != Plane.PlaneSide.Front) {
 					// Tighten the funnel.
 					funnel.setRightPlane(funnel.pivot, edge.rightVertex);
 					rightIndex = i;
 				} else {
 					// Right over left, insert left to path and restart scan from portal left point.
 					path.add(new Vector3(funnel.pivot));
-					funnel.pivot.set(funnel.leftDoorPoint);
+					funnel.pivot.set(funnel.leftPortal);
 					rightIndex = leftIndex;
 					i = leftIndex;
 					if (i < nodes.size - 1) {
@@ -68,15 +65,15 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 					break;
 				}
 			}
-			if (leftPlaneLeftDP == Back || leftPlaneLeftDP == OnPlane) {
-				if (rightPlaneLeftDP == Back || rightPlaneLeftDP == OnPlane) {
+			if (leftPlaneLeftDP != Plane.PlaneSide.Front) {
+				if (rightPlaneLeftDP != Plane.PlaneSide.Front) {
 					// Tighten the funnel.
 					funnel.setLeftPlane(funnel.pivot, edge.leftVertex);
 					leftIndex = i;
 				} else {
 					// Left over right, insert right to path and restart scan from portal right point.
 					path.add(new Vector3(funnel.pivot));
-					funnel.pivot.set(funnel.rightDoorPoint);
+					funnel.pivot.set(funnel.rightPortal);
 					leftIndex = rightIndex;
 					i = rightIndex;
 					if (i < nodes.size - 1) {
@@ -97,22 +94,22 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	private class Funnel {
 		public final Plane leftPlane = new Plane();
 		public final Plane rightPlane = new Plane();
-		public final Vector3 leftDoorPoint = new Vector3();
-		public final Vector3 rightDoorPoint = new Vector3();
+		public final Vector3 leftPortal = new Vector3();
+		public final Vector3 rightPortal = new Vector3();
 		public final Vector3 pivot = new Vector3();
 		private final Vector3 up = Vector3.Y;
 		private Vector3 tmp = new Vector3();
 
 		public void setLeftPlane(Vector3 pivot, Vector3 leftEdgeVertex) {
 			leftPlane.set(pivot, tmp.set(pivot).add(up), leftEdgeVertex);
-			leftDoorPoint.set(leftEdgeVertex);
+			leftPortal.set(leftEdgeVertex);
 		}
 
 		public void setRightPlane(Vector3 pivot, Vector3 rightEdgeVertex) {
 			rightPlane.set(pivot, tmp.set(pivot).add(up), rightEdgeVertex);
 			rightPlane.normal.scl(-1);
 			rightPlane.d = -rightPlane.d;
-			rightDoorPoint.set(rightEdgeVertex);
+			rightPortal.set(rightEdgeVertex);
 		}
 
 		public void setPlanes(Vector3 pivot, Edge edge) {
