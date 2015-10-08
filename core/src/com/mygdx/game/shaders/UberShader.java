@@ -19,6 +19,14 @@ public class UberShader extends DefaultShader {
 
 	public Renderable renderable;
 
+	protected final int u_hue = register(new Uniform("u_hue"));
+	protected final int u_saturation = register(new Uniform("u_saturation"));
+	protected final int u_value = register(new Uniform("u_value"));
+	protected final int u_specOpacity = register(new Uniform("u_specOpacity"));
+	protected final int u_lightIntensity = register(new Uniform("u_lightIntensity"));
+	protected final int u_ambient = register(new Uniform("u_ambient"));
+
+
 	public UberShader(Renderable renderable, Config config) {
 		super(renderable, config);
 		this.renderable = renderable;
@@ -34,12 +42,12 @@ public class UberShader extends DefaultShader {
 		super.begin(camera, context);
 		context.setDepthTest(GL20.GL_LEQUAL);
 		program.begin();
-		program.setUniformf("u_hue", ShaderSettings.hue);
-		program.setUniformf("u_saturation", ShaderSettings.saturation);
-		program.setUniformf("u_value", ShaderSettings.value);
-		program.setUniformf("u_specOpacity", ShaderSettings.specOpacity);
-		program.setUniformf("u_lightIntensity", ShaderSettings.lightIntensity);
-		program.setUniformf("u_ambient", ShaderSettings.ambient);
+		set(u_hue, ShaderSettings.hue);
+		set(u_saturation, ShaderSettings.saturation);
+		set(u_value, ShaderSettings.value);
+		set(u_specOpacity, ShaderSettings.specOpacity);
+		set(u_lightIntensity, ShaderSettings.lightIntensity);
+		set(u_ambient, ShaderSettings.ambient);
 	}
 
 	@Override
