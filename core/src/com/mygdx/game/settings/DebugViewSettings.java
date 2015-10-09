@@ -8,4 +8,5 @@ public class DebugViewSettings {
 	public static boolean drawNavmesh = false;
 	public static boolean drawArmature = false;
 	public static boolean drawCollShapes = false;
+	public static boolean drawUIDebug = false;
 }

@@ -152,7 +152,7 @@ public class GameScreen implements Screen {
 				PathFindingComponent.class,
 				PhysicsComponent.class,
 				CharacterActionComponent.class).get();
-		engine.addSystem(new PathFindingSystem(pathFamily));
+		engine.addSystem(new PathFollowSystem(pathFamily));
 
 		Family animFamily = Family.all(CharacterActionComponent.class).get();
 		engine.addSystem(new AnimationSystem(animFamily));
@@ -294,9 +294,9 @@ public class GameScreen implements Screen {
 		entity.add(ragCmp);
 
 		// Selection billboard
-		assets.load("marker.png", Pixmap.class);
+		assets.load("images/marker.png", Pixmap.class);
 		assets.finishLoading();
-		Pixmap billboardPixmap = assets.get("marker.png", Pixmap.class);
+		Pixmap billboardPixmap = assets.get("images/marker.png", Pixmap.class);
 		float offsetY = -mdlCmp.bounds.getHeight() + mdlCmp.bounds.getCenterY();
 		BillboardComponent billboard = new BillboardComponent(billboardPixmap, 1, 1, true, new Vector3(0, offsetY, 0));
 		entity.add(new SelectableComponent(billboard.modelInstance));

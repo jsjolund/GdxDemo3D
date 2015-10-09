@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.utils.Array;
@@ -40,6 +41,7 @@ public class BlenderScene implements Disposable {
 	public Array<Entity> entities = new Array<Entity>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
+	public BoundingBox worldBox = new BoundingBox();
 	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
@@ -138,7 +140,6 @@ public class BlenderScene implements Disposable {
 			Model model = modelAssets.get(cmp.model_file_name, Model.class);
 			ModelComponent mdlCmp = new ModelComponent(model, cmp.name,
 					cmp.position, cmp.rotation, cmp.scale);
-
 			ModelInstance instance = mdlCmp.modelInstance;
 
 			if (cmp.name.equals("navmesh")) {
@@ -194,7 +195,7 @@ public class BlenderScene implements Disposable {
 				entity.add(phyCmp);
 			}
 
-
+//			mdlCmp.bounds.
 		}
 	}
 
