@@ -40,15 +40,6 @@ public class GameStage extends Stage {
 	Camera camera3D;
 	Skin skin;
 
-	@Override
-	public void dispose() {
-		super.dispose();
-		batch.dispose();
-		skin.dispose();
-		shapeRenderer.dispose();
-		movementButtonsAtlas.dispose();
-	}
-
 	public GameStage(Viewport viewport) {
 		super(viewport);
 
@@ -66,15 +57,36 @@ public class GameStage extends Stage {
 		movementButtonsAtlas = new TextureAtlas(Gdx.files.internal("skins/movement_buttons.atlas"));
 
 		rootTable = new Table();
-		rootTable.setFillParent(true);
 		rootTable.setDebug(true, true);
-		addActor(rootTable);
 
 		rootTable.add(createShaderMenu()).bottom();
 		rootTable.add(createDebugViewMenu()).bottom();
-		rootTable.add(new Table()).expandX();
+		rootTable.add(new Table()).expandX().fillX();
 		rootTable.add(createMovementButtons()).bottom();
 		rootTable.left().bottom();
+
+		addActor(rootTable);
+	}
+
+	@Override
+	public void dispose() {
+		super.dispose();
+		batch.dispose();
+		skin.dispose();
+		shapeRenderer.dispose();
+		movementButtonsAtlas.dispose();
+	}
+
+	public void resize(int width, int height) {
+		getViewport().update(width, height, false);
+		cameraUI.viewportWidth = viewport.getScreenWidth();
+		cameraUI.viewportHeight = viewport.getScreenHeight();
+		cameraUI.position.set(viewport.getScreenWidth() / 2, viewport.getScreenHeight() / 2, 0);
+		cameraUI.update();
+		batch.setProjectionMatrix(cameraUI.combined);
+		shapeRenderer.setProjectionMatrix(cameraUI.combined);
+
+		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
 
 	private WidgetGroup createMovementButtons() {
@@ -111,7 +123,7 @@ public class GameStage extends Stage {
 		btns.put(btnCrawl, null);
 
 		for (ImageButton btn : btns.keys()) {
-			table.add(btn).size(75,75);
+			table.add(btn).size(75, 75);
 		}
 
 		btnRun.addListener(new InputListener() {
@@ -138,8 +150,6 @@ public class GameStage extends Stage {
 				return true;
 			}
 		});
-//		table.setTransform(true);
-//		table.setScale(0.5f);
 		return table;
 	}
 
@@ -248,15 +258,6 @@ public class GameStage extends Stage {
 		return outerTable;
 	}
 
-	public void resize(int width, int height) {
-		getViewport().update(width, height, false);
-		cameraUI.viewportWidth = viewport.getScreenWidth();
-		cameraUI.viewportHeight = viewport.getScreenHeight();
-		cameraUI.position.set(viewport.getScreenWidth() / 2, viewport.getScreenHeight() / 2, 0);
-		cameraUI.update();
-		batch.setProjectionMatrix(cameraUI.combined);
-		shapeRenderer.setProjectionMatrix(cameraUI.combined);
-	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
