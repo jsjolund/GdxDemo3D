@@ -21,7 +21,6 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.*;
@@ -32,8 +31,6 @@ import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.RagdollFactory;
-
-import java.nio.ByteBuffer;
 
 /**
  * Created by user on 8/1/15.
@@ -74,8 +71,6 @@ public class GameScreen implements Screen {
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
 		stage = new GameStage(viewport);
 		shapeRenderer = new ShapeRenderer();
-
-		IntentBroadcast intentCmp = new IntentBroadcast();
 
 		Gdx.app.debug(tag, "Loading json");
 		BlenderScene blenderScene = new BlenderScene(
@@ -121,22 +116,23 @@ public class GameScreen implements Screen {
 			}
 		}
 
+		IntentBroadcast intent = new IntentBroadcast();
 		Gdx.app.debug(tag, "Adding input controller");
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		InputSystem inputSys = new InputSystem(viewport, intentCmp);
+		InputSystem inputSys = new InputSystem(viewport, intent);
 		engine.addSystem(inputSys);
 		multiplexer.addProcessor(inputSys.inputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
 
 
 		Gdx.app.debug(tag, "Adding camera system");
-		CameraSystem camSys = new CameraSystem(viewport, camera, intentCmp);
+		CameraSystem camSys = new CameraSystem(viewport, camera, intent);
 		engine.addSystem(camSys);
 
 
 		Gdx.app.debug(tag, "Adding selection system");
-		SelectionSystem selSys = new SelectionSystem(phySys, intentCmp);
+		SelectionSystem selSys = new SelectionSystem(stage, phySys, intent);
 		selSys.setNavMesh(blenderScene.navMesh);
 		engine.addSystem(selSys);
 
@@ -145,48 +141,25 @@ public class GameScreen implements Screen {
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
 		engine.addSystem(billSys);
 
-		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0), intentCmp));
-		engine.addEntity(spawnCharacter(new Vector3(1.5f, 1, 23), intentCmp));
+		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0), intent));
+		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5), intent));
+		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5), intent));
+		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20), intent));
 
 		Family pathFamily = Family.all(
 				PathFindingComponent.class,
-				PhysicsComponent.class,
-				CharacterActionComponent.class).get();
+				PhysicsComponent.class
+		).get();
 		engine.addSystem(new PathFollowSystem(pathFamily));
-
-		Family animFamily = Family.all(CharacterActionComponent.class).get();
-		engine.addSystem(new AnimationSystem(animFamily));
 
 		Family ragdollFamily = Family.all(
 				RagdollComponent.class,
-				CharacterActionComponent.class,
 				ModelComponent.class,
 				MotionStateComponent.class,
-				PhysicsComponent.class,
-				SelectableComponent.class).get();
-		engine.addSystem(new RagdollSystem(ragdollFamily, intentCmp));
+				PhysicsComponent.class).get();
+		engine.addSystem(new RagdollSystem(ragdollFamily));
 
-	}
-
-	public static Pixmap getScreenshot(int x, int y, int w, int h, boolean yDown) {
-		final Pixmap pixmap = ScreenUtils.getFrameBufferPixmap(x, y, w, h);
-
-		if (yDown) {
-			// Flip the pixmap upside down
-			ByteBuffer pixels = pixmap.getPixels();
-			int numBytes = w * h * 4;
-			byte[] lines = new byte[numBytes];
-			int numBytesPerLine = w * 4;
-			for (int i = 0; i < h; i++) {
-				pixels.position((h - i - 1) * numBytesPerLine);
-				pixels.get(lines, i * numBytesPerLine, numBytesPerLine);
-			}
-			pixels.clear();
-			pixels.put(lines);
-			pixels.clear();
-		}
-
-		return pixmap;
+		engine.addSystem(new CharacterStateSystem(Family.all(CharacterStateComponent.class).get()));
 	}
 
 	@Override
@@ -244,54 +217,51 @@ public class GameScreen implements Screen {
 		short belongsToFlag = PhysicsSystem.PC_FLAG;
 		short collidesWithFlag = (short) (PhysicsSystem.OBJECT_FLAG | PhysicsSystem.GROUND_FLAG);
 
+		// Model
 		MipMapGenerator.setUseHardwareMipMap(true);
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
 		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
-
 		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/character_male_base.g3db");
-
-		// Create model components containing model instances
 		ModelComponent mdlCmp = new ModelComponent(model, "male", pos,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
-		// TODO: Ragdoll problems with culling. Move capsule to ragdoll.
+		// TODO: Ragdoll problems with frustum culling. Move capsule to ragdoll.
 		mdlCmp.ignoreCulling = true;
 		entity.add(mdlCmp);
+		for (Animation a : mdlCmp.modelInstance.animations) {
+			Gdx.app.debug(tag, "Found animation: " + a.id);
+		}
 
-		MotionStateComponent motionStateCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
+		// Motion state
+		MotionStateComponent motionCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
+		entity.add(motionCmp);
 
-
-		// Create base collision shape
-		float bodyMass = 100;
+		// Create basic capsule collision shape
 		// TODO: Dispose
 		btCollisionShape shape = new btCapsuleShape(0.5f, 1f);
-
+		float bodyMass = 100;
 		PhysicsComponent phyCmp = new PhysicsComponent(
-				shape, motionStateCmp.motionState, bodyMass,
+				shape, motionCmp.motionState, bodyMass,
 				belongsToFlag,
 				collidesWithFlag,
 				true, true);
 		phyCmp.body.setAngularFactor(Vector3.Y);
 		phyCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
-		entity.add(motionStateCmp);
 		entity.add(phyCmp);
 
-		// Make model selectable, add pathfinding, animation components
-		entity.add(new PathFindingComponent(pos));
-		CharacterActionComponent actionCmp = new CharacterActionComponent(mdlCmp.modelInstance);
-		for (Animation a : mdlCmp.modelInstance.animations) {
-			Gdx.app.debug(tag, "Found animation: " + a.id);
-		}
-		entity.add(actionCmp);
-
-		// Ragdoll
-		RagdollComponent ragCmp = RagdollFactory.createRagdoll(mdlCmp.modelInstance, bodyMass, belongsToFlag,
-				collidesWithFlag);
+		// Ragdoll collision shapes
+		String partDefJson = "models/json/character_empty.json";
+		RagdollComponent ragCmp = RagdollFactory.createRagdoll(
+				partDefJson, mdlCmp.modelInstance, bodyMass, belongsToFlag, collidesWithFlag);
 		entity.add(ragCmp);
+
+		// Pathfinding
+		PathFindingComponent pathCmp = new PathFindingComponent(pos);
+		entity.add(pathCmp);
 
 		// Selection billboard
 		assets.load("images/marker.png", Pixmap.class);
@@ -299,13 +269,19 @@ public class GameScreen implements Screen {
 		Pixmap billboardPixmap = assets.get("images/marker.png", Pixmap.class);
 		float offsetY = -mdlCmp.bounds.getHeight() + mdlCmp.bounds.getCenterY();
 		BillboardComponent billboard = new BillboardComponent(billboardPixmap, 1, 1, true, new Vector3(0, offsetY, 0));
-		entity.add(new SelectableComponent(billboard.modelInstance));
 		entity.add(billboard);
 
+		// Selection component
+		SelectableComponent selCmp = new SelectableComponent(billboard.modelInstance);
+		entity.add(selCmp);
+
+		// State machine component
+		CharacterStateComponent charCmp = new CharacterStateComponent(
+				intentCmp, mdlCmp, pathCmp, selCmp, ragCmp, phyCmp, motionCmp);
+		entity.add(charCmp);
+
 		Gdx.app.debug(tag, "Finished adding character");
-
 		return entity;
-
 	}
 
 	@Override

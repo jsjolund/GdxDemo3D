@@ -49,18 +49,6 @@ public class BlenderScene implements Disposable {
 	private AssetManager modelAssets = new AssetManager();
 	private BlenderObject.BCamera sceneCamera;
 
-	@Override
-	public void dispose() {
-		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
-			shape.dispose();
-		}
-		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
-			shape.dispose();
-		}
-		modelAssets.dispose();
-		navMesh.dispose();
-	}
-
 	public BlenderScene(String modelsJsonPath,
 						String emptiesJsonPath,
 						String lightsJsonPath,
@@ -117,6 +105,17 @@ public class BlenderScene implements Disposable {
 		return vector.set(vector.x, vector.z, -vector.y);
 	}
 
+	@Override
+	public void dispose() {
+		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
+			shape.dispose();
+		}
+		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
+			shape.dispose();
+		}
+		modelAssets.dispose();
+		navMesh.dispose();
+	}
 
 	public void setToSceneCamera(PerspectiveCamera camera) {
 		Vector3 direction = new Vector3(Vector3.Y).scl(-1);

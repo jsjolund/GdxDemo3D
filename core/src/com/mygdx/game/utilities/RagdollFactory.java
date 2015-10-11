@@ -32,8 +32,9 @@ public class RagdollFactory {
 	final static float PI2 = 0.5f * PI;
 	final static float PI4 = 0.25f * PI;
 
-	public static RagdollComponent createRagdoll(ModelInstance model, float bodyMass, short belongsToFlag, short
-			collidesWithFlag) {
+	public static RagdollComponent createRagdoll(String path, ModelInstance model, float bodyMass, short
+			belongsToFlag, short
+														 collidesWithFlag) {
 
 		RagdollComponent cmp = new RagdollComponent();
 
@@ -44,7 +45,6 @@ public class RagdollFactory {
 		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
 		ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
 
-		String path = "models/json/character_empty.json";
 		Array<BlenderObject.BEmpty> empties =
 				new Json().fromJson(Array.class, BlenderObject.BEmpty.class, Gdx.files.local(path));
 

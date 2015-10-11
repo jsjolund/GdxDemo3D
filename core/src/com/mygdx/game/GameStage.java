@@ -4,7 +4,6 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -17,7 +16,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.components.CharacterActionComponent;
+import com.mygdx.game.components.CharacterState;
+import com.mygdx.game.components.CharacterStateComponent;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.ShaderSettings;
 
@@ -31,14 +31,18 @@ public class GameStage extends Stage {
 	public static final String tag = "GameStage";
 
 	private final Viewport viewport;
-	private final Batch batch;
+	private final SpriteBatch batch;
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas movementButtonsAtlas;
 
-	Camera cameraUI;
-	Camera camera3D;
-	Skin skin;
+	private final ArrayMap<ImageButton, CharacterState> movementButtons;
+
+	private final Camera cameraUI;
+	private final Camera camera3D;
+	private final Skin skin;
+
+	private CharacterStateComponent selectedCharacterState = null;
 
 	public GameStage(Viewport viewport) {
 		super(viewport);
@@ -54,7 +58,9 @@ public class GameStage extends Stage {
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 		skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
+
 		movementButtonsAtlas = new TextureAtlas(Gdx.files.internal("skins/movement_buttons.atlas"));
+		movementButtons = new ArrayMap<ImageButton, CharacterState>();
 
 		rootTable = new Table();
 		rootTable.setDebug(true, true);
@@ -66,6 +72,40 @@ public class GameStage extends Stage {
 		rootTable.left().bottom();
 
 		addActor(rootTable);
+	}
+
+	private CharacterStateComponent getSelectedCharacterState() {
+		return selectedCharacterState;
+	}
+
+	public void setSelectedCharacterState(CharacterStateComponent cmp) {
+		this.selectedCharacterState = cmp;
+		for (ImageButton btn : movementButtons.keys()) {
+			btn.setChecked(false);
+		}
+		movementButtons.getKey(selectedCharacterState.moveState, true).setChecked(true);
+	}
+
+	private void handleMoveButtonPress(ImageButton thisBtn) {
+		CharacterStateComponent selectedCharacter = getSelectedCharacterState();
+		if (selectedCharacter == null) {
+			return;
+		}
+		boolean checked = thisBtn.isChecked();
+		if (!checked) {
+			for (ImageButton btn : movementButtons.keys()) {
+				btn.setChecked(false);
+			}
+			thisBtn.setChecked(true);
+			CharacterState newState = movementButtons.get(thisBtn);
+
+			if (selectedCharacter != null) {
+				selectedCharacter.moveState = newState;
+				if (selectedCharacter.isMoving) {
+					selectedCharacter.stateMachine.changeState(newState);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -89,9 +129,10 @@ public class GameStage extends Stage {
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
 
+
 	private WidgetGroup createMovementButtons() {
 		final Table table = new Table();
-		final ArrayMap<ImageButton, CharacterActionComponent.Action> btns = new ArrayMap<ImageButton, CharacterActionComponent.Action>();
+
 
 		ImageButton.ImageButtonStyle btnRunStyle = new ImageButton.ImageButtonStyle();
 		btnRunStyle.up = new TextureRegionDrawable(movementButtonsAtlas.findRegion("run-up"));
@@ -117,51 +158,42 @@ public class GameStage extends Stage {
 		btnCrawlStyle.checked = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crawl-down"));
 		final ImageButton btnCrawl = new ImageButton(btnCrawlStyle);
 
-		btns.put(btnRun, null);
-		btns.put(btnWalk, null);
-		btns.put(btnCrouch, null);
-		btns.put(btnCrawl, null);
+		movementButtons.put(btnRun, CharacterState.MOVE_RUN);
+		movementButtons.put(btnWalk, CharacterState.MOVE_WALK);
+		movementButtons.put(btnCrouch, CharacterState.MOVE_CROUCH);
+		movementButtons.put(btnCrawl, CharacterState.MOVE_CRAWL);
 
-		for (ImageButton btn : btns.keys()) {
+		for (ImageButton btn : movementButtons.keys()) {
 			table.add(btn).size(75, 75);
 		}
 
 		btnRun.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnRun, btns);
+				handleMoveButtonPress(btnRun);
 				return true;
 			}
 		});
 		btnWalk.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnWalk, btns);
+				handleMoveButtonPress(btnWalk);
 				return true;
 			}
 		});
 		btnCrouch.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnCrouch, btns);
+				handleMoveButtonPress(btnCrouch);
 				return true;
 			}
 		});
 		btnCrawl.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnCrawl, btns);
+				handleMoveButtonPress(btnCrawl);
 				return true;
 			}
 		});
 		return table;
 	}
 
-	private void handleMoveButtonPress(ImageButton thisBtn, ArrayMap<ImageButton, CharacterActionComponent.Action> btns) {
-		boolean checked = thisBtn.isChecked();
-		if (!checked) {
-			for (ImageButton btn : btns.keys()) {
-				btn.setChecked(false);
-			}
-			thisBtn.setChecked(true);
-		}
-	}
 
 	private WidgetGroup createShaderMenu() {
 		final Table innerTable = new Table();

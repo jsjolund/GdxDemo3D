@@ -9,8 +9,10 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.mygdx.game.components.*;
-import com.mygdx.game.input.IntentBroadcast;
+import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.MotionStateComponent;
+import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.components.RagdollComponent;
 import com.mygdx.game.settings.GameSettings;
 
 import java.util.Iterator;
@@ -19,10 +21,6 @@ import java.util.Iterator;
  * Created by Johannes Sjolund on 9/6/15.
  */
 public class RagdollSystem extends IteratingSystem {
-
-
-	private final ComponentMapper<CharacterActionComponent> actionCmps =
-			ComponentMapper.getFor(CharacterActionComponent.class);
 
 	private final ComponentMapper<ModelComponent> modelCmps =
 			ComponentMapper.getFor(ModelComponent.class);
@@ -36,14 +34,8 @@ public class RagdollSystem extends IteratingSystem {
 	private final ComponentMapper<PhysicsComponent> phyCmps =
 			ComponentMapper.getFor(PhysicsComponent.class);
 
-	private final ComponentMapper<SelectableComponent> selCmps =
-			ComponentMapper.getFor(SelectableComponent.class);
-
-	IntentBroadcast intentCmp;
-
-	public RagdollSystem(Family family, IntentBroadcast intentCmp) {
+	public RagdollSystem(Family family) {
 		super(family);
-		this.intentCmp = intentCmp;
 	}
 
 	private static void updateArmatureToBodies(ModelComponent modelCmp, RagdollComponent ragdollCmp) {
@@ -96,72 +88,69 @@ public class RagdollSystem extends IteratingSystem {
 		}
 	}
 
+	public static void toggle(boolean setRagdollControl,
+							  ModelComponent modelCmp,
+							  RagdollComponent ragdollCmp,
+							  PhysicsComponent phyCmp,
+							  MotionStateComponent motionCmp) {
+
+		if (setRagdollControl) {
+			updateBodiesToArmature(phyCmp, ragdollCmp);
+
+			// Ragdoll follows animation currently, set it to use physics control.
+			// Animations should be paused for this model.
+			ragdollCmp.ragdollControl = true;
+
+			// Get the current translation of the base collision shape (the capsule)
+			ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
+			// Reset any rotation of the model caused by the motion state from the physics engine,
+			// but keep the translation.
+			modelCmp.modelInstance.transform =
+					ragdollCmp.resetRotationTransform.idt().inv().setToTranslation(ragdollCmp.baseTrans);
+
+			// Set the velocities of the ragdoll collision shapes to be the same as the base shape.
+			for (btRigidBody body : ragdollCmp.map.keys()) {
+				body.setLinearVelocity(phyCmp.body.getLinearVelocity().scl(1, 0, 1));
+				body.setAngularVelocity(phyCmp.body.getAngularVelocity());
+				body.setGravity(GameSettings.GRAVITY);
+			}
+
+			// We don't want to use the translation, rotation, scale values of the model when calculating the
+			// model transform, and we don't want the nodes inherit the transform of the parent node,
+			// since the physics engine will be controlling the nodes.
+			for (Node node : ragdollCmp.nodes) {
+				node.isAnimated = true;
+				node.inheritTransform = false;
+			}
+
+		} else {
+			// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.
+			ragdollCmp.ragdollControl = false;
+
+			modelCmp.modelInstance.transform = motionCmp.transform;
+
+			// Reset the nodes to default model animation state.
+			for (Node node : ragdollCmp.nodes) {
+				node.isAnimated = false;
+				node.inheritTransform = true;
+			}
+			modelCmp.modelInstance.calculateTransforms();
+
+			// Disable gravity to prevent problems with the physics engine adding too much velocity
+			// to the ragdoll
+			for (btRigidBody body : ragdollCmp.map.keys()) {
+				body.setGravity(Vector3.Zero);
+			}
+		}
+	}
+
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
 
 		ModelComponent modelCmp = modelCmps.get(entity);
 		RagdollComponent ragdollCmp = ragdollCmps.get(entity);
 		PhysicsComponent phyCmp = phyCmps.get(entity);
-		CharacterActionComponent actionCmp = actionCmps.get(entity);
-		SelectableComponent selCmp = selCmps.get(entity);
 
-		MotionStateComponent motionCmp = motionCmps.get(entity);
-
-		// Check if we should enable or disable physics control of the ragdoll
-		if (selCmp.isSelected && intentCmp.isKillSelected()) {
-			if (ragdollCmp.ragdollControl) {
-
-				// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.
-				ragdollCmp.ragdollControl = false;
-				actionCmp.ragdollControl = false;
-
-				modelCmp.modelInstance.transform = motionCmp.transform;
-
-				// Reset the nodes to default model animation state.
-				for (Node node : ragdollCmp.nodes) {
-					node.isAnimated = false;
-					node.inheritTransform = true;
-				}
-				modelCmp.modelInstance.calculateTransforms();
-
-				// Disable gravity to prevent problems with the physics engine adding too much velocity
-				// to the ragdoll
-				for (btRigidBody body : ragdollCmp.map.keys()) {
-					body.setGravity(Vector3.Zero);
-				}
-
-			} else {
-
-				updateBodiesToArmature(phyCmp, ragdollCmp);
-
-				// Ragdoll follows animation currently, set it to use physics control.
-				// Disallow animations for this model.
-				ragdollCmp.ragdollControl = true;
-				actionCmp.ragdollControl = true;
-
-				// Get the current translation of the base collision shape (the capsule)
-				ragdollCmp.baseBodyTransform.getTranslation(ragdollCmp.baseTrans);
-				// Reset any rotation of the model caused by the motion state from the physics engine,
-				// but keep the translation.
-				modelCmp.modelInstance.transform =
-						ragdollCmp.resetRotationTransform.idt().inv().setToTranslation(ragdollCmp.baseTrans);
-
-				// Set the velocities of the ragdoll collision shapes to be the same as the base shape.
-				for (btRigidBody body : ragdollCmp.map.keys()) {
-					body.setLinearVelocity(phyCmp.body.getLinearVelocity().scl(1, 0, 1));
-					body.setAngularVelocity(phyCmp.body.getAngularVelocity());
-					body.setGravity(GameSettings.GRAVITY);
-				}
-
-				// We don't want to use the translation, rotation, scale values of the model when calculating the
-				// model transform, and we don't want the nodes inherit the transform of the parent node,
-				// since the physics engine will be controlling the nodes.
-				for (Node node : ragdollCmp.nodes) {
-					node.isAnimated = true;
-					node.inheritTransform = false;
-				}
-			}
-		}
 		if (ragdollCmp.ragdollControl) {
 			updateArmatureToBodies(modelCmp, ragdollCmp);
 		} else {

@@ -15,7 +15,6 @@ public class IntentBroadcast {
 	boolean isDragging = false;
 	boolean pan = false;
 	boolean rotate = false;
-	boolean doubleClick = false;
 	boolean killSelected = false;
 	float zoom = 0;
 	Ray pickRay;
@@ -36,15 +35,11 @@ public class IntentBroadcast {
 		return v.set(keysMoveDirection);
 	}
 
-	public boolean isDoubleClick() {
-		return doubleClick;
-	}
-
 	public boolean isDragging() {
 		return isDragging;
 	}
 
-	public boolean isKillSelected() {
+	public boolean killSelected() {
 		return killSelected;
 	}
 

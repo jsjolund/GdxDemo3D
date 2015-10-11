@@ -45,15 +45,6 @@ public class RenderSystem extends EntitySystem implements Disposable {
 
 	public static final String tag = "RenderSystem";
 
-	public static final int SHADOW_MAP_WIDTH = 1024;
-	public static final int SHADOW_MAP_HEIGHT = 1024;
-
-	public static final float SHADOW_VIEWPORT_HEIGHT = 60;
-	public static final float SHADOW_VIEWPORT_WIDTH = 60;
-	public static final float SHADOW_NEAR = 1;
-	public static final float SHADOW_FAR = 100;
-	public static final float SHADOW_INTENSITY = 1f;
-
 	public final Family systemFamily;
 	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
 	private final ModelBatch modelBatch;
@@ -113,14 +104,20 @@ public class RenderSystem extends EntitySystem implements Disposable {
 	public void setEnvironmentLights(Array<BaseLight> lights, Vector3 sunDirection) {
 		environment = new Environment();
 		environment.add((shadowLight = new DirectionalShadowLight(
-				SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT,
-				SHADOW_VIEWPORT_WIDTH, SHADOW_VIEWPORT_HEIGHT,
-				SHADOW_NEAR, SHADOW_FAR))
-				.set(SHADOW_INTENSITY, SHADOW_INTENSITY, SHADOW_INTENSITY, sunDirection.nor()));
+				GameSettings.SHADOW_MAP_WIDTH,
+				GameSettings.SHADOW_MAP_HEIGHT,
+				GameSettings.SHADOW_VIEWPORT_WIDTH,
+				GameSettings.SHADOW_VIEWPORT_HEIGHT,
+				GameSettings.SHADOW_NEAR,
+				GameSettings.SHADOW_FAR))
+				.set(GameSettings.SHADOW_INTENSITY,
+						GameSettings.SHADOW_INTENSITY,
+						GameSettings.SHADOW_INTENSITY,
+						sunDirection.nor()));
 		environment.shadowMap = shadowLight;
 
-		float c = GameSettings.SCENE_AMBIENT_LIGHT;
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, c, c, c, 1));
+		float ambientLight = GameSettings.SCENE_AMBIENT_LIGHT;
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientLight, ambientLight, ambientLight, 1));
 		for (BaseLight light : lights) {
 			environment.add(light);
 		}
@@ -173,7 +170,7 @@ public class RenderSystem extends EntitySystem implements Disposable {
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
 			Triangle t = navmesh.graph.getTriangleFromIndex(i);
-			shapeRenderer.setColor(Color.GRAY);
+			shapeRenderer.setColor(Color.LIGHT_GRAY);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
@@ -201,7 +198,7 @@ public class RenderSystem extends EntitySystem implements Disposable {
 		Array<Vector3> smoothPath = navmesh.debugPathSmooth;
 		if (smoothPath != null && smoothPath.size > 1) {
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(Color.WHITE);
+			shapeRenderer.setColor(Color.CYAN);
 			for (int i = 0; i < smoothPath.size - 1; i++) {
 				Vector3 p = smoothPath.get(i);
 				Vector3 q = smoothPath.get(i + 1);

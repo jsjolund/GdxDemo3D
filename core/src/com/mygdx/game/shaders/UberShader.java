@@ -16,15 +16,13 @@ import com.mygdx.game.settings.ShaderSettings;
 public class UberShader extends DefaultShader {
 
 	public static final String tag = "UberShader";
-
-	public Renderable renderable;
-
 	protected final int u_hue = register(new Uniform("u_hue"));
 	protected final int u_saturation = register(new Uniform("u_saturation"));
 	protected final int u_value = register(new Uniform("u_value"));
 	protected final int u_specOpacity = register(new Uniform("u_specOpacity"));
 	protected final int u_lightIntensity = register(new Uniform("u_lightIntensity"));
 	protected final int u_ambient = register(new Uniform("u_ambient"));
+	public Renderable renderable;
 
 
 	public UberShader(Renderable renderable, Config config) {

@@ -2,14 +2,12 @@ package com.mygdx.game.input;
 
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.IntIntMap;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 
 /**
@@ -80,8 +78,6 @@ public class InputSystem extends EntitySystem {
 				}
 			}
 			data.isDragging = false;
-
-			intent.doubleClick = data.doubleClick;
 		}
 
 		if (keys.containsKey(GameSettings.KEY_KILL_SELECTED)) {
@@ -98,25 +94,12 @@ public class InputSystem extends EntitySystem {
 
 	}
 
-	public class MyInputListener extends ClickListener implements InputProcessor {
+	public class MyInputListener extends InputAdapter {
 
 		@Override
 		public boolean keyDown(int keycode) {
 			keys.put(keycode, keycode);
-			if (keycode == GameSettings.KEY_DRAW_COLLISION_SHAPES) {
-				DebugViewSettings.drawCollShapes = !DebugViewSettings.drawCollShapes;
-			}
-			if (keycode == GameSettings.KEY_DRAW_CONSTRAINTS) {
-				DebugViewSettings.drawConstraints = !DebugViewSettings.drawConstraints;
-			}
-			if (keycode == GameSettings.KEY_DRAW_ARMATURE) {
-				DebugViewSettings.drawArmature = !DebugViewSettings.drawArmature;
-			}
-			if (keycode == GameSettings.KEY_DRAW_NAVMESH) {
-				DebugViewSettings.drawNavmesh = !DebugViewSettings.drawNavmesh;
-			}
 			if (keycode == GameSettings.KEY_PAUSE) {
-
 				if (GameSettings.GAME_SPEED == 1) {
 					GameSettings.GAME_SPEED = 0;
 				} else if (GameSettings.GAME_SPEED == 0) {
@@ -124,7 +107,6 @@ public class InputSystem extends EntitySystem {
 				} else if (GameSettings.GAME_SPEED == 0.05f) {
 					GameSettings.GAME_SPEED = 1;
 				}
-
 			}
 			return true;
 		}
@@ -133,11 +115,6 @@ public class InputSystem extends EntitySystem {
 		public boolean keyUp(int keycode) {
 			keys.remove(keycode, 0);
 			return true;
-		}
-
-		@Override
-		public boolean keyTyped(char character) {
-			return false;
 		}
 
 		@Override
@@ -151,13 +128,6 @@ public class InputSystem extends EntitySystem {
 				data.button = button;
 				data.isDragging = false;
 			}
-			long clickTime = TimeUtils.millis();
-			if (clickTime - data.lastClickTime < 200) {
-				data.doubleClick = true;
-			} else {
-				data.doubleClick = false;
-			}
-			data.lastClickTime = clickTime;
 			intent.pickRay = viewport.getPickRay(screenX, screenY);
 			return true;
 		}
@@ -187,11 +157,6 @@ public class InputSystem extends EntitySystem {
 		}
 
 		@Override
-		public boolean mouseMoved(int screenX, int screenY) {
-			return false;
-		}
-
-		@Override
 		public boolean scrolled(int amount) {
 			zoom += GameSettings.CAMERA_ZOOM_STEP * amount;
 			return true;
@@ -202,10 +167,8 @@ public class InputSystem extends EntitySystem {
 		int dragHistoryCursor = 0;
 		Vector2 down = new Vector2();
 		Vector2 lastDrag = new Vector2();
-		long lastClickTime = 0;
 		int button;
 		boolean isDragging = false;
-		boolean doubleClick = false;
 
 		public TouchData() {
 			reset();
@@ -217,7 +180,6 @@ public class InputSystem extends EntitySystem {
 			lastDrag.setZero();
 			button = -1;
 			isDragging = false;
-			doubleClick = false;
 		}
 	}
 
