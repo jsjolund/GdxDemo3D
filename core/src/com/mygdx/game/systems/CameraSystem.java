@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.input.IntentBroadcast;
@@ -33,6 +34,8 @@ public class CameraSystem extends EntitySystem {
 	private Camera ghostCamera;
 	private Camera realCam;
 	private Viewport viewport;
+
+	private BoundingBox worldBoundingBox;
 
 	public CameraSystem(Viewport viewport, Camera camera, IntentBroadcast intent) {
 		this.intent = intent;
@@ -70,7 +73,13 @@ public class CameraSystem extends EntitySystem {
 		panDirection.add(tmp);
 		panDirection.y = 0;
 		panDirection.nor();
-		ghostCamera.position.add(panDirection.scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY));
+		tmp.set(panDirection).scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY);
+
+		ray.origin.set(ghostCamera.position).add(tmp);
+		ray.direction.set(ghostCamera.direction);
+		if (Intersector.intersectRayBoundsFast(ray, worldBoundingBox)) {
+			ghostCamera.position.add(tmp);
+		}
 	}
 
 	private void processZoom() {
@@ -81,14 +90,20 @@ public class CameraSystem extends EntitySystem {
 	}
 
 	private void processDragPan() {
+
 		ray.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
 		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
 		ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
 		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
 		tmp.set(worldDragLast).sub(worldDragCurrent);
 		tmp.y = 0;
-		worldGroundTarget.add(tmp);
-		ghostCamera.position.add(tmp);
+
+		ray.origin.set(ghostCamera.position).add(tmp);
+		ray.direction.set(ghostCamera.direction);
+		if (Intersector.intersectRayBoundsFast(ray, worldBoundingBox)) {
+			worldGroundTarget.add(tmp);
+			ghostCamera.position.add(tmp);
+		}
 	}
 
 	private void processDragRotation() {
@@ -142,4 +157,7 @@ public class CameraSystem extends EntitySystem {
 	}
 
 
+	public void setWorldBoundingBox(BoundingBox worldBoundingBox) {
+		this.worldBoundingBox = worldBoundingBox;
+	}
 }

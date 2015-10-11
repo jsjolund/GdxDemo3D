@@ -22,15 +22,15 @@ public class PathFindingComponent implements Component {
 	}
 
 	public void setPath(Array<Vector3> newPath) {
-		if (newPath == null) {
-			goalReached = true;
-			path.clear();
-			currentGoal = null;
-		} else {
-			goalReached = false;
-			path.clear();
-			path.addAll(newPath);
-			currentGoal = path.pop();
-		}
+		goalReached = false;
+		path.clear();
+		path.addAll(newPath);
+		currentGoal = path.pop();
+	}
+
+	public void clearPath() {
+		goalReached = true;
+		path.clear();
+		currentGoal = null;
 	}
 }

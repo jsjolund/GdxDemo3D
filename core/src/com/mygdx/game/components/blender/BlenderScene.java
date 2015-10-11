@@ -41,7 +41,8 @@ public class BlenderScene implements Disposable {
 	public Array<Entity> entities = new Array<Entity>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
-	public BoundingBox worldBox = new BoundingBox();
+	public BoundingBox worldBounds = new BoundingBox();
+
 	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
@@ -157,6 +158,7 @@ public class BlenderScene implements Disposable {
 				entity.add(phyCmp);
 				phyCmp.body.setWorldTransform(instance.transform);
 				navMesh = new NavMesh(instance.model.meshes.first(), shape);
+				worldBounds.set(mdlCmp.bounds);
 				continue;
 			}
 
@@ -194,7 +196,7 @@ public class BlenderScene implements Disposable {
 				entity.add(phyCmp);
 			}
 
-//			mdlCmp.bounds.
+
 		}
 	}
 

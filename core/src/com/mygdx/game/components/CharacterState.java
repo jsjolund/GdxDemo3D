@@ -84,7 +84,7 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.controller.setAnimation("armature|idle_stand", -1);
 			entity.controller.paused = true;
 			entity.pathCmp.moveSpeed = 0;
-			entity.pathCmp.setPath(null);
+			entity.pathCmp.clearPath();
 			entity.isMoving = false;
 			RagdollSystem.toggle(true, entity.mdlCmp, entity.ragdollCmp, entity.phyCmp, entity.motionCmp);
 		}
@@ -94,16 +94,20 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.controller.paused = false;
 			RagdollSystem.toggle(false, entity.mdlCmp, entity.ragdollCmp, entity.phyCmp, entity.motionCmp);
 		}
-	};
+	},
+	GLOBAL() {};
 
 	@Override
-	public void update(CharacterStateComponent entity) {
+	public void enter(CharacterStateComponent entity) {
 
 	}
 
 	@Override
-	public void exit(CharacterStateComponent entity) {
+	public void update(CharacterStateComponent entity) {
+	}
 
+	@Override
+	public void exit(CharacterStateComponent entity) {
 	}
 
 	@Override

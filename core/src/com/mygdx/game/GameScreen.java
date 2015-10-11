@@ -128,6 +128,7 @@ public class GameScreen implements Screen {
 
 		Gdx.app.debug(tag, "Adding camera system");
 		CameraSystem camSys = new CameraSystem(viewport, camera, intent);
+		camSys.setWorldBoundingBox(blenderScene.worldBounds);
 		engine.addSystem(camSys);
 
 

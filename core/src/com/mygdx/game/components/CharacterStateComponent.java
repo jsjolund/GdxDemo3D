@@ -11,8 +11,9 @@ import com.mygdx.game.input.IntentBroadcast;
  */
 public class CharacterStateComponent implements Component {
 
-	public StateMachine<CharacterStateComponent> stateMachine;
-	public AnimationController controller;
+	public final StateMachine<CharacterStateComponent> stateMachine;
+	public final AnimationController controller;
+	public final CharacterAnimationListener animationListener;
 
 	public CharacterState moveState = CharacterState.MOVE_WALK;
 	public CharacterState idleState = CharacterState.IDLE_STAND;
@@ -26,6 +27,18 @@ public class CharacterStateComponent implements Component {
 	public MotionStateComponent motionCmp;
 
 	public boolean isMoving = false;
+
+	public class CharacterAnimationListener implements AnimationController.AnimationListener {
+		@Override
+		public void onEnd(AnimationController.AnimationDesc animation) {
+
+		}
+
+		@Override
+		public void onLoop(AnimationController.AnimationDesc animation) {
+
+		}
+	}
 
 	public CharacterStateComponent(IntentBroadcast intentCmp,
 								   ModelComponent mdlCmp,
@@ -43,8 +56,10 @@ public class CharacterStateComponent implements Component {
 		this.selCmp = selCmp;
 
 		controller = new AnimationController(mdlCmp.modelInstance);
-		stateMachine = new DefaultStateMachine<CharacterStateComponent>(this, CharacterState.IDLE_STAND);
+		animationListener = new CharacterAnimationListener();
+		stateMachine = new DefaultStateMachine<CharacterStateComponent>(this, CharacterState.GLOBAL);
 		stateMachine.changeState(CharacterState.IDLE_STAND);
+
 	}
 
 	public void update(float delta) {
@@ -64,6 +79,7 @@ public class CharacterStateComponent implements Component {
 				stateMachine.changeState(CharacterState.DEAD);
 			}
 		}
+
 	}
 
 

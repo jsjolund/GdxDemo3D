@@ -106,6 +106,7 @@ public class SelectionSystem extends EntitySystem {
 					pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
 					Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance);
 
+					// TODO
 					navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.currentPosition,
 							surfaceHitPoint);
 					pathCmp.setPath(navMesh.debugPathSmooth);
