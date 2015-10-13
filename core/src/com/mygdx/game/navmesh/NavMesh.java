@@ -38,13 +38,11 @@ public class NavMesh implements Disposable {
 		heuristic = new NavMeshHeuristic();
 	}
 
-	public void calculatePath(Triangle fromTri, Triangle toTri,
-							  Vector3 fromVec, Vector3 toVec,
-							  NavMeshGraphPath out) {
-		if (fromTri == null || toTri == null || fromVec == null || toVec == null) {
-			return;
+	public boolean calculatePath(Triangle fromTri, Triangle toTri, NavMeshGraphPath out) {
+		if (fromTri == null || toTri == null) {
+			return false;
 		}
-		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
+		return pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
 	}
 
 	@Override

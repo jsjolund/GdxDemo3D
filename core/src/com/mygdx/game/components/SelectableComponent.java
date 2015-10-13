@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
  */
 public class SelectableComponent implements Component {
 
-	public boolean isSelected = false;
 	public ModelInstance selectedMarkerModel;
 
 	public SelectableComponent(ModelInstance selectedMarkerModel) {

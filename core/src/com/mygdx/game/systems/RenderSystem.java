@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
@@ -27,21 +24,22 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.ModelComponent;
+import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.navmesh.Edge;
 import com.mygdx.game.navmesh.NavMesh;
-import com.mygdx.game.navmesh.NavMeshGraphPath;
 import com.mygdx.game.navmesh.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
+import com.mygdx.game.utilities.Observer;
 
 
 /**
  * Created by user on 7/31/15.
  */
-public class RenderSystem extends EntitySystem implements Disposable {
+public class RenderSystem extends EntitySystem implements Disposable, Observer {
 
 	public static final String tag = "RenderSystem";
 
@@ -52,18 +50,21 @@ public class RenderSystem extends EntitySystem implements Disposable {
 	private final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
 	private final Vector3 tmp = new Vector3();
-	private final Vector3 debugNodePos = new Vector3();
-	private final Vector3 debugModelPos = new Vector3();
+	private final Vector3 debugNodePos1 = new Vector3();
+	private final Vector3 debugNodePos2 = new Vector3();
 	private final Matrix4 tmpMatrix = new Matrix4();
 	private final Quaternion tmpQuat = new Quaternion();
 	private final Viewport viewport;
-	private ComponentMapper<SelectableComponent> selectables = ComponentMapper.getFor(SelectableComponent.class);
 	private ImmutableArray<Entity> entities;
 	private BitmapFont font;
 	private Camera camera;
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
 	private NavMesh navmesh;
+
+	private ModelInstance selectedModelInstance;
+	private ModelInstance selectedMarker;
+	private PathFindingComponent selectedPath;
 
 	public RenderSystem(Viewport viewport, Camera camera) {
 		systemFamily = Family.all(ModelComponent.class).get();
@@ -89,6 +90,23 @@ public class RenderSystem extends EntitySystem implements Disposable {
 				return new UberShader(renderable, config);
 			}
 		});
+	}
+
+	@Override
+	public void notifyEntitySelected(Entity entity) {
+		SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
+		if (selCmp != null) {
+			selectedMarker = selCmp.selectedMarkerModel;
+		} else {
+			selectedMarker = null;
+		}
+		selectedPath = entity.getComponent(PathFindingComponent.class);
+		ModelComponent mdlCmp = entity.getComponent(ModelComponent.class);
+		if (mdlCmp != null) {
+			selectedModelInstance = mdlCmp.modelInstance;
+		} else {
+			selectedModelInstance = null;
+		}
 	}
 
 	@Override
@@ -141,15 +159,12 @@ public class RenderSystem extends EntitySystem implements Disposable {
 		for (int i = 0; i < entities.size(); ++i) {
 			Entity entity = entities.get(i);
 			ModelComponent mdlCmp = models.get(entity);
-
 			if (isVisible(camera, mdlCmp) || mdlCmp.ignoreCulling) {
-
-				SelectableComponent selCmp = selectables.get(entity);
-				if (selCmp != null && selCmp.isSelected) {
-					modelBatch.render(selCmp.selectedMarkerModel, environment);
-				}
 				modelBatch.render(mdlCmp.modelInstance, environment);
 			}
+		}
+		if (selectedMarker != null) {
+			modelBatch.render(selectedMarker, environment);
 		}
 		modelBatch.end();
 
@@ -161,6 +176,26 @@ public class RenderSystem extends EntitySystem implements Disposable {
 			drawNavMesh();
 		}
 
+		if (DebugViewSettings.drawPath) {
+			drawPath();
+		}
+	}
+
+	private void drawPath() {
+		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(Color.CYAN);
+		// Smoothed path
+		if (selectedPath != null && selectedPath.path.size > 1) {
+			Vector3 q;
+			Vector3 p = selectedPath.currentGoal;
+			for (int i = selectedPath.path.size - 1; i >= 0; i--) {
+				q = selectedPath.path.get(i);
+				shapeRenderer.line(p, q);
+				p = q;
+			}
+		}
+		shapeRenderer.end();
 	}
 
 	private void drawNavMesh() {
@@ -175,39 +210,27 @@ public class RenderSystem extends EntitySystem implements Disposable {
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
 		}
-//		NavMeshGraphPath path = navmesh.debugPath;
-//		if (path != null && path.getCount() > 0) {
-//			// Path triangles
-//			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-//			shapeRenderer.setColor(1, 1, 0, 0.2f);
-//			for (int i = 0; i < path.getCount(); i++) {
-//				Edge e = (Edge) path.get(i);
-//				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-//				if (i == path.getCount() - 1) {
-//					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
-//				}
-//			}
-//			// Shared triangle edges
-//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-//			for (Connection<Triangle> connection : path) {
-//				Edge e = (Edge) connection;
-//				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
-//			}
-//		}
-//		// Smoothed path
-//		Array<Vector3> smoothPath = navmesh.debugPathSmooth;
-//		if (smoothPath != null && smoothPath.size > 1) {
-//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-//			shapeRenderer.setColor(Color.CYAN);
-//			for (int i = 0; i < smoothPath.size - 1; i++) {
-//				Vector3 p = smoothPath.get(i);
-//				Vector3 q = smoothPath.get(i + 1);
-//				shapeRenderer.line(p, q);
-//			}
-//		}
-		shapeRenderer.end();
-		Gdx.gl.glDisable(GL20.GL_BLEND);
 
+		if (selectedPath != null && selectedPath.trianglePath.getCount() > 0) {
+			// Path triangles
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+			shapeRenderer.setColor(1, 1, 0, 0.2f);
+			for (int i = 0; i < selectedPath.trianglePath.getCount(); i++) {
+				Edge e = (Edge) selectedPath.trianglePath.get(i);
+				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
+				if (i == selectedPath.trianglePath.getCount() - 1) {
+					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
+				}
+			}
+			// Shared triangle edges
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			for (Connection<Triangle> connection : selectedPath.trianglePath) {
+				Edge e = (Edge) connection;
+				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
+			}
+		}
+		shapeRenderer.end();
+		// Draw indices of the triangles
 		spriteBatch.begin();
 		spriteBatch.setProjectionMatrix(camera.combined);
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
@@ -218,8 +241,8 @@ public class RenderSystem extends EntitySystem implements Disposable {
 			font.draw(spriteBatch, Integer.toString(t.index), 0, 0);
 		}
 		spriteBatch.end();
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
-
 
 	private void drawShadowBatch() {
 		int vw = viewport.getScreenWidth();
@@ -247,41 +270,34 @@ public class RenderSystem extends EntitySystem implements Disposable {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(0, 1, 1, 1);
-
-		for (int i = 0; i < entities.size(); ++i) {
-
-			Entity entity = entities.get(i);
-			ModelComponent cmp = models.get(entity);
-			SelectableComponent selCmp = selectables.get(entity);
-			if (selCmp != null) {
-				Node skeleton = cmp.modelInstance.getNode("armature");
-				if (skeleton != null) {
-					cmp.modelInstance.transform.getTranslation(debugModelPos);
-					skeleton.globalTransform.getTranslation(debugNodePos);
-					drawArmatureNodes(skeleton, debugModelPos, debugNodePos);
-				}
+		if (selectedModelInstance != null) {
+			Node skeleton = selectedModelInstance.getNode("armature");
+			if (skeleton != null) {
+				selectedModelInstance.transform.getTranslation(tmp);
+				skeleton.globalTransform.getTranslation(debugNodePos1);
+				drawArmatureNodes(skeleton, tmp, debugNodePos1, debugNodePos2);
 			}
 		}
 		shapeRenderer.end();
 	}
 
-	private void drawArmatureNodes(Node currentNode, Vector3 modelPos, Vector3 parentNodePos) {
-
-		Vector3 debugTmp = new Vector3();
-		currentNode.globalTransform.getTranslation(debugTmp);
-		debugTmp.add(modelPos);
-		shapeRenderer.box(debugTmp.x, debugTmp.y, debugTmp.z, 0.01f, 0.01f, 0.01f);
+	private void drawArmatureNodes(Node currentNode, Vector3 modelPos,
+								   Vector3 parentNodePos, Vector3 currentNodePos) {
+		currentNode.globalTransform.getTranslation(currentNodePos);
+		currentNodePos.add(modelPos);
+		shapeRenderer.setColor(Color.GREEN);
+		shapeRenderer.box(currentNodePos.x, currentNodePos.y, currentNodePos.z, 0.01f, 0.01f, 0.01f);
+		shapeRenderer.setColor(Color.YELLOW);
 		if (currentNode.hasParent()) {
-			shapeRenderer.setColor(1, 1, 0, 1);
-			shapeRenderer.line(parentNodePos, debugTmp);
+			shapeRenderer.line(parentNodePos, currentNodePos);
 		}
-		shapeRenderer.setColor(0, 1, 0, 1);
-
-		if (!currentNode.hasChildren()) {
-			return;
-		} else {
+		if (currentNode.hasChildren()) {
+			float x = currentNodePos.x;
+			float y = currentNodePos.y;
+			float z = currentNodePos.z;
 			for (Node child : currentNode.getChildren()) {
-				drawArmatureNodes(child, modelPos, debugTmp);
+				drawArmatureNodes(child, modelPos, currentNodePos, parentNodePos);
+				currentNodePos.set(x, y, z);
 			}
 		}
 	}

@@ -16,10 +16,10 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.mygdx.game.blender.BlenderObject;
+import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
-import com.mygdx.game.components.blender.BlenderObject;
-import com.mygdx.game.components.blender.BlenderScene;
 
 import java.util.Iterator;
 

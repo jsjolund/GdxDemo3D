@@ -9,10 +9,14 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
@@ -22,13 +26,15 @@ import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.components.*;
-import com.mygdx.game.components.blender.BlenderScene;
-import com.mygdx.game.input.InputHandler;
-import com.mygdx.game.input.IntentBroadcast;
+import com.mygdx.game.input.CameraController;
+import com.mygdx.game.input.GameStage;
+import com.mygdx.game.input.SelectionSystem;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
+import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.RagdollFactory;
 
 /**
@@ -51,7 +57,7 @@ public class GameScreen implements Screen {
 	private final Array<BlenderScene> scenes = new Array<BlenderScene>();
 	private final Array<Class<? extends DisposableComponent>> disposableClasses;
 
-	InputHandler inputHandler;
+	CameraController cameraController;
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		disposableClasses = new Array<Class<? extends DisposableComponent>>();
@@ -117,30 +123,23 @@ public class GameScreen implements Screen {
 			}
 		}
 
-		IntentBroadcast intent = new IntentBroadcast();
-
 		Gdx.app.debug(tag, "Adding selection system");
-		SelectionSystem selSys = new SelectionSystem(stage, viewport, phySys);
+		SelectionSystem selSys = new SelectionSystem(viewport, phySys);
 		selSys.setNavMesh(blenderScene.navMesh);
+		selSys.addObserver(stage);
+		selSys.addObserver(renderSys);
 		engine.addSystem(selSys);
+
+		cameraController = new CameraController(viewport, camera);
+		cameraController.setWorldBoundingBox(blenderScene.worldBounds);
+
 
 		Gdx.app.debug(tag, "Adding input controller");
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		 inputHandler = new InputHandler(viewport, camera);
-//		InputSystem inputSys = new InputSystem(viewport, intent);
-//		engine.addSystem(inputSys);
-		multiplexer.addProcessor(inputHandler.inputAdapter);
+		multiplexer.addProcessor(cameraController.inputAdapter);
 		multiplexer.addProcessor(selSys.inputAdapter);
 		Gdx.input.setInputProcessor(multiplexer);
-
-
-//		Gdx.app.debug(tag, "Adding camera system");
-//		CameraSystem camSys = new CameraSystem(viewport, camera, intent);
-		inputHandler.setWorldBoundingBox(blenderScene.worldBounds);
-//		engine.addSystem(camSys);
-
-
 
 
 		Gdx.app.debug(tag, "Adding billboard system");
@@ -148,10 +147,10 @@ public class GameScreen implements Screen {
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
 		engine.addSystem(billSys);
 
-		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0), intent));
-		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5), intent));
-		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5), intent));
-		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20), intent));
+		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
+		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
+		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
+		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20)));
 
 		Family pathFamily = Family.all(
 				PathFindingComponent.class,
@@ -167,6 +166,7 @@ public class GameScreen implements Screen {
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 
 		engine.addSystem(new CharacterStateSystem(Family.all(CharacterStateComponent.class).get()));
+
 	}
 
 	@Override
@@ -216,10 +216,10 @@ public class GameScreen implements Screen {
 		}
 		stage.act(delta);
 		stage.draw();
-		inputHandler.update(delta);
+		cameraController.update(delta);
 	}
 
-	private Entity spawnCharacter(Vector3 pos, IntentBroadcast intentCmp) {
+	private Entity spawnCharacter(Vector3 pos) {
 		Entity entity = new Entity();
 
 		short belongsToFlag = PhysicsSystem.PC_FLAG;
@@ -286,7 +286,7 @@ public class GameScreen implements Screen {
 
 		// State machine component
 		CharacterStateComponent charCmp = new CharacterStateComponent(
-				intentCmp, mdlCmp, pathCmp, selCmp, ragCmp, phyCmp, motionCmp);
+				mdlCmp, pathCmp, selCmp, ragCmp, phyCmp, motionCmp);
 		entity.add(charCmp);
 
 		Gdx.app.debug(tag, "Finished adding character");

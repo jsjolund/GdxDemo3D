@@ -11,9 +11,9 @@ public class GameSettings {
 	public static final float CAMERA_FOV = 60;
 	public static final float CAMERA_FAR = 1E3f;
 	public static final float CAMERA_NEAR = 1E-3f;
-	public static final float CAMERA_MAX_PAN_VELOCITY = 30;
+	public static final float CAMERA_MAX_PAN_VELOCITY = 50;
 	public static final float CAMERA_MIN_ZOOM = 1;
-	public static final float CAMERA_ZOOM_STEP = 2;
+	public static final float CAMERA_ZOOM_STEP = 4;
 	public static final float CAMERA_MAX_ZOOM = 40;
 	public static final float CAMERA_LERP_ALPHA = 0.1f;
 

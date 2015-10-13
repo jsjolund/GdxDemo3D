@@ -10,23 +10,21 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.settings.GameSettings;
-import com.mygdx.game.systems.GhostCamera;
+import com.mygdx.game.utilities.GhostCamera;
 
 /**
  * Created by Johannes Sjolund on 10/12/15.
  */
-public class InputHandler {
+public class CameraController {
 
+	public final InputProcessor inputAdapter;
 	private final Viewport viewport;
 	private final GhostCamera camera;
-	public final InputProcessor inputAdapter;
-
-	public final IntIntMap keys = new IntIntMap();
+	private final IntIntMap keys = new IntIntMap();
 	private final Vector2 keyPanDirection = new Vector2();
 
 	// World data
 	private final Plane worldGroundPlane = new Plane(Vector3.Y, 0);
-	private BoundingBox worldBoundingBox;
 	private final Vector3 worldDragCurrent = new Vector3();
 	private final Vector3 worldDragLast = new Vector3();
 	private final Vector3 worldGroundTarget = new Vector3();
@@ -36,13 +34,13 @@ public class InputHandler {
 	private final Vector3 tmp1 = new Vector3();
 	private final Vector3 tmp2 = new Vector3();
 	private final Quaternion deltaRotation = new Quaternion();
+	private BoundingBox worldBoundingBox;
 
-	public InputHandler(Viewport viewport, GhostCamera camera) {
+	public CameraController(Viewport viewport, GhostCamera camera) {
 		this.viewport = viewport;
 		this.camera = camera;
 		inputAdapter = new CameraInputAdapter();
 	}
-
 
 	public void update(float deltaTime) {
 		keyPanDirection.setZero();
@@ -98,13 +96,10 @@ public class InputHandler {
 	}
 
 	private void processKeyboardPan(Vector2 keysMoveDirection, float deltaTime) {
-		tmp1.set(camera.direction).scl(keysMoveDirection.y);
-		tmp2.set(tmp1);
 		tmp1.set(camera.direction).crs(camera.up).scl(keysMoveDirection.x);
-		tmp2.add(tmp1);
-		tmp2.y = 0;
-		tmp2.nor();
-		tmp1.set(tmp2).scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY);
+		tmp1.add(tmp2.set(camera.direction).scl(keysMoveDirection.y));
+		tmp1.y = 0;
+		tmp1.nor().scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY);
 
 		ray.origin.set(camera.position).add(tmp1);
 		ray.direction.set(camera.direction);
@@ -120,7 +115,7 @@ public class InputHandler {
 		Vector2 cursorDelta = new Vector2();
 		Vector2 dragCurrent = new Vector2();
 		boolean isDragging = false;
-		float zoom;
+		float zoom = GameSettings.CAMERA_MAX_ZOOM;
 
 		@Override
 		public boolean keyDown(int keycode) {
@@ -150,7 +145,6 @@ public class InputHandler {
 				ray.set(viewport.getPickRay(screenX, screenY));
 				Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
 				worldDragLast.set(worldDragCurrent);
-
 
 			} else if (button == Input.Buttons.RIGHT) {
 				ray.set(camera.position, camera.direction);

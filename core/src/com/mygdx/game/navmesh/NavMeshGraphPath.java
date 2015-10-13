@@ -25,6 +25,31 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 		end = null;
 	}
 
+	public Array<Vector3> getSmoothPath() {
+		Array<Vector3> directPath = getDirectPath();
+		Array<Vector3> smoothPath = new Array<Vector3>();
+
+		float d = 1.2f;
+		Vector3 q = directPath.get(0);
+		Vector3 p;
+		for (int i = 1; i < directPath.size; i++) {
+			p = directPath.get(i);
+			float dst = p.dst(q);
+			smoothPath.add(q);
+			if (dst > d) {
+				int divisions = (int) (dst / d);
+				Vector3 dirVec = new Vector3(p).sub(q).nor();
+				for (int j = 1; j < divisions; j++) {
+					Vector3 r = new Vector3(dirVec).scl(d * j).add(q);
+					smoothPath.add(r);
+				}
+			}
+			q = p;
+		}
+		smoothPath.add(directPath.get(directPath.size - 1));
+		return smoothPath;
+	}
+
 	/**
 	 * Calculate the shortest path through the path triangles, using the Simple Stupid Funnel Algorithm.
 	 *

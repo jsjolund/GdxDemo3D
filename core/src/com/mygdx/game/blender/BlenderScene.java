@@ -1,4 +1,4 @@
-package com.mygdx.game.components.blender;
+package com.mygdx.game.blender;
 
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
@@ -25,8 +25,8 @@ import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.navmesh.NavMesh;
-import com.mygdx.game.systems.GhostCamera;
 import com.mygdx.game.systems.PhysicsSystem;
+import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
 
 import java.nio.FloatBuffer;

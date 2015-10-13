@@ -1,4 +1,4 @@
-package com.mygdx.game.components.blender;
+package com.mygdx.game.blender;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;

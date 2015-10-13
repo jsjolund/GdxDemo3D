@@ -15,7 +15,7 @@ public class PathFindingComponent implements Component {
 
 	public Vector3 currentGoal = null;
 	public Vector3 currentPosition = new Vector3();
-	public Ray posGroundRay = new Ray(new Vector3(), new Vector3(Vector3.Y).scl(-100));
+	public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0,-1,0));
 
 	public float moveSpeed = 1;
 	public boolean goalReached = true;

@@ -37,7 +37,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;
-	private final CollisionContactListener contactListener;
+//	private final CollisionContactListener contactListener;
 	private final btCollisionConfiguration collisionConfig;
 	private final btDispatcher dispatcher;
 	private final btConstraintSolver constraintSolver;
@@ -64,7 +64,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		systemFamily = Family.all(PhysicsComponent.class).get();
 
-		contactListener = new CollisionContactListener();
+//		contactListener = new CollisionContactListener();
 		physicsComponentListener = new PhysicsListener();
 		ragdollComponentListener = new RagdollListener();
 	}
@@ -76,7 +76,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		dynamicsWorld.dispose();
 		broadphase.dispose();
 		constraintSolver.dispose();
-		contactListener.dispose();
+//		contactListener.dispose();
 		debugDrawer.dispose();
 		callback.dispose();
 	}
@@ -129,7 +129,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 	}
 
 
-	public class CollisionContactListener extends ContactListener {
+//	public class CollisionContactListener extends ContactListener {
 //		@Override
 //		public boolean onContactAdded(btManifoldPoint cp,
 //									  btCollisionObject colObj0, int partId0, int index0,
@@ -138,7 +138,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 //			long entityId1 = colObj1.getUserPointer();
 //			return true;
 //		}
-	}
+//	}
 
 	public class PhysicsListener implements EntityListener {
 

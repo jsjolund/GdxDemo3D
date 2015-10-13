@@ -1,6 +1,7 @@
-package com.mygdx.game;
+package com.mygdx.game.input;
 
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -20,13 +21,14 @@ import com.mygdx.game.components.CharacterState;
 import com.mygdx.game.components.CharacterStateComponent;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.ShaderSettings;
+import com.mygdx.game.utilities.Observer;
 
 import java.lang.reflect.Field;
 
 /**
  * Created by user on 8/24/15.
  */
-public class GameStage extends Stage {
+public class GameStage extends Stage implements Observer {
 
 	public static final String tag = "GameStage";
 
@@ -74,21 +76,21 @@ public class GameStage extends Stage {
 		addActor(rootTable);
 	}
 
-	private CharacterStateComponent getSelectedCharacterState() {
-		return selectedCharacterState;
+
+	@Override
+	public void notifyEntitySelected(Entity entity) {
+		selectedCharacterState = entity.getComponent(CharacterStateComponent.class);
+		if (selectedCharacterState != null) {
+			for (ImageButton btn : movementButtons.keys()) {
+				btn.setChecked(false);
+			}
+			movementButtons.getKey(selectedCharacterState.moveState, true).setChecked(true);
+		}
 	}
 
-	public void setSelectedCharacterState(CharacterStateComponent cmp) {
-		this.selectedCharacterState = cmp;
-		for (ImageButton btn : movementButtons.keys()) {
-			btn.setChecked(false);
-		}
-		movementButtons.getKey(selectedCharacterState.moveState, true).setChecked(true);
-	}
 
 	private void handleMoveButtonPress(ImageButton thisBtn) {
-		CharacterStateComponent selectedCharacter = getSelectedCharacterState();
-		if (selectedCharacter == null) {
+		if (selectedCharacterState == null) {
 			return;
 		}
 		boolean checked = thisBtn.isChecked();
@@ -99,10 +101,10 @@ public class GameStage extends Stage {
 			thisBtn.setChecked(true);
 			CharacterState newState = movementButtons.get(thisBtn);
 
-			if (selectedCharacter != null) {
-				selectedCharacter.moveState = newState;
-				if (selectedCharacter.isMoving) {
-					selectedCharacter.stateMachine.changeState(newState);
+			if (selectedCharacterState != null) {
+				selectedCharacterState.moveState = newState;
+				if (selectedCharacterState.isMoving) {
+					selectedCharacterState.stateMachine.changeState(newState);
 				}
 			}
 		}
@@ -315,4 +317,6 @@ public class GameStage extends Stage {
 			shapeRenderer.end();
 		}
 	}
+
+
 }

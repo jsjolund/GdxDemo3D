@@ -4,7 +4,6 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
-import com.mygdx.game.input.IntentBroadcast;
 
 /**
  * Created by Johannes Sjolund on 10/11/15.
@@ -20,7 +19,6 @@ public class CharacterStateComponent implements Component {
 
 	public PathFindingComponent pathCmp;
 	public ModelComponent mdlCmp;
-	public IntentBroadcast intentCmp;
 	public SelectableComponent selCmp;
 	public RagdollComponent ragdollCmp;
 	public PhysicsComponent phyCmp;
@@ -28,26 +26,14 @@ public class CharacterStateComponent implements Component {
 
 	public boolean isMoving = false;
 
-	public class CharacterAnimationListener implements AnimationController.AnimationListener {
-		@Override
-		public void onEnd(AnimationController.AnimationDesc animation) {
+	public CharacterStateComponent(
+			ModelComponent mdlCmp,
+			PathFindingComponent pathCmp,
+			SelectableComponent selCmp,
+			RagdollComponent ragdollCmp,
+			PhysicsComponent phyCmp,
+			MotionStateComponent motionCmp) {
 
-		}
-
-		@Override
-		public void onLoop(AnimationController.AnimationDesc animation) {
-
-		}
-	}
-
-	public CharacterStateComponent(IntentBroadcast intentCmp,
-								   ModelComponent mdlCmp,
-								   PathFindingComponent pathCmp,
-								   SelectableComponent selCmp,
-								   RagdollComponent ragdollCmp,
-								   PhysicsComponent phyCmp,
-								   MotionStateComponent motionCmp) {
-		this.intentCmp = intentCmp;
 		this.mdlCmp = mdlCmp;
 		this.motionCmp = motionCmp;
 		this.pathCmp = pathCmp;
@@ -71,15 +57,18 @@ public class CharacterStateComponent implements Component {
 		} else if (!pathCmp.goalReached && !isMoving) {
 			stateMachine.changeState(moveState);
 		}
+	}
 
-		if (intentCmp.killSelected() && selCmp.isSelected) {
-			if (stateMachine.getCurrentState() == CharacterState.DEAD) {
-				stateMachine.changeState(CharacterState.IDLE_STAND);
-			} else {
-				stateMachine.changeState(CharacterState.DEAD);
-			}
+	public class CharacterAnimationListener implements AnimationController.AnimationListener {
+		@Override
+		public void onEnd(AnimationController.AnimationDesc animation) {
+
 		}
 
+		@Override
+		public void onLoop(AnimationController.AnimationDesc animation) {
+
+		}
 	}
 
 

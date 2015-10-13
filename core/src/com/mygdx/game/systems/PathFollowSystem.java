@@ -31,31 +31,29 @@ public class PathFollowSystem extends IteratingSystem {
 		PhysicsComponent phyCmp = phyCmps.get(entity);
 		PathFindingComponent pathCmp = pathCmps.get(entity);
 
-		phyCmp.body.getWorldTransform(matrix);
-		matrix.getTranslation(pathCmp.currentPosition);
-
 		if (pathCmp.currentGoal == null && pathCmp.path.size == 0) {
 			pathCmp.goalReached = true;
 			return;
 		}
 
-		if (pathCmp.currentGoal == null && pathCmp.path.size > 0) {
-			pathCmp.currentGoal = pathCmp.path.pop();
-		}
-
 		if (pathCmp.currentGoal != null) {
 			float yVelocity = phyCmp.body.getLinearVelocity().y;
+
+			phyCmp.body.getWorldTransform(matrix);
+			matrix.getTranslation(pathCmp.currentPosition);
 
 			float xzDst = Vector2.dst2(pathCmp.currentGoal.x, pathCmp.currentGoal.z,
 					pathCmp.currentPosition.x, pathCmp.currentPosition.z);
 
-			if (xzDst < 0.01f) {
-				phyCmp.body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
-				phyCmp.body.setAngularVelocity(Vector3.Zero);
+			if (xzDst < 0.1f) {
+
 				// set new goal if not empty
 				pathCmp.currentGoal = null;
-				if (pathCmp.path.size != 0) {
+				if (pathCmp.path.size > 0) {
 					pathCmp.currentGoal = pathCmp.path.pop();
+				} else {
+					phyCmp.body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
+					phyCmp.body.setAngularVelocity(Vector3.Zero);
 				}
 
 			} else {
