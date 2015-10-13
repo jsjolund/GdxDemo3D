@@ -5,7 +5,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
@@ -26,6 +25,7 @@ import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.navmesh.NavMesh;
+import com.mygdx.game.systems.GhostCamera;
 import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.ModelFactory;
 
@@ -118,7 +118,7 @@ public class BlenderScene implements Disposable {
 		navMesh.dispose();
 	}
 
-	public void setToSceneCamera(PerspectiveCamera camera) {
+	public void setToSceneCamera(GhostCamera camera) {
 		Vector3 direction = new Vector3(Vector3.Y).scl(-1);
 		direction.rotate(Vector3.X, sceneCamera.rotation.x);
 		direction.rotate(Vector3.Z, sceneCamera.rotation.z);

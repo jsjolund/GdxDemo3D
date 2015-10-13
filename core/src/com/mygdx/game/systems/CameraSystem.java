@@ -91,10 +91,10 @@ public class CameraSystem extends EntitySystem {
 
 	private void processDragPan() {
 
+		worldDragLast.set(worldDragCurrent);
 		ray.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
 		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragCurrent);
 		ray.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
-		Intersector.intersectRayPlane(ray, worldGroundPlane, worldDragLast);
 		tmp.set(worldDragLast).sub(worldDragCurrent);
 		tmp.y = 0;
 

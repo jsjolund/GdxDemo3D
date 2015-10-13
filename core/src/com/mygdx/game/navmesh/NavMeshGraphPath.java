@@ -14,13 +14,19 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	public Vector3 start;
 	public Vector3 end;
 
-	public NavMeshGraphPath(Vector3 start, Vector3 end) {
+	public void setStartEnd(Vector3 start, Vector3 end) {
 		this.start = new Vector3(start);
 		this.end = new Vector3(end);
 	}
 
+	public void clear() {
+		nodes.clear();
+		start = null;
+		end = null;
+	}
+
 	/**
-	 * Calculate the shortest path through the navmesh path triangles, using the Simple Stupid Funnel Algorithm.
+	 * Calculate the shortest path through the path triangles, using the Simple Stupid Funnel Algorithm.
 	 *
 	 * @return
 	 */

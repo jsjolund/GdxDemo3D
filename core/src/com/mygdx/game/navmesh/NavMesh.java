@@ -19,8 +19,6 @@ public class NavMesh implements Disposable {
 	public static final String tag = "NavMesh";
 
 	public NavMeshGraph graph;
-	public NavMeshGraphPath debugPath;
-	public Array<Vector3> debugPathSmooth;
 	private btBvhTriangleMeshShape collisionShape;
 	private NavMeshRaycastCallback raycastCallback;
 	private NavMeshHeuristic heuristic;
@@ -40,14 +38,13 @@ public class NavMesh implements Disposable {
 		heuristic = new NavMeshHeuristic();
 	}
 
-	public void calculatePath(Triangle fromTri, Triangle toTri, Vector3 fromVec, Vector3 toVec) {
+	public void calculatePath(Triangle fromTri, Triangle toTri,
+							  Vector3 fromVec, Vector3 toVec,
+							  NavMeshGraphPath out) {
 		if (fromTri == null || toTri == null || fromVec == null || toVec == null) {
 			return;
 		}
-		NavMeshGraphPath path = new NavMeshGraphPath(fromVec, toVec);
-		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path);
-		debugPathSmooth = path.getDirectPath();
-		debugPath = path;
+		pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
 	}
 
 	@Override

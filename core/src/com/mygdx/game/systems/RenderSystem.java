@@ -175,36 +175,36 @@ public class RenderSystem extends EntitySystem implements Disposable {
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
 		}
-		NavMeshGraphPath path = navmesh.debugPath;
-		if (path != null && path.getCount() > 0) {
-			// Path triangles
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			shapeRenderer.setColor(1, 1, 0, 0.2f);
-			for (int i = 0; i < path.getCount(); i++) {
-				Edge e = (Edge) path.get(i);
-				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-				if (i == path.getCount() - 1) {
-					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
-				}
-			}
-			// Shared triangle edges
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			for (Connection<Triangle> connection : path) {
-				Edge e = (Edge) connection;
-				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
-			}
-		}
-		// Smoothed path
-		Array<Vector3> smoothPath = navmesh.debugPathSmooth;
-		if (smoothPath != null && smoothPath.size > 1) {
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(Color.CYAN);
-			for (int i = 0; i < smoothPath.size - 1; i++) {
-				Vector3 p = smoothPath.get(i);
-				Vector3 q = smoothPath.get(i + 1);
-				shapeRenderer.line(p, q);
-			}
-		}
+//		NavMeshGraphPath path = navmesh.debugPath;
+//		if (path != null && path.getCount() > 0) {
+//			// Path triangles
+//			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+//			shapeRenderer.setColor(1, 1, 0, 0.2f);
+//			for (int i = 0; i < path.getCount(); i++) {
+//				Edge e = (Edge) path.get(i);
+//				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
+//				if (i == path.getCount() - 1) {
+//					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
+//				}
+//			}
+//			// Shared triangle edges
+//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+//			for (Connection<Triangle> connection : path) {
+//				Edge e = (Edge) connection;
+//				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
+//			}
+//		}
+//		// Smoothed path
+//		Array<Vector3> smoothPath = navmesh.debugPathSmooth;
+//		if (smoothPath != null && smoothPath.size > 1) {
+//			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+//			shapeRenderer.setColor(Color.CYAN);
+//			for (int i = 0; i < smoothPath.size - 1; i++) {
+//				Vector3 p = smoothPath.get(i);
+//				Vector3 q = smoothPath.get(i + 1);
+//				shapeRenderer.line(p, q);
+//			}
+//		}
 		shapeRenderer.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 

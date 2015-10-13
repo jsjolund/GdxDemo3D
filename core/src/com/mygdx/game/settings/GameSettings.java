@@ -13,8 +13,8 @@ public class GameSettings {
 	public static final float CAMERA_NEAR = 1E-3f;
 	public static final float CAMERA_MAX_PAN_VELOCITY = 30;
 	public static final float CAMERA_MIN_ZOOM = 1;
-	public static final float CAMERA_ZOOM_STEP = 1;
-	public static final float CAMERA_MAX_ZOOM = 20;
+	public static final float CAMERA_ZOOM_STEP = 2;
+	public static final float CAMERA_MAX_ZOOM = 40;
 	public static final float CAMERA_LERP_ALPHA = 0.1f;
 
 	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
@@ -28,6 +28,10 @@ public class GameSettings {
 	public static final float SHADOW_NEAR = 1;
 	public static final float SHADOW_FAR = 100;
 	public static final float SHADOW_INTENSITY = 1f;
+
+	public static final float CHAR_CAPSULE_XZ_HALFEXT = 0.4f;
+	public static final float CHAR_CAPSULE_Y_HALFEXT = 1;
+	public static final float CHAR_MASS = 100;
 
 	public static float GAME_SPEED = 1;
 

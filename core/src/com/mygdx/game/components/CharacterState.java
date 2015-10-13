@@ -11,11 +11,12 @@ public enum CharacterState implements State<CharacterStateComponent> {
 	MOVE_RUN() {
 		@Override
 		public void enter(CharacterStateComponent entity) {
-			// TODO: Set animation, sound, basic collision shape, movement speed
+			// TODO: Set animation, sound, movement speed
 			entity.controller.setAnimation("armature|move_run", -1);
 			entity.pathCmp.moveSpeed = 8f;
 			entity.idleState = IDLE_STAND;
 			entity.isMoving = true;
+
 		}
 	},
 	MOVE_WALK() {
@@ -25,6 +26,7 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.pathCmp.moveSpeed = 4f;
 			entity.idleState = IDLE_STAND;
 			entity.isMoving = true;
+
 		}
 	},
 	MOVE_CROUCH() {
@@ -34,6 +36,7 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.pathCmp.moveSpeed = 2.5f;
 			entity.idleState = IDLE_CROUCH;
 			entity.isMoving = true;
+
 		}
 	},
 	MOVE_CRAWL() {
@@ -43,6 +46,7 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.pathCmp.moveSpeed = 1f;
 			entity.idleState = IDLE_CRAWL;
 			entity.isMoving = true;
+
 		}
 	},
 	IDLE_STAND() {
