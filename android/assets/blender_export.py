@@ -31,8 +31,8 @@ import os
 import math
 import subprocess
 import json
+import tempfile
 from mathutils import Vector
-
 
 class BlenderObject(object):
     def __init__(self, blender_object):
@@ -62,7 +62,6 @@ class BlenderObject(object):
 
 class BlenderModel(BlenderObject):
     category = "model"
-
     def __init__(self, blender_object, filename):
         super().__init__(blender_object)
         self.filename = filename
@@ -129,31 +128,38 @@ class Color(object):
         self.b = 0.0
 
 
-def write_json(blender_file_basedir, blender_filename_noext, blender_object_map):
-    json_dir_path = os.path.join(os.path.dirname(blender_file_basedir), "json")
-    if not os.path.exists(json_dir_path):
-        os.makedirs(json_dir_path)
-    for category in blender_object_map:
-        json_file_path = os.path.join(json_dir_path, "{}_{}.json".format(blender_filename_noext, category))
-        json_out = []
-        for obj in blender_object_map[category]:
-            json_out.append(obj.serialize())
-        json_file = open(json_file_path, "w")
-        json_file.write(json.dumps(json_out))
-        json_file.write("\n")
-        print("Wrote to " + json_file_path)
-        print(json.dumps(json_out, sort_keys=True, indent=4, separators=(',', ': ')))
-        json_file.close()
+def write_json(json_file_path, objects):
+    """
+    Serialize the "BlenderObjects" and write them to json file
+    :param json_file_path:
+    :param objects:
+    :return:
+    """
+    json_out = []
+    for obj in objects:
+        json_out.append(obj.serialize())
+    json_file = open(json_file_path, "w")
+    json_file.write(json.dumps(json_out))
+    json_file.write("\n")
+    print("INFO: Wrote to " + json_file_path)
+    #print(json.dumps(json_out, sort_keys=True, indent=4, separators=(',', ': ')))
+    json_file.close()
 
 
-def write_fbx(blender_file_basedir, export_objects):
+def write_fbx(fbx_dir, models_to_export):
+    """
+    Export all provided blender models to fbx
+    :param fbx_dir:
+    :param models_to_export:
+    :return: The paths for the fbx files
+    """
     fbx_file_paths = []
 
     # deselect all
     for item in bpy.context.selectable_objects:
         item.select = False
 
-    for game_object in export_objects:
+    for game_object in models_to_export:
         blender_object = game_object.blender_object
         blender_object.select = True
         # Select any connected armatures
@@ -163,7 +169,7 @@ def write_fbx(blender_file_basedir, export_objects):
                 armatures.append(mod.object)
         for armature in armatures:
             armature.select = True
-        fbx_file_path = os.path.join(blender_file_basedir, game_object.get_model_name() + ".fbx")
+        fbx_file_path = os.path.join(fbx_dir, game_object.get_model_name() + ".fbx")
         fbx_file_paths.append(fbx_file_path)
 
         bpy.context.scene.objects.active = blender_object
@@ -192,23 +198,29 @@ def write_fbx(blender_file_basedir, export_objects):
     return fbx_file_paths
 
 
-def convert_to_g3db(blender_file_basedir, fbx_file_paths):
+def convert_to_g3db(g3db_output_path, fbx_file_paths):
+    """
+    Convert all fbx files to g3db with fbx-conv
+    :param g3db_output_path:
+    :param fbx_file_paths:
+    :return: The paths of the g3db files
+    """
     g3db_output_file_paths = []
-    g3db_output_path = os.path.join(os.path.dirname(blender_file_basedir), "g3db")
-    if not os.path.exists(g3db_output_path):
-        os.makedirs(g3db_output_path)
-
     for fbx_file_path in fbx_file_paths:
         basename_ext = os.path.basename(fbx_file_path)
         basename_no_ext, fbx_ext = os.path.splitext(basename_ext)
         g3db_output_file_path = os.path.join(g3db_output_path, basename_no_ext + ".g3db")
         subprocess.call(["fbx-conv", "-f", fbx_file_path, g3db_output_file_path])
-        os.remove(fbx_file_path)
         g3db_output_file_paths.append(g3db_output_file_path)
     return g3db_output_file_paths
 
 
 def get_export_objects(blender_object_map):
+    """
+    Get a list of all models which need to be exported (those with unique meshes)
+    :param blender_object_map:
+    :return:
+    """
     mesh_objects = {}
     export_objects = []
 
@@ -224,11 +236,11 @@ def get_export_objects(blender_object_map):
 
     for key in mesh_objects:
         if len(mesh_objects[key]) > 1:
-            print("Error: Conflicting meshes for export object: '{}'.\nRename objects or link the meshes: {}\n".format(
+            print("ERROR: Conflicting meshes for export object: '{}'.\nRename objects or link the meshes: {}\n".format(
                 key, str(mesh_objects[key])))
             return []
 
-    print("Info: Found export targets:")
+    print("INFO: Found export targets:")
     for o in export_objects:
         print(o.name)
 
@@ -236,6 +248,12 @@ def get_export_objects(blender_object_map):
 
 
 def create_blender_object_map(filename, scene_objects):
+    """
+    Map all supported scene objects into "BlenderObjects" which can be exported and/or serialized.
+    :param filename:
+    :param scene_objects:
+    :return:
+    """
     blender_object_map = {}
 
     for scene_obj in scene_objects:
@@ -261,7 +279,7 @@ def create_blender_object_map(filename, scene_objects):
             category = BlenderCamera.category
 
         if category == "unknown":
-            print("Warning: {} not supported".format(str(scene_obj.data.__class__.__name__)))
+            print("WARNING: {} not supported".format(str(scene_obj.data.__class__.__name__)))
             continue
 
         if category in blender_object_map:
@@ -273,29 +291,37 @@ def create_blender_object_map(filename, scene_objects):
 
 
 def main():
-    print("\nStarting level export...")
+    print("\nStarting scene export...")
     blender_file_basedir = os.path.dirname(bpy.data.filepath)
     blender_filename_noext = bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0]
 
     if not blender_file_basedir:
-        raise Exception("Blend file is not saved")
+        raise Exception("ERROR: Blender file is not saved")
 
     bpy.data.scenes['Scene'].render.fps = 30
 
     blender_object_map = create_blender_object_map(blender_filename_noext, bpy.data.objects)
 
-    print(blender_file_basedir)
-    write_json(blender_file_basedir, blender_filename_noext, blender_object_map)
+    json_dir_path = os.path.join(os.path.dirname(blender_file_basedir), "json")
+    if not os.path.exists(json_dir_path):
+        os.makedirs(json_dir_path)
+    for category in blender_object_map:
+        json_file_path = os.path.join(json_dir_path, "{}_{}.json".format(blender_filename_noext, category))
+        write_json(json_file_path, blender_object_map[category])
 
     print()
     export_objects = get_export_objects(blender_object_map);
     print()
-    fbx_file_paths = write_fbx(blender_file_basedir, export_objects)
-    print()
-    g3db_file_paths = convert_to_g3db(blender_file_basedir, fbx_file_paths)
-    print("\nCreated g3db model files:")
-    for f in g3db_file_paths:
-        print(f)
+    # Export models as fbx to temp dir, then convert them to g3db
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        fbx_file_paths = write_fbx(tmpdirname, export_objects)
+        g3db_output_path = os.path.join(os.path.dirname(blender_file_basedir), "g3db")
+        if not os.path.exists(g3db_output_path):
+            os.makedirs(g3db_output_path)
+        g3db_file_paths = convert_to_g3db(g3db_output_path, fbx_file_paths)
+        print("\nINFO: Created g3db model files:")
+        for f in g3db_file_paths:
+            print(f)
     print("\nFinished.")
     print("\n\n")
 

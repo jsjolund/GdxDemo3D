@@ -30,7 +30,7 @@ public class GameSettings {
 	public static final float SHADOW_INTENSITY = 1f;
 
 	public static final float CHAR_CAPSULE_XZ_HALFEXT = 0.4f;
-	public static final float CHAR_CAPSULE_Y_HALFEXT = 1.1f  ;
+	public static final float CHAR_CAPSULE_Y_HALFEXT = 1.1f;
 	public static final float CHAR_MASS = 100;
 
 	public static float GAME_SPEED = 1;

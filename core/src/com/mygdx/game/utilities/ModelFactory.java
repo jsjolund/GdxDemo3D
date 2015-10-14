@@ -23,47 +23,47 @@ import java.nio.ShortBuffer;
  */
 public class ModelFactory {
 
-/**
- * Translate each vertex along its normal by specified amount.
- *
- * @param model
- * @param amount
- */
-public static void fatten(Model model, float amount) {
-	Vector3 pos = new Vector3();
-	Vector3 nor = new Vector3();
-	for (Node node : model.nodes) {
-		for (NodePart n : node.parts) {
-			Mesh mesh = n.meshPart.mesh;
-			FloatBuffer buf = mesh.getVerticesBuffer();
-			int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
-			int vertexFloats = (mesh.getVertexSize() / 4);
-			VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
-			VertexAttribute norAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Normal);
-			if (posAttr == null || norAttr == null) {
-				throw new IllegalArgumentException("Position/normal vertex attribute not found");
-			}
-			int pOff = posAttr.offset / 4;
-			int nOff = norAttr.offset / 4;
+	/**
+	 * Translate each vertex along its normal by specified amount.
+	 *
+	 * @param model
+	 * @param amount
+	 */
+	public static void fatten(Model model, float amount) {
+		Vector3 pos = new Vector3();
+		Vector3 nor = new Vector3();
+		for (Node node : model.nodes) {
+			for (NodePart n : node.parts) {
+				Mesh mesh = n.meshPart.mesh;
+				FloatBuffer buf = mesh.getVerticesBuffer();
+				int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
+				int vertexFloats = (mesh.getVertexSize() / 4);
+				VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
+				VertexAttribute norAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Normal);
+				if (posAttr == null || norAttr == null) {
+					throw new IllegalArgumentException("Position/normal vertex attribute not found");
+				}
+				int pOff = posAttr.offset / 4;
+				int nOff = norAttr.offset / 4;
 
-			for (int i = 0; i < lastFloat; i += vertexFloats) {
-				pos.x = buf.get(pOff + i);
-				pos.y = buf.get(pOff + i + 1);
-				pos.z = buf.get(pOff + i + 2);
+				for (int i = 0; i < lastFloat; i += vertexFloats) {
+					pos.x = buf.get(pOff + i);
+					pos.y = buf.get(pOff + i + 1);
+					pos.z = buf.get(pOff + i + 2);
 
-				nor.x = buf.get(nOff + i);
-				nor.y = buf.get(nOff + i + 1);
-				nor.z = buf.get(nOff + i + 2);
+					nor.x = buf.get(nOff + i);
+					nor.y = buf.get(nOff + i + 1);
+					nor.z = buf.get(nOff + i + 2);
 
-				nor.nor().scl(amount);
+					nor.nor().scl(amount);
 
-				buf.put(pOff + i, pos.x + nor.x);
-				buf.put(pOff + i + 1, pos.y + nor.y);
-				buf.put(pOff + i + 2, pos.z + nor.z);
+					buf.put(pOff + i, pos.x + nor.x);
+					buf.put(pOff + i + 1, pos.y + nor.y);
+					buf.put(pOff + i + 2, pos.z + nor.z);
+				}
 			}
 		}
 	}
-}
 
 	public static FloatBuffer createBlenderToGdxFloatBuffer(Mesh mesh) {
 		Vector3 pos = new Vector3();

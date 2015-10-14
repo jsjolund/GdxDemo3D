@@ -7,7 +7,6 @@ import com.badlogic.ashley.systems.IteratingSystem;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.mygdx.game.components.ModelComponent;
@@ -25,9 +24,6 @@ public class RagdollSystem extends IteratingSystem {
 
 	private final ComponentMapper<ModelComponent> modelCmps =
 			ComponentMapper.getFor(ModelComponent.class);
-
-	private final ComponentMapper<MotionStateComponent> motionCmps =
-			ComponentMapper.getFor(MotionStateComponent.class);
 
 	private final ComponentMapper<RagdollComponent> ragdollCmps =
 			ComponentMapper.getFor(RagdollComponent.class);

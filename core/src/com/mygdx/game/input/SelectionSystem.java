@@ -2,7 +2,6 @@ package com.mygdx.game.input;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -24,19 +23,20 @@ import com.mygdx.game.utilities.Observer;
 /**
  * Created by user on 8/25/15.
  */
-public class SelectionSystem extends EntitySystem implements Observable {
+public class SelectionSystem implements Observable {
 
 	public static final String tag = "SelectionSystem";
-	private final Vector3 surfaceHitPoint = new Vector3();
-	private final PhysicsSystem phySys;
+
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
+	private final Vector3 surfaceHitPoint = new Vector3();
 	private final float rayDistance = 100;
 	private final Viewport viewport;
 	private final Array<Observer> observers = new Array<Observer>();
+	private final PhysicsSystem phySys;
 	public InputAdapter inputAdapter;
-	private NavMesh navMesh;
 	private Entity selectedEntity;
+	private NavMesh navMesh;
 
 	public SelectionSystem(Viewport viewport, PhysicsSystem phySys) {
 		this.phySys = phySys;

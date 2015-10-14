@@ -156,8 +156,7 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		drawShadowBatch();
 		camera.update();
 		modelBatch.begin(camera);
-		for (int i = 0; i < entities.size(); ++i) {
-			Entity entity = entities.get(i);
+		for (Entity entity : entities) {
 			ModelComponent mdlCmp = models.get(entity);
 			if (isVisible(camera, mdlCmp) || mdlCmp.ignoreCulling) {
 				modelBatch.render(mdlCmp.modelInstance, environment);
@@ -253,8 +252,7 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 
 		shadowLight.begin(Vector3.Zero, camera.direction);
 		shadowBatch.begin(shadowLight.getCamera());
-		for (int i = 0; i < entities.size(); ++i) {
-			Entity entity = entities.get(i);
+		for (Entity entity : entities) {
 			ModelComponent cmp = models.get(entity);
 			shadowBatch.render(cmp.modelInstance);
 		}

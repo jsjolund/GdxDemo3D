@@ -16,7 +16,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
@@ -79,7 +78,6 @@ public class GameScreen implements Screen {
 		stage = new GameStage(viewport);
 		shapeRenderer = new ShapeRenderer();
 
-		Gdx.app.debug(tag, "Loading json");
 		BlenderScene blenderScene = new BlenderScene(
 				"models/json/scene0_model.json",
 				"models/json/scene0_empty.json",
@@ -89,13 +87,11 @@ public class GameScreen implements Screen {
 		scenes.add(blenderScene);
 		blenderScene.setToSceneCamera(camera);
 
-		Gdx.app.debug(tag, "Loading render system");
 		RenderSystem renderSys = new RenderSystem(viewport, camera);
 		renderSys.setNavmesh(blenderScene.navMesh);
 		renderSys.setEnvironmentLights(blenderScene.lights, blenderScene.shadowCameraDirection);
 		engine.addSystem(renderSys);
 
-		Gdx.app.debug(tag, "Loading physics system");
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
 		engine.addEntityListener(phySys.systemFamily, phySys.physicsComponentListener);
@@ -103,7 +99,6 @@ public class GameScreen implements Screen {
 		modes = new btIDebugDraw.DebugDrawModes();
 		debugDraw = phySys.dynamicsWorld.getDebugDrawer();
 
-		Gdx.app.debug(tag, "Adding entities");
 		for (Entity entity : blenderScene.entities) {
 			engine.addEntity(entity);
 		}
@@ -115,26 +110,20 @@ public class GameScreen implements Screen {
 			if (modelCmp.id.startsWith("door")) {
 				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
 				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0, 0, -0.6f), Vector3.Y);
-//				hinge.enableAngularMotor(true, 0, 5);
-
-				hinge.setDbgDrawSize(1);
 				phySys.dynamicsWorld.addConstraint(hinge);
 				phyCmp.addConstraint(hinge);
 			}
 		}
 
-		Gdx.app.debug(tag, "Adding selection system");
 		SelectionSystem selSys = new SelectionSystem(viewport, phySys);
 		selSys.setNavMesh(blenderScene.navMesh);
 		selSys.addObserver(stage);
 		selSys.addObserver(renderSys);
-		engine.addSystem(selSys);
 
 		cameraController = new CameraController(viewport, camera);
 		cameraController.setWorldBoundingBox(blenderScene.worldBounds);
 
 
-		Gdx.app.debug(tag, "Adding input controller");
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
 		multiplexer.addProcessor(cameraController.inputAdapter);
@@ -142,31 +131,26 @@ public class GameScreen implements Screen {
 		Gdx.input.setInputProcessor(multiplexer);
 
 
-		Gdx.app.debug(tag, "Adding billboard system");
 		Family billFamily = Family.all(BillboardComponent.class).get();
 		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
 		engine.addSystem(billSys);
 
-		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
-		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
-		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
-		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20)));
-
-		Family pathFamily = Family.all(
-				PathFindingComponent.class,
-				PhysicsComponent.class
-		).get();
+		Family pathFamily = Family.all(PathFindingComponent.class, PhysicsComponent.class).get();
 		engine.addSystem(new PathFollowSystem(pathFamily));
 
 		Family ragdollFamily = Family.all(
 				RagdollComponent.class,
 				ModelComponent.class,
-				MotionStateComponent.class,
 				PhysicsComponent.class).get();
 		engine.addSystem(new RagdollSystem(ragdollFamily));
 
 		engine.addSystem(new CharacterStateSystem(Family.all(CharacterStateComponent.class).get()));
 
+
+		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
+		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
+		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
+		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20)));
 	}
 
 	@Override

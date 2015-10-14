@@ -2,7 +2,6 @@ package com.mygdx.game.systems;
 
 import com.badlogic.ashley.core.*;
 import com.badlogic.ashley.utils.ImmutableArray;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -37,7 +36,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;
-//	private final CollisionContactListener contactListener;
+	//	private final CollisionContactListener contactListener;
 	private final btCollisionConfiguration collisionConfig;
 	private final btDispatcher dispatcher;
 	private final btConstraintSolver constraintSolver;
@@ -161,7 +160,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		@Override
 		public void entityAdded(Entity entity) {
-			Gdx.app.debug(tag, "Adding ragdoll");
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
 			if (!cmp.ragdollControl) {
 				for (btRigidBody body : cmp.map.keys()) {
@@ -179,7 +177,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 
 		@Override
 		public void entityRemoved(Entity entity) {
-			Gdx.app.debug(tag, "Removing ragdoll");
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
 			for (btRigidBody body : cmp.map.keys()) {
 				dynamicsWorld.removeCollisionObject(body);

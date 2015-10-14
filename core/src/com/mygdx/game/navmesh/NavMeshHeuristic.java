@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector3;
  * Created by Johannes Sjolund on 9/27/15.
  */
 public class NavMeshHeuristic implements Heuristic<Triangle> {
+
 	@Override
 	public float estimate(Triangle node, Triangle endNode) {
 		float minDst = Float.MAX_VALUE;
