@@ -146,6 +146,7 @@ public class SelectionSystem extends EntitySystem implements Observable {
 
 		@Override
 		public boolean keyDown(int keycode) {
+			// TODO: Move
 			if (keycode == Input.Keys.F5) {
 				CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
 				if (cmp != null) {
