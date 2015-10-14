@@ -4,11 +4,14 @@ import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.components.CharacterState;
+import com.mygdx.game.components.CharacterStateComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
 import com.mygdx.game.navmesh.NavMesh;
@@ -139,6 +142,17 @@ public class SelectionSystem extends EntitySystem implements Observable {
 				checkNavMeshClick(ray);
 			}
 			return true;
+		}
+
+		@Override
+		public boolean keyDown(int keycode) {
+			if (keycode == Input.Keys.F5) {
+				CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
+				if (cmp != null) {
+					cmp.stateMachine.changeState(CharacterState.DEAD);
+				}
+			}
+			return false;
 		}
 	}
 }

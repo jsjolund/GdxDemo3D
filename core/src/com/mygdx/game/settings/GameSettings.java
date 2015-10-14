@@ -38,7 +38,6 @@ public class GameSettings {
 	public static float MOUSE_SENSITIVITY = 0.1f;
 
 	public static int KEY_PAUSE = Input.Keys.SPACE;
-	public static int KEY_KILL_SELECTED = Input.Keys.F5;
 	public static int KEY_PAN_FORWARD = Input.Keys.W;
 	public static int KEY_PAN_LEFT = Input.Keys.A;
 	public static int KEY_PAN_BACKWARD = Input.Keys.S;

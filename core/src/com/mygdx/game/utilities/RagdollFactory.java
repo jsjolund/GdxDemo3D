@@ -152,8 +152,8 @@ public class RagdollFactory {
 		// TODO: causes shoulder rotation
 		a = "chest";
 		b = "left_upper_arm";
-		localA.setFromEulerAnglesRad(0, PI, 0).scl(-1, 1, 1).trn(halfExtMap.get(a).x + halfExtMap.get(b).x, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(PI4, -0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(0, PI, 0).trn(halfExtMap.get(a).x + halfExtMap.get(b).x, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(PI4, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		cmp.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 		coneC.setDamping(10);
@@ -162,7 +162,7 @@ public class RagdollFactory {
 		a = "chest";
 		b = "right_upper_arm";
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(-halfExtMap.get(a).x - halfExtMap.get(b).x, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(-PI4, -0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(-PI4, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
 		cmp.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
 		coneC.setLimit(PI2, PI2, 0);
 		coneC.setDamping(10);

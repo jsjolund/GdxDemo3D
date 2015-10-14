@@ -129,7 +129,7 @@ public class CameraController {
 					GameSettings.GAME_SPEED = 1;
 				}
 			}
-			return true;
+			return false;
 		}
 
 		@Override

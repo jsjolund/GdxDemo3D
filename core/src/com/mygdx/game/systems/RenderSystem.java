@@ -182,11 +182,12 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	}
 
 	private void drawPath() {
-		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(Color.CYAN);
-		// Smoothed path
+
 		if (selectedPath != null && selectedPath.path.size > 1) {
+			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
+			shapeRenderer.setColor(Color.CORAL);
+			// Smoothed path
 			Vector3 q;
 			Vector3 p = selectedPath.currentGoal;
 			for (int i = selectedPath.path.size - 1; i >= 0; i--) {
@@ -194,8 +195,8 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 				shapeRenderer.line(p, q);
 				p = q;
 			}
+			shapeRenderer.end();
 		}
-		shapeRenderer.end();
 	}
 
 	private void drawNavMesh() {
