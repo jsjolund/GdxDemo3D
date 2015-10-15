@@ -45,16 +45,16 @@ public class CameraController {
 	public void update(float deltaTime) {
 		keyPanDirection.setZero();
 		if (keys.containsKey(GameSettings.KEY_PAN_FORWARD)) {
-			keyPanDirection.y += 1;
+			keyPanDirection.y++;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_BACKWARD)) {
-			keyPanDirection.y -= 1;
+			keyPanDirection.y--;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_LEFT)) {
-			keyPanDirection.x -= 1;
+			keyPanDirection.x--;
 		}
 		if (keys.containsKey(GameSettings.KEY_PAN_RIGHT)) {
-			keyPanDirection.x += 1;
+			keyPanDirection.x++;
 		}
 		keyPanDirection.nor();
 		processKeyboardPan(keyPanDirection, deltaTime);
@@ -82,7 +82,6 @@ public class CameraController {
 			camera.position.add(tmp1);
 			worldGroundTarget.add(tmp1);
 		}
-
 	}
 
 	private void processDragRotation(Vector2 cursorDelta) {

@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.components.RagdollComponent;
 
 /**
  * Created by user on 8/30/15.
@@ -21,15 +22,19 @@ public class PathFollowSystem extends IteratingSystem {
 
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final ComponentMapper<PhysicsComponent> phyCmps = ComponentMapper.getFor(PhysicsComponent.class);
+	private final ComponentMapper<RagdollComponent> ragCmp = ComponentMapper.getFor(RagdollComponent.class);
 
-	public PathFollowSystem(Family family) {
-		super(family);
+	public PathFollowSystem() {
+		super(Family.all(PathFindingComponent.class).one(PhysicsComponent.class, RagdollComponent.class).get());
 	}
 
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
-		PhysicsComponent phyCmp = phyCmps.get(entity);
 		PathFindingComponent pathCmp = pathCmps.get(entity);
+		PhysicsComponent phyCmp = phyCmps.get(entity);
+		if (phyCmp == null) {
+			phyCmp = ragCmp.get(entity);
+		}
 
 		if (pathCmp.currentGoal == null && pathCmp.path.size == 0) {
 			pathCmp.goalReached = true;

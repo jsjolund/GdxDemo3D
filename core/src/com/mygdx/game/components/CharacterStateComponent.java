@@ -21,8 +21,6 @@ public class CharacterStateComponent implements Component {
 	public ModelComponent mdlCmp;
 	public SelectableComponent selCmp;
 	public RagdollComponent ragdollCmp;
-	public PhysicsComponent phyCmp;
-	public MotionStateComponent motionCmp;
 
 	public boolean isMoving = false;
 
@@ -30,14 +28,10 @@ public class CharacterStateComponent implements Component {
 			ModelComponent mdlCmp,
 			PathFindingComponent pathCmp,
 			SelectableComponent selCmp,
-			RagdollComponent ragdollCmp,
-			PhysicsComponent phyCmp,
-			MotionStateComponent motionCmp) {
+			RagdollComponent ragdollCmp) {
 
 		this.mdlCmp = mdlCmp;
-		this.motionCmp = motionCmp;
 		this.pathCmp = pathCmp;
-		this.phyCmp = phyCmp;
 		this.ragdollCmp = ragdollCmp;
 		this.selCmp = selCmp;
 

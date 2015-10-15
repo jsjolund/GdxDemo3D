@@ -22,7 +22,6 @@ import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.MotionStateComponent;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.navmesh.NavMesh;
 import com.mygdx.game.systems.PhysicsSystem;
@@ -169,10 +168,8 @@ public class BlenderScene implements Disposable {
 				btCollisionShape shape = blenderDefinedShapesMap.get(cmp.name);
 				float mass = massMap.get(cmp.name);
 
-				MotionStateComponent motionStateCmp = new MotionStateComponent(instance.transform);
-				entity.add(motionStateCmp);
 				entity.add(new PhysicsComponent(
-						shape, motionStateCmp.motionState, mass,
+						shape, instance.transform, mass,
 						PhysicsSystem.OBJECT_FLAG,
 						(short) (PhysicsSystem.GROUND_FLAG
 								| PhysicsSystem.OBJECT_FLAG

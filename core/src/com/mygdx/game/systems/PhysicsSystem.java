@@ -61,7 +61,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		dynamicsWorld.setDebugDrawer(debugDrawer);
 		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
 
-		systemFamily = Family.all(PhysicsComponent.class).get();
+		systemFamily = Family.one(PhysicsComponent.class, RagdollComponent.class).get();
 
 //		contactListener = new CollisionContactListener();
 		physicsComponentListener = new PhysicsListener();
@@ -144,6 +144,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		@Override
 		public void entityAdded(Entity entity) {
 			PhysicsComponent cmp = entity.getComponent(PhysicsComponent.class);
+
 			cmp.body.setUserPointer(entity.getId());
 			dynamicsWorld.addRigidBody(cmp.body, cmp.belongsToFlag, cmp.collidesWithFlag);
 
@@ -161,11 +162,9 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		@Override
 		public void entityAdded(Entity entity) {
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
-			if (!cmp.ragdollControl) {
-				for (btRigidBody body : cmp.map.keys()) {
-					body.setGravity(Vector3.Zero);
-				}
-			}
+
+			cmp.body.setUserPointer(entity.getId());
+			dynamicsWorld.addRigidBody(cmp.body, cmp.belongsToFlag, cmp.collidesWithFlag);
 			for (btRigidBody body : cmp.map.keys()) {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, cmp.belongsToFlag, cmp.collidesWithFlag);
@@ -178,6 +177,7 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		@Override
 		public void entityRemoved(Entity entity) {
 			RagdollComponent cmp = entity.getComponent(RagdollComponent.class);
+			dynamicsWorld.removeCollisionObject(cmp.body);
 			for (btRigidBody body : cmp.map.keys()) {
 				dynamicsWorld.removeCollisionObject(body);
 			}

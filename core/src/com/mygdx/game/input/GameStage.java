@@ -88,6 +88,11 @@ public class GameStage extends Stage implements Observer {
 		}
 	}
 
+	@Override
+	public void notifyLayerSelected(int layer) {
+
+	}
+
 
 	private void handleMoveButtonPress(ImageButton thisBtn) {
 		if (selectedCharacterState == null) {

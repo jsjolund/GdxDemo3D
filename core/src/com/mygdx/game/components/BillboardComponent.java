@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.utilities.ModelFactory;
 
@@ -23,12 +24,13 @@ public class BillboardComponent implements DisposableComponent {
 	public final Vector3 offset = new Vector3();
 	private final Model model;
 	public boolean faceUp;
+	public Matrix4 followTransform;
 
-	public BillboardComponent(Pixmap pixmap, float width, float height, boolean faceUp, Vector3 offset) {
+	public BillboardComponent(Pixmap pixmap, float width, float height, boolean faceUp, Vector3 offset, Matrix4
+			followTransform) {
 		textureRegion = new TextureRegion(new Texture(pixmap), pixmap.getWidth(), pixmap.getHeight());
 		Material material = new Material();
 		material.set(new TextureAttribute(TextureAttribute.Diffuse, textureRegion));
-		material.set(new ColorAttribute(ColorAttribute.Diffuse, Color.GREEN));
 		material.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
 		material.set(new BlendingAttribute());
 //		material.set(new IntAttribute(IntAttribute.CullFace, Gdx.gl.GL_NONE));
@@ -38,6 +40,7 @@ public class BillboardComponent implements DisposableComponent {
 
 		this.faceUp = faceUp;
 		this.offset.set(offset);
+		this.followTransform = followTransform;
 	}
 
 	@Override

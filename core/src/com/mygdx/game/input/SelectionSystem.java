@@ -61,6 +61,13 @@ public class SelectionSystem implements Observable {
 		}
 	}
 
+	@Override
+	public void notifyObserversLayerSelected(int layer) {
+		for (Observer observer : observers) {
+//			observer.notifyLayerSelected();
+		}
+	}
+
 	public void setNavMesh(NavMesh navMesh) {
 		this.navMesh = navMesh;
 	}
@@ -134,7 +141,7 @@ public class SelectionSystem implements Observable {
 					PhysicsSystem.PC_FLAG,
 					PhysicsSystem.ALL_FLAG,
 					rayDistance);
-
+			System.out.println(hitEntity);
 			if (hitEntity != null && selCmps.has(hitEntity)) {
 				notifyObserversEntitySelected(hitEntity);
 				selectedEntity = hitEntity;
@@ -148,10 +155,18 @@ public class SelectionSystem implements Observable {
 		public boolean keyDown(int keycode) {
 			// TODO: Move
 			if (keycode == Input.Keys.F5) {
-				CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
-				if (cmp != null) {
-					cmp.stateMachine.changeState(CharacterState.DEAD);
+				if (selectedEntity != null) {
+					CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
+					if (cmp != null) {
+						cmp.stateMachine.changeState(CharacterState.DEAD);
+					}
 				}
+			}
+			if (keycode == Input.Keys.NUM_0) {
+			}
+			if (keycode == Input.Keys.NUM_1) {
+			}
+			if (keycode == Input.Keys.NUM_2) {
 			}
 			return false;
 		}

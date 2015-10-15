@@ -34,7 +34,6 @@ import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
 import com.mygdx.game.utilities.GhostCamera;
-import com.mygdx.game.utilities.RagdollFactory;
 
 /**
  * Created by user on 8/1/15.
@@ -63,7 +62,6 @@ public class GameScreen implements Screen {
 		disposableClasses.add(BillboardComponent.class);
 		disposableClasses.add(PhysicsComponent.class);
 		disposableClasses.add(RagdollComponent.class);
-		disposableClasses.add(MotionStateComponent.class);
 
 		assets = new AssetManager();
 		engine = new PooledEngine();
@@ -94,7 +92,7 @@ public class GameScreen implements Screen {
 
 		PhysicsSystem phySys = new PhysicsSystem();
 		engine.addSystem(phySys);
-		engine.addEntityListener(phySys.systemFamily, phySys.physicsComponentListener);
+		engine.addEntityListener(Family.all(PhysicsComponent.class).get(), phySys.physicsComponentListener);
 		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
 		modes = new btIDebugDraw.DebugDrawModes();
 		debugDraw = phySys.dynamicsWorld.getDebugDrawer();
@@ -105,9 +103,7 @@ public class GameScreen implements Screen {
 
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
-			ModelComponent modelCmp = entity.getComponent(ModelComponent.class);
-
-			if (modelCmp.id.startsWith("door")) {
+			if (entity.getComponent(ModelComponent.class).id.startsWith("door")) {
 				PhysicsComponent phyCmp = entity.getComponent(PhysicsComponent.class);
 				btHingeConstraint hinge = new btHingeConstraint(phyCmp.body, new Vector3(0, 0, -0.6f), Vector3.Y);
 				phySys.dynamicsWorld.addConstraint(hinge);
@@ -131,21 +127,13 @@ public class GameScreen implements Screen {
 		Gdx.input.setInputProcessor(multiplexer);
 
 
-		Family billFamily = Family.all(BillboardComponent.class).get();
-		BillboardSystem billSys = new BillboardSystem(billFamily, camera);
-		engine.addSystem(billSys);
+		engine.addSystem(new BillboardSystem(camera));
 
-		Family pathFamily = Family.all(PathFindingComponent.class, PhysicsComponent.class).get();
-		engine.addSystem(new PathFollowSystem(pathFamily));
+		engine.addSystem(new PathFollowSystem());
 
-		Family ragdollFamily = Family.all(
-				RagdollComponent.class,
-				ModelComponent.class,
-				PhysicsComponent.class).get();
-		engine.addSystem(new RagdollSystem(ragdollFamily));
+		engine.addSystem(new RagdollSystem());
 
-		engine.addSystem(new CharacterStateSystem(Family.all(CharacterStateComponent.class).get()));
-
+		engine.addSystem(new CharacterStateSystem());
 
 		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
 		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
@@ -203,7 +191,7 @@ public class GameScreen implements Screen {
 		cameraController.update(delta);
 	}
 
-	private Entity spawnCharacter(Vector3 pos) {
+	private Entity spawnCharacter(Vector3 initialPosition) {
 		Entity entity = new Entity();
 
 		short belongsToFlag = PhysicsSystem.PC_FLAG;
@@ -218,50 +206,41 @@ public class GameScreen implements Screen {
 		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/character_male_base.g3db");
-		ModelComponent mdlCmp = new ModelComponent(model, "male", pos,
+		ModelComponent mdlCmp = new ModelComponent(model, "male", initialPosition,
 				new Vector3(0, 0, 0),
 				new Vector3(1, 1, 1));
 		// TODO: Ragdoll problems with frustum culling. Move capsule to ragdoll.
 		mdlCmp.ignoreCulling = true;
 		entity.add(mdlCmp);
-		for (com.badlogic.gdx.graphics.g3d.model.Animation animation : mdlCmp.modelInstance.animations) {
-			System.out.println(animation.id);
-		}
-
-		// Motion state
-		MotionStateComponent motionCmp = new MotionStateComponent(mdlCmp.modelInstance.transform);
-		entity.add(motionCmp);
+//		for (com.badlogic.gdx.graphics.g3d.model.Animation animation : mdlCmp.modelInstance.animations) {
+//			System.out.println(animation.id);
+//		}
 
 		// Create basic capsule collision shape
 		// TODO: Dispose
 		btCollisionShape shape = new btCapsuleShape(GameSettings.CHAR_CAPSULE_XZ_HALFEXT,
 				GameSettings.CHAR_CAPSULE_Y_HALFEXT);
 
-		PhysicsComponent phyCmp = new PhysicsComponent(
-				shape, motionCmp.motionState, GameSettings.CHAR_MASS,
-				belongsToFlag,
-				collidesWithFlag,
-				true, true);
-		phyCmp.body.setAngularFactor(Vector3.Y);
-		phyCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
-		entity.add(phyCmp);
-
 		// Ragdoll collision shapes
 		String partDefJson = "models/json/character_empty.json";
-		RagdollComponent ragCmp = RagdollFactory.createRagdoll(
-				partDefJson, mdlCmp.modelInstance, GameSettings.CHAR_MASS, belongsToFlag, collidesWithFlag);
+		RagdollComponent ragCmp = new RagdollComponent(shape, mdlCmp.modelInstance.transform, GameSettings.CHAR_MASS,
+				belongsToFlag,
+				collidesWithFlag,
+				true, true, partDefJson, mdlCmp.modelInstance.getNode("armature"));
+		ragCmp.body.setAngularFactor(Vector3.Y);
+		ragCmp.body.setWorldTransform(mdlCmp.modelInstance.transform);
 		entity.add(ragCmp);
 
 		// Pathfinding
-		PathFindingComponent pathCmp = new PathFindingComponent(pos);
+		PathFindingComponent pathCmp = new PathFindingComponent(initialPosition);
 		entity.add(pathCmp);
 
 		// Selection billboard
 		assets.load("images/marker.png", Pixmap.class);
 		assets.finishLoading();
 		Pixmap billboardPixmap = assets.get("images/marker.png", Pixmap.class);
-		BillboardComponent billboard = new BillboardComponent(
-				billboardPixmap, 1, 1, true, new Vector3(0, -GameSettings.CHAR_CAPSULE_Y_HALFEXT * 0.8f, 0));
+		BillboardComponent billboard = new BillboardComponent(billboardPixmap, 1, 1, true,
+				new Vector3(0, -GameSettings.CHAR_CAPSULE_Y_HALFEXT * 0.8f, 0), mdlCmp.modelInstance.transform);
 		entity.add(billboard);
 
 		// Selection component
@@ -270,7 +249,7 @@ public class GameScreen implements Screen {
 
 		// State machine component
 		CharacterStateComponent charCmp = new CharacterStateComponent(
-				mdlCmp, pathCmp, selCmp, ragCmp, phyCmp, motionCmp);
+				mdlCmp, pathCmp, selCmp, ragCmp);
 		entity.add(charCmp);
 
 		Gdx.app.debug(tag, "Finished adding character");

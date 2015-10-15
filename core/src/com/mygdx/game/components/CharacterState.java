@@ -90,13 +90,13 @@ public enum CharacterState implements State<CharacterStateComponent> {
 			entity.pathCmp.moveSpeed = 0;
 			entity.pathCmp.clearPath();
 			entity.isMoving = false;
-			RagdollSystem.toggle(true, entity.mdlCmp, entity.ragdollCmp, entity.phyCmp, entity.motionCmp);
+			RagdollSystem.toggle(true, entity.mdlCmp, entity.ragdollCmp);
 		}
 
 		@Override
 		public void exit(CharacterStateComponent entity) {
 			entity.controller.paused = false;
-			RagdollSystem.toggle(false, entity.mdlCmp, entity.ragdollCmp, entity.phyCmp, entity.motionCmp);
+			RagdollSystem.toggle(false, entity.mdlCmp, entity.ragdollCmp);
 		}
 	},
 	GLOBAL() {};

@@ -10,8 +10,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.MotionStateComponent;
-import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
 import com.mygdx.game.settings.GameSettings;
 
@@ -28,11 +26,8 @@ public class RagdollSystem extends IteratingSystem {
 	private final ComponentMapper<RagdollComponent> ragdollCmps =
 			ComponentMapper.getFor(RagdollComponent.class);
 
-	private final ComponentMapper<PhysicsComponent> phyCmps =
-			ComponentMapper.getFor(PhysicsComponent.class);
-
-	public RagdollSystem(Family family) {
-		super(family);
+	public RagdollSystem() {
+		super(Family.all(RagdollComponent.class, ModelComponent.class).get());
 	}
 
 	private static void updateArmatureToBodies(ModelComponent modelCmp, RagdollComponent ragdollCmp) {
@@ -68,10 +63,10 @@ public class RagdollSystem extends IteratingSystem {
 		modelCmp.modelInstance.calculateTransforms();
 	}
 
-	private static void updateBodiesToArmature(PhysicsComponent phyCmp, RagdollComponent ragdollCmp) {
+	private static void updateBodiesToArmature(RagdollComponent ragdollCmp) {
 		// Ragdoll parts should follow the model animation.
 		// Loop over each part and set it to the global transform of the armature node it should follow.
-		phyCmp.body.getWorldTransform(ragdollCmp.baseBodyTransform);
+		ragdollCmp.body.getWorldTransform(ragdollCmp.baseBodyTransform);
 		for (Iterator<ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection>> iterator
 			 = ragdollCmp.map.iterator(); iterator.hasNext(); ) {
 			ObjectMap.Entry<btRigidBody, RagdollComponent.NodeConnection> entry = iterator.next();
@@ -87,12 +82,10 @@ public class RagdollSystem extends IteratingSystem {
 
 	public static void toggle(boolean setRagdollControl,
 							  ModelComponent modelCmp,
-							  RagdollComponent ragdollCmp,
-							  PhysicsComponent phyCmp,
-							  MotionStateComponent motionCmp) {
+							  RagdollComponent ragdollCmp) {
 
 		if (setRagdollControl) {
-			updateBodiesToArmature(phyCmp, ragdollCmp);
+			updateBodiesToArmature(ragdollCmp);
 
 			// Ragdoll follows animation currently, set it to use physics control.
 			// Animations should be paused for this model.
@@ -107,8 +100,8 @@ public class RagdollSystem extends IteratingSystem {
 
 			// Set the velocities of the ragdoll collision shapes to be the same as the base shape.
 			for (btRigidBody body : ragdollCmp.map.keys()) {
-				body.setLinearVelocity(phyCmp.body.getLinearVelocity().scl(1, 0, 1));
-				body.setAngularVelocity(phyCmp.body.getAngularVelocity());
+				body.setLinearVelocity(ragdollCmp.body.getLinearVelocity().scl(1, 0, 1));
+				body.setAngularVelocity(ragdollCmp.body.getAngularVelocity());
 				body.setGravity(GameSettings.GRAVITY);
 			}
 
@@ -124,7 +117,7 @@ public class RagdollSystem extends IteratingSystem {
 			// Ragdoll physics control is enabled, disable it, reset nodes and ragdoll components to animation.
 			ragdollCmp.ragdollControl = false;
 
-			modelCmp.modelInstance.transform = motionCmp.transform;
+			modelCmp.modelInstance.transform = ragdollCmp.motionState.transform;
 
 			// Reset the nodes to default model animation state.
 			for (Node node : ragdollCmp.nodes) {
@@ -146,12 +139,11 @@ public class RagdollSystem extends IteratingSystem {
 
 		ModelComponent modelCmp = modelCmps.get(entity);
 		RagdollComponent ragdollCmp = ragdollCmps.get(entity);
-		PhysicsComponent phyCmp = phyCmps.get(entity);
 
 		if (ragdollCmp.ragdollControl) {
 			updateArmatureToBodies(modelCmp, ragdollCmp);
 		} else {
-			updateBodiesToArmature(phyCmp, ragdollCmp);
+			updateBodiesToArmature(ragdollCmp);
 		}
 	}
 }

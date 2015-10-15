@@ -61,6 +61,7 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
 	private NavMesh navmesh;
+	private int layer = 0;
 
 	private ModelInstance selectedModelInstance;
 	private ModelInstance selectedMarker;
@@ -107,6 +108,11 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		} else {
 			selectedModelInstance = null;
 		}
+	}
+
+	@Override
+	public void notifyLayerSelected(int layer) {
+		this.layer = layer;
 	}
 
 	@Override
@@ -170,18 +176,15 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		if (DebugViewSettings.drawArmature) {
 			drawArmature();
 		}
-
 		if (DebugViewSettings.drawNavmesh) {
 			drawNavMesh();
 		}
-
 		if (DebugViewSettings.drawPath) {
 			drawPath();
 		}
 	}
 
 	private void drawPath() {
-
 		if (selectedPath != null && selectedPath.path.size > 1) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);

@@ -1,11 +1,13 @@
 package com.mygdx.game.components;
 
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
+import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
 
 /**
@@ -14,26 +16,26 @@ import com.badlogic.gdx.utils.Array;
 public class PhysicsComponent implements DisposableComponent {
 
 	private final static Vector3 localInertia = new Vector3();
-	public final MotionStateComponent.PhysicsMotionState motionState;
 	public final btRigidBody body;
 	public final short belongsToFlag;
 	public final short collidesWithFlag;
 	public final btCollisionShape shape;
 	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
-
+	public final PhysicsMotionState motionState;
+	protected final float mass;
 	public Array<btTypedConstraint> constraints;
 
 	public PhysicsComponent(btCollisionShape shape,
-							MotionStateComponent.PhysicsMotionState motionState,
+							Matrix4 motionStateTransform,
 							float mass,
 							short belongsToFlag,
 							short collidesWithFlag,
 							boolean callback,
 							boolean noDeactivate) {
+		this.mass = mass;
 		this.shape = shape;
 		this.belongsToFlag = belongsToFlag;
 		this.collidesWithFlag = collidesWithFlag;
-		this.motionState = motionState;
 
 		if (mass > 0f) {
 			shape.calculateLocalInertia(mass, localInertia);
@@ -51,8 +53,11 @@ public class PhysicsComponent implements DisposableComponent {
 		if (noDeactivate) {
 			body.setActivationState(Collision.DISABLE_DEACTIVATION);
 		}
-		if (motionState != null) {
+		if (motionStateTransform != null) {
+			motionState = new PhysicsMotionState(motionStateTransform);
 			body.setMotionState(motionState);
+		} else {
+			motionState = null;
 		}
 	}
 
@@ -74,5 +79,26 @@ public class PhysicsComponent implements DisposableComponent {
 			constraint.dispose();
 		}
 		constraints.clear();
+		if (motionState != null) {
+			motionState.dispose();
+		}
+	}
+
+	public class PhysicsMotionState extends btMotionState {
+		public final Matrix4 transform;
+
+		public PhysicsMotionState(Matrix4 transform) {
+			this.transform = transform;
+		}
+
+		@Override
+		public void getWorldTransform(Matrix4 worldTrans) {
+			worldTrans.set(transform);
+		}
+
+		@Override
+		public void setWorldTransform(Matrix4 worldTrans) {
+			transform.set(worldTrans);
+		}
 	}
 }

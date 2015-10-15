@@ -14,8 +14,8 @@ public class CharacterStateSystem extends IteratingSystem {
 	private final ComponentMapper<CharacterStateComponent> stateCmps =
 			ComponentMapper.getFor(CharacterStateComponent.class);
 
-	public CharacterStateSystem(Family family) {
-		super(family);
+	public CharacterStateSystem() {
+		super(Family.all(CharacterStateComponent.class).get());
 	}
 
 	@Override

@@ -12,5 +12,6 @@ public interface Observable {
 	void removeObserver(Observer observer);
 
 	void notifyObserversEntitySelected(Entity entity);
+	void notifyObserversLayerSelected(int layer);
 
 }

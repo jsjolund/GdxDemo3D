@@ -8,4 +8,5 @@ import com.badlogic.ashley.core.Entity;
 public interface Observer {
 
 	void notifyEntitySelected(Entity entity);
+	void notifyLayerSelected(int layer);
 }
