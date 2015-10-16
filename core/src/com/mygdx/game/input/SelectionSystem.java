@@ -76,7 +76,7 @@ public class SelectionSystem implements Observable {
 		// Check if player clicked navigation mesh
 		if ((phySys.rayTest(ray, surfaceHitPoint, PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG, rayDistance)) != null) {
-
+			Gdx.app.debug(tag, "Clicked navmesh " + surfaceHitPoint);
 			// Check which navmesh triangle was hit
 			Triangle hitTriangle = navMesh.rayTest(ray, rayDistance);
 			if (hitTriangle != null) {
@@ -141,7 +141,6 @@ public class SelectionSystem implements Observable {
 					PhysicsSystem.PC_FLAG,
 					PhysicsSystem.ALL_FLAG,
 					rayDistance);
-			System.out.println(hitEntity);
 			if (hitEntity != null && selCmps.has(hitEntity)) {
 				notifyObserversEntitySelected(hitEntity);
 				selectedEntity = hitEntity;

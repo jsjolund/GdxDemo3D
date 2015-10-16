@@ -10,7 +10,8 @@ import com.badlogic.gdx.utils.Array;
  */
 public class Triangle implements IndexedNode<Triangle> {
 
-	public int index;
+	public int triIndex;
+	public int meshPartIndex;
 	public Vector3 a;
 	public Vector3 b;
 	public Vector3 c;
@@ -18,11 +19,12 @@ public class Triangle implements IndexedNode<Triangle> {
 	public Array<Connection<Triangle>> connections;
 	public Array<Vector3> corners;
 
-	public Triangle(Vector3 a, Vector3 b, Vector3 c, int index) {
+	public Triangle(Vector3 a, Vector3 b, Vector3 c, int triIndex, int meshPartIndex) {
 		this.a = a;
 		this.b = b;
 		this.c = c;
-		this.index = index;
+		this.triIndex = triIndex;
+		this.meshPartIndex = meshPartIndex;
 		this.centroid = new Vector3(a).add(b).add(c).scl(1f / 3f);
 		this.connections = new Array<Connection<Triangle>>();
 
@@ -35,17 +37,16 @@ public class Triangle implements IndexedNode<Triangle> {
 
 	@Override
 	public String toString() {
-		final StringBuffer sb = new StringBuffer("Triangle: ");
-		sb.append("a=").append(a);
-		sb.append(", b=").append(b);
-		sb.append(", c=").append(c);
-		sb.append(", centroid=").append(centroid);
+		final StringBuffer sb = new StringBuffer("Triangle{");
+		sb.append("triIndex=").append(triIndex);
+		sb.append(", meshPartIndex=").append(meshPartIndex);
+		sb.append('}');
 		return sb.toString();
 	}
 
 	@Override
 	public int getIndex() {
-		return index;
+		return triIndex;
 	}
 
 	@Override

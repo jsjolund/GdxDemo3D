@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -156,7 +157,7 @@ public class BlenderScene implements Disposable {
 						false, false);
 				entity.add(phyCmp);
 				phyCmp.body.setWorldTransform(instance.transform);
-				navMesh = new NavMesh(instance.model.meshes.first(), shape);
+				navMesh = new NavMesh(instance.model, shape);
 				worldBounds.set(mdlCmp.bounds);
 				continue;
 			}

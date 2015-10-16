@@ -128,17 +128,14 @@ public class GameScreen implements Screen {
 
 
 		engine.addSystem(new BillboardSystem(camera));
-
 		engine.addSystem(new PathFollowSystem());
-
 		engine.addSystem(new RagdollSystem());
-
 		engine.addSystem(new CharacterStateSystem());
 
 		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
 		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
 		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
-		engine.addEntity(spawnCharacter(new Vector3(1, 1, 20)));
+		engine.addEntity(spawnCharacter(new Vector3(-12, 4, 10)));
 	}
 
 	@Override
@@ -252,7 +249,6 @@ public class GameScreen implements Screen {
 				mdlCmp, pathCmp, selCmp, ragCmp);
 		entity.add(charCmp);
 
-		Gdx.app.debug(tag, "Finished adding character");
 		return entity;
 	}
 

@@ -1,14 +1,11 @@
 package com.mygdx.game.navmesh;
 
-import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
-import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btTriangleRaycastCallback;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Disposable;
 
 /**
@@ -26,14 +23,11 @@ public class NavMesh implements Disposable {
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
 
-	public NavMesh(Mesh mesh, btBvhTriangleMeshShape collisionShape) {
+	public NavMesh(Model model, btBvhTriangleMeshShape collisionShape) {
 		this.collisionShape = collisionShape;
 		raycastCallback = new NavMeshRaycastCallback(rayFrom, rayTo);
-		raycastCallback.setFlags(
-				btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
-
-		ArrayMap<Triangle, Array<Connection<Triangle>>> map = NavMeshFactory.createConnectionMap(mesh);
-		graph = new NavMeshGraph(map);
+		raycastCallback.setFlags(btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
+		graph = new NavMeshGraph(model);
 		pathFinder = new IndexedAStarPathFinder<Triangle>(graph);
 		heuristic = new NavMeshHeuristic();
 	}
@@ -63,7 +57,7 @@ public class NavMesh implements Disposable {
 		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
 
 		if (raycastCallback.triangleIndex != -1) {
-			hitTriangle = graph.getTriangleFromIndex(raycastCallback.triangleIndex);
+			hitTriangle = graph.getTriangleFromMeshPart(raycastCallback.partId, raycastCallback.triangleIndex);
 		}
 		return hitTriangle;
 	}

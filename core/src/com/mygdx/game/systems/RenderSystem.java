@@ -207,7 +207,7 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
-			Triangle t = navmesh.graph.getTriangleFromIndex(i);
+			Triangle t = navmesh.graph.getTriangleFromGraph(i);
 			shapeRenderer.setColor(Color.LIGHT_GRAY);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
@@ -237,11 +237,11 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		spriteBatch.begin();
 		spriteBatch.setProjectionMatrix(camera.combined);
 		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
-			Triangle t = navmesh.graph.getTriangleFromIndex(i);
+			Triangle t = navmesh.graph.getTriangleFromGraph(i);
 			tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
 			tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
 			spriteBatch.setTransformMatrix(tmpMatrix);
-			font.draw(spriteBatch, Integer.toString(t.index), 0, 0);
+			font.draw(spriteBatch, Integer.toString(t.triIndex), 0, 0);
 		}
 		spriteBatch.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
