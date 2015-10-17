@@ -30,7 +30,12 @@ public class CameraController {
 	}
 
 	public void setWorldBoundingBox(BoundingBox worldBoundingBox) {
-		this.worldBoundingBox = worldBoundingBox;
+		this.worldBoundingBox = new BoundingBox(worldBoundingBox);
+		Vector3 min = new Vector3();
+		Vector3 max = new Vector3();
+		this.worldBoundingBox.getMax(max).y = 0;
+		this.worldBoundingBox.getMin(min).y = 0;
+		this.worldBoundingBox.set(min, max);
 	}
 
 	public void processDragPan(Ray dragCurrentRay, Ray lastDragProcessedRay) {
@@ -82,8 +87,8 @@ public class CameraController {
 	}
 
 	public void processTouchDownRight() {
-		ray.set(camera.position, camera.direction);
-		Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
+//		ray.set(camera.position, camera.direction);
+//		Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
 	}
 
 
