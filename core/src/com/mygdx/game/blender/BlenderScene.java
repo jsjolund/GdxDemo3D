@@ -24,7 +24,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.PhysicsComponent;
-import com.mygdx.game.navmesh.NavMesh;
+import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
@@ -174,12 +174,16 @@ public class BlenderScene implements Disposable {
 					cmp.position, cmp.rotation, cmp.scale);
 			ModelInstance instance = mdlCmp.modelInstance;
 
+			for (int i = 0; i < cmp.layers.length; i++) {
+				if (cmp.layers[i]) {
+					mdlCmp.layer = i;
+				}
+			}
+
 			if (cmp.name.equals("navmesh")) {
 				createNavmesh(entity, mdlCmp);
 				continue;
 			}
-
-			entity.add(mdlCmp);
 
 			if (blenderDefinedShapesMap.containsKey(cmp.name) && massMap.containsKey(cmp.name)) {
 				// The model has a shape and mass predefined.
@@ -211,7 +215,9 @@ public class BlenderScene implements Disposable {
 				entity.add(phyCmp);
 			}
 
-
+			// TODO:
+			// If models have zero mass (static terrain) and are on the same layer, perhaps merge them?
+			entity.add(mdlCmp);
 		}
 	}
 

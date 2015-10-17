@@ -6,8 +6,10 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.pathfinding.PathFollowSystem;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Observable;
@@ -29,17 +31,22 @@ public class GameInputProcessor implements InputProcessor, Observable {
 	private final Vector2 keyPanDirection = new Vector2();
 
 	private final IntIntMap keys = new IntIntMap();
+	private boolean isDragging = false;
+
 	private final Viewport viewport;
 	private final CameraController cameraController;
 	private final SelectionController selectionController;
-	private boolean isDragging = false;
+	private final PathFollowSystem pathSys;
+	private final Array<Observer> observers = new Array<Observer>();
 
 	public GameInputProcessor(Viewport viewport,
 							  CameraController cameraController,
-							  SelectionController selectionController) {
+							  SelectionController selectionController,
+							  PathFollowSystem pathSys) {
 		this.viewport = viewport;
 		this.cameraController = cameraController;
 		this.selectionController = selectionController;
+		this.pathSys = pathSys;
 	}
 
 	@Override
@@ -57,15 +64,6 @@ public class GameInputProcessor implements InputProcessor, Observable {
 		if (keycode == Input.Keys.F5) {
 			selectionController.killSelectedCharacter();
 		}
-		if (keycode == Input.Keys.NUM_0) {
-			notifyObserversLayerSelected(0);
-		}
-		if (keycode == Input.Keys.NUM_1) {
-			notifyObserversLayerSelected(1);
-		}
-		if (keycode == Input.Keys.NUM_2) {
-			notifyObserversLayerSelected(2);
-		}
 		return true;
 	}
 
@@ -76,8 +74,13 @@ public class GameInputProcessor implements InputProcessor, Observable {
 	}
 
 	@Override
-	public boolean keyTyped(char character) {
-		return false;
+	public boolean keyTyped(char keyChar) {
+		int keyInt = Character.getNumericValue(keyChar);
+		keyInt--;
+		if (keyInt >= 0 && keyInt <= 9) {
+			notifyObserversLayerSelected(keyInt);
+		}
+		return true;
 	}
 
 	@Override
@@ -98,7 +101,9 @@ public class GameInputProcessor implements InputProcessor, Observable {
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		if (!isDragging) {
 			touchUpRay.set(viewport.getPickRay(screenX, screenY));
-			selectionController.processTouch(touchUpRay);
+			if (!selectionController.processTouch(touchUpRay)) {
+				pathSys.checkNavMeshClick(touchUpRay);
+			}
 		}
 		isDragging = false;
 		dragCurrent.setZero();
@@ -156,14 +161,15 @@ public class GameInputProcessor implements InputProcessor, Observable {
 		}
 	}
 
+
 	@Override
 	public void addObserver(Observer observer) {
-
+		observers.add(observer);
 	}
 
 	@Override
 	public void removeObserver(Observer observer) {
-
+		observers.removeValue(observer, true);
 	}
 
 	@Override
@@ -173,6 +179,8 @@ public class GameInputProcessor implements InputProcessor, Observable {
 
 	@Override
 	public void notifyObserversLayerSelected(int layer) {
-
+		for (Observer observer : observers) {
+			observer.notifyLayerSelected(layer);
+		}
 	}
 }

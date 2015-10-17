@@ -26,9 +26,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.ModelComponent;
 import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
-import com.mygdx.game.navmesh.Edge;
-import com.mygdx.game.navmesh.NavMesh;
-import com.mygdx.game.navmesh.Triangle;
+import com.mygdx.game.pathfinding.Edge;
+import com.mygdx.game.pathfinding.NavMesh;
+import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.shaders.UberShader;
@@ -61,7 +61,7 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
 	private NavMesh navmesh;
-	private int layer = 0;
+	private int layer = Integer.MAX_VALUE;
 
 	private ModelInstance selectedModelInstance;
 	private ModelInstance selectedMarker;
@@ -153,7 +153,11 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	}
 
 	private boolean isVisible(final Camera camera, final ModelComponent cmp) {
+		if (cmp.layer > layer) {
+			return false;
+		}
 		cmp.modelInstance.transform.getTranslation(tmp);
+		tmp.add(cmp.center);
 		return camera.frustum.sphereInFrustum(tmp, cmp.radius);
 	}
 
@@ -257,6 +261,9 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		shadowBatch.begin(shadowLight.getCamera());
 		for (Entity entity : entities) {
 			ModelComponent cmp = models.get(entity);
+			if (cmp.layer > layer) {
+				continue;
+			}
 			shadowBatch.render(cmp.modelInstance);
 		}
 		shadowBatch.end();

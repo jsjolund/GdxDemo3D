@@ -1,4 +1,4 @@
-package com.mygdx.game.navmesh;
+package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -45,7 +45,7 @@ public class NavMesh implements Disposable {
 		raycastCallback.dispose();
 	}
 
-	public Triangle rayTest(Ray ray, float maxDistance) {
+	public Triangle rayTest(Ray ray, float maxDistance, int maxMeshPartIndex) {
 		Triangle hitTriangle = null;
 
 		rayFrom.set(ray.origin);
@@ -54,6 +54,7 @@ public class NavMesh implements Disposable {
 		raycastCallback.clearReport();
 		raycastCallback.setFrom(rayFrom);
 		raycastCallback.setTo(rayTo);
+		raycastCallback.setMaxMeshPartIndex(maxMeshPartIndex);
 		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
 
 		if (raycastCallback.triangleIndex != -1) {

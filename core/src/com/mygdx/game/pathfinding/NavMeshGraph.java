@@ -1,4 +1,4 @@
-package com.mygdx.game.navmesh;
+package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;

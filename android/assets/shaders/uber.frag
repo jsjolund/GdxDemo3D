@@ -1,5 +1,4 @@
 // From http://gist.github.com/xoppa/9766698
-
 #ifdef GL_ES
 #define LOWP lowp
 #define MED mediump

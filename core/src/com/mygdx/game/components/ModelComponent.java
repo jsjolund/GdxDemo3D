@@ -19,6 +19,7 @@ public class ModelComponent implements Component {
 	public final float radius;
 	public final BoundingBox bounds = new BoundingBox();
 	public final String id;
+	public int layer;
 	public ModelInstance modelInstance;
 	public boolean ignoreCulling = false;
 
@@ -37,7 +38,7 @@ public class ModelComponent implements Component {
 		modelInstance.calculateTransforms();
 
 		try {
-			modelInstance.calculateBoundingBox(bounds).mul(modelInstance.transform);
+			modelInstance.calculateBoundingBox(bounds);
 		} catch (Exception e) {
 			Gdx.app.debug(tag, "Error when calculating bounding box.", e);
 		}

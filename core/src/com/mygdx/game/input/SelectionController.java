@@ -2,16 +2,12 @@ package com.mygdx.game.input;
 
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.components.CharacterState;
 import com.mygdx.game.components.CharacterStateComponent;
-import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.SelectableComponent;
-import com.mygdx.game.navmesh.NavMesh;
-import com.mygdx.game.navmesh.Triangle;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.Observable;
@@ -25,13 +21,11 @@ public class SelectionController implements Observable {
 	public static final String tag = "SelectionController";
 
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
-	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final Vector3 surfaceHitPoint = new Vector3();
-	private final float rayDistance = 100;
 	private final Array<Observer> observers = new Array<Observer>();
 	private final PhysicsSystem phySys;
 	private Entity selectedEntity;
-	private NavMesh navMesh;
+
 
 	public SelectionController(PhysicsSystem phySys) {
 		this.phySys = phySys;
@@ -58,81 +52,19 @@ public class SelectionController implements Observable {
 	public void notifyObserversLayerSelected(int layer) {
 	}
 
-	public void setNavMesh(NavMesh navMesh) {
-		this.navMesh = navMesh;
-	}
 
-	private void checkNavMeshClick(Ray pickRay) {
-		// Check if player clicked navigation mesh
-		if ((phySys.rayTest(pickRay, surfaceHitPoint, PhysicsSystem.NAVMESH_FLAG,
-				PhysicsSystem.NAVMESH_FLAG, rayDistance)) != null) {
-			Gdx.app.debug(tag, "Clicked navmesh " + surfaceHitPoint);
-			// Check which navmesh triangle was hit
-			Triangle hitTriangle = navMesh.rayTest(pickRay, rayDistance);
-			if (hitTriangle != null) {
-				PathFindingComponent pathCmp = pathCmps.get(selectedEntity);
-				if (pathCmp != null) {
-					// Check which triangle the entity is currently standing on
-					pathCmp.posGroundRay.origin.set(pathCmp.currentPosition);
-					Triangle posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance);
-
-					if (posTriangle == null) {
-						/*
-						 Player was likely on the edge of the navmesh, and triangle raycast
-						 was unable to find which triangle the player stands on.
-						 TODO:
-						 The path data structure should keep track of which triangle the
-						 player is currently on so ray test on current position is not
-						 necessary...
-						 */
-						Gdx.app.debug(tag, "Checking neighbouring positions");
-						while (true) {
-							float offs = 0.2f;
-							pathCmp.posGroundRay.origin.set(pathCmp.currentPosition).sub(-offs, 0, 0);
-							if ((posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance)) != null) {
-								break;
-							}
-							pathCmp.posGroundRay.origin.set(pathCmp.currentPosition).sub(offs, 0, 0);
-							if ((posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance)) != null) {
-								break;
-							}
-							pathCmp.posGroundRay.origin.set(pathCmp.currentPosition).sub(0, 0, -offs);
-							if ((posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance)) != null) {
-								break;
-							}
-							pathCmp.posGroundRay.origin.set(pathCmp.currentPosition).sub(0, 0, offs);
-							posTriangle = navMesh.rayTest(pathCmp.posGroundRay, rayDistance);
-							break;
-						}
-
-					}
-					Vector3 posPoint = new Vector3(pathCmp.currentPosition).sub(0, GameSettings
-							.CHAR_CAPSULE_Y_HALFEXT, 0);
-					pathCmp.clearPath();
-					boolean pathFound = navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.trianglePath);
-					pathCmp.trianglePath.setStartEnd(posPoint, surfaceHitPoint);
-					pathCmp.setPath(pathCmp.trianglePath.getSmoothPath());
-					if (!pathFound) {
-						Gdx.app.debug(tag, "Path not found");
-					}
-
-				}
-			}
-		}
-	}
-
-	public void processTouch(Ray pickRay) {
+	public boolean processTouch(Ray pickRay) {
 		// Check if player clicked a selectable entity
 		Entity hitEntity = phySys.rayTest(pickRay, surfaceHitPoint,
 				PhysicsSystem.PC_FLAG,
 				PhysicsSystem.ALL_FLAG,
-				rayDistance);
+				GameSettings.CAMERA_PICK_RAY_DST);
 		if (hitEntity != null && selCmps.has(hitEntity)) {
 			notifyObserversEntitySelected(hitEntity);
 			selectedEntity = hitEntity;
-		} else if (selectedEntity != null) {
-			checkNavMeshClick(pickRay);
+			return true;
 		}
+		return false;
 	}
 
 	public void killSelectedCharacter() {

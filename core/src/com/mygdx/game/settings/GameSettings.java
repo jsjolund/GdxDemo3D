@@ -17,6 +17,8 @@ public class GameSettings {
 	public static final float CAMERA_MAX_ZOOM = 40;
 	public static final float CAMERA_LERP_ALPHA = 0.1f;
 
+	public static final float CAMERA_PICK_RAY_DST = 100;
+
 	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
 	public static final Vector3 GRAVITY = new Vector3(0, -9.82f, 0);

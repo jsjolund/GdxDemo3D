@@ -4,7 +4,7 @@ import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.navmesh.NavMeshGraphPath;
+import com.mygdx.game.pathfinding.NavMeshGraphPath;
 
 /**
  * Created by user on 8/30/15.

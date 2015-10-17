@@ -29,6 +29,8 @@ import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.components.*;
 import com.mygdx.game.input.GameInputProcessor;
 import com.mygdx.game.input.SelectionController;
+import com.mygdx.game.components.PathFindingComponent;
+import com.mygdx.game.pathfinding.PathFollowSystem;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
@@ -111,25 +113,32 @@ public class GameScreen implements Screen {
 			}
 		}
 
+
+		PathFollowSystem pathSys = new PathFollowSystem(phySys);
+		pathSys.setNavMesh(blenderScene.navMesh);
+		engine.addSystem(pathSys);
+
+		engine.addSystem(new BillboardSystem(camera));
+		engine.addSystem(new RagdollSystem());
+		engine.addSystem(new CharacterStateSystem());
+
+
 		SelectionController selSys = new SelectionController(phySys);
-		selSys.setNavMesh(blenderScene.navMesh);
 		selSys.addObserver(stage);
 		selSys.addObserver(renderSys);
+		selSys.addObserver(pathSys);
 
 		cameraController = new CameraController(camera);
 		cameraController.setWorldBoundingBox(blenderScene.worldBounds);
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		multiplexer.addProcessor(gameInputProcessor = new GameInputProcessor(viewport, cameraController, selSys));
+		multiplexer.addProcessor(gameInputProcessor = new GameInputProcessor(viewport, cameraController, selSys, pathSys));
 		Gdx.input.setInputProcessor(multiplexer);
 
-//		gameInputProcessor.addObserver();
+		gameInputProcessor.addObserver(renderSys);
+		gameInputProcessor.addObserver(pathSys);
 
-		engine.addSystem(new BillboardSystem(camera));
-		engine.addSystem(new PathFollowSystem());
-		engine.addSystem(new RagdollSystem());
-		engine.addSystem(new CharacterStateSystem());
 
 		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
 		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
