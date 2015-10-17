@@ -3,12 +3,9 @@ package com.mygdx.game.input;
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.components.CharacterState;
 import com.mygdx.game.components.CharacterStateComponent;
 import com.mygdx.game.components.PathFindingComponent;
@@ -23,25 +20,21 @@ import com.mygdx.game.utilities.Observer;
 /**
  * Created by user on 8/25/15.
  */
-public class SelectionSystem implements Observable {
+public class SelectionController implements Observable {
 
-	public static final String tag = "SelectionSystem";
+	public static final String tag = "SelectionController";
 
 	private final ComponentMapper<SelectableComponent> selCmps = ComponentMapper.getFor(SelectableComponent.class);
 	private final ComponentMapper<PathFindingComponent> pathCmps = ComponentMapper.getFor(PathFindingComponent.class);
 	private final Vector3 surfaceHitPoint = new Vector3();
 	private final float rayDistance = 100;
-	private final Viewport viewport;
 	private final Array<Observer> observers = new Array<Observer>();
 	private final PhysicsSystem phySys;
-	public InputAdapter inputAdapter;
 	private Entity selectedEntity;
 	private NavMesh navMesh;
 
-	public SelectionSystem(Viewport viewport, PhysicsSystem phySys) {
+	public SelectionController(PhysicsSystem phySys) {
 		this.phySys = phySys;
-		this.viewport = viewport;
-		this.inputAdapter = new SelectionInputAdapter();
 	}
 
 	@Override
@@ -63,22 +56,19 @@ public class SelectionSystem implements Observable {
 
 	@Override
 	public void notifyObserversLayerSelected(int layer) {
-		for (Observer observer : observers) {
-//			observer.notifyLayerSelected();
-		}
 	}
 
 	public void setNavMesh(NavMesh navMesh) {
 		this.navMesh = navMesh;
 	}
 
-	private void checkNavMeshClick(Ray ray) {
+	private void checkNavMeshClick(Ray pickRay) {
 		// Check if player clicked navigation mesh
-		if ((phySys.rayTest(ray, surfaceHitPoint, PhysicsSystem.NAVMESH_FLAG,
+		if ((phySys.rayTest(pickRay, surfaceHitPoint, PhysicsSystem.NAVMESH_FLAG,
 				PhysicsSystem.NAVMESH_FLAG, rayDistance)) != null) {
 			Gdx.app.debug(tag, "Clicked navmesh " + surfaceHitPoint);
 			// Check which navmesh triangle was hit
-			Triangle hitTriangle = navMesh.rayTest(ray, rayDistance);
+			Triangle hitTriangle = navMesh.rayTest(pickRay, rayDistance);
 			if (hitTriangle != null) {
 				PathFindingComponent pathCmp = pathCmps.get(selectedEntity);
 				if (pathCmp != null) {
@@ -131,43 +121,27 @@ public class SelectionSystem implements Observable {
 		}
 	}
 
-	public class SelectionInputAdapter extends InputAdapter {
-
-		@Override
-		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-			Ray ray = viewport.getPickRay(screenX, screenY);
-			// Check if player clicked a selectable entity
-			Entity hitEntity = phySys.rayTest(ray, surfaceHitPoint,
-					PhysicsSystem.PC_FLAG,
-					PhysicsSystem.ALL_FLAG,
-					rayDistance);
-			if (hitEntity != null && selCmps.has(hitEntity)) {
-				notifyObserversEntitySelected(hitEntity);
-				selectedEntity = hitEntity;
-			} else if (selectedEntity != null) {
-				checkNavMeshClick(ray);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean keyDown(int keycode) {
-			// TODO: Move
-			if (keycode == Input.Keys.F5) {
-				if (selectedEntity != null) {
-					CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
-					if (cmp != null) {
-						cmp.stateMachine.changeState(CharacterState.DEAD);
-					}
-				}
-			}
-			if (keycode == Input.Keys.NUM_0) {
-			}
-			if (keycode == Input.Keys.NUM_1) {
-			}
-			if (keycode == Input.Keys.NUM_2) {
-			}
-			return false;
+	public void processTouch(Ray pickRay) {
+		// Check if player clicked a selectable entity
+		Entity hitEntity = phySys.rayTest(pickRay, surfaceHitPoint,
+				PhysicsSystem.PC_FLAG,
+				PhysicsSystem.ALL_FLAG,
+				rayDistance);
+		if (hitEntity != null && selCmps.has(hitEntity)) {
+			notifyObserversEntitySelected(hitEntity);
+			selectedEntity = hitEntity;
+		} else if (selectedEntity != null) {
+			checkNavMeshClick(pickRay);
 		}
 	}
+
+	public void killSelectedCharacter() {
+		if (selectedEntity != null) {
+			CharacterStateComponent cmp = selectedEntity.getComponent(CharacterStateComponent.class);
+			if (cmp != null) {
+				cmp.stateMachine.changeState(CharacterState.DEAD);
+			}
+		}
+	}
+
 }

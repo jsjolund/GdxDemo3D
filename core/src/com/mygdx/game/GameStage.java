@@ -1,4 +1,4 @@
-package com.mygdx.game.input;
+package com.mygdx.game;
 
 
 import com.badlogic.ashley.core.Entity;
@@ -74,6 +74,8 @@ public class GameStage extends Stage implements Observer {
 		rootTable.left().bottom();
 
 		addActor(rootTable);
+
+
 	}
 
 

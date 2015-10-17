@@ -9,8 +9,8 @@ import com.badlogic.gdx.math.Vector3;
 public class GameSettings {
 
 	public static final float CAMERA_FOV = 60;
-	public static final float CAMERA_FAR = 1E3f;
-	public static final float CAMERA_NEAR = 1E-3f;
+	public static final float CAMERA_FAR = 100f;
+	public static final float CAMERA_NEAR = 0.1f;
 	public static final float CAMERA_MAX_PAN_VELOCITY = 50;
 	public static final float CAMERA_MIN_ZOOM = 1;
 	public static final float CAMERA_ZOOM_STEP = 4;

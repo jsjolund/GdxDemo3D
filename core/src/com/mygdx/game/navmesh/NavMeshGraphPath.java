@@ -25,6 +25,14 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 		end = null;
 	}
 
+	/**
+	 * Calculate the shortest path through the path triangles with {@link #getDirectPath() getDirectPath()},
+	 * then divide up long path lines into smaller.
+	 * <p/>
+	 * TODO: The path should store which triangle each waypoint belongs to
+	 *
+	 * @return
+	 */
 	public Array<Vector3> getSmoothPath() {
 		Array<Vector3> directPath = getDirectPath();
 		Array<Vector3> smoothPath = new Array<Vector3>();

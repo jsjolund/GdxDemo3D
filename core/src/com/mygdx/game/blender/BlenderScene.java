@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -30,6 +30,7 @@ import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
 
 import java.nio.FloatBuffer;
+import java.util.Comparator;
 
 
 /**
@@ -37,12 +38,14 @@ import java.nio.FloatBuffer;
  */
 public class BlenderScene implements Disposable {
 
+	public static final String tag = "BlenderScene";
+
 	public Array<BaseLight> lights = new Array<BaseLight>();
 	public Array<Entity> entities = new Array<Entity>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
-	public BoundingBox worldBounds = new BoundingBox();
 
+	public BoundingBox worldBounds = new BoundingBox();
 	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
@@ -129,6 +132,35 @@ public class BlenderScene implements Disposable {
 		camera.update();
 	}
 
+	private void createNavmesh(Entity entity, ModelComponent mdlCmp) {
+		ModelInstance instance = mdlCmp.modelInstance;
+		Array<NodePart> nodes = instance.getNode("navmesh").parts;
+		// Sort the model meshParts array according to material name
+		nodes.sort(new NavMeshNodeSorter());
+
+		for (NodePart n : nodes) {
+			Gdx.app.debug(tag, n.meshPart.id + " " + n.material.id);
+		}
+
+		// The navmesh should be handled differently than other entities.
+		// Its model should not be rendered.
+		// Its vertices need to be rotated correctly for the shape to be oriented correctly.
+		ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
+		btTriangleIndexVertexArray vertexArray =
+				new btTriangleIndexVertexArray(instance.model.meshParts);
+		btBvhTriangleMeshShape shape = new btBvhTriangleMeshShape(vertexArray, true);
+		staticGeneratedShapesMap.put("navmesh", shape);
+		PhysicsComponent phyCmp = new PhysicsComponent(
+				shape, null, 0,
+				PhysicsSystem.NAVMESH_FLAG,
+				PhysicsSystem.NAVMESH_FLAG,
+				false, false);
+		entity.add(phyCmp);
+		phyCmp.body.setWorldTransform(instance.transform);
+		navMesh = new NavMesh(instance.model, shape);
+		worldBounds.set(mdlCmp.bounds);
+	}
+
 	private void createEntities(Array<BlenderObject.BModel> models) {
 
 		for (BlenderObject.BModel cmp : models) {
@@ -143,22 +175,7 @@ public class BlenderScene implements Disposable {
 			ModelInstance instance = mdlCmp.modelInstance;
 
 			if (cmp.name.equals("navmesh")) {
-				// The navmesh should be handled differently than other entities.
-				// Its vertices need to be rotated correctly for the shape to work.
-				ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
-				btTriangleIndexVertexArray vertexArray =
-						new btTriangleIndexVertexArray(instance.model.meshParts);
-				btBvhTriangleMeshShape shape = new btBvhTriangleMeshShape(vertexArray, true);
-				staticGeneratedShapesMap.put("navmesh", shape);
-				PhysicsComponent phyCmp = new PhysicsComponent(
-						shape, null, 0,
-						PhysicsSystem.NAVMESH_FLAG,
-						PhysicsSystem.NAVMESH_FLAG,
-						false, false);
-				entity.add(phyCmp);
-				phyCmp.body.setWorldTransform(instance.transform);
-				navMesh = new NavMesh(instance.model, shape);
-				worldBounds.set(mdlCmp.bounds);
+				createNavmesh(entity, mdlCmp);
 				continue;
 			}
 
@@ -295,6 +312,13 @@ public class BlenderScene implements Disposable {
 	private Array<BlenderObject.BCamera> deserializeCameras(String path) {
 		return (path == null) ? new Array<BlenderObject.BCamera>() :
 				new Json().fromJson(Array.class, BlenderObject.BCamera.class, Gdx.files.local(path));
+	}
+
+	private class NavMeshNodeSorter implements Comparator<NodePart> {
+		@Override
+		public int compare(NodePart a, NodePart b) {
+			return a.material.id.compareTo(b.material.id);
+		}
 	}
 
 

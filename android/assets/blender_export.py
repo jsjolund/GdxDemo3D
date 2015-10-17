@@ -257,6 +257,7 @@ def create_blender_object_map(filename, scene_objects):
     blender_object_map = {}
 
     for scene_obj in scene_objects:
+        # Don't include hidden objects
         if scene_obj.hide:
             continue
 
@@ -308,10 +309,11 @@ def main():
     for category in blender_object_map:
         json_file_path = os.path.join(json_dir_path, "{}_{}.json".format(blender_filename_noext, category))
         write_json(json_file_path, blender_object_map[category])
+    print()
 
+    export_objects = get_export_objects(blender_object_map)
     print()
-    export_objects = get_export_objects(blender_object_map);
-    print()
+
     # Export models as fbx to temp dir, then convert them to g3db
     with tempfile.TemporaryDirectory() as tmpdirname:
         fbx_file_paths = write_fbx(tmpdirname, export_objects)

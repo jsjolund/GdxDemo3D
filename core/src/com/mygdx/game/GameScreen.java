@@ -27,12 +27,12 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.components.*;
-import com.mygdx.game.input.CameraController;
-import com.mygdx.game.input.GameStage;
-import com.mygdx.game.input.SelectionSystem;
+import com.mygdx.game.input.GameInputProcessor;
+import com.mygdx.game.input.SelectionController;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.systems.*;
+import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.GhostCamera;
 
 /**
@@ -51,11 +51,11 @@ public class GameScreen implements Screen {
 	private final ShapeRenderer shapeRenderer;
 	private final btIDebugDraw.DebugDrawModes modes;
 	private final btIDebugDraw debugDraw;
-
+	private final GameInputProcessor gameInputProcessor;
+	private final PhysicsSystem phySys;
 	private final Array<BlenderScene> scenes = new Array<BlenderScene>();
 	private final Array<Class<? extends DisposableComponent>> disposableClasses;
-
-	CameraController cameraController;
+	private final CameraController cameraController;
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		disposableClasses = new Array<Class<? extends DisposableComponent>>();
@@ -90,8 +90,7 @@ public class GameScreen implements Screen {
 		renderSys.setEnvironmentLights(blenderScene.lights, blenderScene.shadowCameraDirection);
 		engine.addSystem(renderSys);
 
-		PhysicsSystem phySys = new PhysicsSystem();
-		engine.addSystem(phySys);
+		engine.addSystem(phySys = new PhysicsSystem());
 		engine.addEntityListener(Family.all(PhysicsComponent.class).get(), phySys.physicsComponentListener);
 		engine.addEntityListener(Family.all(RagdollComponent.class).get(), phySys.ragdollComponentListener);
 		modes = new btIDebugDraw.DebugDrawModes();
@@ -101,6 +100,7 @@ public class GameScreen implements Screen {
 			engine.addEntity(entity);
 		}
 
+		// TODO: Add constraint support in blender scene somehow
 		ImmutableArray<Entity> modelEntities = engine.getEntitiesFor(Family.all(ModelComponent.class).get());
 		for (Entity entity : modelEntities) {
 			if (entity.getComponent(ModelComponent.class).id.startsWith("door")) {
@@ -111,21 +111,20 @@ public class GameScreen implements Screen {
 			}
 		}
 
-		SelectionSystem selSys = new SelectionSystem(viewport, phySys);
+		SelectionController selSys = new SelectionController(phySys);
 		selSys.setNavMesh(blenderScene.navMesh);
 		selSys.addObserver(stage);
 		selSys.addObserver(renderSys);
 
-		cameraController = new CameraController(viewport, camera);
+		cameraController = new CameraController(camera);
 		cameraController.setWorldBoundingBox(blenderScene.worldBounds);
-
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		multiplexer.addProcessor(cameraController.inputAdapter);
-		multiplexer.addProcessor(selSys.inputAdapter);
+		multiplexer.addProcessor(gameInputProcessor = new GameInputProcessor(viewport, cameraController, selSys));
 		Gdx.input.setInputProcessor(multiplexer);
 
+//		gameInputProcessor.addObserver();
 
 		engine.addSystem(new BillboardSystem(camera));
 		engine.addSystem(new PathFollowSystem());
@@ -181,11 +180,12 @@ public class GameScreen implements Screen {
 				mode |= modes.DBG_DrawWireframe;
 			}
 			debugDraw.setDebugMode(mode);
-			engine.getSystem(PhysicsSystem.class).debugDrawWorld(camera);
+			phySys.debugDrawWorld(camera);
 		}
 		stage.act(delta);
 		stage.draw();
-		cameraController.update(delta);
+		gameInputProcessor.update(delta);
+		camera.update(delta, GameSettings.CAMERA_LERP_ALPHA);
 	}
 
 	private Entity spawnCharacter(Vector3 initialPosition) {
