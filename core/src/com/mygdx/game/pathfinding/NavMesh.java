@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btTriangleIndexVertexArray;
 import com.badlogic.gdx.physics.bullet.collision.btTriangleRaycastCallback;
 import com.badlogic.gdx.utils.Disposable;
 
@@ -23,13 +25,18 @@ public class NavMesh implements Disposable {
 	private Vector3 rayFrom = new Vector3();
 	private Vector3 rayTo = new Vector3();
 
-	public NavMesh(Model model, btBvhTriangleMeshShape collisionShape) {
-		this.collisionShape = collisionShape;
+	public NavMesh(Model model) {
+		btTriangleIndexVertexArray vertexArray = new btTriangleIndexVertexArray(model.meshParts);
+		collisionShape = new btBvhTriangleMeshShape(vertexArray, true);
 		raycastCallback = new NavMeshRaycastCallback(rayFrom, rayTo);
 		raycastCallback.setFlags(btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
 		graph = new NavMeshGraph(model);
 		pathFinder = new IndexedAStarPathFinder<Triangle>(graph);
 		heuristic = new NavMeshHeuristic();
+	}
+
+	public btCollisionShape getShape() {
+		return collisionShape;
 	}
 
 	public boolean calculatePath(Triangle fromTri, Triangle toTri, NavMeshGraphPath out) {

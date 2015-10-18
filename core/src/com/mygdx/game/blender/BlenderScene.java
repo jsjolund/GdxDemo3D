@@ -134,21 +134,17 @@ public class BlenderScene implements Disposable {
 
 	private void createNavmesh(Entity entity, ModelComponent mdlCmp) {
 		ModelInstance instance = mdlCmp.modelInstance;
+		ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
+
 		Array<NodePart> nodes = instance.getNode("navmesh").parts;
 		// Sort the model meshParts array according to material name
 		nodes.sort(new NavMeshNodeSorter());
 
-		for (NodePart n : nodes) {
-			Gdx.app.debug(tag, n.meshPart.id + " " + n.material.id);
-		}
-
 		// The navmesh should be handled differently than other entities.
 		// Its model should not be rendered.
 		// Its vertices need to be rotated correctly for the shape to be oriented correctly.
-		ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
-		btTriangleIndexVertexArray vertexArray =
-				new btTriangleIndexVertexArray(instance.model.meshParts);
-		btBvhTriangleMeshShape shape = new btBvhTriangleMeshShape(vertexArray, true);
+		navMesh = new NavMesh(instance.model);
+		btCollisionShape shape = navMesh.getShape();
 		staticGeneratedShapesMap.put("navmesh", shape);
 		PhysicsComponent phyCmp = new PhysicsComponent(
 				shape, null, 0,
@@ -157,7 +153,7 @@ public class BlenderScene implements Disposable {
 				false, false);
 		entity.add(phyCmp);
 		phyCmp.body.setWorldTransform(instance.transform);
-		navMesh = new NavMesh(instance.model, shape);
+
 		worldBounds.set(mdlCmp.bounds);
 	}
 

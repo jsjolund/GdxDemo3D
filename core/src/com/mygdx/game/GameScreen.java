@@ -114,7 +114,7 @@ public class GameScreen implements Screen {
 		}
 
 
-		PathFollowSystem pathSys = new PathFollowSystem(phySys);
+		PathFollowSystem pathSys = new PathFollowSystem();
 		pathSys.setNavMesh(blenderScene.navMesh);
 		engine.addSystem(pathSys);
 
@@ -133,7 +133,8 @@ public class GameScreen implements Screen {
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(stage);
-		multiplexer.addProcessor(gameInputProcessor = new GameInputProcessor(viewport, cameraController, selSys, pathSys));
+		gameInputProcessor = new GameInputProcessor(viewport, cameraController, selSys, pathSys);
+		multiplexer.addProcessor(gameInputProcessor);
 		Gdx.input.setInputProcessor(multiplexer);
 
 		gameInputProcessor.addObserver(renderSys);

@@ -144,7 +144,6 @@ public class PhysicsSystem extends EntitySystem implements Disposable {
 		@Override
 		public void entityAdded(Entity entity) {
 			PhysicsComponent cmp = entity.getComponent(PhysicsComponent.class);
-
 			cmp.body.setUserPointer(entity.getId());
 			dynamicsWorld.addRigidBody(cmp.body, cmp.belongsToFlag, cmp.collidesWithFlag);
 

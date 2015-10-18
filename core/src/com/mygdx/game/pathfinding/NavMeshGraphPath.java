@@ -34,6 +34,7 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	 * @return
 	 */
 	public Array<Vector3> getSmoothPath() {
+//		return getDirectPath();
 		Array<Vector3> directPath = getDirectPath();
 		Array<Vector3> smoothPath = new Array<Vector3>();
 

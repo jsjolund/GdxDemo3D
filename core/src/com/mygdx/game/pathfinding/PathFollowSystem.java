@@ -14,7 +14,6 @@ import com.mygdx.game.components.PathFindingComponent;
 import com.mygdx.game.components.PhysicsComponent;
 import com.mygdx.game.components.RagdollComponent;
 import com.mygdx.game.settings.GameSettings;
-import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.Observer;
 
 /**
@@ -33,15 +32,12 @@ public class PathFollowSystem extends IteratingSystem implements Observer {
 	private final ComponentMapper<PhysicsComponent> phyCmps = ComponentMapper.getFor(PhysicsComponent.class);
 	private final ComponentMapper<RagdollComponent> ragCmp = ComponentMapper.getFor(RagdollComponent.class);
 
-	private final PhysicsSystem phySys;
-
 	private NavMesh navMesh;
 	private Entity selectedEntity;
 	private int selectedLayer;
 
-	public PathFollowSystem(PhysicsSystem phySys) {
+	public PathFollowSystem() {
 		super(Family.all(PathFindingComponent.class).one(PhysicsComponent.class, RagdollComponent.class).get());
-		this.phySys = phySys;
 	}
 
 	@Override
@@ -67,7 +63,6 @@ public class PathFollowSystem extends IteratingSystem implements Observer {
 					pathCmp.currentPosition.x, pathCmp.currentPosition.z);
 
 			if (xzDst < 0.1f) {
-
 				// set new goal if not empty
 				pathCmp.currentGoal = null;
 				if (pathCmp.path.size > 0) {
@@ -105,15 +100,11 @@ public class PathFollowSystem extends IteratingSystem implements Observer {
 		if (pathCmp == null) {
 			return;
 		}
-		// Check if player clicked navigation mesh
-		if ((phySys.rayTest(pickRay, surfaceHitPoint, PhysicsSystem.NAVMESH_FLAG,
-				PhysicsSystem.NAVMESH_FLAG, GameSettings.CAMERA_PICK_RAY_DST)) == null) {
-			return;
-		}
 		Gdx.app.debug(tag, "Clicked navmesh " + surfaceHitPoint);
 
 		// Check which navmesh triangle was hit
 		Triangle hitTriangle = navMesh.rayTest(pickRay, GameSettings.CAMERA_PICK_RAY_DST, selectedLayer);
+		System.out.println(hitTriangle);
 		if (hitTriangle == null) {
 			return;
 		}
@@ -161,12 +152,12 @@ public class PathFollowSystem extends IteratingSystem implements Observer {
 				.CHAR_CAPSULE_Y_HALFEXT, 0);
 		pathCmp.clearPath();
 		boolean pathFound = navMesh.calculatePath(posTriangle, hitTriangle, pathCmp.trianglePath);
-		pathCmp.trianglePath.setStartEnd(posPoint, surfaceHitPoint);
-		pathCmp.setPath(pathCmp.trianglePath.getSmoothPath());
-
 		if (!pathFound) {
 			Gdx.app.debug(tag, "Path not found");
 		}
+		pathCmp.trianglePath.setStartEnd(posPoint, surfaceHitPoint);
+		pathCmp.setPath(pathCmp.trianglePath.getSmoothPath());
+
 
 	}
 
