@@ -21,7 +21,7 @@ public class GameSettings {
 
 	public static final float SCENE_AMBIENT_LIGHT = 0.1f;
 
-	public static final Vector3 GRAVITY = new Vector3(0, -9.82f, 0);
+	public static final Vector3 GRAVITY = new Vector3(0, -9.8f * 2, 0);
 
 	public static final int SHADOW_MAP_WIDTH = 1024;
 	public static final int SHADOW_MAP_HEIGHT = 1024;
@@ -33,7 +33,6 @@ public class GameSettings {
 
 	public static final float CHAR_CAPSULE_XZ_HALFEXT = 0.4f;
 	public static final float CHAR_CAPSULE_Y_HALFEXT = 1.1f;
-	public static final float CHAR_MASS = 100;
 
 	public static float GAME_SPEED = 1;
 
@@ -44,6 +43,8 @@ public class GameSettings {
 	public static int KEY_PAN_LEFT = Input.Keys.A;
 	public static int KEY_PAN_BACKWARD = Input.Keys.S;
 	public static int KEY_PAN_RIGHT = Input.Keys.D;
+
+	public static int KEY_KILL_CHARACTER = Input.Keys.F5;
 
 	public static float SOUND_VOLUME = 1f;
 	public static float MUSIC_VOLUME = 1f;

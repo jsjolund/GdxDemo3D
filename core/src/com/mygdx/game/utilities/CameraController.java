@@ -33,9 +33,17 @@ public class CameraController {
 		this.worldBoundingBox = new BoundingBox(worldBoundingBox);
 		Vector3 min = new Vector3();
 		Vector3 max = new Vector3();
+		// Set height of bounding box to zero (y dimension)
 		this.worldBoundingBox.getMax(max).y = 0;
 		this.worldBoundingBox.getMin(min).y = 0;
 		this.worldBoundingBox.set(min, max);
+
+		ray.set(camera.position, camera.direction);
+		if (!Intersector.intersectRayBounds(ray, this.worldBoundingBox, worldGroundTarget)) {
+			// TODO: What happens if the center of camera is not aimed at bounding box?
+			// Probably move the camera until it is...
+		}
+
 	}
 
 	public void processDragPan(Ray dragCurrentRay, Ray lastDragProcessedRay) {

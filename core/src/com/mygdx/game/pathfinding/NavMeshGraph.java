@@ -61,25 +61,6 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		map = createConnections(indexConnections, triangles, vertexVectors);
 	}
 
-	@Override
-	public int getNodeCount() {
-		return map.size;
-	}
-
-	@Override
-	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
-		return map.getValueAt(fromNode.triIndex);
-	}
-
-	public Triangle getTriangleFromGraph(int graphTriIndex) {
-		return map.getKeyAt(graphTriIndex);
-	}
-
-	public Triangle getTriangleFromMeshPart(int meshPartIndex, int triIndex) {
-		return map.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + triIndex);
-	}
-
-
 	/**
 	 * Get an array of the vertex indices from the mesh. Any vertices which share the same position will be counted
 	 * as a single vertex and share the same index. That is, position duplicates will be filtered out.
@@ -296,6 +277,24 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public int getNodeCount() {
+		return map.size;
+	}
+
+	@Override
+	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
+		return map.getValueAt(fromNode.triIndex);
+	}
+
+	public Triangle getTriangleFromGraph(int graphTriIndex) {
+		return map.getKeyAt(graphTriIndex);
+	}
+
+	public Triangle getTriangleFromMeshPart(int meshPartIndex, int triIndex) {
+		return map.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + triIndex);
 	}
 
 	/**

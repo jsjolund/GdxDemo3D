@@ -1,7 +1,5 @@
-package com.mygdx.game.systems;
+package com.mygdx.game;
 
-import com.badlogic.ashley.core.*;
-import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Camera;
@@ -9,7 +7,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
@@ -21,13 +22,13 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.PathFindingComponent;
-import com.mygdx.game.components.SelectableComponent;
+import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.GameCharacter;
+import com.mygdx.game.objects.GameModel;
 import com.mygdx.game.pathfinding.Edge;
-import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
@@ -35,16 +36,16 @@ import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
 import com.mygdx.game.utilities.Observer;
 
+import java.util.Iterator;
+
 
 /**
  * Created by user on 7/31/15.
  */
-public class RenderSystem extends EntitySystem implements Disposable, Observer {
+public class GameRenderer implements Disposable, Observer {
 
-	public static final String tag = "RenderSystem";
+	public static final String tag = "GameRenderer";
 
-	public final Family systemFamily;
-	private final ComponentMapper<ModelComponent> models = ComponentMapper.getFor(ModelComponent.class);
 	private final ModelBatch modelBatch;
 	private final ModelBatch shadowBatch;
 	private final MyShapeRenderer shapeRenderer;
@@ -55,22 +56,23 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	private final Matrix4 tmpMatrix = new Matrix4();
 	private final Quaternion tmpQuat = new Quaternion();
 	private final Viewport viewport;
-	private ImmutableArray<Entity> entities;
+	GameCharacter selectedCharacter;
 	private BitmapFont font;
 	private Camera camera;
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
-	private NavMesh navmesh;
-	private int layer = Integer.MAX_VALUE;
+	private GameEngine engine;
+	private Bits visibleLayers;
+	private Billboard markerBillboard;
 
-	private ModelInstance selectedModelInstance;
-	private ModelInstance selectedMarker;
-	private PathFindingComponent selectedPath;
-
-	public RenderSystem(Viewport viewport, Camera camera) {
-		systemFamily = Family.all(ModelComponent.class).get();
+	public GameRenderer(Viewport viewport, Camera camera, GameEngine engine) {
 		this.viewport = viewport;
 		this.camera = camera;
+		this.engine = engine;
+		visibleLayers = new Bits();
+		for (int i = 0; i < 10; i++) {
+			visibleLayers.set(i);
+		}
 
 		shapeRenderer = new MyShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
@@ -91,28 +93,19 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 				return new UberShader(renderable, config);
 			}
 		});
+
+
 	}
 
 	@Override
-	public void notifyEntitySelected(Entity entity) {
-		SelectableComponent selCmp = entity.getComponent(SelectableComponent.class);
-		if (selCmp != null) {
-			selectedMarker = selCmp.selectedMarkerModel;
-		} else {
-			selectedMarker = null;
-		}
-		selectedPath = entity.getComponent(PathFindingComponent.class);
-		ModelComponent mdlCmp = entity.getComponent(ModelComponent.class);
-		if (mdlCmp != null) {
-			selectedModelInstance = mdlCmp.modelInstance;
-		} else {
-			selectedModelInstance = null;
-		}
+	public void notifyEntitySelected(GameCharacter entity) {
+		selectedCharacter = entity;
+		markerBillboard.setFollowTransform(entity.modelInstance.transform);
 	}
 
 	@Override
-	public void notifyLayerSelected(int layer) {
-		this.layer = layer;
+	public void notifyLayerChanged(Bits layer) {
+		this.visibleLayers = layer;
 	}
 
 	@Override
@@ -147,34 +140,28 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		}
 	}
 
-	@Override
-	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(systemFamily);
-	}
 
-	private boolean isVisible(final Camera camera, final ModelComponent cmp) {
-		if (cmp.layer > layer) {
+	private boolean isVisible(final Camera camera, final GameModel gameModel) {
+		if (!gameModel.layers.intersects(visibleLayers)) {
 			return false;
 		}
-		cmp.modelInstance.transform.getTranslation(tmp);
-		tmp.add(cmp.center);
-		return camera.frustum.sphereInFrustum(tmp, cmp.radius);
+		gameModel.modelInstance.transform.getTranslation(tmp);
+		tmp.add(gameModel.center);
+		return camera.frustum.sphereInFrustum(tmp, gameModel.radius);
 	}
 
-	@Override
 	public void update(float deltaTime) {
 		drawShadowBatch();
 		camera.update();
 		modelBatch.begin(camera);
-		for (Entity entity : entities) {
-			ModelComponent mdlCmp = models.get(entity);
-			if (isVisible(camera, mdlCmp) || mdlCmp.ignoreCulling) {
-				modelBatch.render(mdlCmp.modelInstance, environment);
+		Iterator<GameModel> models = engine.getModels();
+		while (models.hasNext()) {
+			GameModel mdl = models.next();
+			if (isVisible(camera, mdl) || mdl.ignoreCulling) {
+				modelBatch.render(mdl.modelInstance, environment);
 			}
 		}
-		if (selectedMarker != null) {
-			modelBatch.render(selectedMarker, environment);
-		}
+		modelBatch.render(markerBillboard.modelInstance, environment);
 		modelBatch.end();
 
 		if (DebugViewSettings.drawArmature) {
@@ -189,15 +176,15 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 	}
 
 	private void drawPath() {
-		if (selectedPath != null && selectedPath.path.size > 1) {
+		if (selectedCharacter != null && selectedCharacter.pathData.path.size > 1) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(Color.CORAL);
 			// Smoothed path
 			Vector3 q;
-			Vector3 p = selectedPath.currentGoal;
-			for (int i = selectedPath.path.size - 1; i >= 0; i--) {
-				q = selectedPath.path.get(i);
+			Vector3 p = selectedCharacter.pathData.currentGoal;
+			for (int i = selectedCharacter.pathData.path.size - 1; i >= 0; i--) {
+				q = selectedCharacter.pathData.path.get(i);
 				shapeRenderer.line(p, q);
 				p = q;
 			}
@@ -210,28 +197,28 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
-			Triangle t = navmesh.graph.getTriangleFromGraph(i);
+		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
+			Triangle t = engine.navmesh.graph.getTriangleFromGraph(i);
 			shapeRenderer.setColor(Color.LIGHT_GRAY);
 			shapeRenderer.line(t.a, t.b);
 			shapeRenderer.line(t.b, t.c);
 			shapeRenderer.line(t.c, t.a);
 		}
 
-		if (selectedPath != null && selectedPath.trianglePath.getCount() > 0) {
+		if (selectedCharacter != null && selectedCharacter.pathData.trianglePath.getCount() > 0) {
 			// Path triangles
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
 			shapeRenderer.setColor(1, 1, 0, 0.2f);
-			for (int i = 0; i < selectedPath.trianglePath.getCount(); i++) {
-				Edge e = (Edge) selectedPath.trianglePath.get(i);
+			for (int i = 0; i < selectedCharacter.pathData.trianglePath.getCount(); i++) {
+				Edge e = (Edge) selectedCharacter.pathData.trianglePath.get(i);
 				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-				if (i == selectedPath.trianglePath.getCount() - 1) {
+				if (i == selectedCharacter.pathData.trianglePath.getCount() - 1) {
 					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
 				}
 			}
 			// Shared triangle edges
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			for (Connection<Triangle> connection : selectedPath.trianglePath) {
+			for (Connection<Triangle> connection : selectedCharacter.pathData.trianglePath) {
 				Edge e = (Edge) connection;
 				shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
 			}
@@ -240,8 +227,8 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		// Draw indices of the triangles
 		spriteBatch.begin();
 		spriteBatch.setProjectionMatrix(camera.combined);
-		for (int i = 0; i < navmesh.graph.getNodeCount(); i++) {
-			Triangle t = navmesh.graph.getTriangleFromGraph(i);
+		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
+			Triangle t = engine.navmesh.graph.getTriangleFromGraph(i);
 			tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
 			tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
 			spriteBatch.setTransformMatrix(tmpMatrix);
@@ -259,12 +246,13 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 
 		shadowLight.begin(Vector3.Zero, camera.direction);
 		shadowBatch.begin(shadowLight.getCamera());
-		for (Entity entity : entities) {
-			ModelComponent cmp = models.get(entity);
-			if (cmp.layer > layer) {
+		Iterator<GameModel> models = engine.getModels();
+		while (models.hasNext()) {
+			GameModel mdl = models.next();
+			if (!mdl.layers.intersects(visibleLayers)) {
 				continue;
 			}
-			shadowBatch.render(cmp.modelInstance);
+			shadowBatch.render(mdl.modelInstance);
 		}
 		shadowBatch.end();
 		shadowLight.end();
@@ -279,10 +267,10 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(0, 1, 1, 1);
-		if (selectedModelInstance != null) {
-			Node skeleton = selectedModelInstance.getNode("armature");
+		if (selectedCharacter != null) {
+			Node skeleton = selectedCharacter.modelInstance.getNode("armature");
 			if (skeleton != null) {
-				selectedModelInstance.transform.getTranslation(tmp);
+				selectedCharacter.modelInstance.transform.getTranslation(tmp);
 				skeleton.globalTransform.getTranslation(debugNodePos1);
 				drawArmatureNodes(skeleton, tmp, debugNodePos1, debugNodePos2);
 			}
@@ -311,9 +299,8 @@ public class RenderSystem extends EntitySystem implements Disposable, Observer {
 		}
 	}
 
-	public void setNavmesh(NavMesh navmesh) {
-		this.navmesh = navmesh;
+	public void setSelectionMarker(Billboard markerBillboard) {
+		this.markerBillboard = markerBillboard;
 	}
-
-
 }
+

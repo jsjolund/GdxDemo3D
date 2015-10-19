@@ -1,13 +1,11 @@
 package com.mygdx.game.blender;
 
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
@@ -18,30 +16,30 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
+import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
-import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Json;
-import com.mygdx.game.components.ModelComponent;
-import com.mygdx.game.components.PhysicsComponent;
+import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.GameModelBody;
+import com.mygdx.game.objects.InvisibleBody;
 import com.mygdx.game.pathfinding.NavMesh;
-import com.mygdx.game.systems.PhysicsSystem;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
 
 import java.nio.FloatBuffer;
 import java.util.Comparator;
 
-
 /**
- * Created by Johannes Sjolund on 10/2/15.
+ * Created by Johannes Sjolund on 10/19/15.
  */
-public class BlenderScene implements Disposable {
+public class BlenderScene {
 
 	public static final String tag = "BlenderScene";
 
 	public Array<BaseLight> lights = new Array<BaseLight>();
-	public Array<Entity> entities = new Array<Entity>();
+	public Array<GameModelBody> entities = new Array<GameModelBody>();
+	public Array<InvisibleBody> ghosts = new Array<InvisibleBody>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
 
@@ -75,6 +73,8 @@ public class BlenderScene implements Disposable {
 		Array<BlenderObject.BLight> blenderLights = deserializeLights(lightsJsonPath);
 		Array<BlenderObject.BCamera> blenderCameras = deserializeCameras(cameraJsonPath);
 
+		// The export script uses Blender's coordinate system (z-up), so convert them.
+		// This could also be done in the script of course
 		blenderToGdxCoordinates(blenderModels);
 		blenderToGdxCoordinates(blenderEmpties);
 		blenderToGdxCoordinates(blenderLights);
@@ -82,8 +82,9 @@ public class BlenderScene implements Disposable {
 
 		loadCollisionData(blenderEmpties);
 		createLights(blenderLights);
-		createEntities(blenderModels);
+		createGameObjects(blenderModels);
 
+		// Not sure if multiple cameras will ever be supported
 		if (blenderCameras.size != 0) {
 			sceneCamera = blenderCameras.get(0);
 		}
@@ -109,13 +110,18 @@ public class BlenderScene implements Disposable {
 		return vector.set(vector.x, vector.z, -vector.y);
 	}
 
-	@Override
 	public void dispose() {
 		for (btCollisionShape shape : blenderDefinedShapesMap.values) {
 			shape.dispose();
 		}
 		for (btCollisionShape shape : staticGeneratedShapesMap.values) {
 			shape.dispose();
+		}
+		for (GameModelBody g : entities) {
+			g.dispose();
+		}
+		for (InvisibleBody g : ghosts) {
+			g.dispose();
 		}
 		modelAssets.dispose();
 		navMesh.dispose();
@@ -132,90 +138,93 @@ public class BlenderScene implements Disposable {
 		camera.update();
 	}
 
-	private void createNavmesh(Entity entity, ModelComponent mdlCmp) {
-		ModelInstance instance = mdlCmp.modelInstance;
-		ModelFactory.setBlenderToGdxFloatBuffer(instance.model.meshes.first());
+	private void createGameObjects(Array<BlenderObject.BModel> models) {
 
-		Array<NodePart> nodes = instance.getNode("navmesh").parts;
-		// Sort the model meshParts array according to material name
-		nodes.sort(new NavMeshNodeSorter());
+		for (BlenderObject.BModel bModel : models) {
 
-		// The navmesh should be handled differently than other entities.
-		// Its model should not be rendered.
-		// Its vertices need to be rotated correctly for the shape to be oriented correctly.
-		navMesh = new NavMesh(instance.model);
-		btCollisionShape shape = navMesh.getShape();
-		staticGeneratedShapesMap.put("navmesh", shape);
-		PhysicsComponent phyCmp = new PhysicsComponent(
-				shape, null, 0,
-				PhysicsSystem.NAVMESH_FLAG,
-				PhysicsSystem.NAVMESH_FLAG,
-				false, false);
-		entity.add(phyCmp);
-		phyCmp.body.setWorldTransform(instance.transform);
+			GameModelBody entity;
 
-		worldBounds.set(mdlCmp.bounds);
-	}
+			modelAssets.finishLoadingAsset(bModel.model_file_name);
+			Model model = modelAssets.get(bModel.model_file_name, Model.class);
 
-	private void createEntities(Array<BlenderObject.BModel> models) {
+			btCollisionShape shape;
+			float mass = 0;
+			short belongsToFlag;
+			short collidesWithFlag;
+			boolean callback = false;
+			boolean noDeactivate = false;
 
-		for (BlenderObject.BModel cmp : models) {
+			// The navmesh should be treated differently than the rest of the models
+			if (bModel.name.equals("navmesh")) {
+				// We need to set the node transforms before calculating the navmesh shape
+				GameModel gameModel = new GameModel(model, bModel.name, bModel.position, bModel.rotation, bModel.scale);
+				ModelFactory.setBlenderToGdxFloatBuffer(gameModel.modelInstance.model.meshes.first());
 
-			Entity entity = new Entity();
-			entities.add(entity);
+				Array<NodePart> nodes = gameModel.modelInstance.model.getNode("navmesh").parts;
+				// Sort the model meshParts array according to material name
+				nodes.sort(new NavMeshNodeSorter());
 
-			modelAssets.finishLoadingAsset(cmp.model_file_name);
-			Model model = modelAssets.get(cmp.model_file_name, Model.class);
-			ModelComponent mdlCmp = new ModelComponent(model, cmp.name,
-					cmp.position, cmp.rotation, cmp.scale);
-			ModelInstance instance = mdlCmp.modelInstance;
+				// The navmesh should be handled differently than other entities.
+				// Its model should not be rendered.
+				// Its vertices need to be rotated correctly for the shape to be oriented correctly.
+				navMesh = new NavMesh(gameModel.modelInstance.model);
+				shape = navMesh.getShape();
+				staticGeneratedShapesMap.put("navmesh", shape);
+				belongsToFlag = GameModelBody.NAVMESH_FLAG;
+				collidesWithFlag = GameModelBody.NAVMESH_FLAG;
 
-			for (int i = 0; i < cmp.layers.length; i++) {
-				if (cmp.layers[i]) {
-					mdlCmp.layer = i;
-				}
-			}
-
-			if (cmp.name.equals("navmesh")) {
-				createNavmesh(entity, mdlCmp);
+				InvisibleBody invisibleBody = new InvisibleBody(
+						shape, mass, gameModel.modelInstance.transform, belongsToFlag, collidesWithFlag, callback, noDeactivate);
+				worldBounds.set(gameModel.bounds);
+				ghosts.add(invisibleBody);
+				// Finished with the navmesh
 				continue;
 			}
 
-			if (blenderDefinedShapesMap.containsKey(cmp.name) && massMap.containsKey(cmp.name)) {
+			// Check if shape and mass is defined in the Blender scene. Otherwise let Bullet calculate a shape.
+			if (blenderDefinedShapesMap.containsKey(bModel.name) && massMap.containsKey(bModel.name)) {
 				// The model has a shape and mass predefined.
-				btCollisionShape shape = blenderDefinedShapesMap.get(cmp.name);
-				float mass = massMap.get(cmp.name);
-
-				entity.add(new PhysicsComponent(
-						shape, instance.transform, mass,
-						PhysicsSystem.OBJECT_FLAG,
-						(short) (PhysicsSystem.GROUND_FLAG
-								| PhysicsSystem.OBJECT_FLAG
-								| PhysicsSystem.PC_FLAG),
-						true, false));
+				shape = blenderDefinedShapesMap.get(bModel.name);
+				mass = massMap.get(bModel.name);
+				belongsToFlag = GameModelBody.OBJECT_FLAG;
+				collidesWithFlag = (short) (GameModelBody.GROUND_FLAG
+						| GameModelBody.OBJECT_FLAG
+						| GameModelBody.PC_FLAG);
 
 			} else {
-				btCollisionShape shape;
-				if (staticGeneratedShapesMap.containsKey(cmp.name)) {
-					shape = staticGeneratedShapesMap.get(cmp.name);
+				// Check if we have already calculated a shape previously
+				if (staticGeneratedShapesMap.containsKey(bModel.name)) {
+					shape = staticGeneratedShapesMap.get(bModel.name);
 				} else {
-					shape = Bullet.obtainStaticNodeShape(instance.nodes);
-					staticGeneratedShapesMap.put(cmp.name, shape);
+					// We need to set the node transforms before calculating the static Bullet shape
+					GameModel gameModel = new GameModel(model, bModel.name, bModel.position, bModel.rotation, bModel.scale);
+					shape = Bullet.obtainStaticNodeShape(gameModel.modelInstance.nodes);
+					staticGeneratedShapesMap.put(bModel.name, shape);
 				}
-				PhysicsComponent phyCmp = new PhysicsComponent(
-						shape, null, 0,
-						PhysicsSystem.GROUND_FLAG,
-						(short) (PhysicsSystem.OBJECT_FLAG | PhysicsSystem.PC_FLAG),
-						false, false);
-				phyCmp.body.setWorldTransform(instance.transform);
-				entity.add(phyCmp);
+				belongsToFlag = GameModelBody.GROUND_FLAG;
+				collidesWithFlag = (short) (GameModelBody.OBJECT_FLAG | GameModelBody.PC_FLAG);
 			}
+
+			entity = new GameModelBody(model, bModel.name, bModel.position, bModel.rotation, bModel.scale,
+					shape, mass, belongsToFlag, collidesWithFlag, callback, noDeactivate);
+			for (int i = 0; i < bModel.layers.length; i++) {
+				if (bModel.layers[i]) {
+					entity.layers.set(i);
+				}
+			}
+
+			// TODO: Add constraint support in blender scene somehow
+			if (bModel.name.startsWith("door")) {
+				entity.constraints.add(new btHingeConstraint(entity.body, new Vector3(0, 0, -0.6f), Vector3.Y));
+			}
+
+			entities.add(entity);
 
 			// TODO:
 			// If models have zero mass (static terrain) and are on the same layer, perhaps merge them?
-			entity.add(mdlCmp);
 		}
 	}
+
 
 	private void createLights(Array<BlenderObject.BLight> bLights) {
 
@@ -322,6 +331,4 @@ public class BlenderScene implements Disposable {
 			return a.material.id.compareTo(b.material.id);
 		}
 	}
-
-
 }

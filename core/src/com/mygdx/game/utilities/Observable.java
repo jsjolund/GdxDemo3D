@@ -1,6 +1,7 @@
 package com.mygdx.game.utilities;
 
-import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.utils.Bits;
+import com.mygdx.game.objects.GameCharacter;
 
 /**
  * Created by Johannes Sjolund on 10/13/15.
@@ -11,7 +12,8 @@ public interface Observable {
 
 	void removeObserver(Observer observer);
 
-	void notifyObserversEntitySelected(Entity entity);
-	void notifyObserversLayerSelected(int layer);
+	void notifyObserversEntitySelected(GameCharacter entity);
+
+	void notifyObserversLayerChanged(Bits layer);
 
 }
