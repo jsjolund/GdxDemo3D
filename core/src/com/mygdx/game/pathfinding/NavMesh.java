@@ -45,7 +45,11 @@ public class NavMesh implements Disposable {
 		if (fromTri == null || toTri == null) {
 			return false;
 		}
-		return pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
+		boolean pathFound = pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
+		if (pathFound) {
+			out.setStartTriangle(fromTri);
+		}
+		return pathFound;
 	}
 
 	@Override
@@ -100,7 +104,7 @@ public class NavMesh implements Disposable {
 
 		path.clear();
 		path.setStartEnd(fromPoint, toPoint);
-		System.out.println(fromPoint + " " + toPoint);
+
 		if (!calculatePath(fromTri, toTri, path)) {
 			Gdx.app.debug(tag, "Path not found.");
 			return false;

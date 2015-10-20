@@ -29,6 +29,7 @@ import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.GameModel;
 import com.mygdx.game.pathfinding.Edge;
+import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
@@ -151,19 +152,20 @@ public class GameRenderer implements Disposable, Observer {
 	}
 
 	public void update(float deltaTime) {
-		drawShadowBatch();
-		camera.update();
-		modelBatch.begin(camera);
-		Iterator<GameModel> models = engine.getModels();
-		while (models.hasNext()) {
-			GameModel mdl = models.next();
-			if (isVisible(camera, mdl) || mdl.ignoreCulling) {
-				modelBatch.render(mdl.modelInstance, environment);
+		if (DebugViewSettings.drawModels) {
+			drawShadowBatch();
+			camera.update();
+			modelBatch.begin(camera);
+			Iterator<GameModel> models = engine.getModels();
+			while (models.hasNext()) {
+				GameModel mdl = models.next();
+				if (isVisible(camera, mdl) || mdl.ignoreCulling) {
+					modelBatch.render(mdl.modelInstance, environment);
+				}
 			}
+			modelBatch.render(markerBillboard.modelInstance, environment);
+			modelBatch.end();
 		}
-		modelBatch.render(markerBillboard.modelInstance, environment);
-		modelBatch.end();
-
 		if (DebugViewSettings.drawArmature) {
 			drawArmature();
 		}
@@ -190,6 +192,30 @@ public class GameRenderer implements Disposable, Observer {
 			}
 			shapeRenderer.end();
 		}
+
+		if (selectedCharacter != null && selectedCharacter.pathData.trianglePath.pathPoints.size > 1) {
+			Array<NavMeshGraphPath.PathPoint> pathPoints = selectedCharacter.pathData.trianglePath.pathPoints;
+			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
+
+			// Smoothed path
+			Vector3 q;
+			Vector3 p = pathPoints.get(pathPoints.size - 1).edgeCrossPoint;
+			float r = 0.05f;
+			float s = r/2;
+			shapeRenderer.setColor(Color.WHITE);
+			shapeRenderer.box(p.x, p.y, p.z, r, r, r);
+			for (int i = pathPoints.size - 1; i >= 0; i--) {
+				q = pathPoints.get(i).edgeCrossPoint;
+				shapeRenderer.setColor(Color.CYAN);
+				shapeRenderer.line(p, q);
+				p = q;
+				shapeRenderer.setColor(Color.WHITE);
+				shapeRenderer.box(p.x-s, p.y-s, p.z+s, r, r, r);
+			}
+			shapeRenderer.end();
+		}
+
 	}
 
 	private void drawNavMesh() {

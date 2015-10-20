@@ -57,9 +57,7 @@ public class BlenderScene {
 						String cameraJsonPath) {
 
 		// Deserialize the list of model objects from the json and start loading them in asset manager.
-		// Use automatic mipmap generation.
 		Array<BlenderObject.BModel> blenderModels = deserializeModels(modelsJsonPath);
-		MipMapGenerator.setUseHardwareMipMap(true);
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;

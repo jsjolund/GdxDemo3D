@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -52,6 +53,7 @@ public class GameScreen implements Screen {
 
 	public GameScreen(int reqWidth, int reqHeight) {
 		Bullet.init();
+		MipMapGenerator.setUseHardwareMipMap(true);
 
 		assets = new AssetManager();
 		engine = new GameEngine();
@@ -98,11 +100,15 @@ public class GameScreen implements Screen {
 		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
 		engine.addEntity(spawnCharacter(new Vector3(-12, 4, 10)));
 
-
 		// Selection billboard
-		assets.load("images/marker.png", Texture.class);
+		TextureLoader.TextureParameter param = new TextureLoader.TextureParameter();
+		param.genMipMaps = true;
+		param.minFilter = Texture.TextureFilter.MipMap;
+		param.magFilter = Texture.TextureFilter.Linear;
+		assets.load("images/marker.png", Texture.class, param);
 		assets.finishLoading();
 		Texture billboardPixmap = assets.get("images/marker.png", Texture.class);
+		// TODO: dispose or use an asset manager model
 		Model billboardModel = ModelFactory.buildBillboardModel(billboardPixmap, 1, 1);
 		Billboard markerBillboard = new Billboard(billboardModel, "marker", camera, true, new Matrix4(),
 				new Vector3(0, -GameSettings.CHAR_CAPSULE_Y_HALFEXT * 0.8f, 0));
@@ -160,7 +166,6 @@ public class GameScreen implements Screen {
 		short collidesWithFlag = (short) (GameModelBody.OBJECT_FLAG | GameModelBody.GROUND_FLAG);
 
 		// Model
-		MipMapGenerator.setUseHardwareMipMap(true);
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
