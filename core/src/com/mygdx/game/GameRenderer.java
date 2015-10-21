@@ -184,9 +184,9 @@ public class GameRenderer implements Disposable, Observer {
 			shapeRenderer.setColor(Color.CORAL);
 			// Smoothed path
 			Vector3 q;
-			Vector3 p = selectedCharacter.pathData.currentGoal.edgeCrossingPoint;
+			Vector3 p = selectedCharacter.pathData.currentGoal.point;
 			for (int i = selectedCharacter.pathData.path.size - 1; i >= 0; i--) {
-				q = selectedCharacter.pathData.path.get(i).edgeCrossingPoint;
+				q = selectedCharacter.pathData.path.get(i).point;
 				shapeRenderer.line(p, q);
 				p = q;
 			}
@@ -200,13 +200,12 @@ public class GameRenderer implements Disposable, Observer {
 
 			// Smoothed path
 			Vector3 q;
-			Vector3 p = pathPoints.get(pathPoints.size - 1).edgeCrossingPoint;
-			float r = 0.05f;
+			Vector3 p = pathPoints.get(pathPoints.size - 1).point;
+			float r = 0.02f;
 			float s = r/2;
 			shapeRenderer.setColor(Color.WHITE);
-			shapeRenderer.box(p.x, p.y, p.z, r, r, r);
 			for (int i = pathPoints.size - 1; i >= 0; i--) {
-				q = pathPoints.get(i).edgeCrossingPoint;
+				q = pathPoints.get(i).point;
 				shapeRenderer.setColor(Color.CYAN);
 				shapeRenderer.line(p, q);
 				p = q;

@@ -146,7 +146,7 @@ public class GameModelBody extends GameModel {
 		if (pathData.currentGoal != null) {
 
 			float yVelocity = body.getLinearVelocity().y;
-			float xzDst = Vector2.dst2(pathData.currentGoal.edgeCrossingPoint.x, pathData.currentGoal.edgeCrossingPoint.z,
+			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
 					pathData.currentPosition.x, pathData.currentPosition.z);
 
 			if (xzDst < 0.1f) {
@@ -160,7 +160,7 @@ public class GameModelBody extends GameModel {
 				}
 			} else {
 				matrix.idt();
-				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.edgeCrossingPoint).scl(-1, 0, 1).nor();
+				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
 				matrix.setToLookAt(goalDirection, Vector3.Y);
 				matrix.setTranslation(pathData.currentPosition);
 				body.setWorldTransform(matrix);

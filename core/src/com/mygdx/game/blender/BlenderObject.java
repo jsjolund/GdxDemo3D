@@ -36,6 +36,4 @@ public abstract class BlenderObject {
 	public static class BEmpty extends BlenderObject {
 
 	}
-
-
 }

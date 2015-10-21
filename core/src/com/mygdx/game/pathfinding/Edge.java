@@ -41,10 +41,10 @@ public class Edge implements Connection<Triangle> {
 	@Override
 	public String toString() {
 		final StringBuffer sb = new StringBuffer("Edge{");
-		sb.append("rightVertex=").append(rightVertex);
-		sb.append(", leftVertex=").append(leftVertex);
-		sb.append(", fromNode=").append(fromNode);
+		sb.append("fromNode=").append(fromNode);
 		sb.append(", toNode=").append(toNode);
+		sb.append(", rightVertex=").append(rightVertex);
+		sb.append(", leftVertex=").append(leftVertex);
 		sb.append('}');
 		return sb.toString();
 	}

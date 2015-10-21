@@ -1,27 +1,31 @@
 package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.IntArray;
 
 /**
  * Created by Johannes Sjolund on 10/20/15.
  */
 public class PathPoint {
 	/**
-	 * Point where the path crosses a navmesh edge
+	 * World coordinates of the path point
 	 */
-	public Vector3 edgeCrossingPoint;
+	public Vector3 point = new Vector3();
 	/**
-	 * Index of the navmesh triangle which the path enters past the crossing point
+	 * Index of the triangle which must be crossed to reach the next path point
 	 */
-	public int crossedTriIndex;
+	public int crossingTriangle = -1;
+	/**
+	 * Indices of any triangles which corners touch the path point
+	 */
+	public IntArray touchingTriangles = new IntArray();
 
-	@Override
-	public String toString() {
-		return String.format("%s %s",crossedTriIndex, edgeCrossingPoint);
+	public PathPoint(Vector3 point) {
+		this.point.set(point);
+	}
+	public PathPoint(Vector3 point , int crossingTriangle) {
+		this.point.set(point);
+		this.crossingTriangle = crossingTriangle;
 	}
 
-	public PathPoint(Vector3 edgeCrossingPoint, int crossedTriIndex) {
-		this.edgeCrossingPoint = edgeCrossingPoint;
-		this.crossedTriIndex = crossedTriIndex;
-	}
 }
