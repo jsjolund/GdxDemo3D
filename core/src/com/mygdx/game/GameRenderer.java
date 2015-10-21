@@ -233,11 +233,21 @@ public class GameRenderer implements Disposable, Observer {
 		if (selectedCharacter != null && selectedCharacter.pathData.trianglePath.getCount() > 0) {
 			// Path triangles
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			shapeRenderer.setColor(1, 1, 0, 0.2f);
+
 			for (int i = 0; i < selectedCharacter.pathData.trianglePath.getCount(); i++) {
 				Edge e = (Edge) selectedCharacter.pathData.trianglePath.get(i);
+				if (selectedCharacter.pathData.currentTriangleIndex == e.fromNode.getIndex()) {
+					shapeRenderer.setColor(1, 0, 0, 0.2f);
+				} else {
+					shapeRenderer.setColor(1, 1, 0, 0.2f);
+				}
 				shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
 				if (i == selectedCharacter.pathData.trianglePath.getCount() - 1) {
+					if (selectedCharacter.pathData.currentTriangleIndex == e.toNode.getIndex()) {
+						shapeRenderer.setColor(1, 0, 0, 0.2f);
+					} else {
+						shapeRenderer.setColor(1, 1, 0, 0.2f);
+					}
 					shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
 				}
 			}

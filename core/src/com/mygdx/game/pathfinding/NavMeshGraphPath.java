@@ -12,10 +12,13 @@ import com.badlogic.gdx.utils.Array;
  */
 public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 
-	public Vector3 up = Vector3.Y;
+	public static Vector3 up = Vector3.Y;
 	public Vector3 start;
 	public Vector3 end;
 	public Triangle startTriangle;
+
+	private final Plane crossingPlane = new Plane();
+	private final Vector3 tmp = new Vector3();
 
 	public Array<PathPoint> debugPathPoints = new Array<PathPoint>();
 
@@ -42,8 +45,6 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	 * @return
 	 */
 	public Array<PathPoint> calculatePathPoints() {
-		System.out.println("\n---");
-		System.out.println("start " + start);
 		Array<PathPoint> pathPoints = new Array<PathPoint>();
 		if (nodes.size == 0) {
 			pathPoints.add(new PathPoint(new Vector3(end), startTriangle.getIndex()));
@@ -111,19 +112,11 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			}
 		}
 		calculateEdgeCrossings(lastRestart, nodes.size - 1, funnel.pivot, end, pathPoints);
-
-		for (PathPoint p : pathPoints) {
-			System.out.println(p.crossingTriangle + " " + p.point + " " + p.touchingTriangles);
-		}
-
 		nodes.removeIndex(nodes.size - 1);
 		pathPoints.reverse();
 		debugPathPoints.addAll(pathPoints);
 		return debugPathPoints;
 	}
-
-	private final Plane crossingPlane = new Plane();
-	private final Vector3 tmp = new Vector3();
 
 	private void calculateEdgeCrossings(int startIndex, int endIndex,
 										Vector3 startPoint, Vector3 endPoint, Array<PathPoint> out) {
@@ -141,26 +134,33 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			edge = (Edge) nodes.get(i);
 			Vector3 xPoint = new Vector3();
 
-			if (edge.rightVertex.equals(startPoint)) {
+			if (edge.rightVertex.equals(startPoint) || edge.leftVertex.equals(startPoint)) {
 				previousLast.crossingTriangle = edge.toNode.triIndex;
+				if (!previousLast.connectingEdges.contains(edge, true)) {
+					previousLast.connectingEdges.add(edge);
+				}
 
-			} else if (edge.rightVertex.equals(endPoint)) {
-
-			} else if (edge.leftVertex.equals(startPoint)) {
-				previousLast.crossingTriangle = edge.toNode.triIndex;
-
-			} else if (edge.leftVertex.equals(endPoint)) {
+			} else if (edge.leftVertex.equals(endPoint) || edge.rightVertex.equals(endPoint)) {
+				if (!end.connectingEdges.contains(edge, true)) {
+					end.connectingEdges.add(edge);
+				}
 
 			} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, xPoint)
 					&& !Float.isNaN(xPoint.x) && !Float.isNaN(xPoint.y) && !Float.isNaN(xPoint.z)) {
-				out.get(out.size - 1).crossingTriangle = edge.fromNode.triIndex;
-				out.add(new PathPoint(xPoint, edge.toNode.triIndex));
-
-			} else if (crossingPlane.distance(edge.rightVertex) < crossingPlane.distance(edge.leftVertex)) {
-			} else {
+				if (i != startIndex || i == 0) {
+					out.get(out.size - 1).crossingTriangle = edge.fromNode.triIndex;
+					PathPoint crossing = new PathPoint(xPoint, edge.toNode.triIndex);
+					crossing.connectingEdges.add(edge);
+					out.add(crossing);
+				}
 			}
 		}
-		out.add(end);
+		if (endIndex < nodes.size - 1) {
+			end.connectingEdges.add((Edge) nodes.get(endIndex));
+		}
+		if (!out.get(out.size - 1).point.equals(end.point)) {
+			out.add(end);
+		}
 	}
 
 	private class Funnel {

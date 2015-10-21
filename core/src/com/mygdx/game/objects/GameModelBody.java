@@ -101,8 +101,10 @@ public class GameModelBody extends GameModel {
 	public class PathFindingData {
 		public Array<PathPoint> path = new Array<PathPoint>();
 		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
+		public int nextTriangleIndex = -1;
+		public int currentTriangleIndex = -1;
 
-		public PathPoint currentGoal = null;
+		public PathPoint currentGoal;
 		public Vector3 currentPosition = new Vector3();
 		public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
 
@@ -144,16 +146,17 @@ public class GameModelBody extends GameModel {
 		pathData.posGroundRay.origin.set(pathData.currentPosition);
 
 		if (pathData.currentGoal != null) {
-
 			float yVelocity = body.getLinearVelocity().y;
 			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
 					pathData.currentPosition.x, pathData.currentPosition.z);
 
-			if (xzDst < 0.1f) {
-				// set new goal if not empty
+			if (xzDst < 0.01f) {
 				pathData.currentGoal = null;
 				if (pathData.path.size > 0) {
 					pathData.currentGoal = pathData.path.pop();
+					pathData.currentTriangleIndex = pathData.nextTriangleIndex;
+					pathData.nextTriangleIndex = pathData.currentGoal.crossingTriangle;
+
 				} else {
 					body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
 					body.setAngularVelocity(Vector3.Zero);

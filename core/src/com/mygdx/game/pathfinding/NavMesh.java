@@ -76,7 +76,7 @@ public class NavMesh implements Disposable {
 		return hitTriangle;
 	}
 
-	public boolean getPath(Triangle fromTri, Ray toRay, Bits toMeshPartIndices,
+	public boolean getPath(int fromTriIndex, Ray toRay, Bits toMeshPartIndices,
 						   float distance, NavMeshGraphPath path) {
 		// TODO
 		return false;
