@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
-import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -20,6 +19,7 @@ import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.objects.GameModel;
 import com.mygdx.game.objects.GameModelBody;
 import com.mygdx.game.objects.InvisibleBody;
@@ -168,8 +168,8 @@ public class BlenderScene {
 				navMesh = new NavMesh(gameModel.modelInstance.model);
 				shape = navMesh.getShape();
 				staticGeneratedShapesMap.put("navmesh", shape);
-				belongsToFlag = GameModelBody.NAVMESH_FLAG;
-				collidesWithFlag = GameModelBody.NAVMESH_FLAG;
+				belongsToFlag = GameEngine.NAVMESH_FLAG;
+				collidesWithFlag = GameEngine.NAVMESH_FLAG;
 
 				InvisibleBody invisibleBody = new InvisibleBody(
 						shape, mass, gameModel.modelInstance.transform, belongsToFlag, collidesWithFlag, callback, noDeactivate);
@@ -184,10 +184,10 @@ public class BlenderScene {
 				// The model has a shape and mass predefined.
 				shape = blenderDefinedShapesMap.get(bModel.name);
 				mass = massMap.get(bModel.name);
-				belongsToFlag = GameModelBody.OBJECT_FLAG;
-				collidesWithFlag = (short) (GameModelBody.GROUND_FLAG
-						| GameModelBody.OBJECT_FLAG
-						| GameModelBody.PC_FLAG);
+				belongsToFlag = GameEngine.OBJECT_FLAG;
+				collidesWithFlag = (short) (GameEngine.GROUND_FLAG
+						| GameEngine.OBJECT_FLAG
+						| GameEngine.PC_FLAG);
 
 			} else {
 				// Check if we have already calculated a shape previously
@@ -199,8 +199,8 @@ public class BlenderScene {
 					shape = Bullet.obtainStaticNodeShape(gameModel.modelInstance.nodes);
 					staticGeneratedShapesMap.put(bModel.name, shape);
 				}
-				belongsToFlag = GameModelBody.GROUND_FLAG;
-				collidesWithFlag = (short) (GameModelBody.OBJECT_FLAG | GameModelBody.PC_FLAG);
+				belongsToFlag = GameEngine.GROUND_FLAG;
+				collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.PC_FLAG);
 			}
 
 			entity = new GameModelBody(model, bModel.name, bModel.position, bModel.rotation, bModel.scale,

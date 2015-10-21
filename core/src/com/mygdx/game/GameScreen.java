@@ -24,7 +24,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
-import com.mygdx.game.objects.GameModelBody;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
@@ -162,8 +161,8 @@ public class GameScreen implements Screen {
 
 	private Entity spawnCharacter(Vector3 initialPosition) {
 
-		short belongsToFlag = GameModelBody.PC_FLAG;
-		short collidesWithFlag = (short) (GameModelBody.OBJECT_FLAG | GameModelBody.GROUND_FLAG);
+		short belongsToFlag = GameEngine.PC_FLAG;
+		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
 
 		// Model
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();

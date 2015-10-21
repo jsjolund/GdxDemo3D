@@ -23,6 +23,13 @@ import java.util.Iterator;
 public class GameEngine extends PooledEngine implements Disposable {
 
 	public static final String tag = "PhysicsSystem";
+	// Collision flags
+	public final static short NONE_FLAG = 0;
+	public final static short NAVMESH_FLAG = 1 << 6;
+	public final static short PC_FLAG = 1 << 10;
+	public final static short GROUND_FLAG = 1 << 8;
+	public final static short OBJECT_FLAG = 1 << 9;
+	public final static short ALL_FLAG = -1;
 
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;

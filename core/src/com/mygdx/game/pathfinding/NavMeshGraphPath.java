@@ -12,12 +12,12 @@ import com.badlogic.gdx.utils.Array;
  */
 public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 
-	private final Vector3 up = Vector3.Y;
+	public Vector3 up = Vector3.Y;
 	public Vector3 start;
 	public Vector3 end;
 	public Triangle startTriangle;
 
-	public Array<PathPoint> pathPoints = new Array<PathPoint>();
+	public Array<PathPoint> debugPathPoints = new Array<PathPoint>();
 
 	public void setStartEnd(Vector3 start, Vector3 end) {
 		this.start = new Vector3(start);
@@ -29,50 +29,39 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	}
 
 	public void clear() {
-		pathPoints.clear();
+		debugPathPoints.clear();
 		nodes.clear();
 		start = null;
 		end = null;
 		startTriangle = null;
 	}
 
-	public class PathPoint {
-		// Point where the path crosses a navmesh edge
-		public Vector3 edgeCrossPoint;
-		// Index of the navmesh triangle which the path enters after crossing
-		public int crossedTriIndex;
-
-		public PathPoint(Vector3 edgeCrossPoint, int crossedTriIndex) {
-			this.edgeCrossPoint = edgeCrossPoint;
-			this.crossedTriIndex = crossedTriIndex;
-		}
-	}
-
-
 	/**
 	 * Calculate the shortest path through the path triangles, using the Simple Stupid Funnel Algorithm.
 	 *
 	 * @return
 	 */
-	public Array<PathPoint> getDirectPath() {
-		Array<PathPoint> rePathPoints = new Array<PathPoint>();
+	public Array<PathPoint> calculatePathPoints() {
+		System.out.println("\n---");
+		System.out.println("start " + start);
+		Array<PathPoint> pathPoints = new Array<PathPoint>();
 		if (nodes.size == 0) {
 			pathPoints.add(new PathPoint(new Vector3(end), startTriangle.getIndex()));
 			pathPoints.add(new PathPoint(new Vector3(start), startTriangle.getIndex()));
-			rePathPoints.addAll(pathPoints);
-			return rePathPoints;
+			debugPathPoints.addAll(pathPoints);
+			return debugPathPoints;
 		}
-		Edge edge = (Edge) nodes.get(0);
-
 		nodes.add(new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end));
+		Edge edge = (Edge) nodes.get(0);
+		pathPoints.add(new PathPoint(new Vector3(start), edge.fromNode.getIndex()));
+
 		Funnel funnel = new Funnel();
 		funnel.pivot.set(start);
 		funnel.setPlanes(funnel.pivot, edge);
+
 		int leftIndex = 0;
 		int rightIndex = 0;
 		int lastRestart = 0;
-
-		pathPoints.add(new PathPoint(new Vector3(start), edge.fromNode.getIndex()));
 
 		for (int i = 1; i < nodes.size; ++i) {
 			edge = (Edge) nodes.get(i);
@@ -89,17 +78,15 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 					rightIndex = i;
 				} else {
 					// Right over left, insert left to path and restart scan from portal left point.
-					storeEdgeCrossings(lastRestart, leftIndex, funnel.pivot, funnel.leftPortal);
+					calculateEdgeCrossings(lastRestart, leftIndex, funnel.pivot, funnel.leftPortal, pathPoints);
 					funnel.pivot.set(funnel.leftPortal);
-					rightIndex = leftIndex;
 					i = leftIndex;
-
+					rightIndex = i;
 					if (i < nodes.size - 1) {
 						lastRestart = i;
 						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
 						continue;
 					}
-
 					break;
 				}
 			}
@@ -110,11 +97,10 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 					leftIndex = i;
 				} else {
 					// Left over right, insert right to path and restart scan from portal right point.
-					storeEdgeCrossings(lastRestart, rightIndex, funnel.pivot, funnel.rightPortal);
+					calculateEdgeCrossings(lastRestart, rightIndex, funnel.pivot, funnel.rightPortal, pathPoints);
 					funnel.pivot.set(funnel.rightPortal);
-					leftIndex = rightIndex;
 					i = rightIndex;
-
+					leftIndex = i;
 					if (i < nodes.size - 1) {
 						lastRestart = i;
 						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
@@ -124,53 +110,83 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 				}
 			}
 		}
-
-		storeEdgeCrossings(lastRestart, nodes.size - 1, funnel.pivot, end);
+		calculateEdgeCrossings(lastRestart, nodes.size - 1, funnel.pivot, end, pathPoints);
 		pathPoints.add(new PathPoint(new Vector3(end), nodes.get(nodes.size - 1).getToNode().getIndex()));
 		nodes.removeIndex(nodes.size - 1);
-		pathPoints.reverse();
-		rePathPoints.addAll(pathPoints);
-		return rePathPoints;
 
+//		System.out.println();
+//		Vector3 current = pathPoints.get(0).edgeCrossingPoint;
+//		Array<String> indices = new Array<String>();
+//		boolean print = false;
+//		for (PathPoint p : pathPoints) {
+//
+//			if (!p.edgeCrossingPoint.equals(current)) {
+//				System.out.println(current + indices.toString());
+//				indices.clear();
+//				indices.add("" + p.crossedTriIndex);
+//				current = p.edgeCrossingPoint;
+//				print = false;
+//				continue;
+//			}
+//			print = true;
+//			indices.add("" + p.crossedTriIndex);
+//		}
+//		if (print)
+//			System.out.println(current + indices.toString());
+
+		pathPoints.reverse();
+		debugPathPoints.addAll(pathPoints);
+		return debugPathPoints;
 	}
 
-	public final Plane crossingPlane = new Plane();
+	private final Plane crossingPlane = new Plane();
 	private final Vector3 tmp = new Vector3();
 
-	private void storeEdgeCrossings(int startIndex, int endIndex, Vector3 startPoint, Vector3 endPoint) {
-		if (startPoint.equals(endPoint)) {
-			System.out.println("ahahahah");
+	private void calculateEdgeCrossings(int startIndex, int endIndex,
+										Vector3 startPoint, Vector3 endPoint, Array<PathPoint> out) {
+		System.out.println();
+		if (startPoint.equals(endPoint) || startIndex >= nodes.size || endIndex >= nodes.size) {
 			return;
 		}
+		// Start point and endpoint are always valid path points
 		crossingPlane.set(startPoint, tmp.set(startPoint).add(up), endPoint);
 
-		if (endIndex < nodes.size) {
-			for (int j = startIndex; j < endIndex; j++) {
-				Edge edge = (Edge) nodes.get(j);
-				Vector3 x = new Vector3();
-				if (edge.rightVertex.equals(startPoint) || edge.rightVertex.equals(endPoint)) {
-					x.set(edge.rightVertex);
-				} else if (edge.leftVertex.equals(startPoint) || edge.leftVertex.equals(endPoint)) {
-					x.set(edge.leftVertex);
-				} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, x)) {
-					// Calculated edge intersection
-				} else if (crossingPlane.distance(edge.rightVertex) < crossingPlane.distance(edge.leftVertex)) {
-					x.set(edge.rightVertex);
-				} else {
-					x.set(edge.leftVertex);
-				}
-				pathPoints.add(new PathPoint(x, edge.toNode.getIndex()));
-			}
+		Edge edge = (Edge) nodes.get(startIndex);
+		if (out.size > 0 && out.get(out.size - 1).crossedTriIndex == edge.toNode.triIndex) {
+			startIndex++;
 		}
+
+		for (int i = startIndex; i < endIndex; i++) {
+			edge = (Edge) nodes.get(i);
+			Vector3 x = new Vector3();
+			if (edge.rightVertex.equals(startPoint) || edge.rightVertex.equals(endPoint)) {
+				x.set(edge.rightVertex);
+			} else if (edge.leftVertex.equals(startPoint) || edge.leftVertex.equals(endPoint)) {
+				x.set(edge.leftVertex);
+			} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, x)) {
+				// Calculated edge intersection
+			} else if (crossingPlane.distance(edge.rightVertex) < crossingPlane.distance(edge.leftVertex)) {
+				x.set(edge.rightVertex);
+			} else {
+				x.set(edge.leftVertex);
+			}
+			out.add(new PathPoint(x, edge.toNode.getIndex()));
+			System.out.println(out.get(out.size - 1));
+
+		}
+		edge = (Edge) nodes.get(endIndex);
+		out.add(new PathPoint(new Vector3(endPoint), edge.toNode.getIndex()));
+		System.out.println(out.get(out.size - 1));
 	}
 
 	private class Funnel {
+
 		public final Plane leftPlane = new Plane();
 		public final Plane rightPlane = new Plane();
 		public final Vector3 leftPortal = new Vector3();
 		public final Vector3 rightPortal = new Vector3();
 		public final Vector3 pivot = new Vector3();
-		private Vector3 tmp = new Vector3();
+		private final Vector3 tmp = new Vector3();
 
 		public void setLeftPlane(Vector3 pivot, Vector3 leftEdgeVertex) {
 			leftPlane.set(pivot, tmp.set(pivot).add(up), leftEdgeVertex);

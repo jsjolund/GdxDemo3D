@@ -45,6 +45,7 @@ public class GameStage extends Stage implements Observable {
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas movementButtonsAtlas;
+	private final Label mouseCoordsLabel;
 
 	private final ArrayMap<ImageButton, GameCharacter.CharacterState> movementButtons;
 
@@ -89,13 +90,24 @@ public class GameStage extends Stage implements Observable {
 		movementButtonsAtlas = new TextureAtlas(Gdx.files.internal("skins/movement_buttons.atlas"));
 		movementButtons = new ArrayMap<ImageButton, GameCharacter.CharacterState>();
 
+		mouseCoordsLabel = new Label(null, skin);
+
 		rootTable = new Table();
 		rootTable.setDebug(true, true);
 
-		rootTable.add(createShaderMenu()).bottom();
-		rootTable.add(createDebugViewMenu()).bottom();
-		rootTable.add(new Table()).expandX().fillX();
-		rootTable.add(createMovementButtons()).bottom();
+		Table topTable = new Table();
+		topTable.add(mouseCoordsLabel).top().left();
+		topTable.add(new Table()).expandX().fillX();
+		rootTable.add(topTable);
+		rootTable.row();
+		rootTable.add(new Table()).expandY().fillY();
+		rootTable.row();
+		Table bottomTable = new Table();
+		bottomTable.add(createShaderMenu()).bottom();
+		bottomTable.add(createDebugViewMenu()).bottom();
+		bottomTable.add(new Table()).expandX().fillX().bottom();
+		bottomTable.add(createMovementButtons()).bottom();
+		rootTable.add(bottomTable).expandX().fillX();
 		rootTable.left().bottom();
 
 		addActor(rootTable);
@@ -368,6 +380,7 @@ public class GameStage extends Stage implements Observable {
 		private final Ray lastDragProcessedRay = new Ray();
 		private final Ray touchDownRay = new Ray();
 		private final Ray touchUpRay = new Ray();
+		private final Ray movedRay = new Ray();
 
 		private final Vector2 lastDragProcessed = new Vector2();
 		private final Vector2 cursorDelta = new Vector2();
@@ -440,8 +453,8 @@ public class GameStage extends Stage implements Observable {
 				touchUpRay.set(viewport.getPickRay(screenX, screenY));
 
 				Entity hitEntity = engine.rayTest(touchUpRay, tmp,
-						GameModelBody.PC_FLAG,
-						GameModelBody.ALL_FLAG,
+						GameEngine.PC_FLAG,
+						GameEngine.ALL_FLAG,
 						GameSettings.CAMERA_PICK_RAY_DST);
 
 				if (hitEntity instanceof GameCharacter) {
@@ -453,7 +466,7 @@ public class GameStage extends Stage implements Observable {
 					GameModelBody.PathFindingData pathData = selectedCharacter.pathData;
 					if (engine.navmesh.getPath(pathData.posGroundRay, touchUpRay, visibleLayers,
 							GameSettings.CAMERA_PICK_RAY_DST, pathData.trianglePath)) {
-						pathData.setPath(pathData.trianglePath.getSmoothPath());
+						pathData.setPath(pathData.trianglePath.calculatePathPoints());
 					}
 
 				}
@@ -485,6 +498,14 @@ public class GameStage extends Stage implements Observable {
 
 		@Override
 		public boolean mouseMoved(int screenX, int screenY) {
+			movedRay.set(viewport.getPickRay(screenX, screenY));
+			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG, GameEngine.NAVMESH_FLAG, 100);
+			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
+				mouseCoordsLabel.setText("");
+			} else {
+				mouseCoordsLabel.setText(tmp.toString());
+			}
 			return false;
 		}
 

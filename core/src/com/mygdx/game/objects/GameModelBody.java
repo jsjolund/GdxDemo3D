@@ -13,18 +13,12 @@ import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
+import com.mygdx.game.pathfinding.PathPoint;
 
 /**
  * Created by Johannes Sjolund on 10/18/15.
  */
 public class GameModelBody extends GameModel {
-	// Collision flags
-	public final static short NONE_FLAG = 0;
-	public final static short NAVMESH_FLAG = 1 << 6;
-	public final static short PC_FLAG = 1 << 10;
-	public final static short GROUND_FLAG = 1 << 8;
-	public final static short OBJECT_FLAG = 1 << 9;
-	public final static short ALL_FLAG = -1;
 
 	private final static Vector3 localInertia = new Vector3();
 	public final btRigidBody body;
@@ -104,23 +98,47 @@ public class GameModelBody extends GameModel {
 		constraints.clear();
 	}
 
+	public class PathFindingData {
+		public Array<PathPoint> path = new Array<PathPoint>();
+		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
+
+		public PathPoint currentGoal = null;
+		public Vector3 currentPosition = new Vector3();
+		public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
+
+		public float moveSpeed = 1;
+		public boolean goalReached = true;
+
+		public PathFindingData(Vector3 initialPosition) {
+			currentPosition.set(initialPosition);
+			posGroundRay.origin.set(initialPosition);
+		}
+
+		public void setPath(Array<PathPoint> newPath) {
+			goalReached = false;
+			path.clear();
+			path.addAll(newPath);
+			currentGoal = path.pop();
+		}
+
+		public void clearPath() {
+			goalReached = true;
+			path.clear();
+			trianglePath.clear();
+			currentGoal = null;
+		}
+	}
+
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
-
-		if (pathData == null) {
+		if (pathData == null || pathData.goalReached) {
 			return;
 		}
-
-		if (pathData.goalReached) {
-			return;
-		}
-
 		if (pathData.currentGoal == null && pathData.path.size == 0) {
 			pathData.goalReached = true;
 			return;
 		}
-
 		body.getWorldTransform(matrix);
 		matrix.getTranslation(pathData.currentPosition);
 		pathData.posGroundRay.origin.set(pathData.currentPosition);
@@ -128,8 +146,7 @@ public class GameModelBody extends GameModel {
 		if (pathData.currentGoal != null) {
 
 			float yVelocity = body.getLinearVelocity().y;
-
-			float xzDst = Vector2.dst2(pathData.currentGoal.x, pathData.currentGoal.z,
+			float xzDst = Vector2.dst2(pathData.currentGoal.edgeCrossingPoint.x, pathData.currentGoal.edgeCrossingPoint.z,
 					pathData.currentPosition.x, pathData.currentPosition.z);
 
 			if (xzDst < 0.1f) {
@@ -141,10 +158,9 @@ public class GameModelBody extends GameModel {
 					body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
 					body.setAngularVelocity(Vector3.Zero);
 				}
-
 			} else {
 				matrix.idt();
-				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal).scl(-1, 0, 1).nor();
+				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.edgeCrossingPoint).scl(-1, 0, 1).nor();
 				matrix.setToLookAt(goalDirection, Vector3.Y);
 				matrix.setTranslation(pathData.currentPosition);
 				body.setWorldTransform(matrix);
@@ -177,34 +193,5 @@ public class GameModelBody extends GameModel {
 		}
 	}
 
-	public class PathFindingData {
-		public Array<Vector3> path = new Array<Vector3>();
-		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
 
-		public Vector3 currentGoal = null;
-		public Vector3 currentPosition = new Vector3();
-		public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
-
-		public float moveSpeed = 1;
-		public boolean goalReached = true;
-
-		public PathFindingData(Vector3 initialPosition) {
-			currentPosition.set(initialPosition);
-			posGroundRay.origin.set(initialPosition);
-		}
-
-		public void setPath(Array<Vector3> newPath) {
-			goalReached = false;
-			path.clear();
-			path.addAll(newPath);
-			currentGoal = path.pop();
-		}
-
-		public void clearPath() {
-			goalReached = true;
-			path.clear();
-			trianglePath.clear();
-			currentGoal = null;
-		}
-	}
 }
