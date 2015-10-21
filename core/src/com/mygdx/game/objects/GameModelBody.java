@@ -121,6 +121,7 @@ public class GameModelBody extends GameModel {
 			path.clear();
 			path.addAll(newPath);
 			currentGoal = path.pop();
+			currentTriangleIndex = currentGoal.crossingTriangle;
 		}
 
 		public void clearPath() {

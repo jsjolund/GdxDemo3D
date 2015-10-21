@@ -202,7 +202,7 @@ public class GameRenderer implements Disposable, Observer {
 			Vector3 q;
 			Vector3 p = pathPoints.get(pathPoints.size - 1).point;
 			float r = 0.02f;
-			float s = r/2;
+			float s = r / 2;
 			shapeRenderer.setColor(Color.WHITE);
 			for (int i = pathPoints.size - 1; i >= 0; i--) {
 				q = pathPoints.get(i).point;
@@ -210,7 +210,7 @@ public class GameRenderer implements Disposable, Observer {
 				shapeRenderer.line(p, q);
 				p = q;
 				shapeRenderer.setColor(Color.WHITE);
-				shapeRenderer.box(p.x-s, p.y-s, p.z+s, r, r, r);
+				shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
 			}
 			shapeRenderer.end();
 		}
