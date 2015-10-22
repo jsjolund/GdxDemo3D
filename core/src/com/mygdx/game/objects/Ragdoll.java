@@ -35,7 +35,8 @@ public class Ragdoll extends GameModelBody {
 	public final Array<Node> nodes = new Array<Node>();
 	public final Matrix4 baseBodyTransform = new Matrix4();
 	public final Matrix4 resetRotationTransform = new Matrix4();
-	public final Matrix4 tmp = new Matrix4();
+	public final Matrix4 tmpMatrix = new Matrix4();
+	public final Vector3 tmpVec = new Vector3();
 	public final Vector3 nodeTrans = new Vector3();
 	public final Vector3 baseTrans = new Vector3();
 	public boolean ragdollControl = false;
@@ -89,13 +90,13 @@ public class Ragdoll extends GameModelBody {
 			NodeConnection connection = bodyEntry.value;
 
 			// Loop over each node connected to this collision shape
-			for (Iterator<ObjectMap.Entry<Node, Matrix4>> iterator2
+			for (Iterator<ObjectMap.Entry<Node, Vector3>> iterator2
 				 = connection.bodyNodeOffsets.iterator(); iterator2.hasNext(); ) {
-				ObjectMap.Entry<Node, Matrix4> nodeEntry = iterator2.next();
+				ObjectMap.Entry<Node, Vector3> nodeEntry = iterator2.next();
 				// A node which is to follow this collision shape
 				Node node = nodeEntry.key;
 				// The offset of this node from the untranslated collision shape origin
-				Matrix4 offsetMatrix = nodeEntry.value;
+				Vector3 offset = nodeEntry.value;
 				// Set the node to the transform of the collision shape it follows
 				partBody.getWorldTransform(node.localTransform);
 				// Calculate difference in translation between the node/ragdoll part and the
@@ -104,8 +105,7 @@ public class Ragdoll extends GameModelBody {
 				baseBodyTransform.getTranslation(baseTrans);
 				nodeTrans.sub(baseTrans);
 				// Calculate the final node transform
-				node.localTransform.setTranslation(nodeTrans)
-						.mul(tmp.set(offsetMatrix).inv());
+				node.localTransform.setTranslation(nodeTrans).translate(tmpVec.set(offset).scl(-1));
 			}
 		}
 		// Calculate the final transform of the model.
@@ -122,10 +122,10 @@ public class Ragdoll extends GameModelBody {
 			NodeConnection data = entry.value;
 			btRigidBody body = entry.key;
 			Node followNode = data.followNode;
-			Matrix4 offsetMatrix = data.bodyNodeOffsets.get(followNode);
+			Vector3 offset = data.bodyNodeOffsets.get(followNode);
 
-			body.proceedToTransform(tmp.set(baseBodyTransform)
-					.mul(followNode.globalTransform).mul(offsetMatrix));
+			body.proceedToTransform(tmpMatrix.set(baseBodyTransform)
+					.mul(followNode.globalTransform).translate(offset));
 		}
 	}
 
@@ -181,12 +181,19 @@ public class Ragdoll extends GameModelBody {
 		}
 	}
 
-	private void addPart(btRigidBody bodyPart, Node node, Matrix4 nodeBodyOffset) {
+	public class NodeConnection {
+		// Stores the offset from the center of a rigid body to the node which connects to it
+		public ArrayMap<Node, Vector3> bodyNodeOffsets = new ArrayMap<Node, Vector3>();
+		// The node this bone should follow in animation mode
+		public Node followNode = null;
+	}
+
+	private void addPart(btRigidBody bodyPart, Node node, Vector3 nodeBodyOffset) {
 		if (!map.containsKey(bodyPart)) {
 			map.put(bodyPart, new NodeConnection());
 		}
 		NodeConnection conn = map.get(bodyPart);
-		conn.bodyNodeOffsets.put(node, new Matrix4(nodeBodyOffset));
+		conn.bodyNodeOffsets.put(node, nodeBodyOffset);
 
 		if (!nodes.contains(node, true)) {
 			nodes.add(node);
@@ -198,14 +205,11 @@ public class Ragdoll extends GameModelBody {
 			map.put(bodyPart, new NodeConnection());
 		}
 		NodeConnection conn = map.get(bodyPart);
-		Matrix4 nodeBodyOffset = new Matrix4();
-
 		conn.followNode = node;
 		// Set the follow offset to the middle of the armature bone
 		Vector3 offsetTranslation = new Vector3();
 		node.getChild(0).localTransform.getTranslation(offsetTranslation).scl(0.5f);
-		nodeBodyOffset.translate(offsetTranslation);
-		conn.bodyNodeOffsets.put(node, nodeBodyOffset);
+		conn.bodyNodeOffsets.put(node, offsetTranslation);
 
 		if (!nodes.contains(node, true)) {
 			nodes.add(node);
@@ -258,7 +262,7 @@ public class Ragdoll extends GameModelBody {
 			this.addFollowPart(phyCmp.body, armature.getChild(partName, true, true));
 		}
 		// Abdomen is the at the top of the armature hierarchy
-		this.addPart(bodyMap.get("abdomen"), armature, new Matrix4().trn(0, halfExtMap.get("abdomen").y * 1.6f, 0));
+		this.addPart(bodyMap.get("abdomen"), armature, new Vector3(0, halfExtMap.get("abdomen").y * 1.6f, 0));
 
 		final Matrix4 localA = new Matrix4();
 		final Matrix4 localB = new Matrix4();
@@ -356,11 +360,5 @@ public class Ragdoll extends GameModelBody {
 
 	}
 
-	public class NodeConnection {
-		// Stores the offset from the center of a rigid body to the node which connects to it
-		public ArrayMap<Node, Matrix4> bodyNodeOffsets = new ArrayMap<Node, Matrix4>();
-		// The node this bone should follow in animation mode
-		public Node followNode = null;
-	}
 
 }
