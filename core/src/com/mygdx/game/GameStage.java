@@ -452,23 +452,28 @@ public class GameStage extends Stage implements Observable {
 			if (!isDragging) {
 				touchUpRay.set(viewport.getPickRay(screenX, screenY));
 
-				Entity hitEntity = engine.rayTest(touchUpRay, tmp,
-						GameEngine.PC_FLAG,
+				Entity hitEntity = engine.rayTest(
+						touchUpRay, tmp,
 						GameEngine.ALL_FLAG,
-						GameSettings.CAMERA_PICK_RAY_DST);
+						GameEngine.ALL_FLAG,
+						GameSettings.CAMERA_PICK_RAY_DST, visibleLayers);
+
+				Gdx.app.debug(tag, "Hit entity " + hitEntity);
 
 				if (hitEntity instanceof GameCharacter) {
 					selectedCharacter = (GameCharacter) hitEntity;
 					setMovementButtons(selectedCharacter.moveState);
 					notifyObserversEntitySelected(selectedCharacter);
 
-				} else if (selectedCharacter != null) {
+				} else if (selectedCharacter != null && hitEntity != null
+						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
+					// TODO: the hit triangle is already stored in the callback
 					GameModelBody.PathFindingData pathData = selectedCharacter.pathData;
+
 					if (engine.navmesh.getPath(pathData.posGroundRay, touchUpRay, visibleLayers,
 							GameSettings.CAMERA_PICK_RAY_DST, pathData.trianglePath)) {
 						pathData.setPath(pathData.trianglePath.calculatePathPoints());
 					}
-
 				}
 			}
 			isDragging = false;
@@ -498,14 +503,14 @@ public class GameStage extends Stage implements Observable {
 
 		@Override
 		public boolean mouseMoved(int screenX, int screenY) {
-			movedRay.set(viewport.getPickRay(screenX, screenY));
-			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG, GameEngine.NAVMESH_FLAG, 100);
-			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
-				mouseCoordsLabel.setText("");
-			} else {
-				mouseCoordsLabel.setText(tmp.toString());
-			}
+//			movedRay.set(viewport.getPickRay(screenX, screenY));
+//			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+//			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG, GameEngine.NAVMESH_FLAG, 100);
+//			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
+//				mouseCoordsLabel.setText("");
+//			} else {
+//				mouseCoordsLabel.setText(tmp.toString());
+//			}
 			return false;
 		}
 

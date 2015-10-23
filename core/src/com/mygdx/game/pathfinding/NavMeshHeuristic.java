@@ -20,7 +20,6 @@ public class NavMeshHeuristic implements Heuristic<Triangle> {
 					minDst = dst;
 				}
 			}
-
 		}
 		return minDst;
 	}

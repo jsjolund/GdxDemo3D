@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
@@ -58,7 +59,7 @@ public class NavMesh implements Disposable {
 		raycastCallback.dispose();
 	}
 
-	public Triangle rayTest(Ray ray, float distance, Bits meshPartIndices) {
+	public Triangle rayTest(Ray ray, float distance, Bits allowedMeshParts) {
 		Triangle hitTriangle = null;
 
 		rayFrom.set(ray.origin);
@@ -67,7 +68,7 @@ public class NavMesh implements Disposable {
 		raycastCallback.clearReport();
 		raycastCallback.setFrom(rayFrom);
 		raycastCallback.setTo(rayTo);
-		raycastCallback.setMeshPartIndices(meshPartIndices);
+		raycastCallback.setAllowedMeshPartIndices(allowedMeshParts);
 		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
 
 		if (raycastCallback.triangleIndex != -1) {
@@ -83,10 +84,10 @@ public class NavMesh implements Disposable {
 	}
 
 
-	public boolean getPath(Ray fromRay, Ray toRay, Bits toMeshPartIndices,
+	public boolean getPath(Ray fromRay, Ray toRay, Bits allowedMeshParts,
 						   float distance, NavMeshGraphPath path) {
 
-		Triangle toTri = rayTest(toRay, distance, toMeshPartIndices);
+		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
 		if (toTri == null) {
 			Gdx.app.debug(tag, "To triangle not found.");
 			return false;

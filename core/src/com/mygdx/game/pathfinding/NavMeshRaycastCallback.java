@@ -1,5 +1,6 @@
 package com.mygdx.game.pathfinding;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btTriangleRaycastCallback;
 import com.badlogic.gdx.physics.bullet.linearmath.btVector3;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.utils.Bits;
  */
 public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 
+	public static final String tag = "NavMeshRaycastCallback";
 	public Vector3 hitNormalLocal = new Vector3();
 	public float hitFraction;
 	public int partId;
@@ -33,7 +35,7 @@ public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 
 	@Override
 	public float reportHit(Vector3 hitNormalLocal, float hitFraction, int partId, int triangleIndex) {
-		if ((meshPartIndices == null || meshPartIndices.get(partId)) && hitFraction < 1) {
+		if ((meshPartIndices == null || meshPartIndices.get(partId)) && hitFraction < this.hitFraction) {
 			this.hitNormalLocal.set(hitNormalLocal);
 			this.hitFraction = hitFraction;
 			this.partId = partId;
@@ -60,7 +62,7 @@ public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 		super.dispose();
 	}
 
-	public void setMeshPartIndices(Bits meshPartIndices) {
+	public void setAllowedMeshPartIndices(Bits meshPartIndices) {
 		this.meshPartIndices = meshPartIndices;
 	}
 }

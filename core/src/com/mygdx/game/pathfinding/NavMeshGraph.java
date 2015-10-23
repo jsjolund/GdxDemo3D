@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -42,6 +43,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * of the centroid of the triangle when "looking" at the edge.
 	 *
 	 * @param model
+	 * @param transform
 	 */
 	public NavMeshGraph(Model model) {
 		short[] indices = getUniquePositionVertexIndices(model.meshes.first());
@@ -289,7 +291,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		return map.getValueAt(fromNode.triIndex);
 	}
 
-	public Triangle getTriangleFromGraph(int graphTriIndex) {
+	public Triangle getTriangleFromGraphIndex(int graphTriIndex) {
 		return map.getKeyAt(graphTriIndex);
 	}
 

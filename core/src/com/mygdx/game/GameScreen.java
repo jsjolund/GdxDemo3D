@@ -73,7 +73,11 @@ public class GameScreen implements Screen {
 				"models/json/scene0_camera.json"
 		);
 		scenes.add(blenderScene);
+
 		engine.navmesh = blenderScene.navMesh;
+		engine.navmeshEntity = blenderScene.navmeshEntity;
+		engine.addEntity(blenderScene.navmeshEntity);
+
 		blenderScene.setToSceneCamera(camera);
 
 		renderSys = new GameRenderer(viewport, camera, engine);

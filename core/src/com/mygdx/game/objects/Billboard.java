@@ -39,12 +39,10 @@ public class Billboard extends GameModel {
 		super.update(deltaTime);
 		followTransform.getTranslation(worldPos);
 		modelInstance.transform.set(camera.view).inv();
-		modelInstance.transform.setTranslation(Vector3.Zero);
 		if (faceUp) {
 			camera.view.getRotation(quat);
 			modelInstance.transform.setFromEulerAngles(-quat.getYaw(), -90, 0);
 		}
 		modelInstance.transform.setTranslation(worldPos.add(offset));
-		modelInstance.calculateTransforms();
 	}
 }

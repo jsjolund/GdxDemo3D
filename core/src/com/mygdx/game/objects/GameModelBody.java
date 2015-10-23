@@ -28,7 +28,7 @@ public class GameModelBody extends GameModel {
 	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
 	public final PhysicsMotionState motionState;
 	protected final float mass;
-	private final Matrix4 matrix = new Matrix4();
+	private Matrix4 matrix = new Matrix4();
 	private final Vector3 goalDirection = new Vector3();
 	private final Vector3 newVelocity = new Vector3();
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
@@ -165,8 +165,7 @@ public class GameModelBody extends GameModel {
 			} else {
 				matrix.idt();
 				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
-				matrix.setToLookAt(goalDirection, Vector3.Y);
-				matrix.setTranslation(pathData.currentPosition);
+				matrix.setToLookAt(goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
 				body.setWorldTransform(matrix);
 
 				newVelocity.set(goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);

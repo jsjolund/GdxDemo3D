@@ -47,10 +47,10 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	public Array<PathPoint> calculatePathPoints() {
 		Array<PathPoint> pathPoints = new Array<PathPoint>();
 		if (nodes.size == 0) {
-			pathPoints.add(new PathPoint(new Vector3(end), startTriangle.getIndex()));
-			pathPoints.add(new PathPoint(new Vector3(start), startTriangle.getIndex()));
+			pathPoints.add(new PathPoint(end, startTriangle.getIndex()));
+			pathPoints.add(new PathPoint(start, startTriangle.getIndex()));
 			debugPathPoints.addAll(pathPoints);
-			return debugPathPoints;
+			return pathPoints;
 		}
 		nodes.add(new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end));
 		Edge edge = (Edge) nodes.get(0);
@@ -115,7 +115,7 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 		nodes.removeIndex(nodes.size - 1);
 		pathPoints.reverse();
 		debugPathPoints.addAll(pathPoints);
-		return debugPathPoints;
+		return pathPoints;
 	}
 
 	private void calculateEdgeCrossings(int startIndex, int endIndex,

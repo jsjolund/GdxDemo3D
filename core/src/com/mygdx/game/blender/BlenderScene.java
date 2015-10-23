@@ -1,5 +1,6 @@
 package com.mygdx.game.blender;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
@@ -42,6 +43,7 @@ public class BlenderScene {
 	public Array<InvisibleBody> ghosts = new Array<InvisibleBody>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
+	public Entity navmeshEntity;
 
 	public BoundingBox worldBounds = new BoundingBox();
 	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
@@ -171,10 +173,9 @@ public class BlenderScene {
 				belongsToFlag = GameEngine.NAVMESH_FLAG;
 				collidesWithFlag = GameEngine.NAVMESH_FLAG;
 
-				InvisibleBody invisibleBody = new InvisibleBody(
+				navmeshEntity = new InvisibleBody(
 						shape, mass, gameModel.modelInstance.transform, belongsToFlag, collidesWithFlag, callback, noDeactivate);
 				worldBounds.set(gameModel.bounds);
-				ghosts.add(invisibleBody);
 				// Finished with the navmesh
 				continue;
 			}
