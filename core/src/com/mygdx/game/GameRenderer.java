@@ -102,6 +102,8 @@ public class GameRenderer implements Disposable, Observer {
 	public void notifyEntitySelected(GameCharacter entity) {
 		selectedCharacter = entity;
 		markerBillboard.setFollowTransform(entity.modelInstance.transform);
+		markerBillboard.layers.clear();
+		markerBillboard.layers.or(entity.layers);
 	}
 
 	@Override
@@ -166,7 +168,9 @@ public class GameRenderer implements Disposable, Observer {
 					modelBatch.render(mdl.modelInstance, environment);
 				}
 			}
-			modelBatch.render(markerBillboard.modelInstance, environment);
+			if (isVisible(camera, markerBillboard)) {
+				modelBatch.render(markerBillboard.modelInstance, environment);
+			}
 			modelBatch.end();
 		}
 		if (DebugViewSettings.drawArmature) {

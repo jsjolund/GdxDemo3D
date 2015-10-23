@@ -31,9 +31,6 @@ public class GameSettings {
 	public static final float SHADOW_FAR = 100;
 	public static final float SHADOW_INTENSITY = 1f;
 
-	public static final float CHAR_CAPSULE_XZ_HALFEXT = 0.4f;
-	public static final float CHAR_CAPSULE_Y_HALFEXT = 1.1f;
-
 	public static float GAME_SPEED = 1;
 
 	public static float MOUSE_SENSITIVITY = 0.1f;

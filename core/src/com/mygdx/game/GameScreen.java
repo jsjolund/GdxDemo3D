@@ -98,7 +98,8 @@ public class GameScreen implements Screen {
 		stage = new GameStage(engine, viewport, cameraController);
 		stage.addObserver(renderSys);
 
-		engine.addEntity(spawnCharacter(new Vector3(5, 1, 0)));
+		GameCharacter character = spawnCharacter(new Vector3(5, 1, 0));
+		engine.addEntity(character);
 		engine.addEntity(spawnCharacter(new Vector3(0, 1, 5)));
 		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
 		engine.addEntity(spawnCharacter(new Vector3(-12, 4, 10)));
@@ -114,7 +115,7 @@ public class GameScreen implements Screen {
 		// TODO: dispose or use an asset manager model
 		Model billboardModel = ModelFactory.buildBillboardModel(billboardPixmap, 1, 1);
 		Billboard markerBillboard = new Billboard(billboardModel, "marker", camera, true, new Matrix4(),
-				new Vector3(0, -GameSettings.CHAR_CAPSULE_Y_HALFEXT * 0.8f, 0));
+				new Vector3(0, -character.bounds.getHeight() / 2 * 0.95f, 0));
 		renderSys.setSelectionMarker(markerBillboard);
 		engine.addEntity(markerBillboard);
 	}
@@ -163,7 +164,7 @@ public class GameScreen implements Screen {
 		camera.update(delta, GameSettings.CAMERA_LERP_ALPHA);
 	}
 
-	private Entity spawnCharacter(Vector3 initialPosition) {
+	private GameCharacter spawnCharacter(Vector3 initialPosition) {
 
 		short belongsToFlag = GameEngine.PC_FLAG;
 		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
@@ -176,28 +177,21 @@ public class GameScreen implements Screen {
 		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/character_male_base.g3db");
-
-		btCollisionShape shape = new btCapsuleShape(
-				GameSettings.CHAR_CAPSULE_XZ_HALFEXT,
-				GameSettings.CHAR_CAPSULE_Y_HALFEXT);
+		btCollisionShape shape = new btCapsuleShape(0.4f, 1.1f);
 		float mass = 100;
 		boolean callback = false;
 		boolean noDeactivate = true;
-
 		String ragdollJson = "models/json/character_empty.json";
 		String armatureNodeId = "armature";
 
-		GameCharacter character = new GameCharacter(model, "character", initialPosition, new Vector3(0, 0, 0),
-				new Vector3(1, 1, 1), shape, mass, belongsToFlag, collidesWithFlag, callback, noDeactivate, ragdollJson, armatureNodeId);
+		GameCharacter character = new GameCharacter(
+				model, "character",
+				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
+				shape, mass, belongsToFlag, collidesWithFlag,
+				callback, noDeactivate, ragdollJson, armatureNodeId);
 		character.ignoreCulling = true;
 		character.body.setAngularFactor(Vector3.Y);
-		character.body.setRestitution(0);
-
-		for (int i = 0; i < 10; i++) {
-			character.layers.set(i);
-		}
-		character.pathData.currentTriangle = engine.navmesh.rayTest(character.pathData.posGroundRay, 100, character.layers);
-		character.layers.clear();
+		character.pathData.currentTriangle = engine.navmesh.rayTest(character.pathData.posGroundRay, 100, null);
 		character.layers.set(character.pathData.currentTriangle.meshPartIndex);
 		return character;
 	}
