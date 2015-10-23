@@ -467,11 +467,10 @@ public class GameStage extends Stage implements Observable {
 
 				} else if (selectedCharacter != null && hitEntity != null
 						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
-					// TODO: the hit triangle is already stored in the callback
 					GameModelBody.PathFindingData pathData = selectedCharacter.pathData;
-
-					if (engine.navmesh.getPath(pathData.posGroundRay, touchUpRay, visibleLayers,
-							GameSettings.CAMERA_PICK_RAY_DST, pathData.trianglePath)) {
+					if (engine.navmesh.getPath(pathData.currentTriangle, pathData.currentPosition,
+							touchUpRay, visibleLayers, GameSettings.CAMERA_PICK_RAY_DST,
+							pathData.trianglePath)) {
 						pathData.setPath(pathData.trianglePath.calculatePathPoints());
 					}
 				}

@@ -30,8 +30,7 @@ public class GameModelBody extends GameModel {
 	public final PhysicsMotionState motionState;
 	protected final float mass;
 	private Matrix4 matrix = new Matrix4();
-	private final Vector3 goalDirection = new Vector3();
-	private final Vector3 newVelocity = new Vector3();
+
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 	public PathFindingData pathData;
 
@@ -102,15 +101,17 @@ public class GameModelBody extends GameModel {
 	public class PathFindingData {
 		public Array<PathPoint> path = new Array<PathPoint>();
 		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
-//		public int nextTriangleIndex = -1;
-//		public int currentTriangleIndex = -1;
 
 		public Triangle currentTriangle;
 		public Triangle nextTriangle;
 
 		public PathPoint currentGoal;
 		public Vector3 currentPosition = new Vector3();
+		public Vector3 currentGroundPosition = new Vector3();
 		public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
+
+		private final Vector3 goalDirection = new Vector3();
+		private final Vector3 newVelocity = new Vector3();
 
 		public float moveSpeed = 1;
 		public boolean goalReached = true;
@@ -135,6 +136,7 @@ public class GameModelBody extends GameModel {
 			trianglePath.clear();
 			currentGoal = null;
 		}
+
 	}
 
 	@Override
@@ -143,14 +145,17 @@ public class GameModelBody extends GameModel {
 		if (pathData == null || pathData.goalReached) {
 			return;
 		}
+		body.getWorldTransform().getTranslation(pathData.currentPosition);
+		pathData.currentGroundPosition.set(pathData.currentPosition);
+		pathData.currentGroundPosition.y -= bounds.getHeight() / 2;
+		pathData.posGroundRay.origin.set(pathData.currentPosition);
+		if (pathData.goalReached) {
+			return;
+		}
 		if (pathData.currentGoal == null && pathData.path.size == 0) {
 			pathData.goalReached = true;
 			return;
 		}
-		body.getWorldTransform(matrix);
-		matrix.getTranslation(pathData.currentPosition);
-		pathData.posGroundRay.origin.set(pathData.currentPosition);
-
 		if (pathData.currentGoal != null) {
 			float yVelocity = body.getLinearVelocity().y;
 			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
@@ -166,19 +171,19 @@ public class GameModelBody extends GameModel {
 					layers.set(pathData.currentTriangle.meshPartIndex);
 
 				} else {
-					body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
+					body.setLinearVelocity(pathData.newVelocity.set(0, yVelocity, 0));
 					body.setAngularVelocity(Vector3.Zero);
 				}
 			} else {
-				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
-				matrix.setToLookAt(goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
+				pathData.goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
+				matrix.setToLookAt(pathData.goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
 				body.setWorldTransform(matrix);
 
-				newVelocity.set(goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);
+				pathData.newVelocity.set(pathData.goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);
 				pathData.goalReached = false;
 
-				newVelocity.y = yVelocity;
-				body.setLinearVelocity(newVelocity);
+				pathData.newVelocity.y = yVelocity;
+				body.setLinearVelocity(pathData.newVelocity);
 			}
 		}
 

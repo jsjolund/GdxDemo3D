@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
@@ -77,10 +76,25 @@ public class NavMesh implements Disposable {
 		return hitTriangle;
 	}
 
-	public boolean getPath(int fromTriIndex, Ray toRay, Bits toMeshPartIndices,
+	public boolean getPath(Triangle fromTriangle, Vector3 fromPoint, Ray toRay, Bits allowedMeshParts,
 						   float distance, NavMeshGraphPath path) {
-		// TODO
-		return false;
+		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
+		if (toTri == null) {
+			Gdx.app.debug(tag, "To triangle not found.");
+			return false;
+		}
+		Vector3 toPoint = new Vector3();
+		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
+
+		path.clear();
+		path.setStartEnd(fromPoint, toPoint);
+
+		if (!calculatePath(fromTriangle, toTri, path)) {
+			Gdx.app.debug(tag, "Path not found.");
+			return false;
+		}
+
+		return true;
 	}
 
 
