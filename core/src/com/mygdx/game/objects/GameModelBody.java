@@ -14,6 +14,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.PathPoint;
+import com.mygdx.game.pathfinding.Triangle;
 
 /**
  * Created by Johannes Sjolund on 10/18/15.
@@ -101,8 +102,11 @@ public class GameModelBody extends GameModel {
 	public class PathFindingData {
 		public Array<PathPoint> path = new Array<PathPoint>();
 		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
-		public int nextTriangleIndex = -1;
-		public int currentTriangleIndex = -1;
+//		public int nextTriangleIndex = -1;
+//		public int currentTriangleIndex = -1;
+
+		public Triangle currentTriangle;
+		public Triangle nextTriangle;
 
 		public PathPoint currentGoal;
 		public Vector3 currentPosition = new Vector3();
@@ -121,7 +125,8 @@ public class GameModelBody extends GameModel {
 			path.clear();
 			path.addAll(newPath);
 			currentGoal = path.pop();
-			currentTriangleIndex = currentGoal.crossingTriangle;
+			currentTriangle = currentGoal.crossingTriangle;
+			nextTriangle = currentGoal.crossingTriangle;
 		}
 
 		public void clearPath() {
@@ -155,15 +160,16 @@ public class GameModelBody extends GameModel {
 				pathData.currentGoal = null;
 				if (pathData.path.size > 0) {
 					pathData.currentGoal = pathData.path.pop();
-					pathData.currentTriangleIndex = pathData.nextTriangleIndex;
-					pathData.nextTriangleIndex = pathData.currentGoal.crossingTriangle;
+					pathData.currentTriangle = pathData.nextTriangle;
+					pathData.nextTriangle = pathData.currentGoal.crossingTriangle;
+					layers.clear();
+					layers.set(pathData.currentTriangle.meshPartIndex);
 
 				} else {
 					body.setLinearVelocity(newVelocity.set(0, yVelocity, 0));
 					body.setAngularVelocity(Vector3.Zero);
 				}
 			} else {
-				matrix.idt();
 				goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
 				matrix.setToLookAt(goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
 				body.setWorldTransform(matrix);

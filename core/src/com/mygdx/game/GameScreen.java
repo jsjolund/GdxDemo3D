@@ -196,7 +196,9 @@ public class GameScreen implements Screen {
 		for (int i = 0; i < 10; i++) {
 			character.layers.set(i);
 		}
-
+		character.pathData.currentTriangle = engine.navmesh.rayTest(character.pathData.posGroundRay, 100, character.layers);
+		character.layers.clear();
+		character.layers.set(character.pathData.currentTriangle.meshPartIndex);
 		return character;
 	}
 

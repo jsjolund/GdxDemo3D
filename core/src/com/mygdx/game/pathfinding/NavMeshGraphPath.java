@@ -47,14 +47,14 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 	public Array<PathPoint> calculatePathPoints() {
 		Array<PathPoint> pathPoints = new Array<PathPoint>();
 		if (nodes.size == 0) {
-			pathPoints.add(new PathPoint(end, startTriangle.getIndex()));
-			pathPoints.add(new PathPoint(start, startTriangle.getIndex()));
+			pathPoints.add(new PathPoint(end, startTriangle));
+			pathPoints.add(new PathPoint(start, startTriangle));
 			debugPathPoints.addAll(pathPoints);
 			return pathPoints;
 		}
 		nodes.add(new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end));
 		Edge edge = (Edge) nodes.get(0);
-		pathPoints.add(new PathPoint(start, edge.fromNode.triIndex));
+		pathPoints.add(new PathPoint(start, edge.fromNode));
 
 		Funnel funnel = new Funnel();
 		funnel.pivot.set(start);
@@ -128,14 +128,14 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 
 		PathPoint previousLast = out.get(out.size - 1);
 		Edge edge = (Edge) nodes.get(endIndex);
-		PathPoint end = new PathPoint(endPoint, edge.toNode.triIndex);
+		PathPoint end = new PathPoint(endPoint, edge.toNode);
 
 		for (int i = startIndex; i < endIndex; i++) {
 			edge = (Edge) nodes.get(i);
 			Vector3 xPoint = new Vector3();
 
 			if (edge.rightVertex.equals(startPoint) || edge.leftVertex.equals(startPoint)) {
-				previousLast.crossingTriangle = edge.toNode.triIndex;
+				previousLast.crossingTriangle = edge.toNode;
 				if (!previousLast.connectingEdges.contains(edge, true)) {
 					previousLast.connectingEdges.add(edge);
 				}
@@ -148,8 +148,8 @@ public class NavMeshGraphPath extends DefaultGraphPath<Connection<Triangle>> {
 			} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, xPoint)
 					&& !Float.isNaN(xPoint.x) && !Float.isNaN(xPoint.y) && !Float.isNaN(xPoint.z)) {
 				if (i != startIndex || i == 0) {
-					out.get(out.size - 1).crossingTriangle = edge.fromNode.triIndex;
-					PathPoint crossing = new PathPoint(xPoint, edge.toNode.triIndex);
+					out.get(out.size - 1).crossingTriangle = edge.fromNode;
+					PathPoint crossing = new PathPoint(xPoint, edge.toNode);
 					crossing.connectingEdges.add(edge);
 					out.add(crossing);
 				}

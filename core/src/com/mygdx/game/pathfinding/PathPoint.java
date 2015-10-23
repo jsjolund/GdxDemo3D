@@ -14,13 +14,13 @@ public class PathPoint {
 	/**
 	 * Index of the triangle which must be crossed to reach the next path point.
 	 */
-	public int crossingTriangle = -1;
+	public Triangle crossingTriangle;
 	/**
 	 * Path edges connected to this point. Can be used for spline generation at some point...
 	 */
 	public Array<Edge> connectingEdges = new Array<Edge>();
 
-	public PathPoint(Vector3 point, int crossingTriangle) {
+	public PathPoint(Vector3 point, Triangle crossingTriangle) {
 		this.point.set(point);
 		this.crossingTriangle = crossingTriangle;
 	}

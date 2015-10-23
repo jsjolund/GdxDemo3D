@@ -146,6 +146,9 @@ public class GameRenderer implements Disposable, Observer {
 		if (!gameModel.layers.intersects(visibleLayers)) {
 			return false;
 		}
+		if (gameModel.ignoreCulling) {
+			return true;
+		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
 		tmp.add(gameModel.center);
 		return camera.frustum.sphereInFrustum(tmp, gameModel.radius);
@@ -159,7 +162,7 @@ public class GameRenderer implements Disposable, Observer {
 			Iterator<GameModel> models = engine.getModels();
 			while (models.hasNext()) {
 				GameModel mdl = models.next();
-				if (isVisible(camera, mdl) || mdl.ignoreCulling) {
+				if (isVisible(camera, mdl)) {
 					modelBatch.render(mdl.modelInstance, environment);
 				}
 			}
@@ -214,14 +217,14 @@ public class GameRenderer implements Disposable, Observer {
 
 				for (int i = 0; i < selectedCharacter.pathData.trianglePath.getCount(); i++) {
 					Edge e = (Edge) selectedCharacter.pathData.trianglePath.get(i);
-					if (selectedCharacter.pathData.currentTriangleIndex == e.fromNode.getIndex()) {
+					if (selectedCharacter.pathData.currentTriangle.getIndex() == e.fromNode.getIndex()) {
 						shapeRenderer.setColor(1, 0, 0, 0.2f);
 					} else {
 						shapeRenderer.setColor(1, 1, 0, 0.2f);
 					}
 					shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
 					if (i == selectedCharacter.pathData.trianglePath.getCount() - 1) {
-						if (selectedCharacter.pathData.currentTriangleIndex == e.toNode.getIndex()) {
+						if (selectedCharacter.pathData.currentTriangle.getIndex() == e.toNode.getIndex()) {
 							shapeRenderer.setColor(1, 0, 0, 0.2f);
 						} else {
 							shapeRenderer.setColor(1, 1, 0, 0.2f);
@@ -235,9 +238,9 @@ public class GameRenderer implements Disposable, Observer {
 					Edge e = (Edge) connection;
 					shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
 				}
-			} else if (selectedCharacter.pathData.currentTriangleIndex != -1) {
+			} else if (selectedCharacter.pathData.currentTriangle != null) {
 				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.pathData.currentTriangleIndex);
+				Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.pathData.currentTriangle.getIndex());
 				shapeRenderer.setColor(1, 0, 0, 0.2f);
 				shapeRenderer.triangle(tri.a, tri.b, tri.c);
 			}
