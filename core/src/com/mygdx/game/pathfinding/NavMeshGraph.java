@@ -29,7 +29,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * <p/>
 	 * All meshes should be made up of one or more triangles, and should not have any isolated edges or vertices.
 	 * <p/>
-	 * Each vertex which has a unique position is stored in a Vector3. Triangle objects map which of these vertices
+	 * Each vertex which has a unique position is stored in a Vector3. Triangle objects bodyPartMap which of these vertices
 	 * form a triangle according to the winding order in the mesh indices buffer. The winding order is assumed to
 	 * be the same for each triangle and is read from left to right in the indices buffer.
 	 * <p/>
@@ -102,7 +102,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	}
 
 	/**
-	 * Creates a map over each triangle and its Edge connections to other triangles. Each edge must follow the
+	 * Creates a bodyPartMap over each triangle and its Edge connections to other triangles. Each edge must follow the
 	 * vertex winding order of the triangle associated with it. Since all triangles are assumed to have the same
 	 * winding order, this means if two triangles connect, each must have its own edge connection data, where the
 	 * edge follows the same winding order as the triangle which owns the edge data.

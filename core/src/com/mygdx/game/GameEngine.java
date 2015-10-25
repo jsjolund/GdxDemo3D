@@ -181,7 +181,7 @@ public class GameEngine extends PooledEngine implements Disposable {
 			GameCharacter gameObj = (GameCharacter) entity;
 			gameObj.body.setUserPointer(entity.getId());
 			dynamicsWorld.addRigidBody(gameObj.body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
-			for (btRigidBody body : gameObj.map.keys()) {
+			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
 			}
@@ -222,7 +222,7 @@ public class GameEngine extends PooledEngine implements Disposable {
 		if (entity instanceof GameCharacter) {
 			GameCharacter gameObj = (GameCharacter) entity;
 			dynamicsWorld.removeCollisionObject(gameObj.body);
-			for (btRigidBody body : gameObj.map.keys()) {
+			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
 				dynamicsWorld.removeCollisionObject(body);
 			}
 			for (btTypedConstraint constraint : gameObj.constraints) {

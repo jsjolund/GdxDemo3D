@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Bits;
@@ -21,6 +22,7 @@ public class GameModel extends GameObject {
 	public Bits layers = new Bits();
 	public ModelInstance modelInstance;
 	public boolean ignoreCulling = false;
+	public final Matrix4 transform;
 
 	public GameModel(Model model,
 					 String id,
@@ -48,6 +50,7 @@ public class GameModel extends GameObject {
 		bounds.getCenter(center);
 		bounds.getDimensions(dimensions);
 		radius = dimensions.len() / 2f;
+		transform = modelInstance.transform;
 	}
 
 

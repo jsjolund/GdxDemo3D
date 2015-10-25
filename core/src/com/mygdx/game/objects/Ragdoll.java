@@ -25,13 +25,21 @@ import java.util.Iterator;
 /**
  * Created by Johannes Sjolund on 10/18/15.
  */
-public class Ragdoll extends GameModelBody {
+public class Ragdoll extends SteerableBody {
+
+	public class RigidBodyNodeConnection {
+		// Stores the offset from the center of a rigid body to the node which connects to it
+		// Used when multiple nodes should follow one body under ragdoll controll
+		public ArrayMap<Node, Vector3> bodyNodeOffsets = new ArrayMap<Node, Vector3>();
+		// The node this bone should follow in animation mode
+		public Node followNode = null;
+	}
+
 	private final static float PI = MathUtils.PI;
 	private final static float PI2 = 0.5f * PI;
 	private final static float PI4 = 0.25f * PI;
 
-	//	public final Array<btTypedConstraint> ragdollConstraints = new Array<btTypedConstraint>();
-	public final ArrayMap<btRigidBody, NodeConnection> map = new ArrayMap<btRigidBody, NodeConnection>();
+	public final ArrayMap<btRigidBody, RigidBodyNodeConnection> bodyPartMap = new ArrayMap<btRigidBody, RigidBodyNodeConnection>();
 	public final Array<Node> nodes = new Array<Node>();
 	public final Matrix4 baseBodyTransform = new Matrix4();
 	public final Matrix4 resetRotationTransform = new Matrix4();
@@ -74,20 +82,20 @@ public class Ragdoll extends GameModelBody {
 	@Override
 	public void dispose() {
 		super.dispose();
-		for (btRigidBody body : map.keys) {
+		for (btRigidBody body : bodyPartMap.keys) {
 			body.dispose();
 		}
-		map.clear();
+		bodyPartMap.clear();
 	}
 
 	private void updateArmatureToBodies() {
 		// Let dynamicsworld control ragdoll. Loop over all ragdoll part collision shapes
 		// and their node connection data.
-		for (Iterator<ObjectMap.Entry<btRigidBody, NodeConnection>> iterator1
-			 = map.iterator(); iterator1.hasNext(); ) {
-			ObjectMap.Entry<btRigidBody, NodeConnection> bodyEntry = iterator1.next();
+		for (Iterator<ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection>> iterator1
+			 = bodyPartMap.iterator(); iterator1.hasNext(); ) {
+			ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection> bodyEntry = iterator1.next();
 			btRigidBody partBody = bodyEntry.key;
-			NodeConnection connection = bodyEntry.value;
+			RigidBodyNodeConnection connection = bodyEntry.value;
 
 			// Loop over each node connected to this collision shape
 			for (Iterator<ObjectMap.Entry<Node, Vector3>> iterator2
@@ -116,10 +124,10 @@ public class Ragdoll extends GameModelBody {
 		// Ragdoll parts should follow the model animation.
 		// Loop over each part and set it to the global transform of the armature node it should follow.
 		body.getWorldTransform(baseBodyTransform);
-		for (Iterator<ObjectMap.Entry<btRigidBody, NodeConnection>> iterator
-			 = map.iterator(); iterator.hasNext(); ) {
-			ObjectMap.Entry<btRigidBody, NodeConnection> entry = iterator.next();
-			NodeConnection data = entry.value;
+		for (Iterator<ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection>> iterator
+			 = bodyPartMap.iterator(); iterator.hasNext(); ) {
+			ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection> entry = iterator.next();
+			RigidBodyNodeConnection data = entry.value;
 			btRigidBody body = entry.key;
 			Node followNode = data.followNode;
 			Vector3 offset = data.bodyNodeOffsets.get(followNode);
@@ -146,7 +154,7 @@ public class Ragdoll extends GameModelBody {
 					resetRotationTransform.idt().inv().setToTranslation(baseTrans);
 
 			// Set the velocities of the ragdoll collision shapes to be the same as the base shape.
-			for (btRigidBody bodyPart : map.keys()) {
+			for (btRigidBody bodyPart : bodyPartMap.keys()) {
 				bodyPart.setLinearVelocity(body.getLinearVelocity().scl(1, 0, 1));
 				bodyPart.setAngularVelocity(body.getAngularVelocity());
 				bodyPart.setGravity(GameSettings.GRAVITY);
@@ -175,24 +183,24 @@ public class Ragdoll extends GameModelBody {
 
 			// Disable gravity to prevent problems with the physics engine adding too much velocity
 			// to the ragdoll
-			for (btRigidBody bodyPart : map.keys()) {
+			for (btRigidBody bodyPart : bodyPartMap.keys()) {
 				bodyPart.setGravity(Vector3.Zero);
 			}
 		}
 	}
 
-	public class NodeConnection {
-		// Stores the offset from the center of a rigid body to the node which connects to it
-		public ArrayMap<Node, Vector3> bodyNodeOffsets = new ArrayMap<Node, Vector3>();
-		// The node this bone should follow in animation mode
-		public Node followNode = null;
-	}
 
+	/**
+	 *
+	 * @param bodyPart The rigid body which is to be synchronized with a node
+	 * @param node The node which is to be synchronized with a body
+	 * @param nodeBodyOffset The offset from the node to rigid body origin
+	 */
 	private void addPart(btRigidBody bodyPart, Node node, Vector3 nodeBodyOffset) {
-		if (!map.containsKey(bodyPart)) {
-			map.put(bodyPart, new NodeConnection());
+		if (!bodyPartMap.containsKey(bodyPart)) {
+			bodyPartMap.put(bodyPart, new RigidBodyNodeConnection());
 		}
-		NodeConnection conn = map.get(bodyPart);
+		RigidBodyNodeConnection conn = bodyPartMap.get(bodyPart);
 		conn.bodyNodeOffsets.put(node, nodeBodyOffset);
 
 		if (!nodes.contains(node, true)) {
@@ -200,11 +208,16 @@ public class Ragdoll extends GameModelBody {
 		}
 	}
 
-	private void addFollowPart(btRigidBody bodyPart, Node node) {
-		if (!map.containsKey(bodyPart)) {
-			map.put(bodyPart, new NodeConnection());
+	/**
+	 *
+	 * @param bodyPart The rigid body which is to be synchronized with a node
+	 * @param node The node which is to be synchronized with a body
+	 */
+	private void addPart(btRigidBody bodyPart, Node node) {
+		if (!bodyPartMap.containsKey(bodyPart)) {
+			bodyPartMap.put(bodyPart, new RigidBodyNodeConnection());
 		}
-		NodeConnection conn = map.get(bodyPart);
+		RigidBodyNodeConnection conn = bodyPartMap.get(bodyPart);
 		conn.followNode = node;
 		// Set the follow offset to the middle of the armature bone
 		Vector3 offsetTranslation = new Vector3();
@@ -217,6 +230,11 @@ public class Ragdoll extends GameModelBody {
 	}
 
 
+	/**
+	 *
+	 * @param ragdollJson The json file containing rigid body dimension data
+	 * @param armatureNodeId The name of the root skeleton/armature node
+	 */
 	private void createRagdoll(String ragdollJson, String armatureNodeId) {
 		Node armature = modelInstance.getNode(armatureNodeId, true, true);
 
@@ -259,7 +277,7 @@ public class Ragdoll extends GameModelBody {
 			phyCmp.constructionInfo.dispose();
 
 			bodyMap.put(partName, phyCmp.body);
-			this.addFollowPart(phyCmp.body, armature.getChild(partName, true, true));
+			this.addPart(phyCmp.body, armature.getChild(partName, true, true));
 		}
 		// Abdomen is the at the top of the armature hierarchy
 		this.addPart(bodyMap.get("abdomen"), armature, new Vector3(0, halfExtMap.get("abdomen").y * 1.6f, 0));

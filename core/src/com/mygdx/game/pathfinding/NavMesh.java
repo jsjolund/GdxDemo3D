@@ -1,6 +1,8 @@
 package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.pfa.Connection;
+import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;
@@ -41,16 +43,6 @@ public class NavMesh implements Disposable {
 		return collisionShape;
 	}
 
-	public boolean calculatePath(Triangle fromTri, Triangle toTri, NavMeshGraphPath out) {
-		if (fromTri == null || toTri == null) {
-			return false;
-		}
-		boolean pathFound = pathFinder.searchConnectionPath(fromTri, toTri, heuristic, out);
-		if (pathFound) {
-			out.setStartTriangle(fromTri);
-		}
-		return pathFound;
-	}
 
 	@Override
 	public void dispose() {
@@ -76,7 +68,7 @@ public class NavMesh implements Disposable {
 		return hitTriangle;
 	}
 
-	public boolean getPath(Triangle fromTriangle, Vector3 fromPoint, Ray toRay, Bits allowedMeshParts,
+	public boolean getPath(Triangle fromTri, Vector3 fromPoint, Ray toRay, Bits allowedMeshParts,
 						   float distance, NavMeshGraphPath path) {
 		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
 		if (toTri == null) {
@@ -87,46 +79,46 @@ public class NavMesh implements Disposable {
 		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
 
 		path.clear();
-		path.setStartEnd(fromPoint, toPoint);
-
-		if (!calculatePath(fromTriangle, toTri, path)) {
-			Gdx.app.debug(tag, "Path not found.");
-			return false;
+		if (pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path)) {
+			path.start = new Vector3(fromPoint);
+			path.end = new Vector3(toPoint);
+			path.startTri = fromTri;
+			return true;
 		}
-
-		return true;
+		Gdx.app.debug(tag, "Path not found.");
+		return false;
 	}
 
 
-	public boolean getPath(Ray fromRay, Ray toRay, Bits allowedMeshParts,
-						   float distance, NavMeshGraphPath path) {
-
-		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
-		if (toTri == null) {
-			Gdx.app.debug(tag, "To triangle not found.");
-			return false;
-		}
-		Vector3 toPoint = new Vector3();
-		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
-
-		Triangle fromTri = rayTest(fromRay, distance, null);
-		if (fromTri == null) {
-			Gdx.app.debug(tag, "From triangle not found.");
-			return false;
-		}
-		Vector3 fromPoint = new Vector3();
-		Intersector.intersectRayTriangle(fromRay, fromTri.a, fromTri.b, fromTri.c, fromPoint);
-
-		path.clear();
-		path.setStartEnd(fromPoint, toPoint);
-
-		if (!calculatePath(fromTri, toTri, path)) {
-			Gdx.app.debug(tag, "Path not found.");
-			return false;
-		}
-
-
-		return true;
-	}
+//	public boolean getPath(Ray fromRay, Ray toRay, Bits allowedMeshParts,
+//						   float distance, NavMeshGraphPath path) {
+//
+//		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
+//		if (toTri == null) {
+//			Gdx.app.debug(tag, "To triangle not found.");
+//			return false;
+//		}
+//		Vector3 toPoint = new Vector3();
+//		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
+//
+//		Triangle fromTri = rayTest(fromRay, distance, null);
+//		if (fromTri == null) {
+//			Gdx.app.debug(tag, "From triangle not found.");
+//			return false;
+//		}
+//		Vector3 fromPoint = new Vector3();
+//		Intersector.intersectRayTriangle(fromRay, fromTri.a, fromTri.b, fromTri.c, fromPoint);
+//
+//		path.clear();
+//		path.setStartEnd(fromPoint, toPoint);
+//
+//		if (!calculatePath(fromTri, toTri, path)) {
+//			Gdx.app.debug(tag, "Path not found.");
+//			return false;
+//		}
+//
+//
+//		return true;
+//	}
 
 }

@@ -23,10 +23,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.objects.GameCharacter;
-import com.mygdx.game.objects.GameModelBody;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
+import com.mygdx.game.settings.SteerSettings;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Observable;
 import com.mygdx.game.utilities.Observer;
@@ -105,12 +105,20 @@ public class GameStage extends Stage implements Observable {
 		Table bottomTable = new Table();
 		bottomTable.add(createShaderMenu()).bottom();
 		bottomTable.add(createDebugViewMenu()).bottom();
+		bottomTable.add(createSteeringMenu()).bottom();
 		bottomTable.add(new Table()).expandX().fillX().bottom();
 		bottomTable.add(createMovementButtons()).bottom();
 		rootTable.add(bottomTable).expandX().fillX();
 		rootTable.left().bottom();
 
 		addActor(rootTable);
+
+		getRoot().addCaptureListener(new InputListener() {
+			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+				if (!(event.getTarget() instanceof TextField)) setKeyboardFocus(null);
+				return false;
+			}
+		});
 	}
 
 	private void handleMoveButtonPress(ImageButton thisBtn) {
@@ -126,9 +134,6 @@ public class GameStage extends Stage implements Observable {
 			GameCharacter.CharacterState newState = movementButtons.get(thisBtn);
 
 			selectedCharacter.moveState = newState;
-			if (selectedCharacter.isMoving) {
-				selectedCharacter.stateMachine.changeState(newState);
-			}
 		}
 	}
 
@@ -265,6 +270,58 @@ public class GameStage extends Stage implements Observable {
 		}
 		innerTable.setVisible(false);
 		final TextButton button = new TextButton("shader", skin);
+		button.addListener(new InputListener() {
+			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+				innerTable.setVisible(!innerTable.isVisible());
+				return true;
+			}
+		});
+		outerTable.add(innerTable).fillX();
+		outerTable.row();
+		outerTable.add(button).fillX();
+		outerTable.row();
+		return outerTable;
+	}
+
+	private WidgetGroup createSteeringMenu() {
+		final Table innerTable = new Table();
+		final Table outerTable = new Table();
+
+		Field[] fields = SteerSettings.class.getFields();
+		for (final Field field : fields) {
+			final Label fieldName = new Label(field.getName(), skin);
+			float fieldValueFloat = 0;
+			try {
+				fieldValueFloat = field.getFloat(field);
+			} catch (Exception e) {
+				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
+			}
+			final TextField fieldValue = new TextField(String.valueOf(fieldValueFloat), skin);
+			innerTable.add(fieldName).fillX();
+			innerTable.row();
+			innerTable.add(fieldValue).fillX();
+			innerTable.row();
+			fieldValue.addListener(new InputListener() {
+				@Override
+				public boolean keyTyped(InputEvent event, char character) {
+					String userInput = fieldValue.getText();
+					float newFieldValue;
+					try {
+						newFieldValue = Float.parseFloat(userInput);
+					} catch (NumberFormatException e) {
+						return true;
+					}
+					try {
+						field.setFloat(field, newFieldValue);
+					} catch (IllegalAccessException e) {
+						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
+					}
+					return true;
+				}
+			});
+		}
+		innerTable.setVisible(false);
+		final TextButton button = new TextButton("steer", skin);
 		button.addListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 				innerTable.setVisible(!innerTable.isVisible());
@@ -436,8 +493,10 @@ public class GameStage extends Stage implements Observable {
 		@Override
 		public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 			lastDragProcessed.set(screenX, screenY);
+			if (isDragging) {
+				// Player pressing both left and right
 
-			if (button == Input.Buttons.LEFT) {
+			} else if (button == Input.Buttons.LEFT) {
 				touchDownRay.set(viewport.getPickRay(screenX, screenY));
 				cameraController.processTouchDownLeft(touchDownRay);
 
@@ -467,14 +526,21 @@ public class GameStage extends Stage implements Observable {
 
 				} else if (selectedCharacter != null && hitEntity != null
 						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
-					GameModelBody.PathFindingData pathData = selectedCharacter.pathData;
-					if (engine.navmesh.getPath(pathData.currentTriangle, pathData.currentPosition,
-							touchUpRay, visibleLayers, GameSettings.CAMERA_PICK_RAY_DST,
-							pathData.trianglePath)) {
-						pathData.setPath(pathData.trianglePath.calculatePathPoints());
+
+//					Vector3 startPos = selectedCharacter.getGroundPosition();
+
+					if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
+							selectedCharacter.getGroundPosition(),
+							touchUpRay, visibleLayers,
+							GameSettings.CAMERA_PICK_RAY_DST,
+							selectedCharacter.navMeshGraphPath)) {
+
+						selectedCharacter.calculateNewPath();
 					}
+
 				}
 			}
+
 			isDragging = false;
 			dragCurrent.setZero();
 			lastDragProcessed.setZero();

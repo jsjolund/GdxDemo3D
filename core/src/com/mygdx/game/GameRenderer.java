@@ -29,7 +29,6 @@ import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.GameModel;
 import com.mygdx.game.pathfinding.Edge;
-import com.mygdx.game.pathfinding.PathPoint;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
@@ -94,8 +93,6 @@ public class GameRenderer implements Disposable, Observer {
 				return new UberShader(renderable, config);
 			}
 		});
-
-
 	}
 
 	@Override
@@ -185,15 +182,15 @@ public class GameRenderer implements Disposable, Observer {
 	}
 
 	private void drawPath() {
-		if (selectedCharacter != null && selectedCharacter.pathData.path.size > 1) {
+		if (selectedCharacter != null && selectedCharacter.navMeshPointPath.getSize() > 1) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(Color.CORAL);
 			// Smoothed path
 			Vector3 q;
-			Vector3 p = selectedCharacter.pathData.currentGoal.point;
-			for (int i = selectedCharacter.pathData.path.size - 1; i >= 0; i--) {
-				q = selectedCharacter.pathData.path.get(i).point;
+			Vector3 p = selectedCharacter.navMeshPointPath.getVector(0);
+			for (int i = 0; i < selectedCharacter.navMeshPointPath.getSize(); i++) {
+				q = selectedCharacter.navMeshPointPath.getVector(i);
 				shapeRenderer.line(p, q);
 				p = q;
 			}
@@ -208,27 +205,28 @@ public class GameRenderer implements Disposable, Observer {
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
 			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
-			shapeRenderer.setColor(Color.LIGHT_GRAY);
-			shapeRenderer.line(t.a, t.b);
-			shapeRenderer.line(t.b, t.c);
-			shapeRenderer.line(t.c, t.a);
+			if (visibleLayers.nextSetBit(t.meshPartIndex) != -1) {
+				shapeRenderer.setColor(Color.LIGHT_GRAY);
+				shapeRenderer.line(t.a, t.b);
+				shapeRenderer.line(t.b, t.c);
+				shapeRenderer.line(t.c, t.a);
+			}
 		}
 
 		if (selectedCharacter != null) {
-			if (selectedCharacter.pathData.trianglePath.getCount() > 0) {
+			if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
 				// Path triangles
 				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-
-				for (int i = 0; i < selectedCharacter.pathData.trianglePath.getCount(); i++) {
-					Edge e = (Edge) selectedCharacter.pathData.trianglePath.get(i);
-					if (selectedCharacter.pathData.currentTriangle.getIndex() == e.fromNode.getIndex()) {
+				for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
+					Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
+					if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
 						shapeRenderer.setColor(1, 0, 0, 0.2f);
 					} else {
 						shapeRenderer.setColor(1, 1, 0, 0.2f);
 					}
 					shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-					if (i == selectedCharacter.pathData.trianglePath.getCount() - 1) {
-						if (selectedCharacter.pathData.currentTriangle.getIndex() == e.toNode.getIndex()) {
+					if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
+						if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
 							shapeRenderer.setColor(1, 0, 0, 0.2f);
 						} else {
 							shapeRenderer.setColor(1, 1, 0, 0.2f);
@@ -238,28 +236,28 @@ public class GameRenderer implements Disposable, Observer {
 				}
 				// Shared triangle edges
 				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-				for (Connection<Triangle> connection : selectedCharacter.pathData.trianglePath) {
+				for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
 					Edge e = (Edge) connection;
 					shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
 				}
-			} else if (selectedCharacter.pathData.currentTriangle != null) {
+
+			} else if (selectedCharacter.currentTriangle != null) {
 				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.pathData.currentTriangle.getIndex());
+				Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex());
 				shapeRenderer.setColor(1, 0, 0, 0.2f);
 				shapeRenderer.triangle(tri.a, tri.b, tri.c);
 			}
-			if (selectedCharacter.pathData.trianglePath.debugPathPoints.size > 0) {
-				Array<PathPoint> pathPoints = selectedCharacter.pathData.trianglePath.debugPathPoints;
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
 
+			if (selectedCharacter.navMeshPointPath.getSize() > 0) {
+				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
 				// Smoothed path
 				Vector3 q;
-				Vector3 p = pathPoints.get(pathPoints.size - 1).point;
+				Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
 				float r = 0.02f;
 				float s = r / 2;
 				shapeRenderer.setColor(Color.WHITE);
-				for (int i = pathPoints.size - 1; i >= 0; i--) {
-					q = pathPoints.get(i).point;
+				for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
+					q = selectedCharacter.navMeshPointPath.getVector(i);
 					shapeRenderer.setColor(Color.CYAN);
 					shapeRenderer.line(p, q);
 					p = q;
@@ -274,10 +272,12 @@ public class GameRenderer implements Disposable, Observer {
 		spriteBatch.setProjectionMatrix(camera.combined);
 		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
 			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
-			tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
-			tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
-			spriteBatch.setTransformMatrix(tmpMatrix);
-			font.draw(spriteBatch, Integer.toString(t.triIndex), 0, 0);
+			if (visibleLayers.nextSetBit(t.meshPartIndex) != -1) {
+				tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
+				tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
+				spriteBatch.setTransformMatrix(tmpMatrix);
+				font.draw(spriteBatch, Integer.toString(t.triIndex), 0, 0);
+			}
 		}
 		spriteBatch.end();
 

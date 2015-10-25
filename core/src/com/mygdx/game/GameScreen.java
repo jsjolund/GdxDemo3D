@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
@@ -24,6 +25,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
+import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
@@ -178,7 +180,7 @@ public class GameScreen implements Screen {
 		assets.finishLoading();
 		Model model = assets.get("models/g3db/character_male_base.g3db");
 		btCollisionShape shape = new btCapsuleShape(0.4f, 1.1f);
-		float mass = 100;
+		float mass = 1;
 		boolean callback = false;
 		boolean noDeactivate = true;
 		String ragdollJson = "models/json/character_empty.json";
@@ -190,9 +192,9 @@ public class GameScreen implements Screen {
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
 		character.ignoreCulling = true;
-		character.body.setAngularFactor(Vector3.Y);
-		character.pathData.currentTriangle = engine.navmesh.rayTest(character.pathData.posGroundRay, 100, null);
-		character.layers.set(character.pathData.currentTriangle.meshPartIndex);
+		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		character.currentTriangle = engine.navmesh.rayTest(posGroundRay, 100, null);
+		character.layers.set(character.currentTriangle.meshPartIndex);
 		return character;
 	}
 

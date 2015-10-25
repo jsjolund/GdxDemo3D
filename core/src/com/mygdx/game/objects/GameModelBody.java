@@ -2,9 +2,7 @@ package com.mygdx.game.objects;
 
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.Collision;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
@@ -12,9 +10,6 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.pathfinding.NavMeshGraphPath;
-import com.mygdx.game.pathfinding.PathPoint;
-import com.mygdx.game.pathfinding.Triangle;
 
 /**
  * Created by Johannes Sjolund on 10/18/15.
@@ -32,7 +27,7 @@ public class GameModelBody extends GameModel {
 	private Matrix4 matrix = new Matrix4();
 
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
-	public PathFindingData pathData;
+//	public PathFindingData pathData;
 
 	public GameModelBody(Model model,
 						 String id,
@@ -98,96 +93,54 @@ public class GameModelBody extends GameModel {
 		constraints.clear();
 	}
 
-	public class PathFindingData {
-		public Array<PathPoint> path = new Array<PathPoint>();
-		public NavMeshGraphPath trianglePath = new NavMeshGraphPath();
-
-		public Triangle currentTriangle;
-		public Triangle nextTriangle;
-
-		public PathPoint currentGoal;
-		public Vector3 currentPosition = new Vector3();
-		public Vector3 currentGroundPosition = new Vector3();
-		public Ray posGroundRay = new Ray(new Vector3(), new Vector3(0, -1, 0));
-
-		private final Vector3 goalDirection = new Vector3();
-		private final Vector3 newVelocity = new Vector3();
-
-		public float moveSpeed = 1;
-		public boolean goalReached = true;
-
-		public PathFindingData(Vector3 initialPosition) {
-			currentPosition.set(initialPosition);
-			posGroundRay.origin.set(initialPosition);
-		}
-
-		public void setPath(Array<PathPoint> newPath) {
-			goalReached = false;
-			path.clear();
-			path.addAll(newPath);
-			currentGoal = path.pop();
-			currentTriangle = currentGoal.crossingTriangle;
-			nextTriangle = currentGoal.crossingTriangle;
-		}
-
-		public void clearPath() {
-			goalReached = true;
-			path.clear();
-			trianglePath.clear();
-			currentGoal = null;
-		}
-
-	}
-
-	@Override
-	public void update(float deltaTime) {
-		super.update(deltaTime);
-		if (pathData == null || pathData.goalReached) {
-			return;
-		}
-		body.getWorldTransform().getTranslation(pathData.currentPosition);
-		pathData.currentGroundPosition.set(pathData.currentPosition);
-		pathData.currentGroundPosition.y -= bounds.getHeight() / 2;
-		pathData.posGroundRay.origin.set(pathData.currentPosition);
-		if (pathData.goalReached) {
-			return;
-		}
-		if (pathData.currentGoal == null && pathData.path.size == 0) {
-			pathData.goalReached = true;
-			return;
-		}
-		if (pathData.currentGoal != null) {
-			float yVelocity = body.getLinearVelocity().y;
-			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
-					pathData.currentPosition.x, pathData.currentPosition.z);
-
-			if (xzDst < 0.01f) {
-				pathData.currentGoal = null;
-				if (pathData.path.size > 0) {
-					pathData.currentGoal = pathData.path.pop();
-					pathData.currentTriangle = pathData.nextTriangle;
-					pathData.nextTriangle = pathData.currentGoal.crossingTriangle;
-					layers.clear();
-					layers.set(pathData.currentTriangle.meshPartIndex);
-
-				} else {
-					body.setLinearVelocity(pathData.newVelocity.set(0, yVelocity, 0));
-					body.setAngularVelocity(Vector3.Zero);
-				}
-			} else {
-				pathData.goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
-				matrix.setToLookAt(pathData.goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
-				body.setWorldTransform(matrix);
-
-				pathData.newVelocity.set(pathData.goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);
-				pathData.goalReached = false;
-
-				pathData.newVelocity.y = yVelocity;
-				body.setLinearVelocity(pathData.newVelocity);
-			}
-		}
-
-	}
+//	@Override
+//	public void update(float deltaTime) {
+//		super.update(deltaTime);
+//		if (pathData == null || pathData.goalReached) {
+//			return;
+//		}
+//		body.getWorldTransform().getTranslation(pathData.currentPosition);
+//		pathData.currentGroundPosition.set(pathData.currentPosition);
+//		pathData.currentGroundPosition.y -= bounds.getHeight() / 2;
+//		pathData.posGroundRay.origin.set(pathData.currentPosition);
+//		if (pathData.goalReached) {
+//			return;
+//		}
+//		if (pathData.currentGoal == null && pathData.path.size == 0) {
+//			pathData.goalReached = true;
+//			return;
+//		}
+//		if (pathData.currentGoal != null) {
+//			float yVelocity = body.getLinearVelocity().y;
+//			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
+//					pathData.currentPosition.x, pathData.currentPosition.z);
+//
+//			if (xzDst < 0.01f) {
+//				pathData.currentGoal = null;
+//				if (pathData.path.size > 0) {
+//					pathData.currentGoal = pathData.path.pop();
+//					pathData.currentTriangle = pathData.nextTriangle;
+//					pathData.nextTriangle = pathData.currentGoal.toNode;
+//					layers.clear();
+//					layers.set(pathData.currentTriangle.meshPartIndex);
+//
+//				} else {
+//					body.setLinearVelocity(pathData.newVelocity.set(0, yVelocity, 0));
+//					body.setAngularVelocity(Vector3.Zero);
+//				}
+//			} else {
+//				pathData.goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
+//				matrix.setToLookAt(pathData.goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
+//				body.setWorldTransform(matrix);
+//
+//				pathData.newVelocity.set(pathData.goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);
+//				pathData.goalReached = false;
+//
+//				pathData.newVelocity.y = yVelocity;
+//				body.setLinearVelocity(pathData.newVelocity);
+//			}
+//		}
+//	}
 
 	protected class PhysicsMotionState extends btMotionState {
 		public final Matrix4 transform;
