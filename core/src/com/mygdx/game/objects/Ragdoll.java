@@ -191,9 +191,8 @@ public class Ragdoll extends SteerableBody {
 
 
 	/**
-	 *
-	 * @param bodyPart The rigid body which is to be synchronized with a node
-	 * @param node The node which is to be synchronized with a body
+	 * @param bodyPart       The rigid body which is to be synchronized with a node
+	 * @param node           The node which is to be synchronized with a body
 	 * @param nodeBodyOffset The offset from the node to rigid body origin
 	 */
 	private void addPart(btRigidBody bodyPart, Node node, Vector3 nodeBodyOffset) {
@@ -209,9 +208,8 @@ public class Ragdoll extends SteerableBody {
 	}
 
 	/**
-	 *
 	 * @param bodyPart The rigid body which is to be synchronized with a node
-	 * @param node The node which is to be synchronized with a body
+	 * @param node     The node which is to be synchronized with a body
 	 */
 	private void addPart(btRigidBody bodyPart, Node node) {
 		if (!bodyPartMap.containsKey(bodyPart)) {
@@ -231,8 +229,7 @@ public class Ragdoll extends SteerableBody {
 
 
 	/**
-	 *
-	 * @param ragdollJson The json file containing rigid body dimension data
+	 * @param ragdollJson    The json file containing rigid body dimension data
 	 * @param armatureNodeId The name of the root skeleton/armature node
 	 */
 	private void createRagdoll(String ragdollJson, String armatureNodeId) {

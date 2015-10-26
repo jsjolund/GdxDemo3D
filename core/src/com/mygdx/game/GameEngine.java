@@ -25,53 +25,24 @@ import java.util.Iterator;
  */
 public class GameEngine extends PooledEngine implements Disposable {
 
-	public static final String tag = "PhysicsSystem";
-	// Collision flags
-	public final static short NONE_FLAG = 0;
-	public final static short NAVMESH_FLAG = 1 << 6;
-	public final static short PC_FLAG = 1 << 10;
-	public final static short GROUND_FLAG = 1 << 8;
-	public final static short OBJECT_FLAG = 1 << 9;
-	public final static short ALL_FLAG = -1;
-
-	// Bullet classes
-	public final btDynamicsWorld dynamicsWorld;
-	private final btDispatcher dispatcher;
-	private final btConstraintSolver constraintSolver;
-	private final btDbvtBroadphase broadphase;
-	private final DebugDrawer debugDrawer;
-	private final LayeredClosestRayResultCallback callback = new LayeredClosestRayResultCallback(Vector3.Zero, Vector3.Z);
-	private final btCollisionConfiguration collisionConfig;
-
-	//	private final CollisionContactListener contactListener;
-
-	private final Vector3 rayFrom = new Vector3();
-	private final Vector3 rayTo = new Vector3();
-
-	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
-	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
-
-	public NavMesh navmesh;
-	public Entity navmeshEntity;
-
 	private class LayeredClosestRayResultCallback extends ClosestRayResultCallback {
-		private Bits layers;
-		private float hitFraction = 1;
-		private float rayDistance = 0;
 		private final Vector3 rayFrom = new Vector3();
 		private final Vector3 rayTo = new Vector3();
 		private final Vector3 tmp = new Vector3();
 		private final Ray ray = new Ray();
 		public Triangle triangle;
+		private Bits layers;
+		private float hitFraction = 1;
+		private float rayDistance = 0;
+
+		public LayeredClosestRayResultCallback(Vector3 rayFromWorld, Vector3 rayToWorld) {
+			super(rayFromWorld, rayToWorld);
+		}
 
 		@Override
 		public void setClosestHitFraction(float value) {
 			super.setClosestHitFraction(value);
 			this.hitFraction = value;
-		}
-
-		public LayeredClosestRayResultCallback(Vector3 rayFromWorld, Vector3 rayToWorld) {
-			super(rayFromWorld, rayToWorld);
 		}
 
 		public void setRay(Ray ray, float rayDistance) {
@@ -120,6 +91,44 @@ public class GameEngine extends PooledEngine implements Disposable {
 			return 1;
 		}
 	}
+	public static final String tag = "PhysicsSystem";
+	// Collision flags
+	public final static short NONE_FLAG = 0;
+	public final static short NAVMESH_FLAG = 1 << 6;
+	public final static short PC_FLAG = 1 << 10;
+	public final static short GROUND_FLAG = 1 << 8;
+	public final static short OBJECT_FLAG = 1 << 9;
+	public final static short ALL_FLAG = -1;
+	// Bullet classes
+	public final btDynamicsWorld dynamicsWorld;
+	private final btDispatcher dispatcher;
+	private final btConstraintSolver constraintSolver;
+	private final btDbvtBroadphase broadphase;
+	private final DebugDrawer debugDrawer;
+	private final LayeredClosestRayResultCallback callback = new LayeredClosestRayResultCallback(Vector3.Zero, Vector3.Z);
+
+	//	private final CollisionContactListener contactListener;
+	private final btCollisionConfiguration collisionConfig;
+	private final Vector3 rayFrom = new Vector3();
+	private final Vector3 rayTo = new Vector3();
+	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
+	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
+	public NavMesh navmesh;
+	public Entity navmeshEntity;
+
+	public GameEngine() {
+		collisionConfig = new btDefaultCollisionConfiguration();
+		dispatcher = new btCollisionDispatcher(collisionConfig);
+		broadphase = new btDbvtBroadphase();
+		constraintSolver = new btSequentialImpulseConstraintSolver();
+		dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase,
+				constraintSolver, collisionConfig);
+		dynamicsWorld.setGravity(GameSettings.GRAVITY);
+
+		debugDrawer = new DebugDrawer();
+		dynamicsWorld.setDebugDrawer(debugDrawer);
+		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
+	}
 
 	public Entity rayTest(Ray ray, Vector3 hitPointWorld, short belongsToFlag, short collidesWithFlag,
 						  float rayDistance, Bits layers) {
@@ -141,20 +150,6 @@ public class GameEngine extends PooledEngine implements Disposable {
 			return getEntity(entityId);
 		}
 		return null;
-	}
-
-	public GameEngine() {
-		collisionConfig = new btDefaultCollisionConfiguration();
-		dispatcher = new btCollisionDispatcher(collisionConfig);
-		broadphase = new btDbvtBroadphase();
-		constraintSolver = new btSequentialImpulseConstraintSolver();
-		dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase,
-				constraintSolver, collisionConfig);
-		dynamicsWorld.setGravity(GameSettings.GRAVITY);
-
-		debugDrawer = new DebugDrawer();
-		dynamicsWorld.setDebugDrawer(debugDrawer);
-		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
 	}
 
 	@Override

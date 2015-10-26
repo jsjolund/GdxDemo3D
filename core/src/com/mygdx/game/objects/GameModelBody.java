@@ -16,6 +16,23 @@ import com.badlogic.gdx.utils.Array;
  */
 public class GameModelBody extends GameModel {
 
+	protected class PhysicsMotionState extends btMotionState {
+		public final Matrix4 transform;
+
+		public PhysicsMotionState(Matrix4 transform) {
+			this.transform = transform;
+		}
+
+		@Override
+		public void getWorldTransform(Matrix4 worldTrans) {
+			worldTrans.set(transform);
+		}
+
+		@Override
+		public void setWorldTransform(Matrix4 worldTrans) {
+			transform.set(worldTrans);
+		}
+	}
 	private final static Vector3 localInertia = new Vector3();
 	public final btRigidBody body;
 	public final short belongsToFlag;
@@ -24,10 +41,9 @@ public class GameModelBody extends GameModel {
 	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
 	public final PhysicsMotionState motionState;
 	protected final float mass;
-	private Matrix4 matrix = new Matrix4();
-
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 //	public PathFindingData pathData;
+	private Matrix4 matrix = new Matrix4();
 
 	public GameModelBody(Model model,
 						 String id,
@@ -75,22 +91,6 @@ public class GameModelBody extends GameModel {
 			body.setActivationState(Collision.DISABLE_DEACTIVATION);
 		}
 		body.setWorldTransform(modelInstance.transform);
-	}
-
-	public void dispose() {
-		super.dispose();
-		// Let the calling class be responsible for shape dispose since it can be reused
-		// shape.dispose();
-		constructionInfo.dispose();
-		motionState.dispose();
-		body.dispose();
-		if (motionState != null) {
-			motionState.dispose();
-		}
-		for (btTypedConstraint constraint : constraints) {
-			constraint.dispose();
-		}
-		constraints.clear();
 	}
 
 //	@Override
@@ -142,22 +142,20 @@ public class GameModelBody extends GameModel {
 //		}
 //	}
 
-	protected class PhysicsMotionState extends btMotionState {
-		public final Matrix4 transform;
-
-		public PhysicsMotionState(Matrix4 transform) {
-			this.transform = transform;
+	public void dispose() {
+		super.dispose();
+		// Let the calling class be responsible for shape dispose since it can be reused
+		// shape.dispose();
+		constructionInfo.dispose();
+		motionState.dispose();
+		body.dispose();
+		if (motionState != null) {
+			motionState.dispose();
 		}
-
-		@Override
-		public void getWorldTransform(Matrix4 worldTrans) {
-			worldTrans.set(transform);
+		for (btTypedConstraint constraint : constraints) {
+			constraint.dispose();
 		}
-
-		@Override
-		public void setWorldTransform(Matrix4 worldTrans) {
-			transform.set(worldTrans);
-		}
+		constraints.clear();
 	}
 
 

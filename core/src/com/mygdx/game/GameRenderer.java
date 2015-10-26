@@ -140,7 +140,6 @@ public class GameRenderer implements Disposable, Observer {
 		}
 	}
 
-
 	private boolean isVisible(final Camera camera, final GameModel gameModel) {
 		if (!gameModel.layers.intersects(visibleLayers)) {
 			return false;
@@ -198,81 +197,101 @@ public class GameRenderer implements Disposable, Observer {
 		}
 	}
 
+	private boolean triangleIsVisible(Triangle t) {
+		return (visibleLayers.nextSetBit(t.meshPartIndex) != -1);
+	}
+
 	private void drawNavMesh() {
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+		// Paint navmesh
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
 			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
-			if (visibleLayers.nextSetBit(t.meshPartIndex) != -1) {
+			if (triangleIsVisible(t)) {
 				shapeRenderer.setColor(Color.LIGHT_GRAY);
 				shapeRenderer.line(t.a, t.b);
 				shapeRenderer.line(t.b, t.c);
 				shapeRenderer.line(t.c, t.a);
 			}
 		}
-
-		if (selectedCharacter != null) {
-			if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
-				// Path triangles
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
-					Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
-					if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
+		if (selectedCharacter == null) {
+			shapeRenderer.end();
+			return;
+		}
+		// Paint triangle path of selected character
+		if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
+			// Path triangles
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+			for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
+				Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
+				if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
+					shapeRenderer.setColor(1, 0, 0, 0.2f);
+				} else {
+					shapeRenderer.setColor(1, 1, 0, 0.2f);
+				}
+				if (triangleIsVisible(e.toNode)) {
+					shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
+				}
+				if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
+					if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
 						shapeRenderer.setColor(1, 0, 0, 0.2f);
 					} else {
 						shapeRenderer.setColor(1, 1, 0, 0.2f);
 					}
-					shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-					if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
-						if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
-							shapeRenderer.setColor(1, 0, 0, 0.2f);
-						} else {
-							shapeRenderer.setColor(1, 1, 0, 0.2f);
-						}
+					if (triangleIsVisible(e.toNode)) {
 						shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
 					}
 				}
-				// Shared triangle edges
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-				for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
-					Edge e = (Edge) connection;
+			}
+			// Shared triangle edges
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
+				Edge e = (Edge) connection;
+				if (triangleIsVisible(e.fromNode) || triangleIsVisible(e.toNode)) {
 					shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
 				}
+			}
 
-			} else if (selectedCharacter.currentTriangle != null) {
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex());
-				shapeRenderer.setColor(1, 0, 0, 0.2f);
+		} else if (selectedCharacter.currentTriangle != null) {
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+			Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex());
+			shapeRenderer.setColor(1, 0, 0, 0.2f);
+			if (triangleIsVisible(tri)) {
 				shapeRenderer.triangle(tri.a, tri.b, tri.c);
 			}
+		}
 
-			if (selectedCharacter.navMeshPointPath.getSize() > 0) {
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-				// Smoothed path
-				Vector3 q;
-				Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
-				float r = 0.02f;
-				float s = r / 2;
+		// Paint point path of selected character
+		if (selectedCharacter.navMeshPointPath.getSize() > 0) {
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			// Smoothed path
+			Vector3 q;
+			Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
+			float r = 0.02f;
+			float s = r / 2;
+			shapeRenderer.setColor(Color.WHITE);
+			for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
+				q = selectedCharacter.navMeshPointPath.getVector(i);
+				shapeRenderer.setColor(Color.CYAN);
+				shapeRenderer.line(p, q);
+				p = q;
 				shapeRenderer.setColor(Color.WHITE);
-				for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
-					q = selectedCharacter.navMeshPointPath.getVector(i);
-					shapeRenderer.setColor(Color.CYAN);
-					shapeRenderer.line(p, q);
-					p = q;
-					shapeRenderer.setColor(Color.WHITE);
-					shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
-				}
+				shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
 			}
 		}
+
 		shapeRenderer.end();
+
 		// Draw indices of the triangles
+		// TODO: Get rid of all the transform matrix setting
 		spriteBatch.begin();
 		spriteBatch.setProjectionMatrix(camera.combined);
 		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
 			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
-			if (visibleLayers.nextSetBit(t.meshPartIndex) != -1) {
+			if (triangleIsVisible(t)) {
 				tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
 				tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
 				spriteBatch.setTransformMatrix(tmpMatrix);

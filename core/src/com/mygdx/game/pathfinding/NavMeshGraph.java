@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -18,6 +17,25 @@ import java.nio.FloatBuffer;
  */
 public class NavMeshGraph implements IndexedGraph<Triangle> {
 
+	/**
+	 * Class for storing the edge connection data between two adjacent triangles.
+	 */
+	private static class IndexConnection {
+		// The vertex indices which makes up the edge shared between two triangles.
+		short edgeVertexIndex1;
+		short edgeVertexIndex2;
+		// The indices of the two triangles sharing this edge.
+		short fromTriIndex;
+		short toTriIndex;
+
+		public IndexConnection(short sharedEdgeVertex1Index, short edgeVertexIndex2,
+							   short fromTriIndex, short toTriIndex) {
+			this.edgeVertexIndex1 = sharedEdgeVertex1Index;
+			this.edgeVertexIndex2 = edgeVertexIndex2;
+			this.fromTriIndex = fromTriIndex;
+			this.toTriIndex = toTriIndex;
+		}
+	}
 	private ArrayMap<Triangle, Array<Connection<Triangle>>> map;
 	private int[] meshPartTriIndexOffsets;
 
@@ -297,26 +315,6 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 
 	public Triangle getTriangleFromMeshPart(int meshPartIndex, int triIndex) {
 		return map.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + triIndex);
-	}
-
-	/**
-	 * Class for storing the edge connection data between two adjacent triangles.
-	 */
-	private static class IndexConnection {
-		// The vertex indices which makes up the edge shared between two triangles.
-		short edgeVertexIndex1;
-		short edgeVertexIndex2;
-		// The indices of the two triangles sharing this edge.
-		short fromTriIndex;
-		short toTriIndex;
-
-		public IndexConnection(short sharedEdgeVertex1Index, short edgeVertexIndex2,
-							   short fromTriIndex, short toTriIndex) {
-			this.edgeVertexIndex1 = sharedEdgeVertex1Index;
-			this.edgeVertexIndex2 = edgeVertexIndex2;
-			this.fromTriIndex = fromTriIndex;
-			this.toTriIndex = toTriIndex;
-		}
 	}
 
 }

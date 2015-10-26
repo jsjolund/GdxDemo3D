@@ -36,15 +36,19 @@ import java.util.Comparator;
  */
 public class BlenderScene {
 
+	private class NavMeshNodeSorter implements Comparator<NodePart> {
+		@Override
+		public int compare(NodePart a, NodePart b) {
+			return a.material.id.compareTo(b.material.id);
+		}
+	}
 	public static final String tag = "BlenderScene";
-
 	public Array<BaseLight> lights = new Array<BaseLight>();
 	public Array<GameModelBody> entities = new Array<GameModelBody>();
 	public Array<InvisibleBody> ghosts = new Array<InvisibleBody>();
 	public Vector3 shadowCameraDirection = new Vector3();
 	public NavMesh navMesh;
 	public Entity navmeshEntity;
-
 	public BoundingBox worldBounds = new BoundingBox();
 	private ArrayMap<String, btCollisionShape> blenderDefinedShapesMap = new ArrayMap<String, btCollisionShape>();
 	private ArrayMap<String, btCollisionShape> staticGeneratedShapesMap = new ArrayMap<String, btCollisionShape>();
@@ -224,7 +228,6 @@ public class BlenderScene {
 		}
 	}
 
-
 	private void createLights(Array<BlenderObject.BLight> bLights) {
 
 		for (BlenderObject.BLight cmp : bLights) {
@@ -322,12 +325,5 @@ public class BlenderScene {
 	private Array<BlenderObject.BCamera> deserializeCameras(String path) {
 		return (path == null) ? new Array<BlenderObject.BCamera>() :
 				new Json().fromJson(Array.class, BlenderObject.BCamera.class, Gdx.files.local(path));
-	}
-
-	private class NavMeshNodeSorter implements Comparator<NodePart> {
-		@Override
-		public int compare(NodePart a, NodePart b) {
-			return a.material.id.compareTo(b.material.id);
-		}
 	}
 }

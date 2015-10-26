@@ -16,7 +16,7 @@ import java.util.Iterator;
 public class NavMeshPointPath implements Iterable<Vector3> {
 
 	/**
-	 * A point where an edge is crossed.
+	 * A point where an edge on the navmesh is crossed.
 	 */
 	private class EdgePoint {
 		/**

@@ -1,8 +1,6 @@
 package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.GraphPath;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;

@@ -38,26 +38,194 @@ import java.lang.reflect.Field;
  */
 public class GameStage extends Stage implements Observable {
 
-	public static final String tag = "GameStage";
+	public class WorldInputProcessor extends Actor implements InputProcessor {
 
+		private final Ray dragCurrentRay = new Ray();
+		private final Ray lastDragProcessedRay = new Ray();
+		private final Ray touchDownRay = new Ray();
+		private final Ray touchUpRay = new Ray();
+		private final Ray movedRay = new Ray();
+
+		private final Vector2 lastDragProcessed = new Vector2();
+		private final Vector2 cursorDelta = new Vector2();
+		private final Vector2 dragCurrent = new Vector2();
+		private final Vector2 keyPanDirection = new Vector2();
+
+		private final Vector3 tmp = new Vector3();
+
+		private final IntIntMap keys = new IntIntMap();
+
+		private boolean isDragging = false;
+
+		@Override
+		public boolean keyDown(int keycode) {
+			keys.put(keycode, keycode);
+			if (keycode == GameSettings.KEY_PAUSE) {
+				if (GameSettings.GAME_SPEED == 1) {
+					GameSettings.GAME_SPEED = 0;
+				} else if (GameSettings.GAME_SPEED == 0) {
+					GameSettings.GAME_SPEED = 0.05f;
+				} else if (GameSettings.GAME_SPEED == 0.05f) {
+					GameSettings.GAME_SPEED = 1;
+				}
+			}
+			if (keycode == GameSettings.KEY_KILL_CHARACTER) {
+				if (selectedCharacter != null) {
+					selectedCharacter.stateMachine.changeState(GameCharacter.CharacterState.DEAD);
+				}
+			}
+			return true;
+		}
+
+		@Override
+		public boolean keyUp(int keycode) {
+			keys.remove(keycode, 0);
+			return true;
+		}
+
+		@Override
+		public boolean keyTyped(char keyChar) {
+			int keyInt = Character.getNumericValue(keyChar);
+			keyInt--;
+			if (keyInt >= 0 && keyInt <= 9) {
+				visibleLayers.clear();
+				for (int i = 0; i <= keyInt; i++) {
+					visibleLayers.set(i);
+				}
+				notifyObserversLayerChanged(visibleLayers);
+			}
+			return true;
+		}
+
+		@Override
+		public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+			lastDragProcessed.set(screenX, screenY);
+			if (button == Input.Buttons.LEFT) {
+				touchDownRay.set(viewport.getPickRay(screenX, screenY));
+				cameraController.processTouchDownLeft(touchDownRay);
+
+			} else if (button == Input.Buttons.RIGHT) {
+				cameraController.processTouchDownRight();
+			}
+			return true;
+		}
+
+		@Override
+		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+			if (!isDragging) {
+				touchUpRay.set(viewport.getPickRay(screenX, screenY));
+
+				Entity hitEntity = engine.rayTest(
+						touchUpRay, tmp,
+						GameEngine.ALL_FLAG,
+						GameEngine.ALL_FLAG,
+						GameSettings.CAMERA_PICK_RAY_DST, visibleLayers);
+
+				Gdx.app.debug(tag, "Hit entity " + hitEntity);
+
+				if (hitEntity instanceof GameCharacter) {
+					selectedCharacter = (GameCharacter) hitEntity;
+					setMovementButtons(selectedCharacter.moveState);
+					notifyObserversEntitySelected(selectedCharacter);
+
+				} else if (selectedCharacter != null && hitEntity != null
+						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
+
+					if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
+							selectedCharacter.getGroundPosition(),
+							touchUpRay, visibleLayers,
+							GameSettings.CAMERA_PICK_RAY_DST,
+							selectedCharacter.navMeshGraphPath)) {
+
+						selectedCharacter.calculateNewPath();
+					}
+
+				}
+			}
+
+			isDragging = false;
+			dragCurrent.setZero();
+			lastDragProcessed.setZero();
+			return true;
+		}
+
+		@Override
+		public boolean touchDragged(int screenX, int screenY, int pointer) {
+			isDragging = true;
+			dragCurrent.set(screenX, screenY);
+
+			if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+				dragCurrentRay.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
+				lastDragProcessedRay.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+				cameraController.processDragPan(dragCurrentRay, lastDragProcessedRay);
+
+			} else if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
+				cursorDelta.set(lastDragProcessed).sub(screenX, screenY).scl(GameSettings.MOUSE_SENSITIVITY);
+				cameraController.processDragRotation(cursorDelta);
+			}
+			lastDragProcessed.set(screenX, screenY);
+
+			return true;
+		}
+
+		@Override
+		public boolean mouseMoved(int screenX, int screenY) {
+			movedRay.set(viewport.getPickRay(screenX, screenY));
+			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
+			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG,
+					GameEngine.NAVMESH_FLAG, 100, null);
+			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
+				mouseCoordsLabel.setText("");
+			} else {
+				mouseCoordsLabel.setText(tmp.toString());
+			}
+			return false;
+		}
+
+		@Override
+		public boolean scrolled(int amount) {
+			cameraController.processZoom(amount);
+			return true;
+		}
+
+		public void update(float deltaTime) {
+			keyPanDirection.setZero();
+			if (keys.containsKey(GameSettings.KEY_PAN_FORWARD)) {
+				keyPanDirection.y++;
+			}
+			if (keys.containsKey(GameSettings.KEY_PAN_BACKWARD)) {
+				keyPanDirection.y--;
+			}
+			if (keys.containsKey(GameSettings.KEY_PAN_LEFT)) {
+				keyPanDirection.x--;
+			}
+			if (keys.containsKey(GameSettings.KEY_PAN_RIGHT)) {
+				keyPanDirection.x++;
+			}
+			if (!keyPanDirection.isZero()) {
+				keyPanDirection.nor();
+				cameraController.processKeyboardPan(keyPanDirection, deltaTime);
+			}
+		}
+
+
+	}
+
+	public static final String tag = "GameStage";
 	private final Viewport viewport;
 	private final SpriteBatch batch;
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas movementButtonsAtlas;
 	private final Label mouseCoordsLabel;
-
 	private final ArrayMap<ImageButton, GameCharacter.CharacterState> movementButtons;
-
 	private final Camera cameraUI;
 	private final Camera camera3D;
 	private final Skin skin;
 	private final CameraController cameraController;
 	private final GameEngine engine;
-
 	private final Array<Observer> observers = new Array<Observer>();
 	private final WorldInputProcessor worldInputProcessor;
-
 	private GameCharacter selectedCharacter;
 	private Bits visibleLayers;
 
@@ -165,7 +333,6 @@ public class GameStage extends Stage implements Observable {
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
 
-
 	private WidgetGroup createMovementButtons() {
 		final Table table = new Table();
 
@@ -229,7 +396,6 @@ public class GameStage extends Stage implements Observable {
 //		});
 		return table;
 	}
-
 
 	private WidgetGroup createShaderMenu() {
 		final Table innerTable = new Table();
@@ -378,7 +544,6 @@ public class GameStage extends Stage implements Observable {
 		return outerTable;
 	}
 
-
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		viewport.setCamera(cameraUI);
@@ -423,188 +588,10 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
-
 	@Override
 	public void notifyObserversLayerChanged(Bits layer) {
 		for (Observer observer : observers) {
 			observer.notifyLayerChanged(layer);
 		}
-	}
-
-	public class WorldInputProcessor extends Actor implements InputProcessor {
-
-		private final Ray dragCurrentRay = new Ray();
-		private final Ray lastDragProcessedRay = new Ray();
-		private final Ray touchDownRay = new Ray();
-		private final Ray touchUpRay = new Ray();
-		private final Ray movedRay = new Ray();
-
-		private final Vector2 lastDragProcessed = new Vector2();
-		private final Vector2 cursorDelta = new Vector2();
-		private final Vector2 dragCurrent = new Vector2();
-		private final Vector2 keyPanDirection = new Vector2();
-
-		private final Vector3 tmp = new Vector3();
-
-		private final IntIntMap keys = new IntIntMap();
-
-		private boolean isDragging = false;
-
-		@Override
-		public boolean keyDown(int keycode) {
-			keys.put(keycode, keycode);
-			if (keycode == GameSettings.KEY_PAUSE) {
-				if (GameSettings.GAME_SPEED == 1) {
-					GameSettings.GAME_SPEED = 0;
-				} else if (GameSettings.GAME_SPEED == 0) {
-					GameSettings.GAME_SPEED = 0.05f;
-				} else if (GameSettings.GAME_SPEED == 0.05f) {
-					GameSettings.GAME_SPEED = 1;
-				}
-			}
-			if (keycode == GameSettings.KEY_KILL_CHARACTER) {
-				if (selectedCharacter != null) {
-					selectedCharacter.stateMachine.changeState(GameCharacter.CharacterState.DEAD);
-				}
-			}
-			return true;
-		}
-
-		@Override
-		public boolean keyUp(int keycode) {
-			keys.remove(keycode, 0);
-			return true;
-		}
-
-		@Override
-		public boolean keyTyped(char keyChar) {
-			int keyInt = Character.getNumericValue(keyChar);
-			keyInt--;
-			if (keyInt >= 0 && keyInt <= 9) {
-				visibleLayers.clear();
-				for (int i = 0; i <= keyInt; i++) {
-					visibleLayers.set(i);
-				}
-				notifyObserversLayerChanged(visibleLayers);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-			lastDragProcessed.set(screenX, screenY);
-			if (isDragging) {
-				// Player pressing both left and right
-
-			} else if (button == Input.Buttons.LEFT) {
-				touchDownRay.set(viewport.getPickRay(screenX, screenY));
-				cameraController.processTouchDownLeft(touchDownRay);
-
-			} else if (button == Input.Buttons.RIGHT) {
-				cameraController.processTouchDownRight();
-			}
-			return true;
-		}
-
-		@Override
-		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-			if (!isDragging) {
-				touchUpRay.set(viewport.getPickRay(screenX, screenY));
-
-				Entity hitEntity = engine.rayTest(
-						touchUpRay, tmp,
-						GameEngine.ALL_FLAG,
-						GameEngine.ALL_FLAG,
-						GameSettings.CAMERA_PICK_RAY_DST, visibleLayers);
-
-				Gdx.app.debug(tag, "Hit entity " + hitEntity);
-
-				if (hitEntity instanceof GameCharacter) {
-					selectedCharacter = (GameCharacter) hitEntity;
-					setMovementButtons(selectedCharacter.moveState);
-					notifyObserversEntitySelected(selectedCharacter);
-
-				} else if (selectedCharacter != null && hitEntity != null
-						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
-
-//					Vector3 startPos = selectedCharacter.getGroundPosition();
-
-					if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
-							selectedCharacter.getGroundPosition(),
-							touchUpRay, visibleLayers,
-							GameSettings.CAMERA_PICK_RAY_DST,
-							selectedCharacter.navMeshGraphPath)) {
-
-						selectedCharacter.calculateNewPath();
-					}
-
-				}
-			}
-
-			isDragging = false;
-			dragCurrent.setZero();
-			lastDragProcessed.setZero();
-			return true;
-		}
-
-		@Override
-		public boolean touchDragged(int screenX, int screenY, int pointer) {
-			isDragging = true;
-			dragCurrent.set(screenX, screenY);
-
-			if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-				dragCurrentRay.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
-				lastDragProcessedRay.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
-				cameraController.processDragPan(dragCurrentRay, lastDragProcessedRay);
-
-			} else if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
-				cursorDelta.set(lastDragProcessed).sub(screenX, screenY).scl(GameSettings.MOUSE_SENSITIVITY);
-				cameraController.processDragRotation(cursorDelta);
-			}
-			lastDragProcessed.set(screenX, screenY);
-
-			return true;
-		}
-
-		@Override
-		public boolean mouseMoved(int screenX, int screenY) {
-//			movedRay.set(viewport.getPickRay(screenX, screenY));
-//			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-//			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG, GameEngine.NAVMESH_FLAG, 100);
-//			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
-//				mouseCoordsLabel.setText("");
-//			} else {
-//				mouseCoordsLabel.setText(tmp.toString());
-//			}
-			return false;
-		}
-
-		@Override
-		public boolean scrolled(int amount) {
-			cameraController.processZoom(amount);
-			return true;
-		}
-
-		public void update(float deltaTime) {
-			keyPanDirection.setZero();
-			if (keys.containsKey(GameSettings.KEY_PAN_FORWARD)) {
-				keyPanDirection.y++;
-			}
-			if (keys.containsKey(GameSettings.KEY_PAN_BACKWARD)) {
-				keyPanDirection.y--;
-			}
-			if (keys.containsKey(GameSettings.KEY_PAN_LEFT)) {
-				keyPanDirection.x--;
-			}
-			if (keys.containsKey(GameSettings.KEY_PAN_RIGHT)) {
-				keyPanDirection.x++;
-			}
-			if (!keyPanDirection.isZero()) {
-				keyPanDirection.nor();
-				cameraController.processKeyboardPan(keyPanDirection, deltaTime);
-			}
-		}
-
-
 	}
 }

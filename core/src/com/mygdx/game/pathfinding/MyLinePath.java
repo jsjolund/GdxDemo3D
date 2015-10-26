@@ -18,20 +18,97 @@ package com.mygdx.game.pathfinding;
 
 
 import com.badlogic.gdx.ai.steer.utils.Path;
-import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector;
 import com.badlogic.gdx.utils.Array;
 
-/** A {@code LinePath} is a path for path following behaviors that is made up of a series of waypoints. Each waypoint is connected
+/**
+ * A {@code LinePath} is a path for path following behaviors that is made up of a series of waypoints. Each waypoint is connected
  * to the successor with a {@link Segment}.
  *
  * @param <T> Type of vector, either 2D or 3D, implementing the {@link Vector} interface
- *
  * @author davebaol
- * @author Daniel Holderbaum */
+ * @author Daniel Holderbaum
+ */
 public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LinePathParam> {
 
+	/**
+	 * A {@code LinePathParam} contains the status of a {@link }.
+	 *
+	 * @author davebaol
+	 */
+	public static class LinePathParam implements Path.PathParam {
+		int segmentIndex;
+		float distance;
+
+		@Override
+		public float getDistance() {
+			return distance;
+		}
+
+		@Override
+		public void setDistance(float distance) {
+			this.distance = distance;
+		}
+
+		public int getSegmentIndex() {
+			return segmentIndex;
+		}
+
+	}
+
+	/**
+	 * A {@code Segment} connects two consecutive waypoints of a {@link }.
+	 *
+	 * @param <T> Type of vector, either 2D or 3D, implementing the {@link Vector} interface
+	 * @author davebaol
+	 */
+	public static class Segment<T extends Vector<T>> {
+		T begin;
+		T end;
+		float length;
+		float cumulativeLength;
+
+		/**
+		 * Creates a {@code Segment} for the 2 given points.
+		 *
+		 * @param begin
+		 * @param end
+		 */
+		Segment(T begin, T end) {
+			this.begin = begin;
+			this.end = end;
+			this.length = begin.dst(end);
+		}
+
+		/**
+		 * Returns the start point of this segment.
+		 */
+		public T getBegin() {
+			return begin;
+		}
+
+		/**
+		 * Returns the end point of this segment.
+		 */
+		public T getEnd() {
+			return end;
+		}
+
+		/**
+		 * Returns the length of this segment.
+		 */
+		public float getLength() {
+			return length;
+		}
+
+		/**
+		 * Returns the cumulative length from the first waypoint of the {@link } this segment belongs to.
+		 */
+		public float getCumulativeLength() {
+			return cumulativeLength;
+		}
+	}
 	private Array<Segment<T>> segments;
 	private boolean isOpen;
 	private float pathLength;
@@ -41,17 +118,23 @@ public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LineP
 	private T tmp2;
 	private T tmp3;
 
-	/** Creates a closed {@code LinePath} for the specified {@code waypoints}.
+	/**
+	 * Creates a closed {@code LinePath} for the specified {@code waypoints}.
+	 *
 	 * @param waypoints the points making up the path
-	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or has less than two (2) waypoints. */
+	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or has less than two (2) waypoints.
+	 */
 	public MyLinePath(Array<T> waypoints) {
 		this(waypoints, false);
 	}
 
-	/** Creates a {@code LinePath} for the specified {@code waypoints}.
+	/**
+	 * Creates a {@code LinePath} for the specified {@code waypoints}.
+	 *
 	 * @param waypoints the points making up the path
-	 * @param isOpen a flag indicating whether the path is open or not
-	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or has less than two (2) waypoints. */
+	 * @param isOpen    a flag indicating whether the path is open or not
+	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or has less than two (2) waypoints.
+	 */
 	public MyLinePath(Array<T> waypoints, boolean isOpen) {
 		this.isOpen = isOpen;
 		createPath(waypoints);
@@ -82,12 +165,15 @@ public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LineP
 		return segments.peek().end;
 	}
 
-	/** Returns the square distance of the nearest point on line segment {@code a-b}, from point {@code c}. Also, the {@code out}
+	/**
+	 * Returns the square distance of the nearest point on line segment {@code a-b}, from point {@code c}. Also, the {@code out}
 	 * vector is assigned to the nearest point.
+	 *
 	 * @param out the output vector that contains the nearest point on return
-	 * @param a the start point of the line segment
-	 * @param b the end point of the line segment
-	 * @param c the point to calculate the distance from */
+	 * @param a   the start point of the line segment
+	 * @param b   the end point of the line segment
+	 * @param c   the point to calculate the distance from
+	 */
 	public float calculatePointSegmentSquareDistance(T out, T a, T b, T c) {
 		tmp1.set(a);
 		tmp2.set(b);
@@ -180,9 +266,12 @@ public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LineP
 		out.set(desiredSegment.begin).sub(desiredSegment.end).scl(distance / desiredSegment.length).add(desiredSegment.end);
 	}
 
-	/** Sets up this {@link Path} using the given way points.
+	/**
+	 * Sets up this {@link Path} using the given way points.
+	 *
 	 * @param waypoints The way points of this path.
-	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or empty. */
+	 * @throws IllegalArgumentException if {@code waypoints} is {@code null} or empty.
+	 */
 	public void createPath(Array<T> waypoints) {
 		if (waypoints == null || waypoints.size < 2)
 			throw new IllegalArgumentException("waypoints cannot be null and must contain at least two (2) waypoints");
@@ -208,69 +297,5 @@ public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LineP
 
 	public Array<Segment<T>> getSegments() {
 		return segments;
-	}
-
-	/** A {@code LinePathParam} contains the status of a {@link }.
-	 *
-	 * @author davebaol */
-	public static class LinePathParam implements Path.PathParam {
-		int segmentIndex;
-		float distance;
-
-		@Override
-		public float getDistance() {
-			return distance;
-		}
-
-		@Override
-		public void setDistance(float distance) {
-			this.distance = distance;
-		}
-
-		public int getSegmentIndex() {
-			return segmentIndex;
-		}
-
-	}
-
-	/** A {@code Segment} connects two consecutive waypoints of a {@link }.
-	 *
-	 * @param <T> Type of vector, either 2D or 3D, implementing the {@link Vector} interface
-	 *
-	 * @author davebaol */
-	public static class Segment<T extends Vector<T>> {
-		T begin;
-		T end;
-		float length;
-		float cumulativeLength;
-
-		/** Creates a {@code Segment} for the 2 given points.
-		 * @param begin
-		 * @param end */
-		Segment(T begin, T end) {
-			this.begin = begin;
-			this.end = end;
-			this.length = begin.dst(end);
-		}
-
-		/** Returns the start point of this segment. */
-		public T getBegin() {
-			return begin;
-		}
-
-		/** Returns the end point of this segment. */
-		public T getEnd() {
-			return end;
-		}
-
-		/** Returns the length of this segment. */
-		public float getLength() {
-			return length;
-		}
-
-		/** Returns the cumulative length from the first waypoint of the {@link } this segment belongs to. */
-		public float getCumulativeLength() {
-			return cumulativeLength;
-		}
 	}
 }

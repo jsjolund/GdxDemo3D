@@ -25,7 +25,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
-import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;

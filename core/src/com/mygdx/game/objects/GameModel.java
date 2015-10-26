@@ -19,10 +19,10 @@ public class GameModel extends GameObject {
 	public final float radius;
 	public final BoundingBox bounds = new BoundingBox();
 	public final String id;
+	public final Matrix4 transform;
 	public Bits layers = new Bits();
 	public ModelInstance modelInstance;
 	public boolean ignoreCulling = false;
-	public final Matrix4 transform;
 
 	public GameModel(Model model,
 					 String id,

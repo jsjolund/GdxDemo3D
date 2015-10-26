@@ -8,16 +8,6 @@ import com.badlogic.gdx.utils.ArrayMap;
  * Created by user on 7/31/15.
  */
 public abstract class BlenderObject {
-	public String type;
-	public String name;
-
-	public Vector3 position;
-	public Vector3 rotation;
-	public Vector3 scale;
-	public boolean[] layers;
-
-	public ArrayMap<String, String> custom_properties;
-
 	public static class BLight extends BlenderObject {
 		public Color lamp_color;
 		public float lamp_energy;
@@ -36,4 +26,11 @@ public abstract class BlenderObject {
 	public static class BEmpty extends BlenderObject {
 
 	}
+	public String type;
+	public String name;
+	public Vector3 position;
+	public Vector3 rotation;
+	public Vector3 scale;
+	public boolean[] layers;
+	public ArrayMap<String, String> custom_properties;
 }

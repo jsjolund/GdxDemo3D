@@ -22,6 +22,26 @@ import com.mygdx.game.utilities.BulletSteeringUtils;
  */
 public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
+	public NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
+	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
+	public Triangle currentTriangle;
+	SteeringAcceleration<Vector3> steeringOutput = new SteeringAcceleration<Vector3>(new Vector3());
+//	public Vector3 currentPathEnd;
+	SteeringBehavior<Vector3> steeringBehavior;
+	FollowPath<Vector3, MyLinePath.LinePathParam> followPathSB;
+	MyLinePath<Vector3> linePath;
+	private Vector3 linearVelocity = new Vector3();
+	private Vector3 angularVelocity = new Vector3();
+	private float zeroLinearSpeedThreshold;
+	private float maxLinearSpeed;
+	private float maxLinearAcceleration;
+	private boolean tagged;
+	private float maxAngularSpeed;
+	private float maxAngularAcceleration;
+	private Vector3 position = new Vector3();
+	private Vector3 groundPosition = new Vector3();
+	private Quaternion tmpQuat = new Quaternion();
+	private Vector3 tmpVec = new Vector3();
 	public SteerableBody(Model model, String id,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
@@ -33,31 +53,6 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
 	}
-
-	public NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
-	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
-	public Triangle currentTriangle;
-//	public Vector3 currentPathEnd;
-
-
-	private Vector3 linearVelocity = new Vector3();
-	private Vector3 angularVelocity = new Vector3();
-	private float zeroLinearSpeedThreshold;
-	private float maxLinearSpeed;
-	private float maxLinearAcceleration;
-	private boolean tagged;
-	private float maxAngularSpeed;
-	private float maxAngularAcceleration;
-	private Vector3 position = new Vector3();
-	private Vector3 groundPosition = new Vector3();
-
-	private Quaternion tmpQuat = new Quaternion();
-	private Vector3 tmpVec = new Vector3();
-
-	SteeringAcceleration<Vector3> steeringOutput = new SteeringAcceleration<Vector3>(new Vector3());
-	SteeringBehavior<Vector3> steeringBehavior;
-	FollowPath<Vector3, MyLinePath.LinePathParam> followPathSB;
-	MyLinePath<Vector3> linePath;
 
 	public void calculateNewPath() {
 //		currentPathEnd = navMeshGraphPath.end;
