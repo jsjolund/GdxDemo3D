@@ -137,7 +137,7 @@ public class Ragdoll extends SteerableBody {
 		}
 	}
 
-	public void toggle(boolean setRagdollControl) {
+	public void setRagdollControl(boolean setRagdollControl) {
 
 		if (setRagdollControl) {
 			updateBodiesToArmature();

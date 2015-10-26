@@ -207,8 +207,6 @@ public class GameStage extends Stage implements Observable {
 				cameraController.processKeyboardPan(keyPanDirection, deltaTime);
 			}
 		}
-
-
 	}
 
 	public static final String tag = "GameStage";

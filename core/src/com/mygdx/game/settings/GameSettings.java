@@ -15,7 +15,7 @@ public class GameSettings {
 	public static final float CAMERA_MIN_ZOOM = 1;
 	public static final float CAMERA_ZOOM_STEP = 4;
 	public static final float CAMERA_MAX_ZOOM = 40;
-	public static final float CAMERA_LERP_ALPHA = 0.1f;
+	public static final float CAMERA_LERP_ALPHA = 5f;
 
 	public static final float CAMERA_PICK_RAY_DST = 100;
 
