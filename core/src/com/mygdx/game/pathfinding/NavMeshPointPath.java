@@ -84,8 +84,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	private final Vector3 tmp1 = new Vector3();
 	private final Vector3 tmp2 = new Vector3();
 	private final Vector3 tmp3 = new Vector3();
-	private final Ray tmpRay = new Ray();
-	private Array<Connection<Triangle>> nodes = new Array<Connection<Triangle>>();
+	private Array<Connection<Triangle>> nodes;
 	private Vector3 up = Vector3.Y;
 	private Vector3 start;
 	private Vector3 end;
@@ -93,25 +92,37 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	private EdgePoint lastPointAdded;
 	private Array<Vector3> vectors = new Array<Vector3>();
 	private Array<EdgePoint> pathPoints = new Array<EdgePoint>();
+	private Edge nodelLastEdge;
 
 	@Override
 	public Iterator<Vector3> iterator() {
 		return vectors.iterator();
 	}
 
+	private Edge getEdge(int index) {
+		return (Edge) ((index == nodes.size) ? nodelLastEdge : nodes.get(index));
+	}
+
+	private int numEdges() {
+		return nodes.size + 1;
+	}
+
+	/**
+	 * Calculate the shortest path through the navigation mesh triangles.
+	 *
+	 * @param trianglePath
+	 */
 	public void calculateForGraphPath(NavMeshGraphPath trianglePath) {
 		clear();
-		for (Connection<Triangle> c : trianglePath) {
-			nodes.add(c);
-		}
+		nodes = trianglePath.nodes;
 		this.start = new Vector3(trianglePath.start);
 		this.end = new Vector3(trianglePath.end);
 		this.startTri = trianglePath.startTri;
 
 		// Check that the start point is actually inside the start triangle, if not, project it to the closest
 		// triangle edge. Otherwise the funnel calculation might generate spurious path segments.
-		tmpRay.set(tmp1.set(up).scl(100).add(start), tmp2.set(up).scl(-1));
-		if (!Intersector.intersectRayTriangle(tmpRay, startTri.a, startTri.b, startTri.c, null)) {
+		Ray ray = new Ray(tmp1.set(up).scl(1000).add(start), tmp2.set(up).scl(-1));
+		if (!Intersector.intersectRayTriangle(ray, startTri.a, startTri.b, startTri.c, null)) {
 			float minDst = Float.MAX_VALUE;
 			Vector3 projection = new Vector3();
 			Vector3 newStart = new Vector3();
@@ -126,40 +137,82 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 			}
 			start.set(newStart);
 		}
-		calculateEdgePoints();
+		if (nodes.size == 0) {
+			addPoint(start, startTri);
+			addPoint(end, startTri);
+		} else {
+			nodelLastEdge = new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end);
+			calculateEdgePoints();
+		}
 	}
 
+	/**
+	 * Clear the stored path data.
+	 */
 	public void clear() {
 		vectors.clear();
 		pathPoints.clear();
-
-		nodes.clear();
 		start = null;
 		end = null;
 		startTri = null;
 		lastPointAdded = null;
+		nodelLastEdge = null;
 	}
 
+	/**
+	 * A path point which crosses one or more edges in the navigation mesh.
+	 *
+	 * @param index
+	 * @return
+	 */
 	public Vector3 getVector(int index) {
 		return vectors.get(index);
 	}
 
+	/**
+	 * The number of path points.
+	 *
+	 * @return
+	 */
 	public int getSize() {
 		return vectors.size;
 	}
 
+	/**
+	 * All vectors in the path.
+	 *
+	 * @return
+	 */
 	public Array<Vector3> getVectors() {
 		return vectors;
 	}
 
+	/**
+	 * The triangle which must be crossed to reach the next path point.
+	 *
+	 * @param index
+	 * @return
+	 */
 	public Triangle getToTriangle(int index) {
 		return pathPoints.get(index).toNode;
 	}
 
+	/**
+	 * The triangle from which must be crossed to reach this point.
+	 *
+	 * @param index
+	 * @return
+	 */
 	public Triangle getFromTriangle(int index) {
 		return pathPoints.get(index).fromNode;
 	}
 
+	/**
+	 * The navmesh edge(s) crossed at this path point.
+	 *
+	 * @param index
+	 * @return
+	 */
 	public Array<Edge> getCrossedEdges(int index) {
 		return pathPoints.get(index).connectingEdges;
 	}
@@ -175,18 +228,12 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	}
 
 	/**
-	 * Calculate the shortest path through the path triangles, using the Simple Stupid Funnel Algorithm.
+	 * Calculate the shortest point path through the path triangles, using the Simple Stupid Funnel Algorithm.
 	 *
 	 * @return
 	 */
 	private void calculateEdgePoints() {
-		if (nodes.size == 0) {
-			addPoint(start, startTri);
-			addPoint(end, startTri);
-			return;
-		}
-		nodes.add(new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end));
-		Edge edge = (Edge) nodes.get(0);
+		Edge edge = getEdge(0);
 		addPoint(start, edge.fromNode);
 		lastPointAdded.fromNode = edge.fromNode;
 
@@ -198,8 +245,8 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		int rightIndex = 0;
 		int lastRestart = 0;
 
-		for (int i = 1; i < nodes.size; ++i) {
-			edge = (Edge) nodes.get(i);
+		for (int i = 1; i < numEdges(); ++i) {
+			edge = getEdge(i);
 
 			Plane.PlaneSide leftPlaneLeftDP = funnel.sideLeftPlane(edge.leftVertex);
 			Plane.PlaneSide leftPlaneRightDP = funnel.sideLeftPlane(edge.rightVertex);
@@ -217,9 +264,9 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 					funnel.pivot.set(funnel.leftPortal);
 					i = leftIndex;
 					rightIndex = i;
-					if (i < nodes.size - 1) {
+					if (i < numEdges() - 1) {
 						lastRestart = i;
-						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
+						funnel.setPlanes(funnel.pivot, getEdge(i + 1));
 						continue;
 					}
 					break;
@@ -236,17 +283,16 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 					funnel.pivot.set(funnel.rightPortal);
 					i = rightIndex;
 					leftIndex = i;
-					if (i < nodes.size - 1) {
+					if (i < numEdges() - 1) {
 						lastRestart = i;
-						funnel.setPlanes(funnel.pivot, (Edge) nodes.get(i + 1));
+						funnel.setPlanes(funnel.pivot, getEdge(i + 1));
 						continue;
 					}
 					break;
 				}
 			}
 		}
-		calculateEdgeCrossings(lastRestart, nodes.size - 1, funnel.pivot, end);
-		nodes.removeIndex(nodes.size - 1);
+		calculateEdgeCrossings(lastRestart, numEdges() - 1, funnel.pivot, end);
 
 		for (int i = 1; i < pathPoints.size; i++) {
 			EdgePoint p = pathPoints.get(i);
@@ -255,21 +301,34 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		return;
 	}
 
+	/**
+	 * Store all edge crossing points between the start and end indices.
+	 * If the path crosses exactly the start or end points (which is quite likely),
+	 * store the edges in order of crossing in the EdgePoint data structure.
+	 * <p/>
+	 * Edge crossings are calculated as intersections with the plane from the
+	 * start, end and up vectors.
+	 *
+	 * @param startIndex
+	 * @param endIndex
+	 * @param startPoint
+	 * @param endPoint
+	 */
 	private void calculateEdgeCrossings(int startIndex, int endIndex,
 										Vector3 startPoint, Vector3 endPoint) {
 
-		if (startIndex >= nodes.size || endIndex >= nodes.size) {
+		if (startIndex >= numEdges() || endIndex >= numEdges()) {
 			return;
 		}
 		crossingPlane.set(startPoint, tmp1.set(startPoint).add(up), endPoint);
 
 		EdgePoint previousLast = lastPointAdded;
 
-		Edge edge = (Edge) nodes.get(endIndex);
+		Edge edge = getEdge(endIndex);
 		EdgePoint end = new EdgePoint(new Vector3(endPoint), edge.toNode);
 
 		for (int i = startIndex; i < endIndex; i++) {
-			edge = (Edge) nodes.get(i);
+			edge = getEdge(i);
 			Vector3 xPoint = new Vector3();
 
 			if (edge.rightVertex.equals(startPoint) || edge.leftVertex.equals(startPoint)) {
@@ -293,8 +352,8 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 				}
 			}
 		}
-		if (endIndex < nodes.size - 1) {
-			end.connectingEdges.add((Edge) nodes.get(endIndex));
+		if (endIndex < numEdges() - 1) {
+			end.connectingEdges.add(getEdge(endIndex));
 		}
 		if (!lastPointAdded.equals(end)) {
 			addPoint(end);
@@ -303,7 +362,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 
 	/**
 	 * From com.badlogic.gdx.ai.steer.paths.LinePath
-	 * <p>
+	 * <p/>
 	 * Returns the square distance of the nearest point on line segment {@code a-b}, from point {@code c}.
 	 * Also, the {@code out}* vector is assigned to the nearest point.
 	 *

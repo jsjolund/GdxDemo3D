@@ -23,7 +23,7 @@ public class GhostCamera extends PerspectiveCamera {
 	}
 
 	public void update(float deltaTime, float alpha) {
-		alpha*=deltaTime;
+		alpha *= deltaTime;
 		super.position.lerp(position, alpha);
 		super.direction.lerp(direction, alpha);
 		super.up.lerp(up, alpha);

@@ -109,6 +109,7 @@ public class MyLinePath<T extends Vector<T>> implements Path<T, MyLinePath.LineP
 			return cumulativeLength;
 		}
 	}
+
 	private Array<Segment<T>> segments;
 	private boolean isOpen;
 	private float pathLength;

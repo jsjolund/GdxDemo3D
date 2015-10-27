@@ -91,6 +91,7 @@ public class GameEngine extends PooledEngine implements Disposable {
 			return 1;
 		}
 	}
+
 	public static final String tag = "PhysicsSystem";
 	// Collision flags
 	public final static short NONE_FLAG = 0;

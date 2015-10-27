@@ -42,6 +42,7 @@ public class BlenderScene {
 			return a.material.id.compareTo(b.material.id);
 		}
 	}
+
 	public static final String tag = "BlenderScene";
 	public Array<BaseLight> lights = new Array<BaseLight>();
 	public Array<GameModelBody> entities = new Array<GameModelBody>();

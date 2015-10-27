@@ -89,25 +89,28 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 
-		if (steeringBehavior != null) {
-			// Calculate steering acceleration
-			steeringBehavior.calculateSteering(steeringOutput);
-
-			// Apply steering acceleration
-			applySteering(steeringOutput, deltaTime);
-
-			if (currentSegment != followPathSB.getPathParam().getSegmentIndex()) {
-				// Steering target path segment changed. Update rotation and current navmesh triangle.
-				currentSegment = followPathSB.getPathParam().getSegmentIndex();
-				MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
-				targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
-				targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
-
-				currentTriangle = navMeshPointPath.getToTriangle(currentSegment);
-				layers.clear();
-				layers.set(currentTriangle.meshPartIndex);
-			}
+		if (steeringBehavior == null) {
+			return;
 		}
+
+		// Calculate steering acceleration
+		steeringBehavior.calculateSteering(steeringOutput);
+
+		// Apply steering acceleration
+		applySteering(steeringOutput, deltaTime);
+
+		if (currentSegment != followPathSB.getPathParam().getSegmentIndex()) {
+			// Steering target path segment changed. Update rotation and current navmesh triangle.
+			currentSegment = followPathSB.getPathParam().getSegmentIndex();
+			MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
+			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
+			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
+
+			currentTriangle = navMeshPointPath.getToTriangle(currentSegment);
+			layers.clear();
+			layers.set(currentTriangle.meshPartIndex);
+		}
+
 
 		boolean isSteering = isSteering();
 		if (isSteering && !wasSteering) {

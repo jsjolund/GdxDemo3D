@@ -211,6 +211,7 @@ public class GameCharacter extends Ragdoll {
 		if (isSteering && !wasSteering) {
 			wasSteering = isSteering;
 			stateMachine.changeState(moveState);
+
 		} else if (!isSteering && wasSteering) {
 			wasSteering = isSteering;
 			if (stateMachine.getCurrentState() != CharacterState.DEAD) {

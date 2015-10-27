@@ -26,6 +26,7 @@ public abstract class BlenderObject {
 	public static class BEmpty extends BlenderObject {
 
 	}
+
 	public String type;
 	public String name;
 	public Vector3 position;

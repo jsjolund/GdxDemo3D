@@ -33,6 +33,7 @@ public class GameModelBody extends GameModel {
 			transform.set(worldTrans);
 		}
 	}
+
 	private final static Vector3 localInertia = new Vector3();
 	public final btRigidBody body;
 	public final short belongsToFlag;
@@ -42,7 +43,7 @@ public class GameModelBody extends GameModel {
 	public final PhysicsMotionState motionState;
 	protected final float mass;
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
-//	public PathFindingData pathData;
+	//	public PathFindingData pathData;
 	private Matrix4 matrix = new Matrix4();
 
 	public GameModelBody(Model model,

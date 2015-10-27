@@ -36,6 +36,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 			this.toTriIndex = toTriIndex;
 		}
 	}
+
 	private ArrayMap<Triangle, Array<Connection<Triangle>>> map;
 	private int[] meshPartTriIndexOffsets;
 
