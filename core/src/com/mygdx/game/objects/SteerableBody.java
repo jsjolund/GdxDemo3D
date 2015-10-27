@@ -63,9 +63,13 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	public void calculateNewPath() {
 		navMeshPointPath.calculateForGraphPath(navMeshGraphPath);
+
+		// Since the navmesh path is on the ground, we need to translate
+		// it to align with body origin
 		Array<Vector3> centerOfMassPath = new Array<Vector3>();
+		float offset = bounds.getHeight() / 2;
 		for (Vector3 v : navMeshPointPath) {
-			centerOfMassPath.add(new Vector3(v).add(0, bounds.getHeight() / 2, 0));
+			centerOfMassPath.add(new Vector3(v).add(0, offset, 0));
 		}
 		linePath = new MyLinePath<Vector3>(centerOfMassPath, true);
 		followPathSB =
