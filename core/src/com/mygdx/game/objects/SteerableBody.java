@@ -73,6 +73,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 						.setPredictionTime(SteerSettings.predictionTime)
 						.setPathOffset(SteerSettings.pathOffset);
 		steeringBehavior = followPathSB;
+		setZeroLinearSpeedThreshold(SteerSettings.zeroLinearSpeedThreshold);
 
 	}
 
@@ -111,7 +112,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			if (currentSpeedSquare > maxLinearSpeed * maxLinearSpeed) {
 				body.setLinearVelocity(velocity.scl(maxLinearSpeed / (float) Math.sqrt(currentSpeedSquare)));
 			}
-			// Set facing
+			// Set facing of model, setting facing of body causes problems when applying force.
 			MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(
 					followPathSB.getPathParam().getSegmentIndex());
 			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();

@@ -38,7 +38,11 @@ public class Billboard extends GameModel {
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 		followTransform.getTranslation(worldPos);
-		modelInstance.transform.set(camera.view).inv();
+		try {
+			modelInstance.transform.set(camera.view).inv();
+		} catch (RuntimeException e) {
+
+		}
 		if (faceUp) {
 			camera.view.getRotation(quat);
 			modelInstance.transform.setFromEulerAngles(-quat.getYaw(), -90, 0);

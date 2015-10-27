@@ -68,7 +68,7 @@ public class GameCharacter extends Ragdoll {
 		MOVE_CROUCH() {
 			@Override
 			public void enter(GameCharacter entity) {
-				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.1f);
+				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
 				entity.idleState = IDLE_CROUCH;
 
 				entity.setMaxLinearSpeed(SteerSettings.maxLinearSpeed * SteerSettings.crouchMultiplier);
@@ -175,7 +175,6 @@ public class GameCharacter extends Ragdoll {
 	public CharacterState moveState = CharacterState.MOVE_WALK;
 	public CharacterState idleState = CharacterState.IDLE_STAND;
 	private boolean wasSteering = false;
-	private Matrix4 tmpMatrix = new Matrix4();
 
 	public GameCharacter(Model model,
 						 String id,
@@ -191,7 +190,9 @@ public class GameCharacter extends Ragdoll {
 						 String ragdollJson,
 						 String armatureNodeId) {
 
-		super(model, id, location, rotation, scale, shape, mass, belongsToFlag, collidesWithFlag, callback, noDeactivate, ragdollJson, armatureNodeId);
+		super(model, id, location, rotation, scale,
+				shape, mass, belongsToFlag, collidesWithFlag,
+				callback, noDeactivate, ragdollJson, armatureNodeId);
 
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
@@ -215,13 +216,15 @@ public class GameCharacter extends Ragdoll {
 
 		} else if (!isSteering && wasSteering) {
 			wasSteering = isSteering;
-			stateMachine.changeState(idleState);
+			if (stateMachine.getCurrentState() != CharacterState.DEAD) {
+				stateMachine.changeState(idleState);
+			}
 			body.setFriction(SteerSettings.idleFriction);
 			body.setAngularVelocity(Vector3.Zero);
-
-			tmpMatrix.setToLookAt(facing, Vector3.Y).setTranslation(getPosition());
-			body.proceedToTransform(tmpMatrix);
+			// Since we are only rotating the model when steering, set body to
+			// model rotation when finished moving.
+			transform.setToLookAt(facing, Vector3.Y).setTranslation(getPosition());
+			body.setWorldTransform(transform);
 		}
-		setZeroLinearSpeedThreshold(SteerSettings.zeroLinearSpeedThreshold);
 	}
 }

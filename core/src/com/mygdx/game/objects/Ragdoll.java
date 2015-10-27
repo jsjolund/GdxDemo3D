@@ -41,12 +41,12 @@ public class Ragdoll extends SteerableBody {
 
 	public final ArrayMap<btRigidBody, RigidBodyNodeConnection> bodyPartMap = new ArrayMap<btRigidBody, RigidBodyNodeConnection>();
 	public final Array<Node> nodes = new Array<Node>();
-	public final Matrix4 baseBodyTransform = new Matrix4();
+	public final Matrix4 capsuleTransform = new Matrix4();
 	public final Matrix4 resetRotationTransform = new Matrix4();
 	public final Matrix4 tmpMatrix = new Matrix4();
 	public final Vector3 tmpVec = new Vector3();
-	public final Vector3 nodeTrans = new Vector3();
-	public final Vector3 baseTrans = new Vector3();
+	public final Vector3 nodeTranslation = new Vector3();
+	public final Vector3 capsuleTranslation = new Vector3();
 	public boolean ragdollControl = false;
 
 	public Ragdoll(Model model,
@@ -96,6 +96,7 @@ public class Ragdoll extends SteerableBody {
 			ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection> bodyEntry = iterator1.next();
 			btRigidBody partBody = bodyEntry.key;
 			RigidBodyNodeConnection connection = bodyEntry.value;
+			capsuleTransform.getTranslation(capsuleTranslation);
 
 			// Loop over each node connected to this collision shape
 			for (Iterator<ObjectMap.Entry<Node, Vector3>> iterator2
@@ -109,11 +110,9 @@ public class Ragdoll extends SteerableBody {
 				partBody.getWorldTransform(node.localTransform);
 				// Calculate difference in translation between the node/ragdoll part and the
 				// base capsule shape.
-				node.localTransform.getTranslation(nodeTrans);
-				baseBodyTransform.getTranslation(baseTrans);
-				nodeTrans.sub(baseTrans);
+				node.localTransform.getTranslation(nodeTranslation);
 				// Calculate the final node transform
-				node.localTransform.setTranslation(nodeTrans).translate(tmpVec.set(offset).scl(-1));
+				node.localTransform.setTranslation(nodeTranslation.sub(capsuleTranslation)).translate(tmpVec.set(offset).scl(-1));
 			}
 		}
 		// Calculate the final transform of the model.
@@ -123,7 +122,7 @@ public class Ragdoll extends SteerableBody {
 	private void updateBodiesToArmature() {
 		// Ragdoll parts should follow the model animation.
 		// Loop over each part and set it to the global transform of the armature node it should follow.
-		body.getWorldTransform(baseBodyTransform);
+		capsuleTransform.set(transform);
 		for (Iterator<ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection>> iterator
 			 = bodyPartMap.iterator(); iterator.hasNext(); ) {
 			ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection> entry = iterator.next();
@@ -132,7 +131,7 @@ public class Ragdoll extends SteerableBody {
 			Node followNode = data.followNode;
 			Vector3 offset = data.bodyNodeOffsets.get(followNode);
 
-			body.proceedToTransform(tmpMatrix.set(baseBodyTransform)
+			body.proceedToTransform(tmpMatrix.set(capsuleTransform)
 					.mul(followNode.globalTransform).translate(offset));
 		}
 	}
@@ -147,11 +146,10 @@ public class Ragdoll extends SteerableBody {
 			ragdollControl = true;
 
 			// Get the current translation of the base collision shape (the capsule)
-			baseBodyTransform.getTranslation(baseTrans);
+			capsuleTransform.getTranslation(capsuleTranslation);
 			// Reset any rotation of the model caused by the motion state from the physics engine,
 			// but keep the translation.
-			modelInstance.transform =
-					resetRotationTransform.idt().inv().setToTranslation(baseTrans);
+			modelInstance.transform = resetRotationTransform.idt().inv().setToTranslation(capsuleTranslation);
 
 			// Set the velocities of the ragdoll collision shapes to be the same as the base shape.
 			for (btRigidBody bodyPart : bodyPartMap.keys()) {
