@@ -7,7 +7,6 @@ import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
@@ -212,19 +211,12 @@ public class GameCharacter extends Ragdoll {
 		if (isSteering && !wasSteering) {
 			wasSteering = isSteering;
 			stateMachine.changeState(moveState);
-			body.setFriction(0);
-
 		} else if (!isSteering && wasSteering) {
 			wasSteering = isSteering;
 			if (stateMachine.getCurrentState() != CharacterState.DEAD) {
 				stateMachine.changeState(idleState);
 			}
-			body.setFriction(SteerSettings.idleFriction);
-			body.setAngularVelocity(Vector3.Zero);
-			// Since we are only rotating the model when steering, set body to
-			// model rotation when finished moving.
-			transform.setToLookAt(facing, Vector3.Y).setTranslation(getPosition());
-			body.setWorldTransform(transform);
 		}
+
 	}
 }
