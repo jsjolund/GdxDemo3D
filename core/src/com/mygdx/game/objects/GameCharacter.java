@@ -192,14 +192,16 @@ public class GameCharacter extends Ragdoll {
 		super(model, id, location, rotation, scale,
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
+		// Only allow player capsule to turn around the up axis
+		body.setAngularFactor(Vector3.Y);
 
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
 		stateMachine = new DefaultStateMachine<GameCharacter>(this, CharacterState.GLOBAL);
+		// Set the steering variables associated with default move state (walking)
+		stateMachine.changeState(moveState);
+		// Then make the character idle
 		stateMachine.changeState(idleState);
-
-		body.setAngularFactor(Vector3.Y);
-		body.setFriction(SteerSettings.idleFriction);
 	}
 
 	@Override

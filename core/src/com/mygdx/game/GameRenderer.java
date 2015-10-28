@@ -149,7 +149,7 @@ public class GameRenderer implements Disposable, Observer {
 		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
 		tmp.add(gameModel.center);
-		return camera.frustum.sphereInFrustum(tmp, gameModel.radius);
+		return camera.frustum.sphereInFrustum(tmp, gameModel.boundingRadius);
 	}
 
 	public void update(float deltaTime) {
@@ -164,7 +164,7 @@ public class GameRenderer implements Disposable, Observer {
 					modelBatch.render(mdl.modelInstance, environment);
 				}
 			}
-			if (isVisible(camera, markerBillboard)) {
+			if (markerBillboard != null && isVisible(camera, markerBillboard)) {
 				modelBatch.render(markerBillboard.modelInstance, environment);
 			}
 			modelBatch.end();

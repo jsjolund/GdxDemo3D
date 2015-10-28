@@ -102,7 +102,7 @@ public class GameModelBody extends GameModel {
 //		}
 //		body.getWorldTransform().getTranslation(pathData.currentPosition);
 //		pathData.currentGroundPosition.set(pathData.currentPosition);
-//		pathData.currentGroundPosition.y -= bounds.getHeight() / 2;
+//		pathData.currentGroundPosition.y -= boundingBox.getHeight() / 2;
 //		pathData.posGroundRay.origin.set(pathData.currentPosition);
 //		if (pathData.goalReached) {
 //			return;

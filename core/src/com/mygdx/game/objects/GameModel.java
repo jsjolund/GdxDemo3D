@@ -16,8 +16,8 @@ public class GameModel extends GameObject {
 	public static final String tag = "ModelComponent";
 	public final Vector3 center = new Vector3();
 	public final Vector3 dimensions = new Vector3();
-	public final float radius;
-	public final BoundingBox bounds = new BoundingBox();
+	public final float boundingRadius;
+	public final BoundingBox boundingBox = new BoundingBox();
 	public final String id;
 	public final Matrix4 transform;
 	public Bits layers = new Bits();
@@ -43,13 +43,13 @@ public class GameModel extends GameObject {
 		modelInstance.calculateTransforms();
 
 		try {
-			modelInstance.calculateBoundingBox(bounds);
+			modelInstance.calculateBoundingBox(boundingBox);
 		} catch (Exception e) {
 			Gdx.app.debug(tag, "Error when calculating bounding box.", e);
 		}
-		bounds.getCenter(center);
-		bounds.getDimensions(dimensions);
-		radius = dimensions.len() / 2f;
+		boundingBox.getCenter(center);
+		boundingBox.getDimensions(dimensions);
+		boundingRadius = dimensions.len() / 2f;
 		transform = modelInstance.transform;
 	}
 

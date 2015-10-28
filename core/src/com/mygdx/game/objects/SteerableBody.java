@@ -59,6 +59,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				shape, mass,
 				belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
+		setZeroLinearSpeedThreshold(SteerSettings.zeroLinearSpeedThreshold);
 	}
 
 	public void calculateNewPath() {
@@ -67,7 +68,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Since the navmesh path is on the ground, we need to translate
 		// it to align with body origin
 		Array<Vector3> centerOfMassPath = new Array<Vector3>();
-		float offset = bounds.getHeight() / 2;
+		float offset = boundingBox.getHeight() / 2;
 		for (Vector3 v : navMeshPointPath) {
 			centerOfMassPath.add(new Vector3(v).add(0, offset, 0));
 		}
@@ -105,12 +106,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
 			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
 			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
-
 			currentTriangle = navMeshPointPath.getToTriangle(currentSegment);
 			layers.clear();
 			layers.set(currentTriangle.meshPartIndex);
 		}
-
 
 		boolean isSteering = isSteering();
 		if (isSteering && !wasSteering) {
@@ -121,7 +120,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			wasSteering = isSteering;
 			body.setFriction(SteerSettings.idleFriction);
 			body.setAngularVelocity(Vector3.Zero);
-			// Since we are only rotating the model when steering, set body to
+			// Since we were only rotating the model when steering, set body to
 			// model rotation when finished moving.
 			transform.setFromEulerAngles(
 					currentFacingQuat.getYaw(),
@@ -179,7 +178,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	@Override
 	public float getBoundingRadius() {
-		return radius;
+		return boundingRadius;
 	}
 
 	@Override
@@ -274,7 +273,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	public Vector3 getGroundPosition() {
 		body.getWorldTransform().getTranslation(groundPosition);
-		groundPosition.y -= bounds.getHeight() / 2;
+		groundPosition.y -= boundingBox.getHeight() / 2;
 		return groundPosition;
 	}
 }

@@ -50,6 +50,7 @@ public class GameStage extends Stage implements Observable {
 		private final Vector2 cursorDelta = new Vector2();
 		private final Vector2 dragCurrent = new Vector2();
 		private final Vector2 keyPanDirection = new Vector2();
+		private final Vector2 lastTouchDown = new Vector2();
 
 		private final Vector3 tmp = new Vector3();
 
@@ -99,6 +100,7 @@ public class GameStage extends Stage implements Observable {
 
 		@Override
 		public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+			lastTouchDown.set(screenX, screenY);
 			lastDragProcessed.set(screenX, screenY);
 			if (button == Input.Buttons.LEFT) {
 				touchDownRay.set(viewport.getPickRay(screenX, screenY));
@@ -142,7 +144,6 @@ public class GameStage extends Stage implements Observable {
 
 				}
 			}
-
 			isDragging = false;
 			dragCurrent.setZero();
 			lastDragProcessed.setZero();
@@ -151,33 +152,32 @@ public class GameStage extends Stage implements Observable {
 
 		@Override
 		public boolean touchDragged(int screenX, int screenY, int pointer) {
-			isDragging = true;
 			dragCurrent.set(screenX, screenY);
+			if (dragCurrent.dst2(lastTouchDown) > GameSettings.MOUSE_DRAG_THRESHOLD) {
+				isDragging = true;
+				if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+					dragCurrentRay.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
+					lastDragProcessedRay.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
+					cameraController.processDragPan(dragCurrentRay, lastDragProcessedRay);
 
-			if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
-				dragCurrentRay.set(viewport.getPickRay(dragCurrent.x, dragCurrent.y));
-				lastDragProcessedRay.set(viewport.getPickRay(lastDragProcessed.x, lastDragProcessed.y));
-				cameraController.processDragPan(dragCurrentRay, lastDragProcessedRay);
-
-			} else if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
-				cursorDelta.set(lastDragProcessed).sub(screenX, screenY).scl(GameSettings.MOUSE_SENSITIVITY);
-				cameraController.processDragRotation(cursorDelta);
+				} else if (Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
+					cursorDelta.set(lastDragProcessed).sub(screenX, screenY).scl(GameSettings.MOUSE_SENSITIVITY);
+					cameraController.processDragRotation(cursorDelta);
+				}
+				lastDragProcessed.set(screenX, screenY);
 			}
-			lastDragProcessed.set(screenX, screenY);
-
 			return true;
 		}
 
 		@Override
 		public boolean mouseMoved(int screenX, int screenY) {
 			movedRay.set(viewport.getPickRay(screenX, screenY));
-			tmp.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG,
 					GameEngine.NAVMESH_FLAG, 100, null);
-			if (tmp.x == Float.MAX_VALUE && tmp.y == Float.MAX_VALUE && tmp.z == Float.MAX_VALUE) {
-				mouseCoordsLabel.setText("");
+			if (e == null) {
+				mouseCoordsLabel.setText(" NavMesh: ");
 			} else {
-				mouseCoordsLabel.setText(tmp.toString());
+				mouseCoordsLabel.setText(" NavMesh: " + tmp.toString());
 			}
 			return false;
 		}
@@ -224,6 +224,7 @@ public class GameStage extends Stage implements Observable {
 	private final GameEngine engine;
 	private final Array<Observer> observers = new Array<Observer>();
 	private final WorldInputProcessor worldInputProcessor;
+	private final Label fpsLabel;
 	private GameCharacter selectedCharacter;
 	private Bits visibleLayers;
 
@@ -257,14 +258,16 @@ public class GameStage extends Stage implements Observable {
 		movementButtons = new ArrayMap<ImageButton, GameCharacter.CharacterState>();
 
 		mouseCoordsLabel = new Label(null, skin);
+		fpsLabel = new Label(null, skin);
 
 		rootTable = new Table();
 		rootTable.setDebug(true, true);
 
 		Table topTable = new Table();
+		topTable.add(fpsLabel).top().left();
 		topTable.add(mouseCoordsLabel).top().left();
 		topTable.add(new Table()).expandX().fillX();
-		rootTable.add(topTable);
+		rootTable.add(topTable).expandX().fillX();
 		rootTable.row();
 		rootTable.add(new Table()).expandY().fillY();
 		rootTable.row();
@@ -567,6 +570,7 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		worldInputProcessor.update(Gdx.graphics.getDeltaTime());
+		fpsLabel.setText(String.format("FPS=%d", Gdx.graphics.getFramesPerSecond()));
 	}
 
 	@Override

@@ -180,7 +180,7 @@ public class BlenderScene {
 
 				navmeshEntity = new InvisibleBody(
 						shape, mass, gameModel.modelInstance.transform, belongsToFlag, collidesWithFlag, callback, noDeactivate);
-				worldBounds.set(gameModel.bounds);
+				worldBounds.set(gameModel.boundingBox);
 				// Finished with the navmesh
 				continue;
 			}
