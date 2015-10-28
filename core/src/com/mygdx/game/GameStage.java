@@ -62,18 +62,10 @@ public class GameStage extends Stage implements Observable {
 		public boolean keyDown(int keycode) {
 			keys.put(keycode, keycode);
 			if (keycode == GameSettings.KEY_PAUSE) {
-				if (GameSettings.GAME_SPEED == 1) {
-					GameSettings.GAME_SPEED = 0;
-				} else if (GameSettings.GAME_SPEED == 0) {
-					GameSettings.GAME_SPEED = 0.05f;
-				} else if (GameSettings.GAME_SPEED == 0.05f) {
-					GameSettings.GAME_SPEED = 1;
-				}
+				speedController.setGameSpeed();
 			}
 			if (keycode == GameSettings.KEY_KILL_CHARACTER) {
-				if (selectedCharacter != null) {
-					selectedCharacter.stateMachine.changeState(GameCharacter.CharacterState.DEAD);
-				}
+				characterController.killCharacter();
 			}
 			return true;
 		}
@@ -126,22 +118,10 @@ public class GameStage extends Stage implements Observable {
 				Gdx.app.debug(tag, "Hit entity " + hitEntity);
 
 				if (hitEntity instanceof GameCharacter) {
-					selectedCharacter = (GameCharacter) hitEntity;
-					setMovementButtons(selectedCharacter.moveState);
-					notifyObserversEntitySelected(selectedCharacter);
+					characterController.handleCharacterSelection((GameCharacter) hitEntity);
 
-				} else if (selectedCharacter != null && hitEntity != null
-						&& hitEntity.getId() == engine.navmeshEntity.getId()) {
-
-					if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
-							selectedCharacter.getGroundPosition(),
-							touchUpRay, visibleLayers,
-							GameSettings.CAMERA_PICK_RAY_DST,
-							selectedCharacter.navMeshGraphPath)) {
-
-						selectedCharacter.calculateNewPath();
-					}
-
+				} else if (hitEntity == engine.navmeshEntity) {
+					characterController.handleCharacterPathing(touchUpRay);
 				}
 			}
 			isDragging = false;
@@ -209,14 +189,183 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
+	private class GameSpeedController extends Table {
+
+		private final ImageButton imageButton;
+		private final ImageButton.ImageButtonStyle btnPauseStyle;
+		private final ImageButton.ImageButtonStyle btnPlayStyle;
+		private final ImageButton.ImageButtonStyle btnSlowStyle;
+
+		public GameSpeedController(TextureAtlas buttonAtlas) {
+			super();
+
+			btnPauseStyle = new ImageButton.ImageButtonStyle();
+			btnPauseStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("pause-up"));
+			btnPauseStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("pause-down"));
+			btnPauseStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("pause-down"));
+
+
+			btnPlayStyle = new ImageButton.ImageButtonStyle();
+			btnPlayStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("play-up"));
+			btnPlayStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("play-down"));
+			btnPlayStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("play-down"));
+
+			btnSlowStyle = new ImageButton.ImageButtonStyle();
+			btnSlowStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("slow-up"));
+			btnSlowStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("slow-down"));
+			btnSlowStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("slow-down"));
+
+			imageButton = new ImageButton(btnPauseStyle);
+
+			imageButton.addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					setGameSpeed();
+					return true;
+				}
+			});
+
+			add(imageButton).size(75, 75);
+		}
+
+		public void setGameSpeed() {
+			if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_PLAY) {
+				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_PAUSE;
+				imageButton.setStyle(btnSlowStyle);
+
+			} else if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_PAUSE) {
+				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_SLOW;
+				imageButton.setStyle(btnPlayStyle);
+
+			} else if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_SLOW) {
+				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_PLAY;
+				imageButton.setStyle(btnPauseStyle);
+
+			}
+		}
+	}
+
+	private class CharacterMovementController extends Table {
+		private final ArrayMap<ImageButton, GameCharacter.CharacterState> movementButtons;
+		private GameCharacter selectedCharacter;
+
+		public CharacterMovementController(TextureAtlas buttonAtlas) {
+			movementButtons = new ArrayMap<ImageButton, GameCharacter.CharacterState>();
+
+			ImageButton.ImageButtonStyle btnRunStyle = new ImageButton.ImageButtonStyle();
+			btnRunStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("run-up"));
+			btnRunStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("run-down"));
+			btnRunStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("run-down"));
+			final ImageButton btnRun = new ImageButton(btnRunStyle);
+
+			ImageButton.ImageButtonStyle btnWalkStyle = new ImageButton.ImageButtonStyle();
+			btnWalkStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("walk-up"));
+			btnWalkStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("walk-down"));
+			btnWalkStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("walk-down"));
+			final ImageButton btnWalk = new ImageButton(btnWalkStyle);
+
+			ImageButton.ImageButtonStyle btnCrouchStyle = new ImageButton.ImageButtonStyle();
+			btnCrouchStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-up"));
+			btnCrouchStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-down"));
+			btnCrouchStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-down"));
+			final ImageButton btnCrouch = new ImageButton(btnCrouchStyle);
+
+//		ImageButton.ImageButtonStyle btnCrawlStyle = new ImageButton.ImageButtonStyle();
+//		btnCrawlStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-up"));
+//		btnCrawlStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-down"));
+//		btnCrawlStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-down"));
+//		final ImageButton btnCrawl = new ImageButton(btnCrawlStyle);
+
+			movementButtons.put(btnRun, GameCharacter.CharacterState.MOVE_RUN);
+			movementButtons.put(btnWalk, GameCharacter.CharacterState.MOVE_WALK);
+			movementButtons.put(btnCrouch, GameCharacter.CharacterState.MOVE_CROUCH);
+//		movementButtons.put(btnCrawl, GameCharacter.CharacterState.MOVE_CRAWL);
+
+			for (ImageButton btn : movementButtons.keys()) {
+				add(btn).size(75, 75);
+			}
+
+			btnRun.addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					handleMoveButtonPress(btnRun);
+					return true;
+				}
+			});
+			btnWalk.addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					handleMoveButtonPress(btnWalk);
+					return true;
+				}
+			});
+			btnCrouch.addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					handleMoveButtonPress(btnCrouch);
+					return true;
+				}
+			});
+//		btnCrawl.addListener(new InputListener() {
+//			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+//				handleMoveButtonPress(btnCrawl);
+//				return true;
+//			}
+//		});
+		}
+
+		private void handleMoveButtonPress(ImageButton thisBtn) {
+			if (selectedCharacter == null) {
+				return;
+			}
+			boolean checked = thisBtn.isChecked();
+			if (!checked) {
+				for (ImageButton btn : movementButtons.keys()) {
+					btn.setChecked(false);
+				}
+				thisBtn.setChecked(true);
+				GameCharacter.CharacterState newState = movementButtons.get(thisBtn);
+				selectedCharacter.handleStateCommand(newState);
+
+			}
+		}
+
+		private void setMovementButtons(GameCharacter.CharacterState state) {
+			for (ImageButton btn : movementButtons.keys()) {
+				btn.setChecked(false);
+			}
+			movementButtons.getKey(state, true).setChecked(true);
+		}
+
+		public void handleCharacterSelection(GameCharacter character) {
+			selectedCharacter = character;
+			setMovementButtons(selectedCharacter.getCurrentMoveState());
+			notifyObserversEntitySelected(selectedCharacter);
+		}
+
+		public void killCharacter() {
+			if (selectedCharacter != null) {
+				selectedCharacter.stateMachine.changeState(GameCharacter.CharacterState.DEAD);
+			}
+		}
+
+		public void handleCharacterPathing(Ray ray) {
+			if (selectedCharacter == null) {
+				return;
+			}
+			if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
+					selectedCharacter.getGroundPosition(),
+					ray, visibleLayers,
+					GameSettings.CAMERA_PICK_RAY_DST,
+					selectedCharacter.navMeshGraphPath)) {
+
+				selectedCharacter.calculateNewPath();
+			}
+		}
+	}
 	public static final String tag = "GameStage";
 	private final Viewport viewport;
 	private final SpriteBatch batch;
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
-	private final TextureAtlas movementButtonsAtlas;
+	private final TextureAtlas buttonsAtlas;
 	private final Label mouseCoordsLabel;
-	private final ArrayMap<ImageButton, GameCharacter.CharacterState> movementButtons;
 	private final Camera cameraUI;
 	private final Camera camera3D;
 	private final Skin skin;
@@ -225,7 +374,8 @@ public class GameStage extends Stage implements Observable {
 	private final Array<Observer> observers = new Array<Observer>();
 	private final WorldInputProcessor worldInputProcessor;
 	private final Label fpsLabel;
-	private GameCharacter selectedCharacter;
+	private final GameSpeedController speedController;
+	private final CharacterMovementController characterController;
 	private Bits visibleLayers;
 
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
@@ -254,11 +404,14 @@ public class GameStage extends Stage implements Observable {
 		shapeRenderer.setAutoShapeType(true);
 		skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
-		movementButtonsAtlas = new TextureAtlas(Gdx.files.internal("skins/movement_buttons.atlas"));
-		movementButtons = new ArrayMap<ImageButton, GameCharacter.CharacterState>();
+		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
+
 
 		mouseCoordsLabel = new Label(null, skin);
 		fpsLabel = new Label(null, skin);
+		speedController = new GameSpeedController(buttonsAtlas);
+		characterController = new CharacterMovementController(buttonsAtlas);
+
 
 		rootTable = new Table();
 		rootTable.setDebug(true, true);
@@ -276,7 +429,8 @@ public class GameStage extends Stage implements Observable {
 		bottomTable.add(createDebugViewMenu()).bottom();
 		bottomTable.add(createSteeringMenu()).bottom();
 		bottomTable.add(new Table()).expandX().fillX().bottom();
-		bottomTable.add(createMovementButtons()).bottom();
+		bottomTable.add(characterController).bottom();
+		bottomTable.add(speedController).bottom();
 		rootTable.add(bottomTable).expandX().fillX();
 		rootTable.left().bottom();
 
@@ -290,28 +444,6 @@ public class GameStage extends Stage implements Observable {
 		});
 	}
 
-	private void handleMoveButtonPress(ImageButton thisBtn) {
-		if (selectedCharacter == null) {
-			return;
-		}
-		boolean checked = thisBtn.isChecked();
-		if (!checked) {
-			for (ImageButton btn : movementButtons.keys()) {
-				btn.setChecked(false);
-			}
-			thisBtn.setChecked(true);
-			GameCharacter.CharacterState newState = movementButtons.get(thisBtn);
-
-			selectedCharacter.moveState = newState;
-		}
-	}
-
-	private void setMovementButtons(GameCharacter.CharacterState state) {
-		for (ImageButton btn : movementButtons.keys()) {
-			btn.setChecked(false);
-		}
-		movementButtons.getKey(state, true).setChecked(true);
-	}
 
 	@Override
 	public void dispose() {
@@ -319,7 +451,7 @@ public class GameStage extends Stage implements Observable {
 		batch.dispose();
 		skin.dispose();
 		shapeRenderer.dispose();
-		movementButtonsAtlas.dispose();
+		buttonsAtlas.dispose();
 	}
 
 	public void resize(int width, int height) {
@@ -334,69 +466,6 @@ public class GameStage extends Stage implements Observable {
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
 
-	private WidgetGroup createMovementButtons() {
-		final Table table = new Table();
-
-
-		ImageButton.ImageButtonStyle btnRunStyle = new ImageButton.ImageButtonStyle();
-		btnRunStyle.up = new TextureRegionDrawable(movementButtonsAtlas.findRegion("run-up"));
-		btnRunStyle.down = new TextureRegionDrawable(movementButtonsAtlas.findRegion("run-down"));
-		btnRunStyle.checked = new TextureRegionDrawable(movementButtonsAtlas.findRegion("run-down"));
-		final ImageButton btnRun = new ImageButton(btnRunStyle);
-
-		ImageButton.ImageButtonStyle btnWalkStyle = new ImageButton.ImageButtonStyle();
-		btnWalkStyle.up = new TextureRegionDrawable(movementButtonsAtlas.findRegion("walk-up"));
-		btnWalkStyle.down = new TextureRegionDrawable(movementButtonsAtlas.findRegion("walk-down"));
-		btnWalkStyle.checked = new TextureRegionDrawable(movementButtonsAtlas.findRegion("walk-down"));
-		final ImageButton btnWalk = new ImageButton(btnWalkStyle);
-
-		ImageButton.ImageButtonStyle btnCrouchStyle = new ImageButton.ImageButtonStyle();
-		btnCrouchStyle.up = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crouch-up"));
-		btnCrouchStyle.down = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crouch-down"));
-		btnCrouchStyle.checked = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crouch-down"));
-		final ImageButton btnCrouch = new ImageButton(btnCrouchStyle);
-
-//		ImageButton.ImageButtonStyle btnCrawlStyle = new ImageButton.ImageButtonStyle();
-//		btnCrawlStyle.up = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crawl-up"));
-//		btnCrawlStyle.down = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crawl-down"));
-//		btnCrawlStyle.checked = new TextureRegionDrawable(movementButtonsAtlas.findRegion("crawl-down"));
-//		final ImageButton btnCrawl = new ImageButton(btnCrawlStyle);
-
-		movementButtons.put(btnRun, GameCharacter.CharacterState.MOVE_RUN);
-		movementButtons.put(btnWalk, GameCharacter.CharacterState.MOVE_WALK);
-		movementButtons.put(btnCrouch, GameCharacter.CharacterState.MOVE_CROUCH);
-//		movementButtons.put(btnCrawl, GameCharacter.CharacterState.MOVE_CRAWL);
-
-		for (ImageButton btn : movementButtons.keys()) {
-			table.add(btn).size(75, 75);
-		}
-
-		btnRun.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnRun);
-				return true;
-			}
-		});
-		btnWalk.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnWalk);
-				return true;
-			}
-		});
-		btnCrouch.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				handleMoveButtonPress(btnCrouch);
-				return true;
-			}
-		});
-//		btnCrawl.addListener(new InputListener() {
-//			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-//				handleMoveButtonPress(btnCrawl);
-//				return true;
-//			}
-//		});
-		return table;
-	}
 
 	private WidgetGroup createShaderMenu() {
 		final Table innerTable = new Table();

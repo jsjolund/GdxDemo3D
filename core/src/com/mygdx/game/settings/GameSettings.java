@@ -32,6 +32,9 @@ public class GameSettings {
 	public static final float SHADOW_INTENSITY = 1f;
 
 	public static float GAME_SPEED = 1;
+	public static float GAME_SPEED_PAUSE = 0;
+	public static float GAME_SPEED_PLAY = 1;
+	public static float GAME_SPEED_SLOW = 0.05f;
 
 	public static float MOUSE_SENSITIVITY = 0.1f;
 	public static float MOUSE_DRAG_THRESHOLD = 10f;

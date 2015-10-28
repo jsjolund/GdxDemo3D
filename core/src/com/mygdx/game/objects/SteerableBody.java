@@ -152,7 +152,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			}
 
 			// Set facing of model, setting facing of body causes problems when applying force.
-			currentFacingQuat.slerp(targetFacingQuat, 0.1f);
+			currentFacingQuat.slerp(targetFacingQuat, 10*deltaTime);
 			Vector3 position = getPosition();
 			transform.setFromEulerAngles(
 					currentFacingQuat.getYaw(),

@@ -137,6 +137,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
+		camera.update(delta, GameSettings.CAMERA_LERP_ALPHA);
 		delta *= GameSettings.GAME_SPEED;
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -163,7 +164,7 @@ public class GameScreen implements Screen {
 		}
 		stage.act(delta);
 		stage.draw();
-		camera.update(delta, GameSettings.CAMERA_LERP_ALPHA);
+
 	}
 
 	private GameCharacter spawnCharacter(Vector3 initialPosition) {

@@ -12,6 +12,8 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.SteerSettings;
 
+import java.util.EnumMap;
+
 /**
  * Created by Johannes Sjolund on 10/18/15.
  */
@@ -22,7 +24,8 @@ public class GameCharacter extends Ragdoll {
 			@Override
 			public void enter(GameCharacter entity) {
 				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
-				entity.idleState = IDLE_STAND;
+				entity.moveState = this;
+				entity.idleState = entity.moveIdleMap.get(this);
 
 				entity.setMaxLinearSpeed(SteerSettings.maxLinearSpeed * SteerSettings.runMultiplier);
 				entity.setMaxLinearAcceleration(SteerSettings.maxLinearAcceleration * SteerSettings.runMultiplier);
@@ -45,7 +48,8 @@ public class GameCharacter extends Ragdoll {
 			@Override
 			public void enter(GameCharacter entity) {
 				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
-				entity.idleState = IDLE_STAND;
+				entity.moveState = this;
+				entity.idleState = entity.moveIdleMap.get(this);
 
 				entity.setMaxLinearSpeed(SteerSettings.maxLinearSpeed);
 				entity.setMaxLinearAcceleration(SteerSettings.maxLinearAcceleration);
@@ -68,7 +72,8 @@ public class GameCharacter extends Ragdoll {
 			@Override
 			public void enter(GameCharacter entity) {
 				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
-				entity.idleState = IDLE_CROUCH;
+				entity.moveState = this;
+				entity.idleState = entity.moveIdleMap.get(this);
 
 				entity.setMaxLinearSpeed(SteerSettings.maxLinearSpeed * SteerSettings.crouchMultiplier);
 				entity.setMaxLinearAcceleration(SteerSettings.maxLinearAcceleration * SteerSettings.crouchMultiplier);
@@ -87,13 +92,7 @@ public class GameCharacter extends Ragdoll {
 				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
 			}
 		},
-		MOVE_CRAWL() {
-			@Override
-			public void enter(GameCharacter entity) {
-				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.1f);
-				entity.idleState = IDLE_CRAWL;
-			}
-		},
+		MOVE_CRAWL() {},
 		IDLE_STAND() {
 			@Override
 			public void enter(GameCharacter entity) {
@@ -171,8 +170,10 @@ public class GameCharacter extends Ragdoll {
 	public final StateMachine<GameCharacter> stateMachine;
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
-	public CharacterState moveState = CharacterState.MOVE_WALK;
-	public CharacterState idleState = CharacterState.IDLE_STAND;
+	private CharacterState moveState = CharacterState.MOVE_WALK;
+	private CharacterState idleState = CharacterState.IDLE_STAND;
+	private EnumMap<CharacterState, CharacterState> moveIdleMap =
+			new EnumMap<CharacterState, CharacterState>(CharacterState.class);
 	private boolean wasSteering = false;
 
 	public GameCharacter(Model model,
@@ -192,16 +193,23 @@ public class GameCharacter extends Ragdoll {
 		super(model, id, location, rotation, scale,
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
-		// Only allow player capsule to turn around the up axis
+		// Only allow physics engine to turn player capsule around the up axis
 		body.setAngularFactor(Vector3.Y);
 
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
+
+		moveIdleMap.put(CharacterState.MOVE_WALK, CharacterState.IDLE_STAND);
+		moveIdleMap.put(CharacterState.MOVE_RUN, CharacterState.IDLE_STAND);
+		moveIdleMap.put(CharacterState.MOVE_CROUCH, CharacterState.IDLE_CROUCH);
+
 		stateMachine = new DefaultStateMachine<GameCharacter>(this, CharacterState.GLOBAL);
 		// Set the steering variables associated with default move state (walking)
 		stateMachine.changeState(moveState);
 		// Then make the character idle
 		stateMachine.changeState(idleState);
+
+
 	}
 
 	@Override
@@ -220,6 +228,26 @@ public class GameCharacter extends Ragdoll {
 				stateMachine.changeState(idleState);
 			}
 		}
+	}
 
+	public void handleStateCommand(CharacterState newState) {
+		boolean isSteering = isSteering();
+
+		if (isSteering) {
+			stateMachine.changeState(newState);
+		} else if (moveIdleMap.containsKey(newState)) {
+			moveState = newState;
+			idleState = moveIdleMap.get(newState);
+			stateMachine.changeState(idleState);
+		}
+	}
+
+
+	public CharacterState getCurrentMoveState() {
+		return moveState;
+	}
+
+	public CharacterState getCurrentIdleState() {
+		return idleState;
 	}
 }
