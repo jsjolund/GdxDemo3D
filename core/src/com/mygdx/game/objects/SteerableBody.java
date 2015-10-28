@@ -97,6 +97,13 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Calculate steering acceleration
 		steeringBehavior.calculateSteering(steeringOutput);
 
+		boolean isSteering = isSteering();
+		if (isSteering && !wasSteering) {
+			startSteering();
+		} else if (!isSteering && wasSteering) {
+			finishSteering();
+		}
+
 		// Apply steering acceleration
 		applySteering(steeringOutput, deltaTime);
 
@@ -110,24 +117,25 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			layers.clear();
 			layers.set(currentTriangle.meshPartIndex);
 		}
+	}
 
-		boolean isSteering = isSteering();
-		if (isSteering && !wasSteering) {
-			wasSteering = isSteering;
-			body.setFriction(0);
+	protected void startSteering() {
+		wasSteering = true;
+		body.setFriction(0);
+	}
 
-		} else if (!isSteering && wasSteering) {
-			wasSteering = isSteering;
-			body.setFriction(SteerSettings.idleFriction);
-			body.setAngularVelocity(Vector3.Zero);
-			// Since we were only rotating the model when steering, set body to
-			// model rotation when finished moving.
-			transform.setFromEulerAngles(
-					currentFacingQuat.getYaw(),
-					currentFacingQuat.getPitch(),
-					currentFacingQuat.getRoll()).setTranslation(position);
-			body.setWorldTransform(transform);
-		}
+	protected void finishSteering() {
+		System.out.println("setting friction");
+		wasSteering = false;
+		body.setFriction(SteerSettings.idleFriction);
+		body.setAngularVelocity(Vector3.Zero);
+		// Since we were only rotating the model when steering, set body to
+		// model rotation when finished moving.
+		transform.setFromEulerAngles(
+				currentFacingQuat.getYaw(),
+				currentFacingQuat.getPitch(),
+				currentFacingQuat.getRoll()).setTranslation(position);
+		body.setWorldTransform(transform);
 	}
 
 
@@ -152,7 +160,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			}
 
 			// Set facing of model, setting facing of body causes problems when applying force.
-			currentFacingQuat.slerp(targetFacingQuat, 10*deltaTime);
+			currentFacingQuat.slerp(targetFacingQuat, 10 * deltaTime);
 			Vector3 position = getPosition();
 			transform.setFromEulerAngles(
 					currentFacingQuat.getYaw(),

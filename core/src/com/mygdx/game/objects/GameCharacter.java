@@ -123,7 +123,13 @@ public class GameCharacter extends Ragdoll {
 				// Turn off animation, set ragdoll control
 				entity.animations.setAnimation("armature|idle_stand", -1);
 				entity.animations.paused = true;
+				entity.steeringBehavior = null;
+				entity.navMeshPointPath.clear();
+				entity.navMeshGraphPath.clear();
+				entity.finishSteering();
+				entity.body.setFriction(1);
 				entity.setRagdollControl(true);
+
 			}
 
 			@Override
@@ -152,7 +158,6 @@ public class GameCharacter extends Ragdoll {
 		public boolean onMessage(GameCharacter entity, Telegram telegram) {
 			return false;
 		}
-
 	}
 
 	public class CharacterAnimationListener implements AnimationController.AnimationListener {
@@ -208,8 +213,13 @@ public class GameCharacter extends Ragdoll {
 		stateMachine.changeState(moveState);
 		// Then make the character idle
 		stateMachine.changeState(idleState);
+	}
 
-
+	@Override
+	public void calculateNewPath() {
+		if (stateMachine.getCurrentState() != CharacterState.DEAD) {
+			super.calculateNewPath();
+		}
 	}
 
 	@Override

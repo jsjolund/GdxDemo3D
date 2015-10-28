@@ -16,7 +16,7 @@ import com.badlogic.gdx.utils.Array;
  */
 public class GameModelBody extends GameModel {
 
-	protected class PhysicsMotionState extends btMotionState {
+	public class PhysicsMotionState extends btMotionState {
 		public final Matrix4 transform;
 
 		public PhysicsMotionState(Matrix4 transform) {
@@ -93,55 +93,6 @@ public class GameModelBody extends GameModel {
 		}
 		body.setWorldTransform(modelInstance.transform);
 	}
-
-//	@Override
-//	public void update(float deltaTime) {
-//		super.update(deltaTime);
-//		if (pathData == null || pathData.goalReached) {
-//			return;
-//		}
-//		body.getWorldTransform().getTranslation(pathData.currentPosition);
-//		pathData.currentGroundPosition.set(pathData.currentPosition);
-//		pathData.currentGroundPosition.y -= boundingBox.getHeight() / 2;
-//		pathData.posGroundRay.origin.set(pathData.currentPosition);
-//		if (pathData.goalReached) {
-//			return;
-//		}
-//		if (pathData.currentGoal == null && pathData.path.size == 0) {
-//			pathData.goalReached = true;
-//			return;
-//		}
-//		if (pathData.currentGoal != null) {
-//			float yVelocity = body.getLinearVelocity().y;
-//			float xzDst = Vector2.dst2(pathData.currentGoal.point.x, pathData.currentGoal.point.z,
-//					pathData.currentPosition.x, pathData.currentPosition.z);
-//
-//			if (xzDst < 0.01f) {
-//				pathData.currentGoal = null;
-//				if (pathData.path.size > 0) {
-//					pathData.currentGoal = pathData.path.pop();
-//					pathData.currentTriangle = pathData.nextTriangle;
-//					pathData.nextTriangle = pathData.currentGoal.toNode;
-//					layers.clear();
-//					layers.set(pathData.currentTriangle.meshPartIndex);
-//
-//				} else {
-//					body.setLinearVelocity(pathData.newVelocity.set(0, yVelocity, 0));
-//					body.setAngularVelocity(Vector3.Zero);
-//				}
-//			} else {
-//				pathData.goalDirection.set(pathData.currentPosition).sub(pathData.currentGoal.point).scl(-1, 0, 1).nor();
-//				matrix.setToLookAt(pathData.goalDirection, Vector3.Y).setTranslation(pathData.currentPosition);
-//				body.setWorldTransform(matrix);
-//
-//				pathData.newVelocity.set(pathData.goalDirection.scl(1, 0, -1)).scl(pathData.moveSpeed);
-//				pathData.goalReached = false;
-//
-//				pathData.newVelocity.y = yVelocity;
-//				body.setLinearVelocity(pathData.newVelocity);
-//			}
-//		}
-//	}
 
 	public void dispose() {
 		super.dispose();

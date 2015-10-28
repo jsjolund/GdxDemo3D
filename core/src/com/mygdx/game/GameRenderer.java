@@ -98,7 +98,7 @@ public class GameRenderer implements Disposable, Observer {
 	@Override
 	public void notifyEntitySelected(GameCharacter entity) {
 		selectedCharacter = entity;
-		markerBillboard.setFollowTransform(entity.modelInstance.transform);
+		markerBillboard.setFollowTransform(entity.motionState.transform);
 		markerBillboard.layers.clear();
 		markerBillboard.layers.or(entity.layers);
 	}
