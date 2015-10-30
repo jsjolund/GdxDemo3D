@@ -1,8 +1,5 @@
 package com.mygdx.game.settings;
 
-/**
- * Created by Johannes Sjolund on 10/25/15.
- */
 public class SteerSettings {
 	public static float maxLinearAcceleration = 50f;
 	public static float maxLinearSpeed = 2f;

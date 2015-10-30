@@ -1,8 +1,5 @@
 package com.mygdx.game.settings;
 
-/**
- * Created by Johannes Sjolund on 10/6/15.
- */
 public class DebugViewSettings {
 	public static boolean drawArmature = false;
 	public static boolean drawCollShapes = false;

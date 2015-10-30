@@ -3,9 +3,6 @@ package com.mygdx.game.settings;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector3;
 
-/**
- * Created by user on 8/1/15.
- */
 public class GameSettings {
 
 	public static final float CAMERA_FOV = 60;

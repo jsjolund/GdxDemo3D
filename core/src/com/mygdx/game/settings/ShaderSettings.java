@@ -1,8 +1,5 @@
 package com.mygdx.game.settings;
 
-/**
- * Created by Johannes Sjolund on 10/6/15.
- */
 public class ShaderSettings {
 	public static float hue = 1f;
 	public static float saturation = 0.5f;
