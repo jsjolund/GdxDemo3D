@@ -172,7 +172,6 @@ public class GameEngine extends PooledEngine implements Disposable {
 	@Override
 	public void addEntity(Entity entity) {
 		super.addEntity(entity);
-
 		if (entity instanceof GameCharacter) {
 			GameCharacter gameObj = (GameCharacter) entity;
 			gameObj.body.setUserPointer(entity.getId());

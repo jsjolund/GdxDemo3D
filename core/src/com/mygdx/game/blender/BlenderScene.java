@@ -11,7 +11,10 @@ import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
+import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -163,15 +166,21 @@ public class BlenderScene {
 			if (bModel.name.equals("navmesh")) {
 				// We need to set the node transforms before calculating the navmesh shape
 				GameModel gameModel = new GameModel(model, bModel.name, bModel.position, bModel.rotation, bModel.scale);
-				ModelFactory.setBlenderToGdxFloatBuffer(gameModel.modelInstance.model.meshes.first());
+//				ModelFactory.setBlenderToGdxFloatBuffer(gameModel.modelInstance.model.meshes.first());
 
 				Array<NodePart> nodes = gameModel.modelInstance.model.getNode("navmesh").parts;
 				// Sort the model meshParts array according to material name
 				nodes.sort(new NavMeshNodeSorter());
 
 				// The navmesh should be handled differently than other entities.
-				// Its model should not be rendered.
-				// Its vertices need to be rotated correctly for the shape to be oriented correctly.
+				gameModel.modelInstance.calculateTransforms();
+				Matrix4 transform = new Matrix4();
+				for (Node node: gameModel.modelInstance.nodes) {
+					transform.set(node.globalTransform).inv();
+					for (NodePart nodePart : node.parts) {
+						nodePart.meshPart.mesh.transform(transform);
+					}
+				}
 				navMesh = new NavMesh(gameModel.modelInstance.model);
 				shape = navMesh.getShape();
 				staticGeneratedShapesMap.put("navmesh", shape);

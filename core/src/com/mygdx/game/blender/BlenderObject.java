@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ArrayMap;
 
 /**
- * Created by user on 7/31/15.
+ * Class for deserializing Blender objects from json
  */
 public abstract class BlenderObject {
 	public static class BLight extends BlenderObject {

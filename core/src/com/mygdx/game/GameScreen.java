@@ -116,7 +116,7 @@ public class GameScreen implements Screen {
 		// TODO: dispose or use an asset manager model
 		Model billboardModel = ModelFactory.buildBillboardModel(billboardPixmap, 1, 1);
 		Billboard markerBillboard = new Billboard(billboardModel, "marker", camera, true, new Matrix4(),
-				new Vector3(0, -character.boundingBox.getHeight() / 2 * 0.95f, 0));
+				new Vector3(0, -character.halfExtents.y * 0.95f, 0));
 		renderSys.setSelectionMarker(markerBillboard);
 		engine.addEntity(markerBillboard);
 	}

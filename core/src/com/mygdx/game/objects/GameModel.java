@@ -18,6 +18,7 @@ public class GameModel extends GameObject {
 	public final Vector3 dimensions = new Vector3();
 	public final float boundingRadius;
 	public final BoundingBox boundingBox = new BoundingBox();
+	public final Vector3 halfExtents = new Vector3();
 	public final String id;
 	public final Matrix4 transform;
 	public Bits layers = new Bits();
@@ -51,6 +52,7 @@ public class GameModel extends GameObject {
 		boundingBox.getDimensions(dimensions);
 		boundingRadius = dimensions.len() / 2f;
 		transform = modelInstance.transform;
+		halfExtents.set(dimensions).scl(0.5f);
 	}
 
 

@@ -49,6 +49,9 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	private int currentSegment = -1;
 	private boolean wasSteering = false;
 
+	private Array<Vector3> centerOfMassPath = new Array<Vector3>();
+	public Array<Vector3> pathToRender = new Array<Vector3>();
+
 	public SteerableBody(Model model, String id,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
@@ -65,12 +68,14 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public void calculateNewPath() {
 		navMeshPointPath.calculateForGraphPath(navMeshGraphPath);
 
+		pathToRender.clear();
+		pathToRender.addAll(navMeshPointPath.getVectors());
+
+		centerOfMassPath.clear();
 		// Since the navmesh path is on the ground, we need to translate
 		// it to align with body origin
-		Array<Vector3> centerOfMassPath = new Array<Vector3>();
-		float offset = boundingBox.getHeight() / 2;
 		for (Vector3 v : navMeshPointPath) {
-			centerOfMassPath.add(new Vector3(v).add(0, offset, 0));
+			centerOfMassPath.add(new Vector3(v).add(0, halfExtents.y, 0));
 		}
 		linePath = new MyLinePath<Vector3>(centerOfMassPath, true);
 		followPathSB =
@@ -107,8 +112,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Apply steering acceleration
 		applySteering(steeringOutput, deltaTime);
 
-		if (currentSegment != followPathSB.getPathParam().getSegmentIndex()) {
-			// Steering target path segment changed. Update rotation and current navmesh triangle.
+		// Check if steering target path segment changed.
+		int traversedSegments = followPathSB.getPathParam().getSegmentIndex() - currentSegment;
+		if (traversedSegments > 0) {
+			// Update rotation and current navmesh triangle.
 			currentSegment = followPathSB.getPathParam().getSegmentIndex();
 			MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
 			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
@@ -119,13 +126,25 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		}
 	}
 
+	public int getCurrentSegment() {
+		return currentSegment;
+	}
+
+	public Vector3 getLinePathPosition(Vector3 out) {
+		linePath.calculatePointSegmentSquareDistance(out,
+				linePath.getSegments().get(currentSegment).getBegin(),
+				linePath.getSegments().get(currentSegment).getEnd(),
+				getGroundPosition());
+		out.sub(0, halfExtents.y, 0);
+		return out;
+	}
+
 	protected void startSteering() {
 		wasSteering = true;
 		body.setFriction(0);
 	}
 
 	protected void finishSteering() {
-		System.out.println("setting friction");
 		wasSteering = false;
 		body.setFriction(SteerSettings.idleFriction);
 		body.setAngularVelocity(Vector3.Zero);
@@ -136,6 +155,8 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				currentFacingQuat.getPitch(),
 				currentFacingQuat.getRoll()).setTranslation(position);
 		body.setWorldTransform(transform);
+
+		pathToRender.clear();
 	}
 
 

@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -13,7 +15,25 @@ import com.badlogic.gdx.utils.ArrayMap;
 import java.nio.FloatBuffer;
 
 /**
- * Created by Johannes Sjolund on 9/27/15.
+ * Creates a bidirectional graph over the triangles in the model, which can be used for A* pathfinding.
+ * All meshes in the model must be indexed (Mesh.getNumIndices()} > 0). The mesh can be divided into
+ * multiple MeshParts (useful for ignoring certain parts of the navmesh or perhaps triggering an event).
+ * All MeshParts should share some edge(s) with another in order for the mesh to be fully traversable.
+ * <p/>
+ * All meshes should be made up of one or more triangles, and should not have any isolated edges or vertices.
+ * <p/>
+ * Each vertex which has a unique position is stored in a Vector3. Triangle objects map which of these vertices
+ * form a triangle according to the winding order in the mesh indices buffer. The winding order is assumed to
+ * be the same for each triangle and is read from left to right in the indices buffer.
+ * <p/>
+ * Each triangle A which shares an edge with another triangle B is associated with an Edge/Connection object. In
+ * this object, triangle A is stored as the fromNode, B as toNode. The object also stores the vertices which
+ * makes up this edge, in the same winding order as triangle A. Additionally, since B is also connected to A,
+ * a mirrored edge is also stored along with B, where the edge has the same winding order as B.
+ * <p/>
+ * The reason the winding order is important is because each edge in the triangle must have the correct vertices
+ * defined as left/right in order for path smoothing to work correctly. Left/right is defined from the perspective
+ * of the centroid of the triangle when "looking" at the edge.
  */
 public class NavMeshGraph implements IndexedGraph<Triangle> {
 
@@ -40,34 +60,14 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	private ArrayMap<Triangle, Array<Connection<Triangle>>> map;
 	private int[] meshPartTriIndexOffsets;
 
-	/**
-	 * Creates a bidirectional graph over the triangles in the model, which can be used for A* pathfinding.
-	 * All meshes in the model must be indexed (Mesh.getNumIndices()} > 0). The mesh can be divided into
-	 * multiple MeshParts (useful for ignoring certain parts of the navmesh or perhaps triggering an event).
-	 * All MeshParts should share some edge(s) with another in order for the mesh to be fully traversable.
-	 * <p/>
-	 * All meshes should be made up of one or more triangles, and should not have any isolated edges or vertices.
-	 * <p/>
-	 * Each vertex which has a unique position is stored in a Vector3. Triangle objects bodyPartMap which of these vertices
-	 * form a triangle according to the winding order in the mesh indices buffer. The winding order is assumed to
-	 * be the same for each triangle and is read from left to right in the indices buffer.
-	 * <p/>
-	 * Each triangle A which shares an edge with another triangle B is associated with an Edge/Connection object. In
-	 * this object, triangle A is stored as the fromNode, B as toNode. The object also stores the vertices which
-	 * makes up this edge, in the same winding order as triangle A. Additionally, since B is also connected to A,
-	 * a mirrored edge is also stored along with B, where the edge has the same winding order as B.
-	 * <p/>
-	 * The reason the winding order is important is because each edge in the triangle must have the correct vertices
-	 * defined as left/right in order for path smoothing to work correctly. Left/right is defined from the perspective
-	 * of the centroid of the triangle when "looking" at the edge.
-	 *
-	 * @param model
-	 * @param transform
-	 */
+
 	public NavMeshGraph(Model model) {
 		short[] indices = getUniquePositionVertexIndices(model.meshes.first());
 		Array<IndexConnection> indexConnections = getIndexConnections(indices);
 
+		// The triangle graph uses consecutive indices for each unique triangle in the whole model.
+		// The Bullet raycast uses MeshPart index combined triangle index inside the MeshPart,
+		// so we need to be able to convert between them.
 		int[] meshPartIndexOffsets = new int[model.meshParts.size];
 		meshPartTriIndexOffsets = new int[model.meshParts.size];
 		for (int i = 0; i < model.meshParts.size; i++) {
@@ -86,7 +86,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * Get an array of the vertex indices from the mesh. Any vertices which share the same position will be counted
 	 * as a single vertex and share the same index. That is, position duplicates will be filtered out.
 	 * <p/>
-	 * TODO: This can probably be optimized further
+	 * TODO: can be optimized further
 	 *
 	 * @param mesh
 	 * @return
@@ -121,7 +121,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	}
 
 	/**
-	 * Creates a bodyPartMap over each triangle and its Edge connections to other triangles. Each edge must follow the
+	 * Creates a map over each triangle and its Edge connections to other triangles. Each edge must follow the
 	 * vertex winding order of the triangle associated with it. Since all triangles are assumed to have the same
 	 * winding order, this means if two triangles connect, each must have its own edge connection data, where the
 	 * edge follows the same winding order as the triangle which owns the edge data.

@@ -7,17 +7,27 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 
 /**
- * Created by Johannes Sjolund on 10/18/15.
+ * A simple billboard-like class which rotates a model to face the camera on update.
+ *
+ * @author jsjolund
  */
 public class Billboard extends GameModel {
 
-	public final Vector3 offset = new Vector3();
+	private final Vector3 offset = new Vector3();
 	private final Vector3 worldPos = new Vector3();
-	public boolean faceUp;
-	public Matrix4 followTransform;
-	private Quaternion quat = new Quaternion();
+	private boolean faceUp;
+	private Matrix4 followTransform;
+	private final Quaternion quat = new Quaternion();
 	private Camera camera;
 
+	/**
+	 * @param model           The model which is to be instantiated
+	 * @param id              Id of the model (doesn't really matter)
+	 * @param camera          The camera which the billboard should face
+	 * @param faceUp          If true, the model will always face the Y-axis, but otherwise rotate with the camera
+	 * @param followTransform The billboard will follow the translation of this matrix
+	 * @param offset          Constant offset from the follow-matrix translation
+	 */
 	public Billboard(Model model, String id, Camera camera, boolean faceUp, Matrix4 followTransform, Vector3 offset) {
 		super(model, id, followTransform.getTranslation(new Vector3()), new Vector3(), new Vector3(1, 1, 1));
 		this.faceUp = faceUp;
@@ -38,14 +48,11 @@ public class Billboard extends GameModel {
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 		followTransform.getTranslation(worldPos);
-		try {
-			modelInstance.transform.set(camera.view).inv();
-		} catch (RuntimeException e) {
-
-		}
+		camera.view.getRotation(quat).conjugate();
 		if (faceUp) {
-			camera.view.getRotation(quat);
-			modelInstance.transform.setFromEulerAngles(-quat.getYaw(), -90, 0);
+			modelInstance.transform.setFromEulerAngles(quat.getYaw(), -90, quat.getRoll());
+		} else {
+			modelInstance.transform.set(quat);
 		}
 		modelInstance.transform.setTranslation(worldPos.add(offset));
 	}

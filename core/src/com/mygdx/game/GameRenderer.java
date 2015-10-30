@@ -181,15 +181,16 @@ public class GameRenderer implements Disposable, Observer {
 	}
 
 	private void drawPath() {
-		if (selectedCharacter != null && selectedCharacter.navMeshPointPath.getSize() > 1) {
+		if (selectedCharacter != null && selectedCharacter.pathToRender.size > 0) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(Color.CORAL);
+
 			// Smoothed path
 			Vector3 q;
-			Vector3 p = selectedCharacter.navMeshPointPath.getVector(0);
-			for (int i = 0; i < selectedCharacter.navMeshPointPath.getSize(); i++) {
-				q = selectedCharacter.navMeshPointPath.getVector(i);
+			Vector3 p = selectedCharacter.getLinePathPosition(tmp);
+			for (int i = selectedCharacter.getCurrentSegment()+1; i < selectedCharacter.pathToRender.size; i++) {
+				q = selectedCharacter.pathToRender.get(i);
 				shapeRenderer.line(p, q);
 				p = q;
 			}
@@ -211,7 +212,7 @@ public class GameRenderer implements Disposable, Observer {
 		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
 			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
 			if (triangleIsVisible(t)) {
-				shapeRenderer.setColor(Color.LIGHT_GRAY);
+				shapeRenderer.setColor(Color.GRAY);
 				shapeRenderer.line(t.a, t.b);
 				shapeRenderer.line(t.b, t.c);
 				shapeRenderer.line(t.c, t.a);
@@ -282,7 +283,6 @@ public class GameRenderer implements Disposable, Observer {
 				shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
 			}
 		}
-
 		shapeRenderer.end();
 
 		// Draw indices of the triangles
