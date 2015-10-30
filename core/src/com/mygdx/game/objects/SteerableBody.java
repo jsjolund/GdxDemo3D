@@ -166,6 +166,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		body.setAngularVelocity(Vector3.Zero);
 		// Since we were only rotating the model when steering, set body to
 		// model rotation when finished moving.
+		position = getPosition();
 		transform.setFromEulerAngles(
 				currentFacingQuat.getYaw(),
 				currentFacingQuat.getPitch(),

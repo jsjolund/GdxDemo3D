@@ -155,6 +155,7 @@ public class Ragdoll extends SteerableBody {
 	public void setRagdollControl(boolean setRagdollControl) {
 
 		if (setRagdollControl) {
+
 			updateBodiesToArmature();
 
 			// Ragdoll follows animation currently, set it to use physics control.
@@ -163,6 +164,7 @@ public class Ragdoll extends SteerableBody {
 
 			// Get the current translation of the base collision shape (the capsule)
 			capsuleTransform.getTranslation(capsuleTranslation);
+
 			// Reset any rotation of the model caused by the motion state from the physics engine,
 			// but keep the translation.
 			modelInstance.transform = resetRotationTransform.idt().inv().setToTranslation(capsuleTranslation);

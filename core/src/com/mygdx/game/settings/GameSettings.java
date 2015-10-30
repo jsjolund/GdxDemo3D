@@ -42,8 +42,6 @@ public class GameSettings {
 	public static int KEY_PAN_BACKWARD = Input.Keys.S;
 	public static int KEY_PAN_RIGHT = Input.Keys.D;
 
-	public static int KEY_KILL_CHARACTER = Input.Keys.F5;
-
 	public static float SOUND_VOLUME = 1f;
 	public static float MUSIC_VOLUME = 1f;
 }

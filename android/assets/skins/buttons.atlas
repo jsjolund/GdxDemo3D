@@ -115,3 +115,17 @@ throw-down
   orig: 128, 128
   offset: 0, 0
   index: -1
+kill-up
+  rotate: false
+  xy: 1024, 0
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+kill-down
+  rotate: false
+  xy: 1024, 128
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
