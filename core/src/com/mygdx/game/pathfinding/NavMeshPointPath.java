@@ -139,17 +139,24 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		// triangle edge. Otherwise the funnel calculation might generate spurious path segments.
 		Ray ray = new Ray(tmp1.set(up).scl(1000).add(start), tmp2.set(up).scl(-1));
 		if (!Intersector.intersectRayTriangle(ray, startTri.a, startTri.b, startTri.c, null)) {
-			float minDst = Float.MAX_VALUE;
+			float minDst = Float.POSITIVE_INFINITY;
 			Vector3 projection = new Vector3();
 			Vector3 newStart = new Vector3();
-			for (int i = 0; i <= 2; i++) {
-				Vector3 a = startTri.corners.get(i);
-				Vector3 b = (i == 2) ? startTri.corners.get(0) : startTri.corners.get(i + 1);
-				float dst = calculatePointSegmentSquareDistance(projection, a, b, start);
-				if (dst < minDst) {
-					newStart.set(projection);
-					minDst = dst;
-				}
+			float dst;
+			// A-B
+			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.a, startTri.b, start)) < minDst) {
+				minDst = dst;
+				newStart.set(projection);
+			}
+			// B-C
+			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.b, startTri.c, start)) < minDst) {
+				minDst = dst;
+				newStart.set(projection);
+			}
+			// C-A
+			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.c, startTri.a, start)) < minDst) {
+				minDst = dst;
+				newStart.set(projection);
 			}
 			start.set(newStart);
 		}

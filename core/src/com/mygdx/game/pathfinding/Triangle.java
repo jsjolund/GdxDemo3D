@@ -33,7 +33,6 @@ public class Triangle implements IndexedNode<Triangle> {
 	public Vector3 c;
 	public Vector3 centroid;
 	public Array<Connection<Triangle>> connections;
-	public Array<Vector3> corners;
 
 	public Triangle(Vector3 a, Vector3 b, Vector3 c, int triIndex, int meshPartIndex) {
 		this.a = a;
@@ -43,12 +42,6 @@ public class Triangle implements IndexedNode<Triangle> {
 		this.meshPartIndex = meshPartIndex;
 		this.centroid = new Vector3(a).add(b).add(c).scl(1f / 3f);
 		this.connections = new Array<Connection<Triangle>>();
-
-		corners = new Array<Vector3>();
-		corners.ordered = true;
-		corners.add(a);
-		corners.add(b);
-		corners.add(c);
 	}
 
 	@Override
