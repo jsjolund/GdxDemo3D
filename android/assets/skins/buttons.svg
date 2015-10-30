@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="buttons.svg"
-   inkscape:export-filename="/home/user/code/idea/my-gdx-game/android/assets/skins/movement_buttons.png"
+   inkscape:export-filename="/home/user/code/idea/my-gdx-game/android/assets/skins/buttons.png"
    inkscape:export-xdpi="61.92762"
    inkscape:export-ydpi="61.92762">
   <defs
@@ -133,14 +133,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.70710678"
-     inkscape:cx="926.84563"
-     inkscape:cy="140.05136"
+     inkscape:cx="928.25984"
+     inkscape:cy="103.28181"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="2558"
      inkscape:window-height="1413"
-     inkscape:window-x="0"
+     inkscape:window-x="2560"
      inkscape:window-y="25"
      inkscape:window-maximized="0">
     <inkscape:grid
