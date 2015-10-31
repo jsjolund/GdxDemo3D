@@ -43,6 +43,8 @@ import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
 import com.mygdx.game.settings.SteerSettings;
+import com.mygdx.game.ui.IntValueLabel;
+import com.mygdx.game.ui.ValueLabel;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Observable;
 import com.mygdx.game.utilities.Observer;
@@ -69,6 +71,7 @@ public class GameStage extends Stage implements Observable {
 		private final Vector2 lastTouchDown = new Vector2();
 
 		private final Vector3 tmp = new Vector3();
+		private final Vector3 mouseCoords = new Vector3();
 
 		private final IntIntMap keys = new IntIntMap();
 
@@ -165,13 +168,9 @@ public class GameStage extends Stage implements Observable {
 		@Override
 		public boolean mouseMoved(int screenX, int screenY) {
 			movedRay.set(viewport.getPickRay(screenX, screenY));
-			Entity e = engine.rayTest(movedRay, tmp, GameEngine.NAVMESH_FLAG,
+			Entity e = engine.rayTest(movedRay, mouseCoords, GameEngine.NAVMESH_FLAG,
 					GameEngine.NAVMESH_FLAG, 100, null);
-			if (e == null) {
-				mouseCoordsLabel.setText(" NavMesh: ");
-			} else {
-				mouseCoordsLabel.setText(" NavMesh: " + tmp.toString());
-			}
+			if (e == null) mouseCoords.set(Float.NaN, Float.NaN, Float.NaN);
 			return false;
 		}
 
@@ -386,7 +385,7 @@ public class GameStage extends Stage implements Observable {
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas buttonsAtlas;
-	private final Label mouseCoordsLabel;
+	private final ValueLabel<Vector3> mouseCoordsLabel;
 	private final Camera cameraUI;
 	private final Camera camera3D;
 	private final Skin skin;
@@ -428,8 +427,22 @@ public class GameStage extends Stage implements Observable {
 		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
 
 
-		mouseCoordsLabel = new Label(null, skin);
-		fpsLabel = new Label(null, skin);
+		mouseCoordsLabel = new ValueLabel<Vector3>("NavMesh: ", new Vector3(), skin) {
+			@Override
+			public Vector3 getValue () {
+				return worldInputProcessor.mouseCoords;
+			}
+			@Override
+			public void copyValue (Vector3 newValue, Vector3 oldValue) {
+				oldValue.set(newValue);
+			}
+		};
+		fpsLabel = new IntValueLabel("FPS: ", 0, skin) {
+			@Override
+			public int getValue () {
+				return Gdx.graphics.getFramesPerSecond();
+			}
+		};
 		speedController = new GameSpeedController(buttonsAtlas);
 		characterController = new CharacterController(buttonsAtlas);
 
@@ -439,7 +452,7 @@ public class GameStage extends Stage implements Observable {
 
 		Table topTable = new Table();
 		topTable.add(fpsLabel).top().left();
-		topTable.add(mouseCoordsLabel).top().left();
+		topTable.add(mouseCoordsLabel).padLeft(15).top().left();
 		topTable.add(new Table()).expandX().fillX();
 		rootTable.add(topTable).expandX().fillX();
 		rootTable.row();
@@ -660,7 +673,6 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		worldInputProcessor.update(Gdx.graphics.getDeltaTime());
-		fpsLabel.setText(String.format("FPS=%d", Gdx.graphics.getFramesPerSecond()));
 	}
 
 	@Override
