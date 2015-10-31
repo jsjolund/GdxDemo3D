@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -35,6 +36,8 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -55,6 +58,42 @@ import java.lang.reflect.Field;
  * @author jsjolund
  */
 public class GameStage extends Stage implements Observable {
+
+	private class LayerController extends Table {
+		public final Slider slider;
+		int minLayer = 1;
+		int maxLayer = 4;
+
+		public LayerController(TextureAtlas buttonAtlas) {
+			Slider.SliderStyle sliderStyle = new Slider.SliderStyle();
+			sliderStyle.knob = new TextureRegionDrawable(buttonAtlas.findRegion("slider-knob-up"));
+			sliderStyle.knobDown = new TextureRegionDrawable(buttonAtlas.findRegion("slider-knob-down"));
+			sliderStyle.knobOver = new TextureRegionDrawable(buttonAtlas.findRegion("slider-knob-down"));
+			sliderStyle.background = new TextureRegionDrawable(buttonAtlas.findRegion("slider-background"));
+
+			slider = new Slider(minLayer, maxLayer, 1, true, sliderStyle);
+			slider.setValue(maxLayer);
+			slider.setAnimateDuration(0.1f);
+
+			slider.addCaptureListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					setLayer((int) slider.getValue());
+				}
+			});
+			add(slider).height(300);
+		}
+
+		public void setLayer(int layer) {
+			layer = MathUtils.clamp(layer, minLayer, maxLayer);
+			slider.setValue(layer);
+			visibleLayers.clear();
+			for (int i = 0; i < layer; i++) {
+				visibleLayers.set(i);
+			}
+			notifyObserversLayerChanged(visibleLayers);
+		}
+	}
 
 	public class WorldInputProcessor extends Actor implements InputProcessor {
 
@@ -97,11 +136,7 @@ public class GameStage extends Stage implements Observable {
 			int keyInt = Character.getNumericValue(keyChar);
 			keyInt--;
 			if (keyInt >= 0 && keyInt <= 9) {
-				visibleLayers.clear();
-				for (int i = 0; i <= keyInt; i++) {
-					visibleLayers.set(i);
-				}
-				notifyObserversLayerChanged(visibleLayers);
+				layerController.setLayer(keyInt + 1);
 			}
 			return true;
 		}
@@ -169,9 +204,9 @@ public class GameStage extends Stage implements Observable {
 		public boolean mouseMoved(int screenX, int screenY) {
 			movedRay.set(viewport.getPickRay(screenX, screenY));
 			Entity e = engine.rayTest(movedRay, mouseCoords, GameEngine.NAVMESH_FLAG,
-					GameEngine.NAVMESH_FLAG, 100, null);
+					GameEngine.NAVMESH_FLAG, GameSettings.CAMERA_PICK_RAY_DST, null);
 			if (e == null) mouseCoords.set(Float.NaN, Float.NaN, Float.NaN);
-			return false;
+			return true;
 		}
 
 		@Override
@@ -209,34 +244,30 @@ public class GameStage extends Stage implements Observable {
 		private final ImageButton.ImageButtonStyle btnSlowStyle;
 
 		public GameSpeedController(TextureAtlas buttonAtlas) {
-			super();
-
 			btnPauseStyle = new ImageButton.ImageButtonStyle();
 			btnPauseStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("pause-up"));
 			btnPauseStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("pause-down"));
-			btnPauseStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("pause-down"));
-
 
 			btnPlayStyle = new ImageButton.ImageButtonStyle();
 			btnPlayStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("play-up"));
 			btnPlayStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("play-down"));
-			btnPlayStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("play-down"));
 
 			btnSlowStyle = new ImageButton.ImageButtonStyle();
 			btnSlowStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("slow-up"));
 			btnSlowStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("slow-down"));
-			btnSlowStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("slow-down"));
 
 			imageButton = new ImageButton(btnPauseStyle);
 
-			imageButton.addListener(new InputListener() {
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					setGameSpeed();
-					return true;
-				}
-			});
+			add(imageButton);
 
-			add(imageButton).size(75, 75);
+			imageButton.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
+					setGameSpeed();
+					event.cancel();
+				}
+
+			});
 		}
 
 		public void setGameSpeed() {
@@ -251,13 +282,14 @@ public class GameStage extends Stage implements Observable {
 			} else if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_SLOW) {
 				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_PLAY;
 				imageButton.setStyle(btnPauseStyle);
-
 			}
 		}
 	}
 
+
 	private class CharacterController extends Table {
 		private final ArrayMap<ImageButton, GameCharacter.CharacterState> characterButtons;
+		ButtonGroup<ImageButton> radioGroup;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
@@ -299,35 +331,35 @@ public class GameStage extends Stage implements Observable {
 //		characterButtons.put(btnCrawl, GameCharacter.CharacterState.MOVE_CRAWL);
 			characterButtons.put(btnKill, GameCharacter.CharacterState.DEAD);
 
+			radioGroup = new ButtonGroup<ImageButton>(btnRun, btnWalk, btnCrouch, btnKill);
+
 			for (ImageButton btn : characterButtons.keys()) {
-				add(btn).size(75, 75);
+				add(btn);
 			}
 
-			btnRun.addListener(new InputListener() {
+			btnRun.addListener(new ClickListener() {
+				@Override
 				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 					handleCharacterButtonPress(btnRun);
 					return true;
 				}
 			});
-			btnWalk.addListener(new InputListener() {
+			btnWalk.addListener(new ClickListener() {
+				@Override
 				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 					handleCharacterButtonPress(btnWalk);
 					return true;
 				}
 			});
-			btnCrouch.addListener(new InputListener() {
+			btnCrouch.addListener(new ClickListener() {
+				@Override
 				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 					handleCharacterButtonPress(btnCrouch);
 					return true;
 				}
 			});
-//		btnCrawl.addListener(new InputListener() {
-//			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-//				handleCharacterButtonPress(btnCrawl);
-//				return true;
-//			}
-//		});
-			btnKill.addListener(new InputListener() {
+			btnKill.addListener(new ClickListener() {
+				@Override
 				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 					handleCharacterButtonPress(btnKill);
 					return true;
@@ -339,28 +371,13 @@ public class GameStage extends Stage implements Observable {
 			if (selectedCharacter == null) {
 				return;
 			}
-			boolean checked = thisBtn.isChecked();
-			if (!checked) {
-				for (ImageButton btn : characterButtons.keys()) {
-					btn.setChecked(false);
-				}
-				thisBtn.setChecked(true);
-				GameCharacter.CharacterState newState = characterButtons.get(thisBtn);
-				selectedCharacter.handleStateCommand(newState);
-
-			}
-		}
-
-		private void setCharacterButtons(GameCharacter.CharacterState state) {
-			for (ImageButton btn : characterButtons.keys()) {
-				btn.setChecked(false);
-			}
-			characterButtons.getKey(state, true).setChecked(true);
+			GameCharacter.CharacterState newState = characterButtons.get(thisBtn);
+			selectedCharacter.handleStateCommand(newState);
 		}
 
 		public void handleCharacterSelection(GameCharacter character) {
 			selectedCharacter = character;
-			setCharacterButtons(selectedCharacter.getCurrentMoveState());
+			characterButtons.getKey(selectedCharacter.getCurrentMoveState(), true).setChecked(true);
 			notifyObserversEntitySelected(selectedCharacter);
 		}
 
@@ -379,6 +396,7 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
+
 	public static final String tag = "GameStage";
 	private final Viewport viewport;
 	private final SpriteBatch batch;
@@ -396,7 +414,10 @@ public class GameStage extends Stage implements Observable {
 	private final Label fpsLabel;
 	private final GameSpeedController speedController;
 	private final CharacterController characterController;
+	private final LayerController layerController;
+	private final Vector3 tmp = new Vector3();
 	private Bits visibleLayers;
+
 
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
 		super(viewport);
@@ -406,9 +427,6 @@ public class GameStage extends Stage implements Observable {
 		this.cameraController = cameraController;
 
 		visibleLayers = new Bits();
-		for (int i = 0; i < 10; i++) {
-			visibleLayers.set(i);
-		}
 
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		multiplexer.addProcessor(this);
@@ -425,7 +443,6 @@ public class GameStage extends Stage implements Observable {
 		skin = new Skin(Gdx.files.internal("skins/uiskin.json"));
 
 		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
-
 
 		mouseCoordsLabel = new ValueLabel<Vector3>("NavMesh: ", new Vector3(), skin) {
 			@Override
@@ -445,9 +462,11 @@ public class GameStage extends Stage implements Observable {
 		};
 		speedController = new GameSpeedController(buttonsAtlas);
 		characterController = new CharacterController(buttonsAtlas);
-
+		layerController = new LayerController(buttonsAtlas);
+		layerController.setLayer(Integer.MAX_VALUE);
 
 		rootTable = new Table();
+		addActor(rootTable);
 		rootTable.setDebug(true, true);
 
 		Table topTable = new Table();
@@ -455,20 +474,31 @@ public class GameStage extends Stage implements Observable {
 		topTable.add(mouseCoordsLabel).padLeft(15).top().left();
 		topTable.add(new Table()).expandX().fillX();
 		rootTable.add(topTable).expandX().fillX();
+
 		rootTable.row();
 		rootTable.add(new Table()).expandY().fillY();
 		rootTable.row();
-		Table bottomTable = new Table();
-		bottomTable.add(createShaderMenu()).bottom();
-		bottomTable.add(createDebugViewMenu()).bottom();
-		bottomTable.add(createSteeringMenu()).bottom();
-		bottomTable.add(new Table()).expandX().fillX().bottom();
-		bottomTable.add(characterController).bottom();
-		bottomTable.add(speedController).bottom();
-		rootTable.add(bottomTable).expandX().fillX();
-		rootTable.left().bottom();
 
-		addActor(rootTable);
+		Table bottomRightTable = new Table();
+		bottomRightTable.add(createShaderMenu()).bottom();
+		bottomRightTable.add(createDebugViewMenu()).bottom();
+		bottomRightTable.add(createSteeringMenu()).bottom();
+		bottomRightTable.add(new Table()).expandX().fillX().bottom();
+		rootTable.add(bottomRightTable).expandX().fillX();
+
+		Table bottomLeftTable = new Table();
+		bottomLeftTable.add(new Table());
+		bottomLeftTable.add(layerController).bottom().right();
+		bottomLeftTable.row();
+		bottomLeftTable.add(characterController).bottom();
+		bottomLeftTable.add(speedController).bottom();
+		bottomLeftTable.setTransform(true);
+		bottomLeftTable.setOrigin(bottomLeftTable.getPrefWidth(), 0);
+		bottomLeftTable.setScale(0.5f);
+		rootTable.add(bottomLeftTable).bottom();
+
+		rootTable.row();
+		rootTable.left().bottom();
 
 		getRoot().addCaptureListener(new InputListener() {
 			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -477,7 +507,6 @@ public class GameStage extends Stage implements Observable {
 			}
 		});
 	}
-
 
 	@Override
 	public void dispose() {
@@ -499,7 +528,6 @@ public class GameStage extends Stage implements Observable {
 
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
-
 
 	private WidgetGroup createShaderMenu() {
 		final Table innerTable = new Table();
@@ -621,15 +649,14 @@ public class GameStage extends Stage implements Observable {
 			checkBox.setChecked(fieldValueBoolean);
 			innerTable.add(checkBox).pad(1).align(Align.left);
 			innerTable.row();
-			checkBox.addListener(new InputListener() {
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					checkBox.toggle();
+			checkBox.addListener(new ChangeListener() {
+				@Override
+				public void changed(ChangeEvent event, Actor actor) {
 					try {
 						field.setBoolean(field, checkBox.isChecked());
 					} catch (IllegalAccessException e) {
 						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
 					}
-					return true;
 				}
 			});
 		}
@@ -649,11 +676,12 @@ public class GameStage extends Stage implements Observable {
 	}
 
 	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		viewport.setCamera(cameraUI);
-		boolean result = super.touchDown(screenX, screenY, pointer, button);
-		viewport.setCamera(camera3D);
-		return result;
+	public Vector2 screenToStageCoordinates(Vector2 screenCoords) {
+		tmp.set(screenCoords.x, screenCoords.y, 1);
+		cameraUI.unproject(tmp, viewport.getScreenX(), viewport.getScreenY(),
+				viewport.getScreenWidth(), viewport.getScreenHeight());
+		screenCoords.set(tmp.x, tmp.y);
+		return screenCoords;
 	}
 
 	@Override
@@ -673,6 +701,7 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		worldInputProcessor.update(Gdx.graphics.getDeltaTime());
+		fpsLabel.setText(String.format("FPS=%d", Gdx.graphics.getFramesPerSecond()));
 	}
 
 	@Override

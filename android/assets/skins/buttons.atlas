@@ -129,3 +129,24 @@ kill-down
   orig: 128, 128
   offset: 0, 0
   index: -1
+slider-background
+  rotate: false
+  xy: 1152, 0
+  size: 128, 256
+  orig: 128, 256
+  offset: 0, 0
+  index: -1
+slider-knob-up
+  rotate: false
+  xy: 1280, 0
+  size: 128, 64
+  orig: 128, 64
+  offset: 0, 0
+  index: -1
+slider-knob-down
+  rotate: false
+  xy: 1280, 64
+  size: 128, 64
+  orig: 128, 64
+  offset: 0, 0
+  index: -1
