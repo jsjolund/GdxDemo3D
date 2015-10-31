@@ -17,26 +17,23 @@
 package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.ai.pfa.Heuristic;
-import com.badlogic.gdx.math.Vector3;
 
-/**
- * @author jsjolund
- */
+/** @author jsjolund */
 public class NavMeshHeuristic implements Heuristic<Triangle> {
 
 	@Override
-	public float estimate(Triangle node, Triangle endNode) {
-		float minDst = Float.MAX_VALUE;
-		for (int i = 0; i < node.corners.size; i++) {
-			Vector3 a = node.corners.get(i);
-			for (int j = 0; j < endNode.corners.size; j++) {
-				Vector3 b = endNode.corners.get(j);
-				float dst = a.dst(b);
-				if (dst < minDst) {
-					minDst = dst;
-				}
-			}
-		}
-		return minDst;
+	public float estimate (Triangle node, Triangle endNode) {
+		float dst2;
+		float minDst2 = Float.POSITIVE_INFINITY;
+		if ((dst2 = node.a.dst2(endNode.a)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.a.dst2(endNode.b)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.a.dst2(endNode.c)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.b.dst2(endNode.a)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.b.dst2(endNode.b)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.b.dst2(endNode.c)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.c.dst2(endNode.a)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.c.dst2(endNode.b)) < minDst2) minDst2 = dst2;
+		if ((dst2 = node.c.dst2(endNode.c)) < minDst2) minDst2 = dst2;
+		return (float)Math.sqrt(minDst2);
 	}
 }
