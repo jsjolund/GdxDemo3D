@@ -15,7 +15,7 @@ allprojects {
 
     version = '1.0'
     ext {
-        appName = 'my-gdx-game'
+        appName = 'GdxDemo3D'
         gdxVersion = '1.7.1-SNAPSHOT'
         roboVMVersion = '1.8.0'
         box2DLightsVersion = '1.4'
