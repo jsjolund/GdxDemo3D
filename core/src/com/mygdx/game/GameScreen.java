@@ -35,6 +35,7 @@ import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
+import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw.DebugDrawModes;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -61,7 +62,6 @@ public class GameScreen implements Screen {
 	private final GhostCamera camera;
 	private final AssetManager assets;
 	private final ShapeRenderer shapeRenderer;
-	private final btIDebugDraw.DebugDrawModes modes;
 	private final btIDebugDraw debugDraw;
 	private final Array<BlenderScene> scenes = new Array<BlenderScene>();
 	private final CameraController cameraController;
@@ -100,7 +100,6 @@ public class GameScreen implements Screen {
 		renderSys = new GameRenderer(viewport, camera, engine);
 		renderSys.setEnvironmentLights(blenderScene.lights, blenderScene.shadowCameraDirection);
 
-		modes = new btIDebugDraw.DebugDrawModes();
 		debugDraw = engine.dynamicsWorld.getDebugDrawer();
 
 		for (Entity entity : blenderScene.entities) {
@@ -171,11 +170,11 @@ public class GameScreen implements Screen {
 		if (DebugViewSettings.drawCollShapes || DebugViewSettings.drawConstraints) {
 			int mode = 0;
 			if (DebugViewSettings.drawConstraints) {
-				mode |= modes.DBG_DrawConstraints;
-				mode |= modes.DBG_DrawConstraintLimits;
+				mode |= DebugDrawModes.DBG_DrawConstraints;
+				mode |= DebugDrawModes.DBG_DrawConstraintLimits;
 			}
 			if (DebugViewSettings.drawCollShapes) {
-				mode |= modes.DBG_DrawWireframe;
+				mode |= DebugDrawModes.DBG_DrawWireframe;
 			}
 			debugDraw.setDebugMode(mode);
 			engine.debugDrawWorld(camera);
