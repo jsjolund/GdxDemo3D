@@ -24,9 +24,9 @@ import com.badlogic.gdx.Screen;
 /**
  * @author jsjolund
  */
-public class MyGdxGame extends Game {
+public class GdxDemo3D extends Game {
 
-	public static final String tag = "MyGdxGame";
+	public static final String tag = "GdxDemo3D";
 	public static int reqWidth = 1280;
 	public static int reqHeight = 720;
 
