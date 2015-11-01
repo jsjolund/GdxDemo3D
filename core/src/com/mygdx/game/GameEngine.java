@@ -18,6 +18,7 @@ package com.mygdx.game;
 
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
+import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
@@ -272,6 +273,11 @@ public class GameEngine extends PooledEngine implements Disposable {
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
+		
+		// Update AI time
+		GdxAI.getTimepiece().update(deltaTime);
+
+		// Update Bullet simulation
 		dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f);
 
 		for (GameObject object : objectsById.values()) {
