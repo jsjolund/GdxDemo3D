@@ -20,6 +20,7 @@ import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.steer.behaviors.FollowPath;
+import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.ai.utils.Location;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Matrix4;
@@ -27,7 +28,6 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.pathfinding.MyLinePath;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
 import com.mygdx.game.pathfinding.Triangle;
@@ -43,8 +43,8 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
 	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
 	public Triangle currentTriangle;
-	protected FollowPath<Vector3, MyLinePath.LinePathParam> followPathSB;
-	protected MyLinePath<Vector3> linePath;
+	protected FollowPath<Vector3, LinePath.LinePathParam> followPathSB;
+	protected LinePath<Vector3> linePath;
 	protected Vector3 position = new Vector3();
 	protected Vector3 targetFacing = new Vector3(Vector3.Z);
 	protected Quaternion targetFacingQuat = new Quaternion();
@@ -93,9 +93,9 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		for (Vector3 v : navMeshPointPath) {
 			centerOfMassPath.add(new Vector3(v).add(0, halfExtents.y, 0));
 		}
-		linePath = new MyLinePath<Vector3>(centerOfMassPath, true);
+		linePath = new LinePath<Vector3>(centerOfMassPath, true);
 		followPathSB =
-				new FollowPath<Vector3, MyLinePath.LinePathParam>(this, linePath, 1)
+				new FollowPath<Vector3, LinePath.LinePathParam>(this, linePath, 1)
 						// Setters below are only useful to arrive at the end of an open path
 						.setTimeToTarget(SteerSettings.timeToTarget)
 						.setArrivalTolerance(SteerSettings.arrivalTolerance)
@@ -133,7 +133,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		if (traversedSegments > 0) {
 			// Update rotation and current navmesh triangle.
 			currentSegment = followPathSB.getPathParam().getSegmentIndex();
-			MyLinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
+			LinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegment);
 			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
 			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
 			currentTriangle = navMeshPointPath.getToTriangle(currentSegment);
