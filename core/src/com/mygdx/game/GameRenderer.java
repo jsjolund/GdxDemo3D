@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -204,7 +204,7 @@ public class GameRenderer implements Disposable, Observer {
 			// Smoothed path
 			Vector3 q;
 			Vector3 p = selectedCharacter.getLinePathPosition(tmp);
-			for (int i = selectedCharacter.getCurrentSegment()+1; i < selectedCharacter.pathToRender.size; i++) {
+			for (int i = selectedCharacter.getCurrentSegment() + 1; i < selectedCharacter.pathToRender.size; i++) {
 				q = selectedCharacter.pathToRender.get(i);
 				shapeRenderer.line(p, q);
 				p = q;
@@ -352,16 +352,18 @@ public class GameRenderer implements Disposable, Observer {
 			Node skeleton = selectedCharacter.modelInstance.getNode("armature");
 			if (skeleton != null) {
 				selectedCharacter.modelInstance.transform.getTranslation(tmp);
+				selectedCharacter.modelInstance.transform.getRotation(tmpQuat);
 				skeleton.globalTransform.getTranslation(debugNodePos1);
-				drawArmatureNodes(skeleton, tmp, debugNodePos1, debugNodePos2);
+				drawArmatureNodes(skeleton, tmp, tmpQuat, debugNodePos1, debugNodePos2);
 			}
 		}
 		shapeRenderer.end();
 	}
 
-	private void drawArmatureNodes(Node currentNode, Vector3 modelPos,
+	private void drawArmatureNodes(Node currentNode, Vector3 modelPos, Quaternion modelRot,
 								   Vector3 parentNodePos, Vector3 currentNodePos) {
 		currentNode.globalTransform.getTranslation(currentNodePos);
+		modelRot.transform(currentNodePos);
 		currentNodePos.add(modelPos);
 		shapeRenderer.setColor(Color.GREEN);
 		shapeRenderer.box(currentNodePos.x, currentNodePos.y, currentNodePos.z, 0.01f, 0.01f, 0.01f);
@@ -374,7 +376,7 @@ public class GameRenderer implements Disposable, Observer {
 			float y = currentNodePos.y;
 			float z = currentNodePos.z;
 			for (Node child : currentNode.getChildren()) {
-				drawArmatureNodes(child, modelPos, currentNodePos, parentNodePos);
+				drawArmatureNodes(child, modelPos, modelRot, currentNodePos, parentNodePos);
 				currentNodePos.set(x, y, z);
 			}
 		}
