@@ -10,8 +10,8 @@ public class SteerSettings {
 	public static float runMultiplier = 2f;
 	public static float crouchMultiplier = 0.5f;
 	public static float timeToTarget = 0.1f;
-	public static float arrivalTolerance = 0.5f;
-	public static float decelerationRadius = 0.75f;
+	public static float arrivalTolerance = 0.1f;
+	public static float decelerationRadius = 0.5f;
 	public static float predictionTime = 0f;
 	public static float pathOffset = 1f;
 }
