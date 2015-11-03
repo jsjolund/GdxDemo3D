@@ -82,53 +82,6 @@ public class ModelFactory {
 		}
 	}
 
-	public static FloatBuffer createBlenderToGdxFloatBuffer(Mesh mesh) {
-		Vector3 pos = new Vector3();
-		FloatBuffer buf = mesh.getVerticesBuffer();
-		FloatBuffer bufNew = BufferUtils.newFloatBuffer(buf.capacity());
-		int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
-		int vertexFloats = (mesh.getVertexSize() / 4);
-		VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
-		int pOff = posAttr.offset / 4;
-		for (int i = pOff; i < lastFloat; i += vertexFloats) {
-			pos.x = buf.get(pOff + i);
-			pos.y = buf.get(pOff + i + 1);
-			pos.z = buf.get(pOff + i + 2);
-			bufNew.put(pOff + i, pos.x);
-			bufNew.put(pOff + i + 1, pos.z);
-			bufNew.put(pOff + i + 2, -pos.y);
-		}
-		return bufNew;
-	}
-
-	public static FloatBuffer setBlenderToGdxFloatBuffer(Mesh mesh) {
-		Vector3 pos = new Vector3();
-		Vector3 nor = new Vector3();
-		FloatBuffer buf = mesh.getVerticesBuffer();
-		int lastFloat = mesh.getNumVertices() * mesh.getVertexSize() / 4;
-		int vertexFloats = (mesh.getVertexSize() / 4);
-		VertexAttribute posAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position);
-		VertexAttribute norAttr = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Normal);
-		int pOff = posAttr.offset / 4;
-		int nOff = norAttr.offset / 4;
-		for (int i = 0; i < lastFloat; i += vertexFloats) {
-			pos.x = buf.get(pOff + i);
-			pos.y = buf.get(pOff + i + 1);
-			pos.z = buf.get(pOff + i + 2);
-			buf.put(pOff + i, pos.x);
-			buf.put(pOff + i + 1, pos.z);
-			buf.put(pOff + i + 2, -pos.y);
-
-			nor.x = buf.get(nOff + i);
-			nor.y = buf.get(nOff + i + 1);
-			nor.z = buf.get(nOff + i + 2);
-			buf.put(nOff + i, nor.x);
-			buf.put(nOff + i + 1, nor.z);
-			buf.put(nOff + i + 2, -nor.y);
-		}
-		return buf;
-	}
-
 	public static void createOutlineModel(Model model, Color outlineColor, float fattenAmount) {
 		fatten(model, fattenAmount);
 		for (Material m : model.materials) {
