@@ -418,7 +418,6 @@ public class GameStage extends Stage implements Observable {
 	private final Vector3 tmp = new Vector3();
 	private Bits visibleLayers;
 
-
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
 		super(viewport);
 		this.engine = engine;
@@ -446,17 +445,18 @@ public class GameStage extends Stage implements Observable {
 
 		mouseCoordsLabel = new ValueLabel<Vector3>("NavMesh: ", new Vector3(), skin) {
 			@Override
-			public Vector3 getValue () {
+			public Vector3 getValue() {
 				return worldInputProcessor.mouseCoords;
 			}
+
 			@Override
-			public void copyValue (Vector3 newValue, Vector3 oldValue) {
+			public void copyValue(Vector3 newValue, Vector3 oldValue) {
 				oldValue.set(newValue);
 			}
 		};
 		fpsLabel = new IntValueLabel("FPS: ", 0, skin) {
 			@Override
-			public int getValue () {
+			public int getValue() {
 				return Gdx.graphics.getFramesPerSecond();
 			}
 		};
@@ -506,6 +506,12 @@ public class GameStage extends Stage implements Observable {
 				return false;
 			}
 		});
+	}
+
+	public Bits getVisibleLayers(Bits out) {
+		out.clear();
+		out.or(visibleLayers);
+		return out;
 	}
 
 	@Override

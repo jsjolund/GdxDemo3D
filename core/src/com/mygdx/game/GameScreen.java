@@ -36,6 +36,7 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw.DebugDrawModes;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
@@ -110,6 +111,7 @@ public class GameScreen implements Screen {
 		cameraController.setWorldBoundingBox(blenderScene.worldBounds);
 		stage = new GameStage(engine, viewport, cameraController);
 		stage.addObserver(renderSys);
+		stage.addObserver(engine);
 
 		GameCharacter character = spawnCharacter(new Vector3(5, 1, 0));
 		engine.addEntity(character);
@@ -131,6 +133,8 @@ public class GameScreen implements Screen {
 				new Vector3(0, -character.halfExtents.y * 0.95f, 0));
 		renderSys.setSelectionMarker(markerBillboard);
 		engine.addEntity(markerBillboard);
+
+		stage.notifyObserversLayerChanged(stage.getVisibleLayers(new Bits()));
 	}
 
 	@Override
@@ -205,7 +209,6 @@ public class GameScreen implements Screen {
 				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
-		character.ignoreCulling = true;
 		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
 		character.currentTriangle = engine.navmesh.rayTest(posGroundRay, 100, null);
 		character.layers.set(character.currentTriangle.meshPartIndex);

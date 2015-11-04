@@ -84,10 +84,6 @@ public class GameRenderer implements Disposable, Observer {
 		this.viewport = viewport;
 		this.camera = camera;
 		this.engine = engine;
-		visibleLayers = new Bits();
-		for (int i = 0; i < 10; i++) {
-			visibleLayers.set(i);
-		}
 
 		shapeRenderer = new MyShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
@@ -159,12 +155,43 @@ public class GameRenderer implements Disposable, Observer {
 		if (!gameModel.layers.intersects(visibleLayers)) {
 			return false;
 		}
-		if (gameModel.ignoreCulling) {
-			return true;
-		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
 		tmp.add(gameModel.center);
 		return camera.frustum.sphereInFrustum(tmp, gameModel.boundingRadius);
+	}
+
+	private void drawShadowBatch() {
+		int vw = viewport.getScreenWidth();
+		int vh = viewport.getScreenHeight();
+		int vx = viewport.getScreenX();
+		int vy = viewport.getScreenY();
+
+		shadowLight.begin(Vector3.Zero, camera.direction);
+		shadowBatch.begin(shadowLight.getCamera());
+		Iterator<GameModel> models = engine.getAllModels();
+		while (models.hasNext()) {
+			GameModel mdl = models.next();
+			if (!mdl.layers.intersects(visibleLayers)) {
+				continue;
+			}
+			shadowBatch.render(mdl.modelInstance);
+		}
+
+//		// TODO: ModelCache doesn't seem to work here
+//		shadowBatch.render(engine.getModelCache());
+//		for (GameModel mdl : engine.getNonCachedModels()) {
+//			if (isVisible(camera, mdl)) {
+//				shadowBatch.render(mdl.modelInstance);
+//			}
+//		}
+
+		shadowBatch.end();
+		shadowLight.end();
+
+		viewport.update(vw, vh);
+		viewport.setScreenX(vx);
+		viewport.setScreenY(vy);
+		viewport.apply();
 	}
 
 	public void update(float deltaTime) {
@@ -172,9 +199,8 @@ public class GameRenderer implements Disposable, Observer {
 			drawShadowBatch();
 			camera.update();
 			modelBatch.begin(camera);
-			Iterator<GameModel> models = engine.getModels();
-			while (models.hasNext()) {
-				GameModel mdl = models.next();
+			modelBatch.render(engine.getModelCache(), environment);
+			for (GameModel mdl : engine.getNonCachedModels()) {
 				if (isVisible(camera, mdl)) {
 					modelBatch.render(mdl.modelInstance, environment);
 				}
@@ -319,30 +345,6 @@ public class GameRenderer implements Disposable, Observer {
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
-	private void drawShadowBatch() {
-		int vw = viewport.getScreenWidth();
-		int vh = viewport.getScreenHeight();
-		int vx = viewport.getScreenX();
-		int vy = viewport.getScreenY();
-
-		shadowLight.begin(Vector3.Zero, camera.direction);
-		shadowBatch.begin(shadowLight.getCamera());
-		Iterator<GameModel> models = engine.getModels();
-		while (models.hasNext()) {
-			GameModel mdl = models.next();
-			if (!mdl.layers.intersects(visibleLayers)) {
-				continue;
-			}
-			shadowBatch.render(mdl.modelInstance);
-		}
-		shadowBatch.end();
-		shadowLight.end();
-
-		viewport.update(vw, vh);
-		viewport.setScreenX(vx);
-		viewport.setScreenY(vy);
-		viewport.apply();
-	}
 
 	private void drawArmature() {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
