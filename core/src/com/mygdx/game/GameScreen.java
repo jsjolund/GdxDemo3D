@@ -153,7 +153,7 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void render(float delta) {
-		camera.update(delta, GameSettings.CAMERA_LERP_ALPHA);
+		camera.update(delta * GameSettings.CAMERA_LERP_ALPHA);
 		stage.act(delta);
 
 		delta *= GameSettings.GAME_SPEED;

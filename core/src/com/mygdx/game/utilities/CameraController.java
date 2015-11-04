@@ -54,7 +54,7 @@ public class CameraController {
 		this.worldBoundingBox.getMin(min).y = 0;
 		this.worldBoundingBox.set(min, max);
 
-		ray.set(camera.position, camera.direction);
+		ray.set(camera.targetPosition, camera.targetDirection);
 		if (!Intersector.intersectRayBounds(ray, this.worldBoundingBox, worldGroundTarget)) {
 			// TODO: What happens if the center of camera is not aimed at bounding box?
 			// Probably move the camera until it is...
@@ -71,16 +71,16 @@ public class CameraController {
 		tmp1.set(worldDragLast).sub(worldDragCurrent);
 		tmp1.y = 0;
 
-		ray.origin.set(camera.position).add(tmp1);
-		ray.direction.set(camera.direction);
+		ray.origin.set(camera.targetPosition).add(tmp1);
+		ray.direction.set(camera.targetDirection);
 		if (Intersector.intersectRayBoundsFast(ray, worldBoundingBox)) {
-			camera.position.add(tmp1);
+			camera.targetPosition.add(tmp1);
 			worldGroundTarget.add(tmp1);
 		}
 	}
 
 	public void processDragRotation(Vector2 cursorDelta) {
-		tmp1.set(camera.direction).crs(camera.up).nor();
+		tmp1.set(camera.targetDirection).crs(camera.targetUp).nor();
 		deltaRotation.setEulerAngles(cursorDelta.x, cursorDelta.y * tmp1.x, cursorDelta.y * tmp1.z);
 		camera.rotateAround(worldGroundTarget, deltaRotation);
 	}
@@ -88,19 +88,19 @@ public class CameraController {
 	public void processZoom(float amount) {
 		zoom += GameSettings.CAMERA_ZOOM_STEP * amount;
 		zoom = MathUtils.clamp(zoom, GameSettings.CAMERA_MIN_ZOOM, GameSettings.CAMERA_MAX_ZOOM);
-		camera.position.set(camera.direction).nor().scl(-zoom).add(worldGroundTarget);
+		camera.targetPosition.set(camera.targetDirection).nor().scl(-zoom).add(worldGroundTarget);
 	}
 
 	public void processKeyboardPan(Vector2 keysMoveDirection, float deltaTime) {
-		tmp1.set(camera.direction).crs(camera.up).scl(keysMoveDirection.x);
-		tmp1.add(tmp2.set(camera.direction).scl(keysMoveDirection.y));
+		tmp1.set(camera.targetDirection).crs(camera.targetUp).scl(keysMoveDirection.x);
+		tmp1.add(tmp2.set(camera.targetDirection).scl(keysMoveDirection.y));
 		tmp1.y = 0;
 		tmp1.nor().scl(deltaTime * GameSettings.CAMERA_MAX_PAN_VELOCITY);
 
-		ray.origin.set(camera.position).add(tmp1);
-		ray.direction.set(camera.direction);
+		ray.origin.set(camera.targetPosition).add(tmp1);
+		ray.direction.set(camera.targetDirection);
 		if (Intersector.intersectRayBoundsFast(ray, worldBoundingBox)) {
-			camera.position.add(tmp1);
+			camera.targetPosition.add(tmp1);
 			worldGroundTarget.add(tmp1);
 		}
 	}

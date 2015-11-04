@@ -241,6 +241,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		}
 		modelCache.end();
 		modelCacheDirty = false;
+		System.out.println("updated cache");
 	}
 
 	@Override

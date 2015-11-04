@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@
 package com.mygdx.game.utilities;
 
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 
@@ -25,9 +26,10 @@ import com.badlogic.gdx.math.Vector3;
  */
 public class GhostCamera extends PerspectiveCamera {
 
-	public final Vector3 position = new Vector3();
-	public final Vector3 direction = new Vector3();
-	public final Vector3 up = new Vector3();
+	public final Vector3 targetPosition = new Vector3();
+	public final Vector3 targetDirection = new Vector3();
+	public final Vector3 targetUp = new Vector3();
+
 	private final Vector3 tmp = new Vector3();
 
 
@@ -38,20 +40,26 @@ public class GhostCamera extends PerspectiveCamera {
 		up.set(super.up);
 	}
 
-	public void update(float deltaTime, float alpha) {
-		alpha *= deltaTime;
-		super.position.lerp(position, alpha);
-		super.direction.lerp(direction, alpha);
-		super.up.lerp(up, alpha);
+	public void update(float alpha) {
+		alpha = MathUtils.clamp(alpha, 0.1f, 0.9f);
+		position.lerp(targetPosition, alpha);
+		direction.lerp(targetDirection, alpha);
+		up.lerp(targetUp, alpha);
 		super.update();
 	}
 
+	public void snapToTarget() {
+		position.set(targetPosition);
+		direction.set(targetDirection);
+		up.set(targetUp);
+	}
+
 	public void rotateAround(Vector3 point, Quaternion quat) {
-		tmp.set(point).sub(position);
-		position.add(tmp);
-		quat.transform(direction);
-		quat.transform(up);
+		tmp.set(point).sub(targetPosition);
+		targetPosition.add(tmp);
+		quat.transform(targetDirection);
+		quat.transform(targetUp);
 		quat.transform(tmp);
-		position.add(-tmp.x, -tmp.y, -tmp.z);
+		targetPosition.add(-tmp.x, -tmp.y, -tmp.z);
 	}
 }
