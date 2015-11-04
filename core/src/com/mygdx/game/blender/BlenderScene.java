@@ -193,21 +193,25 @@ public class BlenderScene implements Disposable {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private static Array<BlenderObject.BModel> deserializeModels(String path) {
 		return (path == null) ? new Array<BlenderObject.BModel>() :
 				new Json().fromJson(Array.class, BlenderObject.BModel.class, Gdx.files.local(path));
 	}
 
+	@SuppressWarnings("unchecked")
 	private static Array<BlenderObject.BEmpty> deserializeEmpties(String path) {
 		return (path == null) ? new Array<BlenderObject.BEmpty>() :
 				new Json().fromJson(Array.class, BlenderObject.BEmpty.class, Gdx.files.local(path));
 	}
 
+	@SuppressWarnings("unchecked")
 	private static Array<BlenderObject.BLight> deserializeLights(String path) {
 		return (path == null) ? new Array<BlenderObject.BLight>() :
 				new Json().fromJson(Array.class, BlenderObject.BLight.class, Gdx.files.local(path));
 	}
 
+	@SuppressWarnings("unchecked")
 	private static Array<BlenderObject.BCamera> deserializeCameras(String path) {
 		return (path == null) ? new Array<BlenderObject.BCamera>() :
 				new Json().fromJson(Array.class, BlenderObject.BCamera.class, Gdx.files.local(path));
@@ -483,9 +487,13 @@ public class BlenderScene implements Disposable {
 		direction.rotate(Vector3.X, sceneCamera.rotation.x);
 		direction.rotate(Vector3.Z, sceneCamera.rotation.z);
 		direction.rotate(Vector3.Y, sceneCamera.rotation.y);
-		camera.position.set(sceneCamera.position);
-		camera.direction.set(direction);
+		direction.nor();
+
 		camera.fieldOfView = sceneCamera.fov;
+		camera.targetPosition.set(sceneCamera.position);
+		camera.targetDirection.set(direction);
+		camera.targetUp.set(Vector3.Y);
+		camera.snapToTarget();
 		camera.update();
 	}
 }
