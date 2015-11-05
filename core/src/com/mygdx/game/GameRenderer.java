@@ -168,23 +168,13 @@ public class GameRenderer implements Disposable, Observer {
 
 		shadowLight.begin(Vector3.Zero, camera.direction);
 		shadowBatch.begin(shadowLight.getCamera());
-		Iterator<GameModel> models = engine.getAllModels();
-		while (models.hasNext()) {
-			GameModel mdl = models.next();
-			if (!mdl.layers.intersects(visibleLayers)) {
-				continue;
+
+		shadowBatch.render(engine.getModelCache());
+		for (GameModel mdl : engine.getNonCachedModels()) {
+			if (isVisible(camera, mdl)) {
+				shadowBatch.render(mdl.modelInstance);
 			}
-			shadowBatch.render(mdl.modelInstance);
 		}
-
-//		// TODO: ModelCache doesn't seem to work here
-//		shadowBatch.render(engine.getModelCache());
-//		for (GameModel mdl : engine.getNonCachedModels()) {
-//			if (isVisible(camera, mdl)) {
-//				shadowBatch.render(mdl.modelInstance);
-//			}
-//		}
-
 		shadowBatch.end();
 		shadowLight.end();
 
