@@ -95,7 +95,7 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
-	public class WorldInputProcessor extends Actor implements InputProcessor {
+	public class WorldInputProcessor implements InputProcessor {
 
 		private final Ray dragCurrentRay = new Ray();
 		private final Ray lastDragProcessedRay = new Ray();
@@ -454,7 +454,7 @@ public class GameStage extends Stage implements Observable {
 				oldValue.set(newValue);
 			}
 		};
-		fpsLabel = new IntValueLabel("FPS: ", 0, skin) {
+		fpsLabel = new IntValueLabel("FPS: ", 999, skin) {
 			@Override
 			public int getValue() {
 				return Gdx.graphics.getFramesPerSecond();
@@ -470,7 +470,7 @@ public class GameStage extends Stage implements Observable {
 		rootTable.setDebug(true, true);
 
 		Table topTable = new Table();
-		topTable.add(fpsLabel).top().left();
+		topTable.add(fpsLabel).width(fpsLabel.getWidth()).top().left();
 		topTable.add(mouseCoordsLabel).padLeft(15).top().left();
 		topTable.add(new Table()).expandX().fillX();
 		rootTable.add(topTable).expandX().fillX();
@@ -691,6 +691,12 @@ public class GameStage extends Stage implements Observable {
 	}
 
 	@Override
+	public void act(float delta) {
+		super.act(delta);
+		worldInputProcessor.update(delta);
+	}
+
+	@Override
 	public void draw() {
 		batch.begin();
 		for (Actor actor : getActors()) {
@@ -705,9 +711,6 @@ public class GameStage extends Stage implements Observable {
 			rootTable.drawDebug(shapeRenderer);
 			shapeRenderer.end();
 		}
-
-		worldInputProcessor.update(Gdx.graphics.getDeltaTime());
-		fpsLabel.setText(String.format("FPS=%d", Gdx.graphics.getFramesPerSecond()));
 	}
 
 	@Override
