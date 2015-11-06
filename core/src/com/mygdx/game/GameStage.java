@@ -288,96 +288,29 @@ public class GameStage extends Stage implements Observable {
 
 
 	private class CharacterController extends Table {
-		private final ArrayMap<ImageButton, GameCharacter.CharacterState> characterButtons;
-		ButtonGroup<ImageButton> radioGroup;
+		private ButtonGroup<CharacterButton> radioGroup;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
-			characterButtons = new ArrayMap<ImageButton, GameCharacter.CharacterState>();
+			radioGroup = new ButtonGroup<CharacterButton>(
+				new CharacterButton(GameCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+				new CharacterButton(GameCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+				new CharacterButton(GameCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+				//new CharacterButton(GameCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(GameCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+			);
 
-			ImageButton.ImageButtonStyle btnRunStyle = new ImageButton.ImageButtonStyle();
-			btnRunStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("run-up"));
-			btnRunStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("run-down"));
-			btnRunStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("run-down"));
-			final ImageButton btnRun = new ImageButton(btnRunStyle);
-
-			ImageButton.ImageButtonStyle btnWalkStyle = new ImageButton.ImageButtonStyle();
-			btnWalkStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("walk-up"));
-			btnWalkStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("walk-down"));
-			btnWalkStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("walk-down"));
-			final ImageButton btnWalk = new ImageButton(btnWalkStyle);
-
-			ImageButton.ImageButtonStyle btnCrouchStyle = new ImageButton.ImageButtonStyle();
-			btnCrouchStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-up"));
-			btnCrouchStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-down"));
-			btnCrouchStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("crouch-down"));
-			final ImageButton btnCrouch = new ImageButton(btnCrouchStyle);
-
-//		ImageButton.ImageButtonStyle btnCrawlStyle = new ImageButton.ImageButtonStyle();
-//		btnCrawlStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-up"));
-//		btnCrawlStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-down"));
-//		btnCrawlStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("crawl-down"));
-//		final ImageButton btnCrawl = new ImageButton(btnCrawlStyle);
-
-			ImageButton.ImageButtonStyle btnKillStyle = new ImageButton.ImageButtonStyle();
-			btnKillStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("kill-up"));
-			btnKillStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("kill-down"));
-			btnKillStyle.checked = new TextureRegionDrawable(buttonAtlas.findRegion("kill-down"));
-			final ImageButton btnKill = new ImageButton(btnKillStyle);
-
-			characterButtons.put(btnRun, GameCharacter.CharacterState.MOVE_RUN);
-			characterButtons.put(btnWalk, GameCharacter.CharacterState.MOVE_WALK);
-			characterButtons.put(btnCrouch, GameCharacter.CharacterState.MOVE_CROUCH);
-//		characterButtons.put(btnCrawl, GameCharacter.CharacterState.MOVE_CRAWL);
-			characterButtons.put(btnKill, GameCharacter.CharacterState.DEAD);
-
-			radioGroup = new ButtonGroup<ImageButton>(btnRun, btnWalk, btnCrouch, btnKill);
-
-			for (ImageButton btn : characterButtons.keys()) {
+			for (CharacterButton btn : radioGroup.getButtons()) {
 				add(btn);
 			}
-
-			btnRun.addListener(new ClickListener() {
-				@Override
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					handleCharacterButtonPress(btnRun);
-					return true;
-				}
-			});
-			btnWalk.addListener(new ClickListener() {
-				@Override
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					handleCharacterButtonPress(btnWalk);
-					return true;
-				}
-			});
-			btnCrouch.addListener(new ClickListener() {
-				@Override
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					handleCharacterButtonPress(btnCrouch);
-					return true;
-				}
-			});
-			btnKill.addListener(new ClickListener() {
-				@Override
-				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-					handleCharacterButtonPress(btnKill);
-					return true;
-				}
-			});
-		}
-
-		private void handleCharacterButtonPress(ImageButton thisBtn) {
-			if (selectedCharacter == null) {
-				return;
-			}
-			GameCharacter.CharacterState newState = characterButtons.get(thisBtn);
-			selectedCharacter.handleStateCommand(newState);
 		}
 
 		public void handleCharacterSelection(GameCharacter character) {
+			for (CharacterButton btn : radioGroup.getButtons()) {
+				if (btn.state == character.getCurrentMoveState())
+					btn.setChecked(true);
+			}
 			selectedCharacter = character;
-			characterButtons.getKey(selectedCharacter.getCurrentMoveState(), true).setChecked(true);
 			notifyObserversEntitySelected(selectedCharacter);
 		}
 
@@ -392,6 +325,26 @@ public class GameStage extends Stage implements Observable {
 					selectedCharacter.navMeshGraphPath)) {
 
 				selectedCharacter.calculateNewPath();
+			}
+		}
+		
+		private class CharacterButton extends ImageButton {
+			
+			GameCharacter.CharacterState state;
+
+			CharacterButton (GameCharacter.CharacterState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
+				super(new TextureRegionDrawable(buttonAtlas.findRegion(up)),
+					new TextureRegionDrawable(buttonAtlas.findRegion(down)),
+					new TextureRegionDrawable(buttonAtlas.findRegion(checked)));
+				this.state = state;
+				this.addListener(new ClickListener() {
+					@Override
+					public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+						if (selectedCharacter != null)
+							selectedCharacter.handleStateCommand(CharacterButton.this.state);
+						return true;
+					}
+				});
 			}
 		}
 	}
