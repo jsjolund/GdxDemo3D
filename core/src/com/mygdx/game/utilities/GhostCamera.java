@@ -35,9 +35,9 @@ public class GhostCamera extends PerspectiveCamera {
 
 	public GhostCamera(float fieldOfViewY, float viewportWidth, float viewportHeight) {
 		super(fieldOfViewY, viewportWidth, viewportHeight);
-		position.set(super.position);
-		direction.set(super.direction);
-		up.set(super.up);
+		targetPosition.set(super.position);
+		targetDirection.set(super.direction);
+		targetUp.set(super.up);
 	}
 
 	public void update(float alpha) {
