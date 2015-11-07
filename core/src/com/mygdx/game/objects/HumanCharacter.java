@@ -28,87 +28,12 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
 
-import java.util.EnumMap;
-
 /**
  * @author jsjolund
  */
 public class HumanCharacter extends Ragdoll {
 
 	public enum CharacterState implements State<HumanCharacter> {
-		MOVE_RUN() {
-			@Override
-			public void enter(HumanCharacter entity) {
-				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
-				entity.moveState = this;
-				entity.idleState = entity.moveIdleMap.get(this);
-
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.runMultiplier);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.runMultiplier);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.runMultiplier);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.runMultiplier);
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.runMultiplier);
-				}
-			}
-
-			@Override
-			public void update(HumanCharacter entity) {
-				float deltaTime = Gdx.graphics.getDeltaTime() * entity.getLinearVelocity().len() * 0.2f;
-				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-			}
-		},
-		MOVE_WALK() {
-			@Override
-			public void enter(HumanCharacter entity) {
-				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
-				entity.moveState = this;
-				entity.idleState = entity.moveIdleMap.get(this);
-
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration);
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius);
-				}
-			}
-
-			@Override
-			public void update(HumanCharacter entity) {
-				float deltaTime = Gdx.graphics.getDeltaTime() * entity.getLinearVelocity().len() * 0.4f;
-				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-			}
-		},
-		MOVE_CROUCH() {
-			@Override
-			public void enter(HumanCharacter entity) {
-				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
-				entity.moveState = this;
-				entity.idleState = entity.moveIdleMap.get(this);
-
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.crouchMultiplier);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.crouchMultiplier);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.crouchMultiplier);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.crouchMultiplier);
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.crouchMultiplier);
-				}
-			}
-
-			@Override
-			public void update(HumanCharacter entity) {
-				float deltaTime = Gdx.graphics.getDeltaTime() * entity.getLinearVelocity().len() * 0.5f;
-				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-			}
-		},
-		MOVE_CRAWL() {},
 		IDLE_STAND() {
 			@Override
 			public void enter(HumanCharacter entity) {
@@ -127,6 +52,58 @@ public class HumanCharacter extends Ragdoll {
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
+		MOVE_RUN(CharacterState.IDLE_STAND, 0.2f) {
+			@Override
+			public void enter(HumanCharacter entity) {
+				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
+				entity.moveState = this;
+
+				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.runMultiplier);
+				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.runMultiplier);
+
+				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.runMultiplier);
+				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.runMultiplier);
+
+				if (entity.followPathSB != null) {
+					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.runMultiplier);
+				}
+			}
+		},
+		MOVE_WALK(CharacterState.IDLE_STAND, 0.4f) {
+			@Override
+			public void enter(HumanCharacter entity) {
+				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
+				entity.moveState = this;
+
+				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed);
+				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration);
+
+				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed);
+				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration);
+
+				if (entity.followPathSB != null) {
+					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius);
+				}
+			}
+		},
+		MOVE_CROUCH(CharacterState.IDLE_CROUCH, 0.5f) {
+			@Override
+			public void enter(HumanCharacter entity) {
+				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
+				entity.moveState = this;
+
+				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.crouchMultiplier);
+				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.crouchMultiplier);
+
+				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.crouchMultiplier);
+				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.crouchMultiplier);
+
+				if (entity.followPathSB != null) {
+					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.crouchMultiplier);
+				}
+			}
+		},
+		MOVE_CRAWL() {},
 		THROW() {
 			@Override
 			public void enter(HumanCharacter entity) {
@@ -156,13 +133,58 @@ public class HumanCharacter extends Ragdoll {
 		},
 		GLOBAL() {};
 
+		protected final CharacterState idleState;
+		protected final float multiplier;
+		
+		private CharacterState() {
+			this(null, 0);
+		}
+		
+		private CharacterState(CharacterState idleState, float multiplier) {
+			this.idleState = idleState;
+			this.multiplier = multiplier;
+		}
+
+		private boolean isMovementState() {
+			return idleState != null;
+		}
+
 		@Override
 		public void enter(HumanCharacter entity) {
 		}
 
 		@Override
 		public void update(HumanCharacter entity) {
+			if (entity.isSteering()) {
+				if (!entity.wasSteering) {
+					entity.wasSteering = true;
+					entity.stateMachine.changeState(entity.moveState);
+					return;
+				}
+			} else {
+				if (entity.wasSteering) {
+					entity.wasSteering = false;
+					if (entity.stateMachine.getCurrentState() != CharacterState.DEAD) {
+						entity.stateMachine.changeState(entity.moveState.idleState);
+						return;
+					}
+				}
+				else {
+					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+					if (previousState.isMovementState()) {
+						entity.moveState = previousState;
+						entity.stateMachine.changeState(previousState.idleState);
+						return;
+					}
+				}
+			}
+
+			// update current state's animation
 			float deltaTime = Gdx.graphics.getDeltaTime();
+			if (idleState != null) {
+				// this is a movement state
+				deltaTime *= entity.getLinearVelocity().len() * multiplier;
+			}
 			entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
 		}
 
@@ -244,9 +266,6 @@ public class HumanCharacter extends Ragdoll {
 	public final CharacterAnimationListener animationListener;
 	private final SteerSettings steerSettings;
 	private CharacterState moveState = CharacterState.MOVE_WALK;
-	private CharacterState idleState = CharacterState.IDLE_STAND;
-	private EnumMap<CharacterState, CharacterState> moveIdleMap =
-			new EnumMap<CharacterState, CharacterState>(CharacterState.class);
 	private boolean wasSteering = false;
 
 	public HumanCharacter(Model model,
@@ -273,15 +292,11 @@ public class HumanCharacter extends Ragdoll {
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
 
-		moveIdleMap.put(CharacterState.MOVE_WALK, CharacterState.IDLE_STAND);
-		moveIdleMap.put(CharacterState.MOVE_RUN, CharacterState.IDLE_STAND);
-		moveIdleMap.put(CharacterState.MOVE_CROUCH, CharacterState.IDLE_CROUCH);
-
 		stateMachine = new DefaultStateMachine<HumanCharacter>(this, CharacterState.GLOBAL);
 		// Set the steering variables associated with default move state (walking)
 		stateMachine.changeState(moveState);
 		// Then make the character idle
-		stateMachine.changeState(idleState);
+		stateMachine.changeState(moveState.idleState);
 
 		steerSettings = new HumanSteerSettings();
 	}
@@ -297,41 +312,18 @@ public class HumanCharacter extends Ragdoll {
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 		stateMachine.update();
-
-		boolean isSteering = isSteering();
-		if (isSteering && !wasSteering) {
-			wasSteering = isSteering;
-			stateMachine.changeState(moveState);
-
-		} else if (!isSteering && wasSteering) {
-			wasSteering = isSteering;
-			if (stateMachine.getCurrentState() != CharacterState.DEAD) {
-				stateMachine.changeState(idleState);
-			}
-		}
 	}
 
 	public void handleStateCommand(CharacterState newState) {
-		boolean isSteering = isSteering();
-
-		if (newState == CharacterState.DEAD) {
-			stateMachine.changeState(newState);
-		} else if (isSteering) {
-			stateMachine.changeState(newState);
-		} else if (moveIdleMap.containsKey(newState)) {
-			moveState = newState;
-			idleState = moveIdleMap.get(newState);
-			stateMachine.changeState(idleState);
-		}
+		stateMachine.changeState(newState);
 	}
-
 
 	public CharacterState getCurrentMoveState() {
 		return moveState;
 	}
 
 	public CharacterState getCurrentIdleState() {
-		return idleState;
+		return moveState.idleState;
 	}
 
 }
