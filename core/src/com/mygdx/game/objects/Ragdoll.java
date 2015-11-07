@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ import java.util.Iterator;
 /**
  * @author jsjolund
  */
-public class Ragdoll extends SteerableBody {
+public abstract class Ragdoll extends GameCharacter {
 
 	public class RigidBodyNodeConnection {
 		// Stores the offset from the center of a rigid body to the node which connects to it
@@ -77,10 +77,11 @@ public class Ragdoll extends SteerableBody {
 				   boolean callback,
 				   boolean noDeactivate,
 				   String ragdollJson,
-				   String armatureNodeId) {
+				   String armatureNodeId,
+				   SteerSettings steerSettings) {
 
 		super(model, id, location, rotation, scale, shape, mass,
-				belongsToFlag, collidesWithFlag, callback, noDeactivate);
+				belongsToFlag, collidesWithFlag, callback, noDeactivate, steerSettings);
 
 		createRagdoll(ragdollJson, armatureNodeId);
 	}

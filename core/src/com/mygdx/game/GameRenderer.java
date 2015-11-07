@@ -52,8 +52,6 @@ import com.mygdx.game.shaders.UberShader;
 import com.mygdx.game.utilities.MyShapeRenderer;
 import com.mygdx.game.utilities.Observer;
 
-import java.util.Iterator;
-
 /**
  * @author jsjolund
  */
@@ -71,7 +69,7 @@ public class GameRenderer implements Disposable, Observer {
 	private final Matrix4 tmpMatrix = new Matrix4();
 	private final Quaternion tmpQuat = new Quaternion();
 	private final Viewport viewport;
-	GameCharacter selectedCharacter;
+	private GameCharacter selectedCharacter;
 	private BitmapFont font;
 	private Camera camera;
 	private Environment environment;
@@ -109,7 +107,7 @@ public class GameRenderer implements Disposable, Observer {
 	@Override
 	public void notifyEntitySelected(GameCharacter entity) {
 		selectedCharacter = entity;
-		markerBillboard.setFollowTransform(entity.motionState.transform);
+		markerBillboard.setFollowTransform(entity.motionState.transform, entity.selectionMarkerOffset);
 		markerBillboard.layers.clear();
 		markerBillboard.layers.or(entity.layers);
 	}

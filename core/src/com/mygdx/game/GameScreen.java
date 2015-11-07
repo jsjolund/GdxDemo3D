@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.Animation;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
@@ -40,9 +41,7 @@ import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
-import com.mygdx.game.objects.Billboard;
-import com.mygdx.game.objects.GameCharacter;
-import com.mygdx.game.objects.GameObject;
+import com.mygdx.game.objects.*;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
@@ -119,6 +118,18 @@ public class GameScreen implements Screen {
 		engine.addEntity(spawnCharacter(new Vector3(10, 1, 5)));
 		engine.addEntity(spawnCharacter(new Vector3(-12, 4, 10)));
 
+		Billboard markerBillboard = spawnSelectionBillboard();
+		renderSys.setSelectionMarker(markerBillboard);
+		engine.addEntity(markerBillboard);
+
+		engine.addEntity(spawnDog(new Vector3(7, 2, 0)));
+		engine.addEntity(spawnDog(new Vector3(12, 2, 0)));
+		engine.addEntity(spawnDog(new Vector3(15, 2, 0)));
+
+		stage.notifyObserversLayerChanged(stage.getVisibleLayers(new Bits()));
+	}
+
+	public Billboard spawnSelectionBillboard() {
 		// Selection billboard
 		TextureLoader.TextureParameter param = new TextureLoader.TextureParameter();
 		param.genMipMaps = true;
@@ -129,12 +140,9 @@ public class GameScreen implements Screen {
 		Texture billboardPixmap = assets.get("images/marker.png", Texture.class);
 		// TODO: dispose or use an asset manager model
 		Model billboardModel = ModelFactory.buildBillboardModel(billboardPixmap, 1, 1);
-		Billboard markerBillboard = new Billboard(billboardModel, "marker", camera, true, new Matrix4(),
-				new Vector3(0, -character.halfExtents.y * 0.95f, 0));
-		renderSys.setSelectionMarker(markerBillboard);
-		engine.addEntity(markerBillboard);
-
-		stage.notifyObserversLayerChanged(stage.getVisibleLayers(new Bits()));
+		Billboard markerBillboard = new Billboard(billboardModel, "marker",
+				camera, true, new Matrix4(), new Vector3());
+		return markerBillboard;
 	}
 
 	@Override
@@ -184,6 +192,38 @@ public class GameScreen implements Screen {
 
 	}
 
+	private GameCharacter spawnDog(Vector3 initialPosition) {
+		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
+		param.textureParameter.genMipMaps = true;
+		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
+		String modelFile = "models/g3db/dog_model.g3db";
+		assets.load(modelFile, Model.class, param);
+		assets.finishLoading();
+		Model model = assets.get(modelFile);
+		for (Animation animation : model.animations) {
+			System.out.println(animation.id);
+		}
+
+		btCollisionShape shape = new btCapsuleShape(0.4f, 0.5f);
+		float mass = 1;
+		boolean callback = false;
+		boolean noDeactivate = true;
+		short belongsToFlag = GameEngine.PC_FLAG;
+		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
+
+		float scl = 0.3f;
+		DogCharacter character = new DogCharacter(model, "dog",
+				initialPosition, new Vector3(0, 0, 0), new Vector3(scl, scl, scl),
+				shape, mass, belongsToFlag, collidesWithFlag,
+				callback, noDeactivate);
+
+		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		character.currentTriangle = engine.navmesh.rayTest(posGroundRay, 100, null);
+		character.layers.set(character.currentTriangle.meshPartIndex);
+		return character;
+	}
+
 	private GameCharacter spawnCharacter(Vector3 initialPosition) {
 
 		short belongsToFlag = GameEngine.PC_FLAG;
@@ -194,9 +234,10 @@ public class GameScreen implements Screen {
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
 		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
-		assets.load("models/g3db/character_male_base.g3db", Model.class, param);
+		String modelFile = "models/g3db/character_male_base.g3db";
+		assets.load(modelFile, Model.class, param);
 		assets.finishLoading();
-		Model model = assets.get("models/g3db/character_male_base.g3db");
+		Model model = assets.get(modelFile);
 		btCollisionShape shape = new btCapsuleShape(0.4f, 1.1f);
 		float mass = 1;
 		boolean callback = false;
@@ -204,7 +245,7 @@ public class GameScreen implements Screen {
 		String ragdollJson = "models/json/character_empty.json";
 		String armatureNodeId = "armature";
 
-		GameCharacter character = new GameCharacter(
+		GameCharacter character = new HumanCharacter(
 				model, "character",
 				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
 				shape, mass, belongsToFlag, collidesWithFlag,

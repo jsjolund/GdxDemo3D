@@ -39,13 +39,16 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Bits;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.objects.GameCharacter;
+import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
-import com.mygdx.game.settings.SteerSettings;
 import com.mygdx.game.ui.IntValueLabel;
 import com.mygdx.game.ui.ValueLabel;
 import com.mygdx.game.utilities.CameraController;
@@ -288,16 +291,37 @@ public class GameStage extends Stage implements Observable {
 
 
 	private class CharacterController extends Table {
+		private class CharacterButton extends ImageButton {
+
+			HumanCharacter.CharacterState state;
+
+			CharacterButton(HumanCharacter.CharacterState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
+				super(new TextureRegionDrawable(buttonAtlas.findRegion(up)),
+						new TextureRegionDrawable(buttonAtlas.findRegion(down)),
+						new TextureRegionDrawable(buttonAtlas.findRegion(checked)));
+				this.state = state;
+				this.addListener(new ClickListener() {
+					@Override
+					public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+						if (selectedCharacter instanceof HumanCharacter) {
+							HumanCharacter human = (HumanCharacter) selectedCharacter;
+							human.handleStateCommand(CharacterButton.this.state);
+						}
+						return true;
+					}
+				});
+			}
+		}
 		private ButtonGroup<CharacterButton> radioGroup;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
 			radioGroup = new ButtonGroup<CharacterButton>(
-				new CharacterButton(GameCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-				new CharacterButton(GameCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-				new CharacterButton(GameCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-				//new CharacterButton(GameCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(GameCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+					//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+					new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
 			for (CharacterButton btn : radioGroup.getButtons()) {
@@ -306,9 +330,12 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		public void handleCharacterSelection(GameCharacter character) {
-			for (CharacterButton btn : radioGroup.getButtons()) {
-				if (btn.state == character.getCurrentMoveState())
-					btn.setChecked(true);
+			if (character instanceof HumanCharacter) {
+				HumanCharacter human = (HumanCharacter) character;
+				for (CharacterButton btn : radioGroup.getButtons()) {
+					if (btn.state == human.getCurrentMoveState())
+						btn.setChecked(true);
+				}
 			}
 			selectedCharacter = character;
 			notifyObserversEntitySelected(selectedCharacter);
@@ -325,26 +352,6 @@ public class GameStage extends Stage implements Observable {
 					selectedCharacter.navMeshGraphPath)) {
 
 				selectedCharacter.calculateNewPath();
-			}
-		}
-		
-		private class CharacterButton extends ImageButton {
-			
-			GameCharacter.CharacterState state;
-
-			CharacterButton (GameCharacter.CharacterState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
-				super(new TextureRegionDrawable(buttonAtlas.findRegion(up)),
-					new TextureRegionDrawable(buttonAtlas.findRegion(down)),
-					new TextureRegionDrawable(buttonAtlas.findRegion(checked)));
-				this.state = state;
-				this.addListener(new ClickListener() {
-					@Override
-					public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-						if (selectedCharacter != null)
-							selectedCharacter.handleStateCommand(CharacterButton.this.state);
-						return true;
-					}
-				});
 			}
 		}
 	}
@@ -544,7 +551,7 @@ public class GameStage extends Stage implements Observable {
 		final Table innerTable = new Table();
 		final Table outerTable = new Table();
 
-		Field[] fields = SteerSettings.class.getFields();
+		Field[] fields = HumanCharacter.HumanSteerSettings.class.getFields();
 		for (final Field field : fields) {
 			final Label fieldName = new Label(field.getName(), skin);
 			float fieldValueFloat = 0;

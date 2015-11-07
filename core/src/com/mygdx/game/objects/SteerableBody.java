@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,6 @@ import com.badlogic.gdx.utils.Array;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
 import com.mygdx.game.pathfinding.Triangle;
-import com.mygdx.game.settings.SteerSettings;
 import com.mygdx.game.utilities.BulletLocation;
 import com.mygdx.game.utilities.BulletSteeringUtils;
 
@@ -40,9 +39,26 @@ import com.mygdx.game.utilities.BulletSteeringUtils;
  */
 public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
+	public interface SteerSettings {
+		float getTimeToTarget();
+
+		float getArrivalTolerance();
+
+		float getDecelerationRadius();
+
+		float getPredictionTime();
+
+		float getPathOffset();
+
+		float getZeroLinearSpeedThreshold();
+
+		float getIdleFriction();
+	}
+	private final SteerSettings steerSettings;
 	public NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
 	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
 	public Triangle currentTriangle;
+	public Array<Vector3> pathToRender = new Array<Vector3>();
 	protected FollowPath<Vector3, LinePath.LinePathParam> followPathSB;
 	protected LinePath<Vector3> linePath;
 	protected Vector3 position = new Vector3();
@@ -64,21 +80,21 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	private Quaternion tmpQuat = new Quaternion();
 	private int currentSegment = -1;
 	private boolean wasSteering = false;
-
 	private Array<Vector3> centerOfMassPath = new Array<Vector3>();
-	public Array<Vector3> pathToRender = new Array<Vector3>();
 
 	public SteerableBody(Model model, String id,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
 						 short belongsToFlag, short collidesWithFlag,
-						 boolean callback, boolean noDeactivate) {
+						 boolean callback, boolean noDeactivate,
+						 SteerSettings steerSettings) {
 		super(model, id,
 				location, rotation, scale,
 				shape, mass,
 				belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
-		setZeroLinearSpeedThreshold(SteerSettings.zeroLinearSpeedThreshold);
+		this.steerSettings = steerSettings;
+		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
 	}
 
 	public void calculateNewPath() {
@@ -97,13 +113,13 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		followPathSB =
 				new FollowPath<Vector3, LinePath.LinePathParam>(this, linePath, 1)
 						// Setters below are only useful to arrive at the end of an open path
-						.setTimeToTarget(SteerSettings.timeToTarget)
-						.setArrivalTolerance(SteerSettings.arrivalTolerance)
-						.setDecelerationRadius(SteerSettings.decelerationRadius)
-						.setPredictionTime(SteerSettings.predictionTime)
-						.setPathOffset(SteerSettings.pathOffset);
+						.setTimeToTarget(steerSettings.getTimeToTarget())
+						.setArrivalTolerance(steerSettings.getArrivalTolerance())
+						.setDecelerationRadius(steerSettings.getDecelerationRadius())
+						.setPredictionTime(steerSettings.getPredictionTime())
+						.setPathOffset(steerSettings.getPathOffset());
 		steeringBehavior = followPathSB;
-		setZeroLinearSpeedThreshold(SteerSettings.zeroLinearSpeedThreshold);
+		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
 		currentSegment = -1;
 	}
 
@@ -162,7 +178,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	protected void finishSteering() {
 		wasSteering = false;
-		body.setFriction(SteerSettings.idleFriction);
+		body.setFriction(steerSettings.getIdleFriction());
 		body.setAngularVelocity(Vector3.Zero);
 		// Since we were only rotating the model when steering, set body to
 		// model rotation when finished moving.

@@ -247,20 +247,15 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	@Override
 	public void addEntity(Entity entity) {
 		super.addEntity(entity);
-		if (entity instanceof GameCharacter) {
-			GameCharacter gameObj = (GameCharacter) entity;
-			gameObj.body.setUserPointer(entity.getId());
-			dynamicsWorld.addRigidBody(gameObj.body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
+		if (entity instanceof Ragdoll) {
+			Ragdoll gameObj = (Ragdoll) entity;
 			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
 				body.setUserPointer(entity.getId());
 				dynamicsWorld.addRigidBody(body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
 			}
-			for (btTypedConstraint constraint : gameObj.constraints) {
-				dynamicsWorld.addConstraint(constraint, true);
-			}
+		}
 
-
-		} else if (entity instanceof GameModelBody) {
+		if (entity instanceof GameModelBody) {
 			GameModelBody gameObj = (GameModelBody) entity;
 			gameObj.body.setUserPointer(entity.getId());
 			dynamicsWorld.addRigidBody(gameObj.body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
@@ -290,18 +285,14 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	public void removeEntity(Entity entity) {
 		super.removeEntity(entity);
 
-		if (entity instanceof GameCharacter) {
-			GameCharacter gameObj = (GameCharacter) entity;
-			dynamicsWorld.removeCollisionObject(gameObj.body);
+		if (entity instanceof Ragdoll) {
+			Ragdoll gameObj = (Ragdoll) entity;
 			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
 				dynamicsWorld.removeCollisionObject(body);
 			}
-			for (btTypedConstraint constraint : gameObj.constraints) {
-				dynamicsWorld.removeConstraint(constraint);
-			}
+		}
 
-
-		} else if (entity instanceof GameModelBody) {
+		if (entity instanceof GameModelBody) {
 			GameModelBody gameObj = (GameModelBody) entity;
 			dynamicsWorld.removeCollisionObject(gameObj.body);
 
