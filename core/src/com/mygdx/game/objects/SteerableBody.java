@@ -59,7 +59,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
 	public Triangle currentTriangle;
 	public Array<Vector3> pathToRender = new Array<Vector3>();
-	protected FollowPath<Vector3, LinePath.LinePathParam> followPathSB;
+	public FollowPath<Vector3, LinePath.LinePathParam> followPathSB;
 	protected LinePath<Vector3> linePath;
 	protected Vector3 position = new Vector3();
 	protected Vector3 targetFacing = new Vector3(Vector3.Z);

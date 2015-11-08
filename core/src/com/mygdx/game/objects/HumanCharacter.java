@@ -21,12 +21,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.State;
 import com.badlogic.gdx.ai.fsm.StateMachine;
+import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.utilities.Sounds;
 
 /**
  * @author jsjolund
@@ -108,6 +110,19 @@ public class HumanCharacter extends Ragdoll {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|action_throw", 1, 1, entity.animationListener, 0.1f);
+			}
+		},
+		WHISTLE() {
+			@Override
+			public void enter(HumanCharacter entity) {
+				Sounds.whistle.play();
+				if (entity.dog != null) {
+					MessageManager.getInstance().dispatchMessage(1, null, entity.dog, DogCharacter.MSG_LETS_PLAY);
+				}
+			}
+
+			@Override
+			public void exit(HumanCharacter entity) {
 			}
 		},
 		DEAD() {
@@ -267,6 +282,7 @@ public class HumanCharacter extends Ragdoll {
 	private final SteerSettings steerSettings;
 	private CharacterState moveState = CharacterState.MOVE_WALK;
 	private boolean wasSteering = false;
+	private DogCharacter dog;
 
 	public HumanCharacter(Model model,
 						  String id,
@@ -301,9 +317,19 @@ public class HumanCharacter extends Ragdoll {
 		steerSettings = new HumanSteerSettings();
 	}
 
+	public void assignDog(DogCharacter dog) {
+		this.dog = dog;
+		dog.human = this;
+	}
+
+	public boolean wantToPlay() {
+		return stateMachine.getCurrentState() == CharacterState.WHISTLE;
+	}
+	
 	@Override
 	public void calculateNewPath() {
-		if (stateMachine.getCurrentState() != CharacterState.DEAD) {
+		CharacterState state = (CharacterState) stateMachine.getCurrentState();
+		if (state.isMovementState()) {
 			super.calculateNewPath();
 		}
 	}

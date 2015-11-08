@@ -265,11 +265,13 @@ public class GameStage extends Stage implements Observable {
 
 		public CharacterController(TextureAtlas buttonAtlas) {
 			radioGroup = new ButtonGroup<CharacterButton>(
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-					//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-					new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+				new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+				//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
 			for (CharacterButton btn : radioGroup.getButtons()) {
