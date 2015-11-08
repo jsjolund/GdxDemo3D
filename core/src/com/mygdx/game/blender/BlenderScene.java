@@ -262,7 +262,7 @@ public class BlenderScene implements Disposable {
 	 * @param initialPosition
 	 * @return
 	 */
-	public GameCharacter spawnDog(Vector3 initialPosition) {
+	public DogCharacter spawnDog(Vector3 initialPosition) {
 		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
@@ -280,18 +280,18 @@ public class BlenderScene implements Disposable {
 		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
 
 		float scl = 0.3f;
-		DogCharacter character = new DogCharacter(model, "dog",
+		DogCharacter dog = new DogCharacter(model, "dog",
 				initialPosition, new Vector3(0, 0, 0), new Vector3(scl, scl, scl),
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
 
 		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
-		character.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
-		character.layers.set(character.currentTriangle.meshPartIndex);
+		dog.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
+		dog.layers.set(dog.currentTriangle.meshPartIndex);
 
-		add(character);
+		add(dog);
 
-		return character;
+		return dog;
 	}
 
 	/**
@@ -301,7 +301,7 @@ public class BlenderScene implements Disposable {
 	 * @param initialPosition
 	 * @return
 	 */
-	public GameCharacter spawnHuman(Vector3 initialPosition) {
+	public HumanCharacter spawnHuman(Vector3 initialPosition) {
 
 		short belongsToFlag = GameEngine.PC_FLAG;
 		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
@@ -322,18 +322,18 @@ public class BlenderScene implements Disposable {
 		String ragdollJson = "models/json/character_empty.json";
 		String armatureNodeId = "armature";
 
-		GameCharacter character = new HumanCharacter(
+		HumanCharacter human = new HumanCharacter(
 				model, "character",
 				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
 		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
-		character.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
-		character.layers.set(character.currentTriangle.meshPartIndex);
+		human.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
+		human.layers.set(human.currentTriangle.meshPartIndex);
 
-		add(character);
+		add(human);
 
-		return character;
+		return human;
 	}
 
 	/**

@@ -20,6 +20,7 @@ import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.mygdx.game.utilities.Sounds;
 
 /**
  * @author jsjolund
@@ -47,6 +48,14 @@ public class GdxDemo3D extends Game {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
 		Screen currentScreen = new GameScreen(reqWidth, reqHeight);
 		setScreen(currentScreen);
+		
+		Sounds.load();
+	}
+
+	@Override
+	public void dispose () {
+		Sounds.dispose();
+		super.dispose();
 	}
 
 }

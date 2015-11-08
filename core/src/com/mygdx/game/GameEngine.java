@@ -19,6 +19,7 @@ package com.mygdx.game;
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.ai.GdxAI;
+import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.ModelCache;
 import com.badlogic.gdx.math.Intersector;
@@ -342,6 +343,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 
 		// Update AI time
 		GdxAI.getTimepiece().update(deltaTime);
+
+		// Dispatch delayed messages
+		MessageManager.getInstance().update();
 
 		// Update Bullet simulation
 		dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f);

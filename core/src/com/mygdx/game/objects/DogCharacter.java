@@ -1,130 +1,18 @@
 package com.mygdx.game.objects;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
-import com.badlogic.gdx.ai.fsm.State;
-import com.badlogic.gdx.ai.fsm.StateMachine;
+import com.badlogic.gdx.ai.btree.BehaviorTree;
+import com.badlogic.gdx.ai.btree.utils.BehaviorTreeLibraryManager;
 import com.badlogic.gdx.ai.msg.Telegram;
+import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.mygdx.game.settings.GameSettings;
 
 /**
  * Created by Johannes Sjolund on 11/6/15.
  */
-public class DogCharacter extends GameCharacter {
-
-	public enum CharacterState implements State<DogCharacter> {
-		MOVE_RUN() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
-
-				entity.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed * DogSteerSettings.runMultiplier);
-				entity.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration * DogSteerSettings.runMultiplier);
-
-				entity.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed * DogSteerSettings.runMultiplier);
-				entity.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration * DogSteerSettings.runMultiplier);
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * DogSteerSettings.runMultiplier);
-				}
-			}
-
-			@Override
-			public void update(DogCharacter entity) {
-				float deltaTime = Gdx.graphics.getDeltaTime() * entity.getLinearVelocity().len() * 0.2f;
-				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-			}
-		},
-		MOVE_WALK() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
-
-				entity.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed);
-				entity.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration);
-
-				entity.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed);
-				entity.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration);
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius);
-				}
-			}
-
-			@Override
-			public void update(DogCharacter entity) {
-				float deltaTime = Gdx.graphics.getDeltaTime() * entity.getLinearVelocity().len() * 0.7f;
-				entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-			}
-		},
-		IDLE_STAND() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|idle_stand", -1, 1, entity.animationListener, 0.1f);
-			}
-		},
-		IDLE_SIT() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|idle_sit", -1, 1, entity.animationListener, 0.1f);
-			}
-		},
-		IDLE_SEARCH() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|idle_search", -1, 1, entity.animationListener, 0.1f);
-			}
-		},
-		IDLE_LIE_DOWN() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|idle_lie_down", -1, 1, entity.animationListener, 0.1f);
-			}
-		},
-		ACTION_PISS() {
-			@Override
-			public void enter(DogCharacter entity) {
-				entity.animations.animate("armature|action_piss", -1, 1, entity.animationListener, 0.1f);
-			}
-		},
-		GLOBAL() {};
-
-		public static <T extends Enum<?>> T randomMoveState(Class<T> clazz) {
-			int x = MathUtils.random(0, 1);
-			return clazz.getEnumConstants()[x];
-		}
-
-		public static <T extends Enum<?>> T randomIdleState(Class<T> clazz) {
-			int x = MathUtils.random(2, 6);
-			return clazz.getEnumConstants()[x];
-		}
-
-		@Override
-		public void enter(DogCharacter entity) {
-
-		}
-
-		@Override
-		public void update(DogCharacter entity) {
-			float deltaTime = Gdx.graphics.getDeltaTime();
-			entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
-		}
-
-		@Override
-		public void exit(DogCharacter entity) {
-
-		}
-
-		@Override
-		public boolean onMessage(DogCharacter entity, Telegram telegram) {
-			return false;
-		}
-	}
+public class DogCharacter extends GameCharacter implements Telegraph {
 
 	public static class DogSteerSettings implements SteerSettings {
 		public static float maxLinearAcceleration = 50f;
@@ -179,23 +67,24 @@ public class DogCharacter extends GameCharacter {
 	public class CharacterAnimationListener implements AnimationController.AnimationListener {
 		@Override
 		public void onEnd(AnimationController.AnimationDesc animation) {
-
+			currentAnimationFinished = true;
 		}
 
 		@Override
 		public void onLoop(AnimationController.AnimationDesc animation) {
-
+			currentAnimationFinished = true;
 		}
 	}
+	
+	public static final int MSG_LETS_PLAY = 1;
+	public static final int MSG_LETS_STOP_PLAYING = 2;
 
-	public final StateMachine<DogCharacter> stateMachine;
+	public final BehaviorTree<DogCharacter> btree;
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
-	private boolean wasSteering = false;
-
-	//	private CharacterState moveState = CharacterState.MOVE_WALK;
-	private CharacterState moveState = CharacterState.MOVE_RUN;
-	private CharacterState idleState = CharacterState.IDLE_STAND;
+	public boolean currentAnimationFinished;
+	public HumanCharacter human;
+	public boolean heardWhistle;
 
 	public DogCharacter(Model model, String id,
 						Vector3 location, Vector3 rotation, Vector3 scale,
@@ -214,25 +103,20 @@ public class DogCharacter extends GameCharacter {
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
 
-		stateMachine = new DefaultStateMachine<DogCharacter>(this, CharacterState.GLOBAL);
+		btree = BehaviorTreeLibraryManager.getInstance().createBehaviorTree("btrees/dog.btree", this);
 
-		stateMachine.changeState(moveState);
-		stateMachine.changeState(idleState);
+		heardWhistle = false;
 	}
 
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
-		stateMachine.update();
+		btree.step();
+	}
 
-		boolean isSteering = isSteering();
-		if (isSteering && !wasSteering) {
-			wasSteering = isSteering;
-			stateMachine.changeState(moveState.randomMoveState(CharacterState.class));
-
-		} else if (!isSteering && wasSteering) {
-			wasSteering = isSteering;
-			stateMachine.changeState(idleState.randomIdleState(CharacterState.class));
-		}
+	@Override
+	public boolean handleMessage (Telegram msg) {
+		heardWhistle = true;
+		return true;
 	}
 }

@@ -71,12 +71,12 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		public final Vector3 pivot = new Vector3();
 
 		public void setLeftPlane(Vector3 pivot, Vector3 leftEdgeVertex) {
-			leftPlane.set(pivot, tmp1.set(pivot).add(up), leftEdgeVertex);
+			leftPlane.set(pivot, tmp1.set(pivot).add(UP), leftEdgeVertex);
 			leftPortal.set(leftEdgeVertex);
 		}
 
 		public void setRightPlane(Vector3 pivot, Vector3 rightEdgeVertex) {
-			rightPlane.set(pivot, tmp1.set(pivot).add(up), rightEdgeVertex);
+			rightPlane.set(pivot, tmp1.set(pivot).add(UP), rightEdgeVertex);
 			rightPlane.normal.scl(-1);
 			rightPlane.d = -rightPlane.d;
 			rightPortal.set(rightEdgeVertex);
@@ -96,12 +96,12 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		}
 	}
 
+	private static final Vector3 UP = Vector3.Y;
+
 	private final Plane crossingPlane = new Plane();
 	private final Vector3 tmp1 = new Vector3();
 	private final Vector3 tmp2 = new Vector3();
-	private final Vector3 tmp3 = new Vector3();
 	private Array<Connection<Triangle>> nodes;
-	private Vector3 up = Vector3.Y;
 	private Vector3 start;
 	private Vector3 end;
 	private Triangle startTri;
@@ -137,7 +137,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 
 		// Check that the start point is actually inside the start triangle, if not, project it to the closest
 		// triangle edge. Otherwise the funnel calculation might generate spurious path segments.
-		Ray ray = new Ray(tmp1.set(up).scl(1000).add(start), tmp2.set(up).scl(-1));
+		Ray ray = new Ray(tmp1.set(UP).scl(1000).add(start), tmp2.set(UP).scl(-1));
 		if (!Intersector.intersectRayTriangle(ray, startTri.a, startTri.b, startTri.c, null)) {
 			float minDst = Float.POSITIVE_INFINITY;
 			Vector3 projection = new Vector3();
@@ -343,7 +343,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		if (startIndex >= numEdges() || endIndex >= numEdges()) {
 			return;
 		}
-		crossingPlane.set(startPoint, tmp1.set(startPoint).add(up), endPoint);
+		crossingPlane.set(startPoint, tmp1.set(startPoint).add(UP), endPoint);
 
 		EdgePoint previousLast = lastPointAdded;
 
@@ -352,7 +352,6 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 
 		for (int i = startIndex; i < endIndex; i++) {
 			edge = getEdge(i);
-			Vector3 xPoint = new Vector3();
 
 			if (edge.rightVertex.equals(startPoint) || edge.leftVertex.equals(startPoint)) {
 				previousLast.toNode = edge.toNode;
@@ -365,11 +364,11 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 					end.connectingEdges.add(edge);
 				}
 
-			} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, xPoint)
-					&& !Float.isNaN(xPoint.x) && !Float.isNaN(xPoint.y) && !Float.isNaN(xPoint.z)) {
+			} else if (Intersector.intersectSegmentPlane(edge.leftVertex, edge.rightVertex, crossingPlane, tmp1)
+					&& !Float.isNaN(tmp1.x + tmp1.y + tmp1.z)) {
 				if (i != startIndex || i == 0) {
 					lastPointAdded.toNode = edge.fromNode;
-					EdgePoint crossing = new EdgePoint(xPoint, edge.toNode);
+					EdgePoint crossing = new EdgePoint(new Vector3(tmp1), edge.toNode);
 					crossing.connectingEdges.add(edge);
 					addPoint(crossing);
 				}
@@ -387,7 +386,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	 * From com.badlogic.gdx.ai.steer.paths.LinePath
 	 * <p/>
 	 * Returns the square distance of the nearest point on line segment {@code a-b}, from point {@code c}.
-	 * Also, the {@code out}* vector is assigned to the nearest point.
+	 * Also, the {@code out} vector is assigned to the nearest point.
 	 *
 	 * @param out the output vector that contains the nearest point on return
 	 * @param a   the start point of the line segment
@@ -397,17 +396,14 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	 * @author Daniel Holderbaum
 	 */
 	private float calculatePointSegmentSquareDistance(Vector3 out, Vector3 a, Vector3 b, Vector3 c) {
-		tmp1.set(a);
-		tmp2.set(b);
-		tmp3.set(c);
+		out.set(a);
+		tmp1.set(b);
+		tmp2.set(c);
 
-		Vector3 ab = tmp2.sub(a);
-		float t = (tmp3.sub(a)).dot(ab) / ab.len2();
-		t = MathUtils.clamp(t, 0, 1);
-		out.set(tmp1.add(ab.scl(t)));
+		Vector3 ab = tmp1.sub(a);
+		float t = (tmp2.sub(a)).dot(ab) / ab.len2();
+		out.mulAdd(ab, MathUtils.clamp(t, 0, 1));
 
-		tmp1.set(out);
-		Vector3 distance = tmp1.sub(c);
-		return distance.len2();
+		return out.dst2(c);
 	}
 }

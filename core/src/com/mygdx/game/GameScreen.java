@@ -33,7 +33,9 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
@@ -97,15 +99,20 @@ public class GameScreen implements Screen {
 		stage.addObserver(renderSys);
 		stage.addObserver(engine);
 
-		blenderScene.spawnHuman(new Vector3(5, 1, 0));
-		blenderScene.spawnHuman(new Vector3(0, 1, 5));
-		blenderScene.spawnHuman(new Vector3(10, 1, 5));
-		blenderScene.spawnHuman(new Vector3(-12, 4, 10));
+		HumanCharacter h1 = blenderScene.spawnHuman(new Vector3(5, 1, 0));
+		HumanCharacter h2 = blenderScene.spawnHuman(new Vector3(0, 1, 5));
+		HumanCharacter h3 = blenderScene.spawnHuman(new Vector3(10, 1, 5));
+		HumanCharacter h4 = blenderScene.spawnHuman(new Vector3(-12, 4, 10));
 
-		blenderScene.spawnDog(new Vector3(7, 2, 0));
-		blenderScene.spawnDog(new Vector3(12, 2, 0));
-		blenderScene.spawnDog(new Vector3(15, 2, 0));
+		DogCharacter d1 = blenderScene.spawnDog(new Vector3(7, 2, 0));
+		DogCharacter d2 = blenderScene.spawnDog(new Vector3(12, 2, 0));
+		DogCharacter d3 = blenderScene.spawnDog(new Vector3(15, 2, 0));
 
+		// Assign each dog to a human
+		h1.assignDog(d1);
+		h2.assignDog(d2);
+		h3.assignDog(d3);
+		
 		Billboard markerBillboard = blenderScene.spawnSelectionBillboard(camera);
 		renderSys.setSelectionMarker(markerBillboard);
 
@@ -119,7 +126,6 @@ public class GameScreen implements Screen {
 			Gdx.app.debug(tag, "Found tree at " + tree.transform.getTranslation(new Vector3()));
 		}
 	}
-
 
 	@Override
 	public void dispose() {
