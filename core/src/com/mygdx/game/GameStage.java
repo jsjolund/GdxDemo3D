@@ -39,23 +39,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.IntIntMap;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
-import com.mygdx.game.ui.IntValueLabel;
-import com.mygdx.game.ui.ValueLabel;
+import com.mygdx.game.ui.*;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Observable;
 import com.mygdx.game.utilities.Observer;
-
-import java.lang.reflect.Field;
 
 /**
  * @author jsjolund
@@ -63,7 +60,7 @@ import java.lang.reflect.Field;
 public class GameStage extends Stage implements Observable {
 
 	private class LayerController extends Table {
-		public final Slider slider;
+		private final Slider slider;
 		int minLayer = 1;
 		int maxLayer = 4;
 
@@ -175,7 +172,7 @@ public class GameStage extends Stage implements Observable {
 					characterController.handleCharacterSelection((GameCharacter) hitEntity);
 
 				} else if (hitEntity == engine.getScene().navmeshEntity) {
-					characterController.handleCharacterPathing(touchUpRay);
+					characterController.handleCharacterPathing(touchUpRay, visibleLayers);
 				}
 			}
 			isDragging = false;
@@ -239,56 +236,6 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
-	private class GameSpeedController extends Table {
-
-		private final ImageButton imageButton;
-		private final ImageButton.ImageButtonStyle btnPauseStyle;
-		private final ImageButton.ImageButtonStyle btnPlayStyle;
-		private final ImageButton.ImageButtonStyle btnSlowStyle;
-
-		public GameSpeedController(TextureAtlas buttonAtlas) {
-			btnPauseStyle = new ImageButton.ImageButtonStyle();
-			btnPauseStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("pause-up"));
-			btnPauseStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("pause-down"));
-
-			btnPlayStyle = new ImageButton.ImageButtonStyle();
-			btnPlayStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("play-up"));
-			btnPlayStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("play-down"));
-
-			btnSlowStyle = new ImageButton.ImageButtonStyle();
-			btnSlowStyle.up = new TextureRegionDrawable(buttonAtlas.findRegion("slow-up"));
-			btnSlowStyle.down = new TextureRegionDrawable(buttonAtlas.findRegion("slow-down"));
-
-			imageButton = new ImageButton(btnPauseStyle);
-
-			add(imageButton);
-
-			imageButton.addListener(new ChangeListener() {
-				@Override
-				public void changed(ChangeEvent event, Actor actor) {
-					setGameSpeed();
-					event.cancel();
-				}
-
-			});
-		}
-
-		public void setGameSpeed() {
-			if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_PLAY) {
-				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_PAUSE;
-				imageButton.setStyle(btnSlowStyle);
-
-			} else if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_PAUSE) {
-				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_SLOW;
-				imageButton.setStyle(btnPlayStyle);
-
-			} else if (GameSettings.GAME_SPEED == GameSettings.GAME_SPEED_SLOW) {
-				GameSettings.GAME_SPEED = GameSettings.GAME_SPEED_PLAY;
-				imageButton.setStyle(btnPauseStyle);
-			}
-		}
-	}
-
 
 	private class CharacterController extends Table {
 		private class CharacterButton extends ImageButton {
@@ -332,17 +279,26 @@ public class GameStage extends Stage implements Observable {
 
 		public void handleCharacterSelection(GameCharacter character) {
 			if (character instanceof HumanCharacter) {
+				steerSettings.clearChildren();
+				steerSettings.add(humanSteerSettings);
+				steerSettings.invalidateHierarchy();
+
 				HumanCharacter human = (HumanCharacter) character;
 				for (CharacterButton btn : radioGroup.getButtons()) {
 					if (btn.state == human.getCurrentMoveState())
 						btn.setChecked(true);
 				}
+			} else if (character instanceof DogCharacter) {
+				steerSettings.clearChildren();
+				steerSettings.add(dogSteerSettings);
+				steerSettings.invalidateHierarchy();
+				radioGroup.uncheckAll();
 			}
 			selectedCharacter = character;
 			notifyObserversEntitySelected(selectedCharacter);
 		}
 
-		public void handleCharacterPathing(Ray ray) {
+		public void handleCharacterPathing(Ray ray, Bits visibleLayers) {
 			if (selectedCharacter == null) {
 				return;
 			}
@@ -356,7 +312,6 @@ public class GameStage extends Stage implements Observable {
 			}
 		}
 	}
-
 
 	public static final String tag = "GameStage";
 	private final Viewport viewport;
@@ -376,6 +331,10 @@ public class GameStage extends Stage implements Observable {
 	private final GameSpeedController speedController;
 	private final CharacterController characterController;
 	private final LayerController layerController;
+	private final FloatSettingsMenu humanSteerSettings;
+	private final FloatSettingsMenu dogSteerSettings;
+	private final Table steerSettings;
+
 	private final Vector3 tmp = new Vector3();
 	private Bits visibleLayers;
 
@@ -440,10 +399,17 @@ public class GameStage extends Stage implements Observable {
 		rootTable.add(new Table()).expandY().fillY();
 		rootTable.row();
 
+		humanSteerSettings = new FloatSettingsMenu("steering (human)", skin,
+				HumanCharacter.HumanSteerSettings.class);
+		dogSteerSettings = new FloatSettingsMenu("steering (dog)", skin,
+				DogCharacter.DogSteerSettings.class);
+		steerSettings = new Table();
+		steerSettings.add(humanSteerSettings);
+
 		Table bottomRightTable = new Table();
-		bottomRightTable.add(createShaderMenu()).bottom();
-		bottomRightTable.add(createDebugViewMenu()).bottom();
-		bottomRightTable.add(createSteeringMenu()).bottom();
+		bottomRightTable.add(new FloatSettingsMenu("shader", skin, ShaderSettings.class)).bottom();
+		bottomRightTable.add(new BooleanSettingsMenu("debug", skin, DebugViewSettings.class)).bottom();
+		bottomRightTable.add(steerSettings).bottom();
 		bottomRightTable.add(new Table()).expandX().fillX().bottom();
 		rootTable.add(bottomRightTable).expandX().fillX();
 
@@ -468,6 +434,7 @@ public class GameStage extends Stage implements Observable {
 			}
 		});
 	}
+
 
 	public Bits getVisibleLayers(Bits out) {
 		out.clear();
@@ -496,151 +463,6 @@ public class GameStage extends Stage implements Observable {
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
 	}
 
-	private WidgetGroup createShaderMenu() {
-		final Table innerTable = new Table();
-		final Table outerTable = new Table();
-
-		Field[] fields = ShaderSettings.class.getFields();
-		for (final Field field : fields) {
-			final Label fieldName = new Label(field.getName(), skin);
-			float fieldValueFloat = 0;
-			try {
-				fieldValueFloat = field.getFloat(field);
-			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
-			}
-			final TextField fieldValue = new TextField(String.valueOf(fieldValueFloat), skin);
-			innerTable.add(fieldName).fillX();
-			innerTable.row();
-			innerTable.add(fieldValue).fillX();
-			innerTable.row();
-			fieldValue.addListener(new InputListener() {
-				@Override
-				public boolean keyTyped(InputEvent event, char character) {
-					String userInput = fieldValue.getText();
-					float newFieldValue;
-					try {
-						newFieldValue = Float.parseFloat(userInput);
-					} catch (NumberFormatException e) {
-						return true;
-					}
-					try {
-						field.setFloat(field, newFieldValue);
-					} catch (IllegalAccessException e) {
-						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
-					}
-					return true;
-				}
-			});
-		}
-		innerTable.setVisible(false);
-		final TextButton button = new TextButton("shader", skin);
-		button.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				innerTable.setVisible(!innerTable.isVisible());
-				return true;
-			}
-		});
-		outerTable.add(innerTable).fillX();
-		outerTable.row();
-		outerTable.add(button).fillX();
-		outerTable.row();
-		return outerTable;
-	}
-
-	private WidgetGroup createSteeringMenu() {
-		final Table innerTable = new Table();
-		final Table outerTable = new Table();
-
-		Field[] fields = HumanCharacter.HumanSteerSettings.class.getFields();
-		for (final Field field : fields) {
-			final Label fieldName = new Label(field.getName(), skin);
-			float fieldValueFloat = 0;
-			try {
-				fieldValueFloat = field.getFloat(field);
-			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
-			}
-			final TextField fieldValue = new TextField(String.valueOf(fieldValueFloat), skin);
-			innerTable.add(fieldName).fillX();
-			innerTable.row();
-			innerTable.add(fieldValue).fillX();
-			innerTable.row();
-			fieldValue.addListener(new InputListener() {
-				@Override
-				public boolean keyTyped(InputEvent event, char character) {
-					String userInput = fieldValue.getText();
-					float newFieldValue;
-					try {
-						newFieldValue = Float.parseFloat(userInput);
-					} catch (NumberFormatException e) {
-						return true;
-					}
-					try {
-						field.setFloat(field, newFieldValue);
-					} catch (IllegalAccessException e) {
-						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
-					}
-					return true;
-				}
-			});
-		}
-		innerTable.setVisible(false);
-		final TextButton button = new TextButton("steer", skin);
-		button.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				innerTable.setVisible(!innerTable.isVisible());
-				return true;
-			}
-		});
-		outerTable.add(innerTable).fillX();
-		outerTable.row();
-		outerTable.add(button).fillX();
-		outerTable.row();
-		return outerTable;
-	}
-
-	private WidgetGroup createDebugViewMenu() {
-		final Table innerTable = new Table();
-		final Table outerTable = new Table();
-
-		Field[] fields = DebugViewSettings.class.getFields();
-		for (final Field field : fields) {
-			boolean fieldValueBoolean = false;
-			try {
-				fieldValueBoolean = field.getBoolean(field);
-			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse value for " + field.getName());
-			}
-			final CheckBox checkBox = new CheckBox(field.getName(), skin);
-			checkBox.setChecked(fieldValueBoolean);
-			innerTable.add(checkBox).pad(1).align(Align.left);
-			innerTable.row();
-			checkBox.addListener(new ChangeListener() {
-				@Override
-				public void changed(ChangeEvent event, Actor actor) {
-					try {
-						field.setBoolean(field, checkBox.isChecked());
-					} catch (IllegalAccessException e) {
-						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
-					}
-				}
-			});
-		}
-		innerTable.setVisible(false);
-		final TextButton button = new TextButton("debug", skin);
-		button.addListener(new InputListener() {
-			public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-				innerTable.setVisible(!innerTable.isVisible());
-				return true;
-			}
-		});
-		outerTable.add(innerTable).fillX();
-		outerTable.row();
-		outerTable.add(button).fillX();
-		outerTable.row();
-		return outerTable;
-	}
 
 	@Override
 	public Vector2 screenToStageCoordinates(Vector2 screenCoords) {
