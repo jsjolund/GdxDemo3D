@@ -174,7 +174,7 @@ public class GameStage extends Stage implements Observable {
 				if (hitEntity instanceof GameCharacter) {
 					characterController.handleCharacterSelection((GameCharacter) hitEntity);
 
-				} else if (hitEntity == engine.navmeshEntity) {
+				} else if (hitEntity == engine.getScene().navmeshEntity) {
 					characterController.handleCharacterPathing(touchUpRay);
 				}
 			}
@@ -312,6 +312,7 @@ public class GameStage extends Stage implements Observable {
 				});
 			}
 		}
+
 		private ButtonGroup<CharacterButton> radioGroup;
 		private GameCharacter selectedCharacter;
 
@@ -345,7 +346,7 @@ public class GameStage extends Stage implements Observable {
 			if (selectedCharacter == null) {
 				return;
 			}
-			if (engine.navmesh.getPath(selectedCharacter.currentTriangle,
+			if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
 					selectedCharacter.getGroundPosition(),
 					ray, visibleLayers,
 					GameSettings.CAMERA_PICK_RAY_DST,

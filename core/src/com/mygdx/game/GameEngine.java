@@ -32,8 +32,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.LongMap;
+import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.*;
-import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.Observer;
@@ -95,8 +95,8 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 					return hitFraction;
 				}
 
-			} else if (entity.getId() == navmeshEntity.getId()) {
-				Triangle triangle = navmesh.rayTest(ray, rayDistance, layers);
+			} else if (entity.getId() == scene.navmeshEntity.getId()) {
+				Triangle triangle = scene.navMesh.rayTest(ray, rayDistance, layers);
 				if (triangle == null) {
 					// Triangle is not on allowed layer
 					return 1;
@@ -138,9 +138,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 
 	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
 	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
-	// Navmesh
-	public NavMesh navmesh;
-	public Entity navmeshEntity;
+
+	private BlenderScene scene;
+
 	// Models
 	private boolean modelCacheDirty = true;
 	private ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
@@ -181,6 +181,22 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 			return getEntity(entityId);
 		}
 		return null;
+	}
+
+	public BlenderScene getScene() {
+		return scene;
+	}
+
+	public void setScene(BlenderScene scene) {
+		// TODO: Remove any previous scene
+		this.scene = scene;
+
+		addEntity(scene.navmeshEntity);
+
+		Iterator<GameObject> objs = scene.getGameObjects();
+		while (objs.hasNext()) {
+			addEntity(objs.next());
+		}
 	}
 
 	@Override
@@ -241,7 +257,6 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		}
 		modelCache.end();
 		modelCacheDirty = false;
-		System.out.println("updated cache");
 	}
 
 	@Override

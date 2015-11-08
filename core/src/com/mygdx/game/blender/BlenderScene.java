@@ -20,6 +20,8 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -33,20 +35,20 @@ import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.*;
 import com.mygdx.game.GameEngine;
-import com.mygdx.game.objects.GameModel;
-import com.mygdx.game.objects.GameModelBody;
-import com.mygdx.game.objects.GameObject;
-import com.mygdx.game.objects.InvisibleBody;
+import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.GhostCamera;
+import com.mygdx.game.utilities.ModelFactory;
 
 import java.nio.FloatBuffer;
 import java.util.Comparator;
+import java.util.Iterator;
 
 /**
  * @author jsjolund
@@ -121,18 +123,17 @@ public class BlenderScene implements Disposable {
 			return a.material.id.compareTo(b.material.id);
 		}
 	}
-
+	private final Array<GameObject> gameObjects = new Array<GameObject>();
+	private final ArrayMap<String, Array<GameModel>> modelIdMap = new ArrayMap<String, Array<GameModel>>();
+	private final AssetManager modelAssets = new AssetManager();
+	private final ArrayMap<String, CollisionShapeDef> shapesMap = new ArrayMap<String, CollisionShapeDef>();
+	private final ModelLoader.ModelParameters param;
 	// Navmesh stuff
 	public NavMesh navMesh;
 	public Entity navmeshEntity;
 	public BoundingBox worldBounds = new BoundingBox();
 	public Array<BaseLight> lights = new Array<BaseLight>();
 	public Vector3 shadowCameraDirection = new Vector3(Vector3.Y).scl(-1);
-	public Array<GameObject> gameObjects = new Array<GameObject>();
-
-	private AssetManager modelAssets = new AssetManager();
-	private ArrayMap<String, CollisionShapeDef> shapesMap = new ArrayMap<String, CollisionShapeDef>();
-	private ModelLoader.ModelParameters param;
 	private BlenderObject.BCamera sceneCamera;
 
 	/**
@@ -190,7 +191,6 @@ public class BlenderScene implements Disposable {
 		for (BlenderObject.BCamera camera : blenderCameras) {
 			addCameras(camera);
 		}
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -237,9 +237,153 @@ public class BlenderScene implements Disposable {
 		return vector.set(vector.x, vector.z, -vector.y);
 	}
 
+	public Iterator<GameObject> getGameObjects() {
+		return gameObjects.iterator();
+	}
+
+	/**
+	 * Get all game models which have this id.
+	 *
+	 * @param id  The id of the models.
+	 * @param out Models will be added to this output array.
+	 * @return The output array for chaining.
+	 */
+	public Array<GameModel> getGameModelById(String id, Array<GameModel> out) {
+		if (modelIdMap.containsKey(id)) {
+			out.addAll(modelIdMap.get(id));
+		}
+		return out;
+	}
+
+	/**
+	 * Spawn a dog. If called after {@link GameEngine#setScene(BlenderScene)} the returned object
+	 * must be added to the engine with {@link GameEngine#addEntity(Entity)}.
+	 *
+	 * @param initialPosition
+	 * @return
+	 */
+	public GameCharacter spawnDog(Vector3 initialPosition) {
+		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
+		param.textureParameter.genMipMaps = true;
+		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
+		String modelFile = "models/g3db/dog_model.g3db";
+		modelAssets.load(modelFile, Model.class, param);
+		modelAssets.finishLoading();
+		Model model = modelAssets.get(modelFile);
+
+		btCollisionShape shape = new btCapsuleShape(0.4f, 0.5f);
+		float mass = 1;
+		boolean callback = false;
+		boolean noDeactivate = true;
+		short belongsToFlag = GameEngine.PC_FLAG;
+		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
+
+		float scl = 0.3f;
+		DogCharacter character = new DogCharacter(model, "dog",
+				initialPosition, new Vector3(0, 0, 0), new Vector3(scl, scl, scl),
+				shape, mass, belongsToFlag, collidesWithFlag,
+				callback, noDeactivate);
+
+		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		character.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
+		character.layers.set(character.currentTriangle.meshPartIndex);
+
+		add(character);
+
+		return character;
+	}
+
+	/**
+	 * Spawn a human. If called after {@link GameEngine#setScene(BlenderScene)} the returned object
+	 * must be added to the engine with {@link GameEngine#addEntity(Entity)}.
+	 *
+	 * @param initialPosition
+	 * @return
+	 */
+	public GameCharacter spawnHuman(Vector3 initialPosition) {
+
+		short belongsToFlag = GameEngine.PC_FLAG;
+		short collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
+
+		// Model
+		ModelLoader.ModelParameters param = new ModelLoader.ModelParameters();
+		param.textureParameter.genMipMaps = true;
+		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
+		String modelFile = "models/g3db/character_male_base.g3db";
+		modelAssets.load(modelFile, Model.class, param);
+		modelAssets.finishLoading();
+		Model model = modelAssets.get(modelFile);
+		btCollisionShape shape = new btCapsuleShape(0.4f, 1.1f);
+		float mass = 1;
+		boolean callback = false;
+		boolean noDeactivate = true;
+		String ragdollJson = "models/json/character_empty.json";
+		String armatureNodeId = "armature";
+
+		GameCharacter character = new HumanCharacter(
+				model, "character",
+				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
+				shape, mass, belongsToFlag, collidesWithFlag,
+				callback, noDeactivate, ragdollJson, armatureNodeId);
+		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		character.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
+		character.layers.set(character.currentTriangle.meshPartIndex);
+
+		add(character);
+
+		return character;
+	}
+
+	/**
+	 * Spawn a selection marker billboard. If called after {@link GameEngine#setScene(BlenderScene)}
+	 * the returned object must be added to the engine with {@link GameEngine#addEntity(Entity)}.
+	 *
+	 * @param camera The camera which the billboard should face.
+	 * @return
+	 */
+	public Billboard spawnSelectionBillboard(Camera camera) {
+		// Selection billboard
+		TextureLoader.TextureParameter param = new TextureLoader.TextureParameter();
+		param.genMipMaps = true;
+		param.minFilter = Texture.TextureFilter.MipMap;
+		param.magFilter = Texture.TextureFilter.Linear;
+		modelAssets.load("images/marker.png", Texture.class, param);
+		modelAssets.finishLoading();
+		Texture billboardPixmap = modelAssets.get("images/marker.png", Texture.class);
+		// TODO: dispose or use an asset manager model
+		Model billboardModel = ModelFactory.buildBillboardModel(billboardPixmap, 1, 1);
+		Billboard markerBillboard = new Billboard(billboardModel, "marker",
+				camera, true, new Matrix4(), new Vector3());
+
+		add(markerBillboard);
+
+		return markerBillboard;
+	}
+
+	/**
+	 * Add object to scene. If called after {@link GameEngine#setScene(BlenderScene)}
+	 * the object must be added to the engine with {@link GameEngine#addEntity(Entity)}.
+	 *
+	 * @param obj
+	 */
+	public void add(GameObject obj) {
+		gameObjects.add(obj);
+		if (obj instanceof GameModel) {
+			GameModel gameModel = (GameModel) obj;
+			if (!modelIdMap.containsKey(gameModel.id)) {
+				modelIdMap.put(gameModel.id, new Array<GameModel>());
+			}
+			Array<GameModel> models = modelIdMap.get(gameModel.id);
+			models.add(gameModel);
+		}
+	}
+
 	public void dispose() {
 		navMesh.dispose();
 		modelAssets.dispose();
+		modelIdMap.clear();
 		for (GameObject obj : gameObjects) {
 			obj.dispose();
 		}
@@ -345,7 +489,7 @@ public class BlenderScene implements Disposable {
 			entity.constraints.add(new btHingeConstraint(entity.body, new Vector3(0, 0, -0.6f), Vector3.Y));
 		}
 
-		gameObjects.add(entity);
+		add(entity);
 	}
 
 	/**
@@ -357,7 +501,7 @@ public class BlenderScene implements Disposable {
 		modelAssets.finishLoadingAsset(bModel.model_file_name);
 		Model model = modelAssets.get(bModel.model_file_name, Model.class);
 		GameModel entity = new GameModel(model, bModel.name, bModel.position, bModel.rotation, bModel.scale);
-		gameObjects.add(entity);
+		add(entity);
 		for (int i = 0; i < bModel.layers.length; i++) {
 			if (bModel.layers[i]) {
 				entity.layers.set(i);
@@ -379,7 +523,7 @@ public class BlenderScene implements Disposable {
 		InvisibleBody entity = new InvisibleBody(def.shape, def.mass, empty.position, empty.rotation,
 				belongsToFlag, collidesWithFlag, false, false);
 
-		gameObjects.add(entity);
+		add(entity);
 	}
 
 	/**

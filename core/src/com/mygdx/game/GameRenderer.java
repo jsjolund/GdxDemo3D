@@ -238,8 +238,8 @@ public class GameRenderer implements Disposable, Observer {
 		// Paint navmesh
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
-			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
+		for (int i = 0; i < engine.getScene().navMesh.graph.getNodeCount(); i++) {
+			Triangle t = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(i);
 			if (triangleIsVisible(t)) {
 				shapeRenderer.setColor(Color.GRAY);
 				shapeRenderer.line(t.a, t.b);
@@ -287,7 +287,8 @@ public class GameRenderer implements Disposable, Observer {
 
 		} else if (selectedCharacter.currentTriangle != null) {
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			Triangle tri = engine.navmesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex());
+			Triangle tri = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex
+					());
 			shapeRenderer.setColor(1, 0, 0, 0.2f);
 			if (triangleIsVisible(tri)) {
 				shapeRenderer.triangle(tri.a, tri.b, tri.c);
@@ -318,8 +319,8 @@ public class GameRenderer implements Disposable, Observer {
 		// TODO: Get rid of all the transform matrix setting
 		spriteBatch.begin();
 		spriteBatch.setProjectionMatrix(camera.combined);
-		for (int i = 0; i < engine.navmesh.graph.getNodeCount(); i++) {
-			Triangle t = engine.navmesh.graph.getTriangleFromGraphIndex(i);
+		for (int i = 0; i < engine.getScene().navMesh.graph.getNodeCount(); i++) {
+			Triangle t = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(i);
 			if (triangleIsVisible(t)) {
 				tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
 				tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
@@ -328,7 +329,6 @@ public class GameRenderer implements Disposable, Observer {
 			}
 		}
 		spriteBatch.end();
-
 
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
