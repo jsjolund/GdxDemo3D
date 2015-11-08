@@ -129,32 +129,34 @@ public class NavMesh implements Disposable {
 	}
 
 	/**
-	 * Get a random point anywhere on the navigation mesh.
-	 *
-	 * @param out Output vector.
-	 * @return Output vector for chaining.
+	 * Get a random triangle anywhere on the navigation mesh.
+	 * The probability distribution is even in world space, as opposed to triangle index,
+	 * meaning large triangles will be chosen more often than small ones.
 	 */
-	public Vector3 getRandomPoint(Vector3 out) {
+	public Triangle getRandomTriangle() {
 		allMeshPartsTmp.clear();
 		for (int i = 0; i < graph.getMeshPartCount(); i++) {
 			allMeshPartsTmp.set(i);
 		}
-		return getRandomPoint(out, allMeshPartsTmp);
+		return getRandomTriangle(allMeshPartsTmp);
 	}
 
 	/**
-	 * Get a random point on the navigation mesh, on any of the allowed mesh parts.
+	 * Get a random triangle on the navigation mesh, on any of the allowed mesh parts.
+	 * The probability distribution is even in world space, as opposed to triangle index,
+	 * meaning large triangles will be chosen more often than small ones.
 	 * <p/>
-	 * For example, to get a random point on the second navigation mesh part:
+	 * Example usage, to get a random point on the second navigation mesh part:
 	 * allowedMeshParts.clear();
 	 * allowedMeshParts.set(1);
-	 * navmesh.getRandomPoint(outVector, allowedMeshParts);
+	 * Triangle randomTri = navmesh.getRandomTriangle(allowedMeshParts);
+	 * Vector3 randomPoint = new Vector3();
+	 * randomTri.getRandomPoint(randomPoint);
 	 *
-	 * @param out              Output vector.
 	 * @param allowedMeshParts Bits representing allowed mesh part indices.
-	 * @return Output vector for chaining.
+	 * @return A random triangle.
 	 */
-	public Vector3 getRandomPoint(Vector3 out, Bits allowedMeshParts) {
+	public Triangle getRandomTriangle(Bits allowedMeshParts) {
 		triAreasTmp.clear();
 		triAreasTmp.ordered = true;
 		trisTmp.clear();
@@ -176,8 +178,7 @@ public class NavMesh implements Disposable {
 			}
 		}
 		if (triAreasTmp.size == 0) {
-			out.set(Float.NaN, Float.NaN, Float.NaN);
-			return out;
+			return null;
 		}
 		float r = MathUtils.random(0f, triAreasTmp.get(triAreasTmp.size - 1));
 		int i;
@@ -186,7 +187,7 @@ public class NavMesh implements Disposable {
 				break;
 			}
 		}
-		return trisTmp.get(i).getRandomPoint(out);
+		return trisTmp.get(i);
 	}
 
 
