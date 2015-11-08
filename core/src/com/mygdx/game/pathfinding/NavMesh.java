@@ -39,16 +39,19 @@ import com.badlogic.gdx.utils.FloatArray;
 public class NavMesh implements Disposable {
 
 	public static final String tag = "NavMesh";
+
+	public final NavMeshGraph graph;
+
 	private final Vector3 rayFrom = new Vector3();
 	private final Vector3 rayTo = new Vector3();
 	private final FloatArray triAreasTmp = new FloatArray();
 	private final Array<Triangle> trisTmp = new Array<Triangle>();
 	private final Bits allMeshPartsTmp = new Bits();
-	public NavMeshGraph graph;
-	private btBvhTriangleMeshShape collisionShape;
-	private NavMeshRaycastCallback raycastCallback;
-	private NavMeshHeuristic heuristic;
-	private IndexedAStarPathFinder<Triangle> pathFinder;
+
+	private final btBvhTriangleMeshShape collisionShape;
+	private final NavMeshRaycastCallback raycastCallback;
+	private final NavMeshHeuristic heuristic;
+	private final IndexedAStarPathFinder<Triangle> pathFinder;
 
 	public NavMesh(Model model) {
 		btTriangleIndexVertexArray vertexArray = new btTriangleIndexVertexArray(model.meshParts);
@@ -97,7 +100,31 @@ public class NavMesh implements Disposable {
 	}
 
 	/**
-	 * Calculate a path of triangles from a start triangle to the triangle which is intersected by a ray.
+	 * Calculate a triangle graph path between two triangles which are intersected by the rays.
+	 *
+	 * @param fromRay
+	 * @param toRay
+	 * @param allowedMeshParts
+	 * @param distance
+	 * @param path
+	 * @return
+	 */
+	public boolean getPath(Ray fromRay, Ray toRay, Bits allowedMeshParts,
+						   float distance, NavMeshGraphPath path) {
+
+		Triangle fromTri = rayTest(fromRay, distance, allowedMeshParts);
+		if (fromTri == null) {
+			Gdx.app.debug(tag, "From triangle not found.");
+			return false;
+		}
+		Vector3 fromPoint = new Vector3();
+		Intersector.intersectRayTriangle(fromRay, fromTri.a, fromTri.b, fromTri.c, fromPoint);
+
+		return getPath(fromTri, fromPoint, toRay, allowedMeshParts, distance, path);
+	}
+
+	/**
+	 * Calculate a triangle graph path from a start triangle to the triangle which is intersected by a ray.
 	 *
 	 * @param fromTri
 	 * @param fromPoint
@@ -117,6 +144,23 @@ public class NavMesh implements Disposable {
 		Vector3 toPoint = new Vector3();
 		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
 
+		return getPath(fromTri, fromPoint, toTri, toPoint, path);
+	}
+
+
+	/**
+	 * Calculate a triangle graph path between two triangles.
+	 *
+	 * @param fromTri
+	 * @param fromPoint
+	 * @param toTri
+	 * @param toPoint
+	 * @param path
+	 * @return
+	 */
+	public boolean getPath(Triangle fromTri, Vector3 fromPoint,
+						   Triangle toTri, Vector3 toPoint,
+						   NavMeshGraphPath path) {
 		path.clear();
 		if (pathFinder.searchConnectionPath(fromTri, toTri, heuristic, path)) {
 			path.start = new Vector3(fromPoint);
@@ -190,36 +234,5 @@ public class NavMesh implements Disposable {
 		return trisTmp.get(i);
 	}
 
-
-//	public boolean getPath(Ray fromRay, Ray toRay, Bits allowedMeshParts,
-//						   float distance, NavMeshGraphPath path) {
-//
-//		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
-//		if (toTri == null) {
-//			Gdx.app.debug(tag, "To triangle not found.");
-//			return false;
-//		}
-//		Vector3 toPoint = new Vector3();
-//		Intersector.intersectRayTriangle(toRay, toTri.a, toTri.b, toTri.c, toPoint);
-//
-//		Triangle fromTri = rayTest(fromRay, distance, null);
-//		if (fromTri == null) {
-//			Gdx.app.debug(tag, "From triangle not found.");
-//			return false;
-//		}
-//		Vector3 fromPoint = new Vector3();
-//		Intersector.intersectRayTriangle(fromRay, fromTri.a, fromTri.b, fromTri.c, fromPoint);
-//
-//		path.clear();
-//		path.setStartEnd(fromPoint, toPoint);
-//
-//		if (!calculatePath(fromTri, toTri, path)) {
-//			Gdx.app.debug(tag, "Path not found.");
-//			return false;
-//		}
-//
-//
-//		return true;
-//	}
 
 }
