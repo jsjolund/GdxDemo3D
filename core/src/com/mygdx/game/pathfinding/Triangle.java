@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,6 +18,7 @@ package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedNode;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -61,6 +62,35 @@ public class Triangle implements IndexedNode<Triangle> {
 	@Override
 	public Array<Connection<Triangle>> getConnections() {
 		return connections;
+	}
+
+	/**
+	 * Calculates a random point in this triangle.
+	 *
+	 * @param out Output vector
+	 * @return Output for chaining
+	 */
+	public Vector3 getRandomPoint(Vector3 out) {
+		float r1 = MathUtils.random(0f, 1f);
+		float r2 = MathUtils.random(0f, 1f);
+		float sr1 = (float) Math.sqrt(r1);
+		out.x = (1 - sr1) * a.x + sr1 * (1 - r2) * b.x + (sr1 * r2) * c.x;
+		out.y = (1 - sr1) * a.y + sr1 * (1 - r2) * b.y + (sr1 * r2) * c.y;
+		out.z = (1 - sr1) * a.z + sr1 * (1 - r2) * b.z + (sr1 * r2) * c.z;
+		return out;
+	}
+
+	/**
+	 * Calculates the area of the triangle.
+	 *
+	 * @return
+	 */
+	public float area() {
+		double ab = a.dst(b);
+		double bc = b.dst(c);
+		double ca = a.dst(c);
+		double s = (ab + bc + ca) / 2;
+		return (float) Math.sqrt(s * (s - ab) * (s - bc) * (s - ca));
 	}
 }
 

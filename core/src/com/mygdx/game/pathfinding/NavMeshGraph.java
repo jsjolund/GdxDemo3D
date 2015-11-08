@@ -75,14 +75,16 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 
 	private ArrayMap<Triangle, Array<Connection<Triangle>>> map;
 	private int[] meshPartTriIndexOffsets;
+	private int[] meshPartTriCounts;
 
 
 	public NavMeshGraph(Model model) {
 		short[] indices = getUniquePositionVertexIndices(model.meshes.first());
 		Array<IndexConnection> indexConnections = getIndexConnections(indices);
+		Vector3[] vertexVectors = createVertexVectors(model.meshes.first(), indices);
 
 		// The triangle graph uses consecutive indices for each unique triangle in the whole model.
-		// The Bullet raycast uses MeshPart index combined triangle index inside the MeshPart,
+		// The Bullet raycast uses MeshPart index combined with triangle index inside the MeshPart,
 		// so we need to be able to convert between them.
 		int[] meshPartIndexOffsets = new int[model.meshParts.size];
 		meshPartTriIndexOffsets = new int[model.meshParts.size];
@@ -91,9 +93,9 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 			meshPartIndexOffsets[i] = meshPart.offset;
 			meshPartTriIndexOffsets[i] = meshPart.offset / 3;
 		}
-
-		Vector3[] vertexVectors = createVertexVectors(model.meshes.first(), indices);
-		Array<Triangle> triangles = createTriangles(vertexVectors, indices, meshPartIndexOffsets);
+		meshPartTriCounts = new int[model.meshParts.size];
+		Array<Triangle> triangles = createTriangles(vertexVectors, indices,
+				meshPartIndexOffsets, meshPartTriCounts);
 
 		map = createConnections(indexConnections, triangles, vertexVectors);
 	}
@@ -177,9 +179,11 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @param vertexVectors
 	 * @param indices
 	 * @param meshPartIndexOffsets
+	 * @param meshPartTriCounts
 	 * @return
 	 */
-	private static Array<Triangle> createTriangles(Vector3[] vertexVectors, short[] indices, int[] meshPartIndexOffsets) {
+	private static Array<Triangle> createTriangles(Vector3[] vertexVectors, short[] indices,
+												   int[] meshPartIndexOffsets, int[] meshPartTriCounts) {
 		Array<Triangle> triangles = new Array<Triangle>();
 		triangles.ordered = true;
 		short i = 0;
@@ -196,6 +200,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 					vertexVectors[indices[i++]],
 					vertexVectors[indices[i++]],
 					triIndex, meshPartIndex));
+			meshPartTriCounts[meshPartIndex]++;
 			triIndex++;
 		}
 		return triangles;
@@ -321,6 +326,10 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		return map.size;
 	}
 
+	public int getTriangleCount(int meshPartIndex) {
+		return meshPartTriCounts[meshPartIndex];
+	}
+
 	@Override
 	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
 		return map.getValueAt(fromNode.triIndex);
@@ -334,4 +343,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		return map.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + triIndex);
 	}
 
+	public int getMeshPartCount() {
+		return meshPartTriIndexOffsets.length;
+	}
 }

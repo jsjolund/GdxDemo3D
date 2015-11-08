@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2015 See AUTHORS file.
- *
+ * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p/>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p/>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,20 +20,18 @@ package com.mygdx.game.pathfinding;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.model.MeshPart;
-import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.graphics.g3d.model.NodePart;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.collision.btTriangleIndexVertexArray;
 import com.badlogic.gdx.physics.bullet.collision.btTriangleRaycastCallback;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.FloatArray;
 
 /**
  * @author jsjolund
@@ -43,6 +41,9 @@ public class NavMesh implements Disposable {
 	public static final String tag = "NavMesh";
 	private final Vector3 rayFrom = new Vector3();
 	private final Vector3 rayTo = new Vector3();
+	private final FloatArray triAreasTmp = new FloatArray();
+	private final Array<Triangle> trisTmp = new Array<Triangle>();
+	private final Bits allMeshPartsTmp = new Bits();
 	public NavMeshGraph graph;
 	private btBvhTriangleMeshShape collisionShape;
 	private NavMeshRaycastCallback raycastCallback;
@@ -69,6 +70,14 @@ public class NavMesh implements Disposable {
 		raycastCallback.dispose();
 	}
 
+	/**
+	 * Get the triangle which this ray intersects. Returns null if no triangle is intersected.
+	 *
+	 * @param ray
+	 * @param distance
+	 * @param allowedMeshParts
+	 * @return
+	 */
 	public Triangle rayTest(Ray ray, float distance, Bits allowedMeshParts) {
 		Triangle hitTriangle = null;
 
@@ -87,6 +96,17 @@ public class NavMesh implements Disposable {
 		return hitTriangle;
 	}
 
+	/**
+	 * Calculate a path of triangles from a start triangle to the triangle which is intersected by a ray.
+	 *
+	 * @param fromTri
+	 * @param fromPoint
+	 * @param toRay
+	 * @param allowedMeshParts
+	 * @param distance
+	 * @param path
+	 * @return
+	 */
 	public boolean getPath(Triangle fromTri, Vector3 fromPoint, Ray toRay, Bits allowedMeshParts,
 						   float distance, NavMeshGraphPath path) {
 		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
@@ -106,6 +126,67 @@ public class NavMesh implements Disposable {
 		}
 		Gdx.app.debug(tag, "Path not found.");
 		return false;
+	}
+
+	/**
+	 * Get a random point anywhere on the navigation mesh.
+	 *
+	 * @param out Output vector.
+	 * @return Output vector for chaining.
+	 */
+	public Vector3 getRandomPoint(Vector3 out) {
+		allMeshPartsTmp.clear();
+		for (int i = 0; i < graph.getMeshPartCount(); i++) {
+			allMeshPartsTmp.set(i);
+		}
+		return getRandomPoint(out, allMeshPartsTmp);
+	}
+
+	/**
+	 * Get a random point on the navigation mesh, on any of the allowed mesh parts.
+	 * <p/>
+	 * For example, to get a random point on the second navigation mesh part:
+	 * allowedMeshParts.clear();
+	 * allowedMeshParts.set(1);
+	 * navmesh.getRandomPoint(outVector, allowedMeshParts);
+	 *
+	 * @param out              Output vector.
+	 * @param allowedMeshParts Bits representing allowed mesh part indices.
+	 * @return Output vector for chaining.
+	 */
+	public Vector3 getRandomPoint(Vector3 out, Bits allowedMeshParts) {
+		triAreasTmp.clear();
+		triAreasTmp.ordered = true;
+		trisTmp.clear();
+		trisTmp.ordered = true;
+
+		// To get a uniform distribution over the triangles in the mesh parts
+		// we must take areas of the triangles into account.
+		for (int mpIndex = 0; mpIndex < graph.getMeshPartCount(); mpIndex++) {
+			if (allowedMeshParts.get(mpIndex)) {
+				for (int triIndex = 0; triIndex < graph.getTriangleCount(mpIndex); triIndex++) {
+					Triangle tri = graph.getTriangleFromMeshPart(mpIndex, triIndex);
+					float integratedArea = 0;
+					if (triAreasTmp.size > 0) {
+						integratedArea = triAreasTmp.get(triAreasTmp.size - 1);
+					}
+					triAreasTmp.add(integratedArea + tri.area());
+					trisTmp.add(tri);
+				}
+			}
+		}
+		if (triAreasTmp.size == 0) {
+			out.set(Float.NaN, Float.NaN, Float.NaN);
+			return out;
+		}
+		float r = MathUtils.random(0f, triAreasTmp.get(triAreasTmp.size - 1));
+		int i;
+		for (i = 0; i < triAreasTmp.size; i++) {
+			if (r <= triAreasTmp.get(i)) {
+				break;
+			}
+		}
+		return trisTmp.get(i).getRandomPoint(out);
 	}
 
 
