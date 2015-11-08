@@ -36,25 +36,25 @@ import com.mygdx.game.utilities.Sounds;
 public class HumanCharacter extends Ragdoll {
 
 	public enum CharacterState implements State<HumanCharacter> {
-		IDLE_STAND() {
+		IDLE_STAND(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_stand", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
-		IDLE_CROUCH() {
+		IDLE_CROUCH(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
-		IDLE_CRAWL() {
+		IDLE_CRAWL(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
-		MOVE_RUN(CharacterState.IDLE_STAND, 0.2f) {
+		MOVE_RUN(CharacterState.IDLE_STAND, 0.2f, true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
@@ -71,7 +71,7 @@ public class HumanCharacter extends Ragdoll {
 				}
 			}
 		},
-		MOVE_WALK(CharacterState.IDLE_STAND, 0.4f) {
+		MOVE_WALK(CharacterState.IDLE_STAND, 0.4f, true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
@@ -88,7 +88,7 @@ public class HumanCharacter extends Ragdoll {
 				}
 			}
 		},
-		MOVE_CROUCH(CharacterState.IDLE_CROUCH, 0.5f) {
+		MOVE_CROUCH(CharacterState.IDLE_CROUCH, 0.5f, true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
@@ -148,20 +148,30 @@ public class HumanCharacter extends Ragdoll {
 		},
 		GLOBAL() {};
 
+		protected final boolean steeringAllowed;
 		protected final CharacterState idleState;
 		protected final float multiplier;
-		
+
 		private CharacterState() {
-			this(null, 0);
+			this(null, 0, false);
 		}
-		
-		private CharacterState(CharacterState idleState, float multiplier) {
+
+		private CharacterState(boolean steeringAllowed) {
+			this(null, 0, steeringAllowed);
+		}
+
+		private CharacterState(CharacterState idleState, float multiplier, boolean steeringAllowed) {
 			this.idleState = idleState;
 			this.multiplier = multiplier;
+			this.steeringAllowed = steeringAllowed;
 		}
 
 		private boolean isMovementState() {
 			return idleState != null;
+		}
+
+		private boolean steeringIsAllowed() {
+			return steeringAllowed;
 		}
 
 		@Override
@@ -183,9 +193,8 @@ public class HumanCharacter extends Ragdoll {
 						entity.stateMachine.changeState(entity.moveState.idleState);
 						return;
 					}
-				}
-				else {
-					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+				} else {
+					CharacterState previousState = (CharacterState) entity.stateMachine.getPreviousState();
 					if (previousState.isMovementState()) {
 						entity.moveState = previousState;
 						entity.stateMachine.changeState(previousState.idleState);
@@ -325,11 +334,11 @@ public class HumanCharacter extends Ragdoll {
 	public boolean wantToPlay() {
 		return stateMachine.getCurrentState() == CharacterState.WHISTLE;
 	}
-	
+
 	@Override
 	public void calculateNewPath() {
 		CharacterState state = (CharacterState) stateMachine.getCurrentState();
-		if (state.isMovementState()) {
+		if (state.steeringIsAllowed()) {
 			super.calculateNewPath();
 		}
 	}
