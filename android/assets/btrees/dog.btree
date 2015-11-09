@@ -1,10 +1,14 @@
+import calculatePathToHuman:"com.mygdx.game.objects.dog.CalculatePathToHumanTask"
+import setThrowButton:"com.mygdx.game.objects.dog.SetThrowButtonTask"
 import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
 import piss:"com.mygdx.game.objects.dog.PissTask"
 import spinAround:"com.mygdx.game.objects.dog.SpinAroundTask"
 import run:"com.mygdx.game.objects.dog.RunTask"
 import sit:"com.mygdx.game.objects.dog.SitTask"
 import stand:"com.mygdx.game.objects.dog.StandTask"
-import heardWhistle?:"com.mygdx.game.objects.dog.HeardWhistleCondition"
+import humanWantToPlay?:"com.mygdx.game.objects.dog.HumanWantToPlayCondition"
+import stickThrown?:"com.mygdx.game.objects.dog.StickThrownCondition"
+
 
 #sequence
 #  lieDown
@@ -25,19 +29,26 @@ import heardWhistle?:"com.mygdx.game.objects.dog.HeardWhistleCondition"
 
         
 sequence
-  parallel policy:"selector"  # lie down until whistle is heard
-    heardWhistle?
+  parallel policy:"selector"  # lie down if the man don't wan't to play
+    humanWantToPlay?
     lieDown    
   sequence
-    #reachHuman
-    parallel # wait for the man to throw the stick
-      wait seconds:3 # thrown?
-      sequence
-        spinAround
-        parallel policy:"selector"
-          wait seconds:"uniform,3,5"
-          randomSelector
-            stand
-            sit
+    calculatePathToHuman
+    run
+    setThrowButton enabled:true
+    parallel
+      humanWantToPlay?
+      parallel policy:"selector" # wait for the man to throw the stick
+        stickThrown?
+        repeat
+          sequence
+            spinAround
+            parallel policy:"selector"
+              wait seconds:"uniform,3,5"
+              randomSelector
+                stand
+                sit
+    setThrowButton enabled:false
+    #calculatePathToStick
     run    # run and take the stick
   

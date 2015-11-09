@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.GameMessages;
 
 /**
  * Created by Johannes Sjolund on 11/6/15.
@@ -75,16 +76,14 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 			currentAnimationFinished = true;
 		}
 	}
-	
-	public static final int MSG_LETS_PLAY = 1;
-	public static final int MSG_LETS_STOP_PLAYING = 2;
 
 	public final BehaviorTree<DogCharacter> btree;
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
 	public boolean currentAnimationFinished;
 	public HumanCharacter human;
-	public boolean heardWhistle;
+	public boolean humanWantToPlay;
+	public boolean stickThrown;
 
 	public DogCharacter(Model model, String id,
 						Vector3 location, Vector3 rotation, Vector3 scale,
@@ -105,7 +104,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 
 		btree = BehaviorTreeLibraryManager.getInstance().createBehaviorTree("btrees/dog.btree", this);
 
-		heardWhistle = false;
+		humanWantToPlay = false;
 	}
 
 	@Override
@@ -115,8 +114,19 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	}
 
 	@Override
-	public boolean handleMessage (Telegram msg) {
-		heardWhistle = true;
+	public boolean handleMessage (Telegram telegram) {
+		switch (telegram.message) {
+		case GameMessages.DOG_LETS_PLAY:
+			humanWantToPlay = true;
+			stickThrown = false;
+			break;
+		case GameMessages.DOG_LETS_STOP_PLAYING:
+			humanWantToPlay = false;
+			break;
+		case GameMessages.DOG_STICK_THROWN:
+			stickThrown = true;
+			break;
+		}
 		return true;
 	}
 }

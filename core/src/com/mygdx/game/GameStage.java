@@ -22,6 +22,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.ai.msg.MessageManager;
+import com.badlogic.gdx.ai.msg.Telegram;
+import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -46,6 +49,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.HumanCharacter;
+import com.mygdx.game.objects.HumanCharacter.CharacterState;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
@@ -237,7 +241,7 @@ public class GameStage extends Stage implements Observable {
 	}
 
 
-	private class CharacterController extends Table {
+	private class CharacterController extends Table implements Telegraph {
 		private class CharacterButton extends ImageButton {
 
 			HumanCharacter.CharacterState state;
@@ -263,66 +267,141 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		private ButtonGroup<CharacterButton> radioGroup;
+		private CharacterButton whistleButton;
+		private CharacterButton throwButton;
+		private Cell<Actor> firstCell;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
 			radioGroup = new ButtonGroup<CharacterButton>(
-					new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "crawl-down"),
-					new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down"),
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-					new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-					//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-					new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+				//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
+			whistleButton = new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "whistle-down");
+			throwButton = new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
+
+			this.firstCell = add((Actor)null); // reserve cell to first radio button
 			for (CharacterButton btn : radioGroup.getButtons()) {
 				add(btn);
+			}
+			//setFirstRadioButton(whistleButton, null);
+			
+			// Register this controller's interests
+			MessageManager.getInstance().addListeners(this,
+				GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON,
+				GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE,
+				GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_THROW);
+		}
+		
+		private final void setFirstRadioButton(CharacterButton btn, HumanCharacter human) {
+			if (human != null && human == selectedCharacter) {
+				CharacterButton prevSelecteBtn = radioGroup.getChecked();
+				clearFirstRadioButton(human);
+				firstCell.setActor(btn);
+				btn.setVisible(true);
+				radioGroup.add(btn);
+				radioGroup.uncheckAll();
+				if (prevSelecteBtn != null)
+					prevSelecteBtn.setChecked(true);
+				System.out.println("setFirstRadioButton = " + (btn == whistleButton ? "whistleButton" : (btn == throwButton ? "throwButton" : "???")));
+			}
+		}
+		
+		private final void clearFirstRadioButton(HumanCharacter human) {
+			if (human != null && human == selectedCharacter) {
+				CharacterButton prevSelecteBtn = radioGroup.getChecked();
+				radioGroup.remove(whistleButton);
+				radioGroup.remove(throwButton);
+				radioGroup.uncheckAll();
+				whistleButton.setVisible(false);
+				throwButton.setVisible(false);
+				if (prevSelecteBtn != null)
+					prevSelecteBtn.setChecked(true);
 			}
 		}
 
 		public void handleCharacterSelection(GameCharacter character) {
+			if (selectedCharacter == character)
+				return;
+
+			if (selectedCharacter != null && selectedCharacter instanceof HumanCharacter) {
+				HumanCharacter human = (HumanCharacter) character;
+				human.selected = false;
+			}
+			
+			selectedCharacter = character;
+			notifyObserversEntitySelected(selectedCharacter);
+
 			if (character instanceof HumanCharacter) {
 				steerSettings.clearChildren();
 				steerSettings.add(humanSteerSettings);
 				steerSettings.invalidateHierarchy();
 
 				HumanCharacter human = (HumanCharacter) character;
+				human.selected = true;
+				if (human.dog != null) {
+					if (!human.dog.humanWantToPlay) {
+						this.setFirstRadioButton(whistleButton, human);
+					}
+					else if (!human.dog.stickThrown) {
+						this.setFirstRadioButton(throwButton, human);
+					}
+					else {
+						this.clearFirstRadioButton(human);
+					}
+				}
+				else {
+					this.clearFirstRadioButton(human);
+				}
 				for (CharacterButton btn : radioGroup.getButtons()) {
+					if (btn.state == CharacterState.DEAD && human.stateMachine.getCurrentState() == CharacterState.DEAD) {
+						btn.setChecked(true);
+						break;
+					}
 					if (btn.state == human.getCurrentMoveState())
 						btn.setChecked(true);
 				}
+				this.setVisible(true);
 			} else if (character instanceof DogCharacter) {
 				steerSettings.clearChildren();
 				steerSettings.add(dogSteerSettings);
 				steerSettings.invalidateHierarchy();
-				radioGroup.uncheckAll();
+				this.setVisible(false);
 			}
-			selectedCharacter = character;
-			notifyObserversEntitySelected(selectedCharacter);
 		}
 
 		public void handleCharacterPathing(Ray ray, Bits visibleLayers) {
-			// Perform pathfinding only if a character is selected and a movement button is checked
-			if (selectedCharacter != null) {
-				switch (radioGroup.getChecked().state) {
-					case MOVE_WALK:
-					case MOVE_RUN:
-					case MOVE_CRAWL:
-					case MOVE_CROUCH:
-						if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-								selectedCharacter.getGroundPosition(),
-								ray, visibleLayers,
-								GameSettings.CAMERA_PICK_RAY_DST,
-								selectedCharacter.navMeshGraphPath)) {
+			// Perform pathfinding only if a human character is selected and a movement button is checked
+			if (selectedCharacter instanceof HumanCharacter && radioGroup.getCheckedIndex() > -1 && radioGroup.getChecked().state.isMovementState()) {
+				if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
+						selectedCharacter.getGroundPosition(),
+						ray, visibleLayers,
+						GameSettings.CAMERA_PICK_RAY_DST,
+						selectedCharacter.navMeshGraphPath)) {
 
-							selectedCharacter.calculateNewPath();
-						}
-						break;
-					default:
-						break;
+					selectedCharacter.calculateNewPath();
 				}
 			}
+		}
+
+		@Override
+		public boolean handleMessage (Telegram telegram) {
+			switch (telegram.message) {
+			case GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE:
+				setFirstRadioButton(whistleButton, (HumanCharacter)telegram.extraInfo);
+				break;
+			case GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_THROW:
+				setFirstRadioButton(throwButton, (HumanCharacter)telegram.extraInfo);
+				break;
+			case GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON:
+				clearFirstRadioButton((HumanCharacter)telegram.extraInfo);
+				break;
+			}
+			return true;
 		}
 	}
 
@@ -395,6 +474,7 @@ public class GameStage extends Stage implements Observable {
 		};
 		speedController = new GameSpeedController(buttonsAtlas);
 		characterController = new CharacterController(buttonsAtlas);
+		characterController.setVisible(false); // initially no character is selected, so hide the controller
 		layerController = new LayerController(buttonsAtlas);
 		layerController.setLayer(Integer.MAX_VALUE);
 
@@ -426,12 +506,11 @@ public class GameStage extends Stage implements Observable {
 		bottomRightTable.add(new Table()).expandX().fillX().bottom();
 		rootTable.add(bottomRightTable).expandX().fillX();
 
-		Table bottomLeftTable = new Table();
-		bottomLeftTable.add(new Table());
-		bottomLeftTable.add(layerController).bottom().right();
+		Table bottomLeftTable = new Table().bottom().left();
+		bottomLeftTable.add(layerController).right().colspan(2);
 		bottomLeftTable.row();
-		bottomLeftTable.add(characterController).bottom();
-		bottomLeftTable.add(speedController).bottom();
+		bottomLeftTable.add(characterController);
+		bottomLeftTable.add(speedController);
 		bottomLeftTable.setTransform(true);
 		bottomLeftTable.setOrigin(bottomLeftTable.getPrefWidth(), 0);
 		bottomLeftTable.setScale(0.5f);
