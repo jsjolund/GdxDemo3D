@@ -37,19 +37,19 @@ import com.mygdx.game.utilities.Sounds;
 public class HumanCharacter extends Ragdoll {
 
 	public enum CharacterState implements State<HumanCharacter> {
-		IDLE_STAND() {
+		IDLE_STAND(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_stand", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
-		IDLE_CROUCH() {
+		IDLE_CROUCH(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
-		IDLE_CRAWL() {
+		IDLE_CRAWL(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
@@ -116,6 +116,7 @@ public class HumanCharacter extends Ragdoll {
 		WHISTLE() {
 			@Override
 			public void enter(HumanCharacter entity) {
+				// Clear path and stop steering
 				entity.steeringBehavior = null;
 				entity.navMeshPointPath.clear();
 				entity.navMeshGraphPath.clear();
@@ -123,6 +124,7 @@ public class HumanCharacter extends Ragdoll {
 				entity.body.setFriction(1);
 				CharacterState prevState = (CharacterState)entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
+					// Save animation speed multiplier
 					entity.animationSpeedMultiplier = prevState.multiplier; 
 				}
 			}
@@ -130,30 +132,35 @@ public class HumanCharacter extends Ragdoll {
 			@Override
 			public void update(HumanCharacter entity) {
 				if (entity.isMoving()) {
+					// Keep on updating movement animation
 					super.update(entity);
 				}
 				else {
 					Sounds.whistle.play();
+					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
 							DogCharacter.MSG_LETS_PLAY);
 					}
+					// Transition to the appropriate idle state depending on the previous state
 					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
-					if (previousState == null)
-						previousState = CharacterState.IDLE_STAND;
-					if (previousState.isMovementState()) {
-						entity.moveState = previousState;
-						entity.stateMachine.changeState(previousState.idleState);
+					CharacterState nextState = CharacterState.IDLE_STAND;
+					if (previousState != null) {
+						if (previousState.isMovementState()) {
+							entity.moveState = previousState; // hmmm... is this really needed?
+							nextState = previousState.idleState;
+						}
+						else if (previousState.isIdleState()) {
+							nextState = previousState;
+						}
 					}
-					else {
-						entity.stateMachine.changeState(previousState == CharacterState.DEAD ? CharacterState.IDLE_STAND : idleState);
-//						entity.stateMachine.revertToPreviousState();
-					}
+					entity.stateMachine.changeState(nextState);
 				}
 			}
 
 			@Override
 			public void exit(HumanCharacter entity) {
+				// Reset entity's animation speed multiplier
 				entity.animationSpeedMultiplier = -1;
 			}
 		},
@@ -183,7 +190,11 @@ public class HumanCharacter extends Ragdoll {
 		protected final float multiplier;
 		
 		private CharacterState() {
-			this(null, 0);
+			this(false);
+		}
+		
+		private CharacterState(boolean idle) {
+			this(null, idle ? -1 : 0);
 		}
 		
 		private CharacterState(CharacterState idleState, float multiplier) {
@@ -193,6 +204,10 @@ public class HumanCharacter extends Ragdoll {
 
 		private boolean isMovementState() {
 			return idleState != null;
+		}
+
+		private boolean isIdleState() {
+			return idleState == null && multiplier < 0;
 		}
 
 		@Override
@@ -227,9 +242,9 @@ public class HumanCharacter extends Ragdoll {
 
 			// update current state's animation
 			float deltaTime = Gdx.graphics.getDeltaTime();
+			// Use entity's animation speed multiplier, if any
 			float animationSpeedMultiplier = entity.animationSpeedMultiplier > 0 ? entity.animationSpeedMultiplier : multiplier;
-			if (idleState != null || animationSpeedMultiplier > 0) {
-				// this is a movement state
+			if (animationSpeedMultiplier > 0) {
 				deltaTime *= entity.getLinearVelocity().len() * animationSpeedMultiplier;
 			}
 			entity.animations.update(deltaTime * GameSettings.GAME_SPEED);

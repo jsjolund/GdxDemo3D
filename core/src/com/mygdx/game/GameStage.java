@@ -303,25 +303,25 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		public void handleCharacterPathing(Ray ray, Bits visibleLayers) {
-			if (selectedCharacter == null) {
-				return;
-			}
-			switch(radioGroup.getChecked().state) {
-			case MOVE_WALK:
-			case MOVE_RUN:
-			case MOVE_CRAWL:
-			case MOVE_CROUCH:
-				if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-						selectedCharacter.getGroundPosition(),
-						ray, visibleLayers,
-						GameSettings.CAMERA_PICK_RAY_DST,
-						selectedCharacter.navMeshGraphPath)) {
-
-					selectedCharacter.calculateNewPath();
+			// Perform pathfinding only if a character is selected and a movement button is checked
+			if (selectedCharacter != null) {
+				switch(radioGroup.getChecked().state) {
+				case MOVE_WALK:
+				case MOVE_RUN:
+				case MOVE_CRAWL:
+				case MOVE_CROUCH:
+					if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
+							selectedCharacter.getGroundPosition(),
+							ray, visibleLayers,
+							GameSettings.CAMERA_PICK_RAY_DST,
+							selectedCharacter.navMeshGraphPath)) {
+	
+						selectedCharacter.calculateNewPath();
+					}
+					break;
+				default:
+					break;
 				}
-				break;
-			default:
-				break;
 			}
 		}
 	}
