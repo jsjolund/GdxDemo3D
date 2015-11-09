@@ -250,9 +250,11 @@ public class GameStage extends Stage implements Observable {
 				this.addListener(new ClickListener() {
 					@Override
 					public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-						if (selectedCharacter instanceof HumanCharacter) {
-							HumanCharacter human = (HumanCharacter) selectedCharacter;
-							human.handleStateCommand(CharacterButton.this.state);
+						if (!CharacterButton.this.isChecked()) {
+							if (selectedCharacter instanceof HumanCharacter) {
+								HumanCharacter human = (HumanCharacter) selectedCharacter;
+								human.handleStateCommand(CharacterButton.this.state);
+							}
 						}
 						return true;
 					}
@@ -304,13 +306,22 @@ public class GameStage extends Stage implements Observable {
 			if (selectedCharacter == null) {
 				return;
 			}
-			if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-					selectedCharacter.getGroundPosition(),
-					ray, visibleLayers,
-					GameSettings.CAMERA_PICK_RAY_DST,
-					selectedCharacter.navMeshGraphPath)) {
+			switch(radioGroup.getChecked().state) {
+			case MOVE_WALK:
+			case MOVE_RUN:
+			case MOVE_CRAWL:
+			case MOVE_CROUCH:
+				if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
+						selectedCharacter.getGroundPosition(),
+						ray, visibleLayers,
+						GameSettings.CAMERA_PICK_RAY_DST,
+						selectedCharacter.navMeshGraphPath)) {
 
-				selectedCharacter.calculateNewPath();
+					selectedCharacter.calculateNewPath();
+				}
+				break;
+			default:
+				break;
 			}
 		}
 	}
