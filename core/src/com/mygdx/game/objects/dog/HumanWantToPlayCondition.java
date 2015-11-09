@@ -7,9 +7,9 @@ import com.mygdx.game.objects.DogCharacter;
 /**
  * @author davebaol
  */
-public class HeardWhistleCondition extends LeafTask<DogCharacter> {
+public class HumanWantToPlayCondition extends LeafTask<DogCharacter> {
 
-	public HeardWhistleCondition () {
+	public HumanWantToPlayCondition () {
 	}
 
 	@Override
@@ -18,7 +18,7 @@ public class HeardWhistleCondition extends LeafTask<DogCharacter> {
 
 	@Override
 	public void run () {
-		if (getObject().heardWhistle) {
+		if (getObject().humanWantToPlay) {
 			success();
 		}
 		else {

@@ -28,6 +28,7 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.GameMessages;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.Sounds;
 
@@ -67,6 +68,12 @@ public class HumanCharacter extends Ragdoll {
 				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.runMultiplier);
 				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.runMultiplier);
 
+				// If the entity owns a dog tell him you don't want to play and re-enable whistle
+				if (entity.dog != null) {
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
+					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
+				}
+
 				if (entity.followPathSB != null) {
 					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.runMultiplier);
 				}
@@ -83,6 +90,12 @@ public class HumanCharacter extends Ragdoll {
 
 				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed);
 				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration);
+
+				// If the entity owns a dog tell him you don't want to play and re-enable whistle
+				if (entity.dog != null) {
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
+					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
+				}
 
 				if (entity.followPathSB != null) {
 					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius);
@@ -101,6 +114,12 @@ public class HumanCharacter extends Ragdoll {
 				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.crouchMultiplier);
 				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.crouchMultiplier);
 
+				// If the entity owns a dog tell him you don't want to play and re-enable whistle
+				if (entity.dog != null) {
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
+					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
+				}
+
 				if (entity.followPathSB != null) {
 					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.crouchMultiplier);
 				}
@@ -110,7 +129,37 @@ public class HumanCharacter extends Ragdoll {
 		THROW() {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|action_throw", 1, 1, entity.animationListener, 0.1f);
+			}
+
+			@Override
+			public void update(HumanCharacter entity) {
+				if (!entity.animationCompleted) {
+					// Keep on updating throw animation
+					super.update(entity);
+				}
+				else {
+					// If the entity owns a dog send it a delayed message to emulate reaction time
+					if (entity.dog != null) {
+						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
+							GameMessages.DOG_STICK_THROWN);
+					}
+
+					// Transition to the appropriate idle state depending on the previous state
+					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+					CharacterState nextState = CharacterState.IDLE_STAND;
+					if (previousState != null) {
+						if (previousState.isMovementState()) {
+							entity.moveState = previousState; // hmmm... is this really needed?
+							nextState = previousState.idleState;
+						}
+						else if (previousState.isIdleState()) {
+							nextState = previousState;
+						}
+					}
+					entity.stateMachine.changeState(nextState);
+				}
 			}
 		},
 		WHISTLE() {
@@ -140,7 +189,7 @@ public class HumanCharacter extends Ragdoll {
 					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
-							DogCharacter.MSG_LETS_PLAY);
+							GameMessages.DOG_LETS_PLAY);
 					}
 					// Transition to the appropriate idle state depending on the previous state
 					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
@@ -162,6 +211,9 @@ public class HumanCharacter extends Ragdoll {
 			public void exit(HumanCharacter entity) {
 				// Reset entity's animation speed multiplier
 				entity.animationSpeedMultiplier = -1;
+
+				// Disable whistle and throw buttons
+				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON, entity);
 			}
 		},
 		DEAD() {
@@ -202,11 +254,11 @@ public class HumanCharacter extends Ragdoll {
 			this.multiplier = multiplier;
 		}
 
-		private boolean isMovementState() {
+		public boolean isMovementState() {
 			return idleState != null;
 		}
 
-		private boolean isIdleState() {
+		public boolean isIdleState() {
 			return idleState == null && multiplier < 0;
 		}
 
@@ -314,12 +366,12 @@ public class HumanCharacter extends Ragdoll {
 	public class CharacterAnimationListener implements AnimationController.AnimationListener {
 		@Override
 		public void onEnd(AnimationController.AnimationDesc animation) {
-
+			animationCompleted = true;
 		}
 
 		@Override
 		public void onLoop(AnimationController.AnimationDesc animation) {
-
+			animationCompleted = true;
 		}
 	}
 
@@ -329,8 +381,10 @@ public class HumanCharacter extends Ragdoll {
 	private final SteerSettings steerSettings;
 	private CharacterState moveState = CharacterState.MOVE_WALK;
 	private boolean wasSteering = false;
-	private DogCharacter dog;
+	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;
+	private boolean animationCompleted;
+	public boolean selected = false;
 
 	public HumanCharacter(Model model,
 						  String id,
@@ -355,6 +409,7 @@ public class HumanCharacter extends Ragdoll {
 
 		animations = new AnimationController(modelInstance);
 		animationListener = new CharacterAnimationListener();
+		animationCompleted = false;
 
 		stateMachine = new DefaultStateMachine<HumanCharacter>(this, CharacterState.GLOBAL);
 		// Set the steering variables associated with default move state (walking)

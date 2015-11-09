@@ -27,4 +27,14 @@ public class RunTask extends DogTaskBase {
 		}
 	}
 
+	@Override
+	public void run () {
+		// TODO: check if end of path reached
+		boolean endOfPath = true;
+		if (endOfPath)
+			success();
+		else
+			super.run();
+	}
+
 }
