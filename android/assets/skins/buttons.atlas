@@ -150,3 +150,17 @@ slider-knob-down
   orig: 128, 64
   offset: 0, 0
   index: -1
+whistle-up
+  rotate: false
+  xy: 1408, 0
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1
+whistle-down
+  rotate: false
+  xy: 1408, 128
+  size: 128, 128
+  orig: 128, 128
+  offset: 0, 0
+  index: -1

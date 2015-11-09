@@ -267,13 +267,13 @@ public class GameStage extends Stage implements Observable {
 
 		public CharacterController(TextureAtlas buttonAtlas) {
 			radioGroup = new ButtonGroup<CharacterButton>(
-				new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-				//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+					new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "crawl-down"),
+					new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down"),
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+					new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+					//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+					new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
 			for (CharacterButton btn : radioGroup.getButtons()) {
@@ -305,22 +305,22 @@ public class GameStage extends Stage implements Observable {
 		public void handleCharacterPathing(Ray ray, Bits visibleLayers) {
 			// Perform pathfinding only if a character is selected and a movement button is checked
 			if (selectedCharacter != null) {
-				switch(radioGroup.getChecked().state) {
-				case MOVE_WALK:
-				case MOVE_RUN:
-				case MOVE_CRAWL:
-				case MOVE_CROUCH:
-					if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-							selectedCharacter.getGroundPosition(),
-							ray, visibleLayers,
-							GameSettings.CAMERA_PICK_RAY_DST,
-							selectedCharacter.navMeshGraphPath)) {
-	
-						selectedCharacter.calculateNewPath();
-					}
-					break;
-				default:
-					break;
+				switch (radioGroup.getChecked().state) {
+					case MOVE_WALK:
+					case MOVE_RUN:
+					case MOVE_CRAWL:
+					case MOVE_CROUCH:
+						if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
+								selectedCharacter.getGroundPosition(),
+								ray, visibleLayers,
+								GameSettings.CAMERA_PICK_RAY_DST,
+								selectedCharacter.navMeshGraphPath)) {
+
+							selectedCharacter.calculateNewPath();
+						}
+						break;
+					default:
+						break;
 				}
 			}
 		}
