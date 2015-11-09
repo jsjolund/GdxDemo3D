@@ -269,11 +269,15 @@ public class GameStage extends Stage implements Observable {
 		private ButtonGroup<CharacterButton> radioGroup;
 		private CharacterButton whistleButton;
 		private CharacterButton throwButton;
-		private Cell<Actor> firstCell;
+		private Cell<CharacterButton> firstCell;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
+			whistleButton = new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "whistle-down");
+			throwButton = new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
+
 			radioGroup = new ButtonGroup<CharacterButton>(
+				whistleButton,
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
@@ -281,14 +285,10 @@ public class GameStage extends Stage implements Observable {
 				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
-			whistleButton = new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "whistle-down");
-			throwButton = new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
-
-			this.firstCell = add((Actor)null); // reserve cell to first radio button
 			for (CharacterButton btn : radioGroup.getButtons()) {
 				add(btn);
 			}
-			//setFirstRadioButton(whistleButton, null);
+			this.firstCell = getCell(whistleButton); // Save the reference to the 1st cell
 			
 			// Register this controller's interests
 			MessageManager.getInstance().addListeners(this,
@@ -328,11 +328,13 @@ public class GameStage extends Stage implements Observable {
 			if (selectedCharacter == character)
 				return;
 
+			// Remove selection from previously selected human (if any)
 			if (selectedCharacter != null && selectedCharacter instanceof HumanCharacter) {
-				HumanCharacter human = (HumanCharacter) character;
+				HumanCharacter human = (HumanCharacter) selectedCharacter;
 				human.selected = false;
 			}
 			
+			// Select new character
 			selectedCharacter = character;
 			notifyObserversEntitySelected(selectedCharacter);
 
@@ -343,6 +345,7 @@ public class GameStage extends Stage implements Observable {
 
 				HumanCharacter human = (HumanCharacter) character;
 				human.selected = true;
+				// Restore the controller based on the newly selected human
 				if (human.dog != null) {
 					if (!human.dog.humanWantToPlay) {
 						this.setFirstRadioButton(whistleButton, human);
@@ -370,7 +373,7 @@ public class GameStage extends Stage implements Observable {
 				steerSettings.clearChildren();
 				steerSettings.add(dogSteerSettings);
 				steerSettings.invalidateHierarchy();
-				this.setVisible(false);
+				this.setVisible(false);  // no controller for dogs
 			}
 		}
 
@@ -506,7 +509,7 @@ public class GameStage extends Stage implements Observable {
 		bottomRightTable.add(new Table()).expandX().fillX().bottom();
 		rootTable.add(bottomRightTable).expandX().fillX();
 
-		Table bottomLeftTable = new Table().bottom().left();
+		Table bottomLeftTable = new Table();
 		bottomLeftTable.add(layerController).right().colspan(2);
 		bottomLeftTable.row();
 		bottomLeftTable.add(characterController);
