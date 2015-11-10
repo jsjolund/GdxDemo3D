@@ -23,10 +23,16 @@ public class SetThrowButtonTask extends DogActionBase {
 
 	@Override
 	public void run () {
-		HumanCharacter human = getObject().human;
-		if (human.selected) {
+		DogCharacter dog = getObject();
+		HumanCharacter human = dog.human;
+		if (human.selected && dog.humanWantToPlay) {
 			int msg = enabled ? GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_THROW : GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON;
-			MessageManager.getInstance().dispatchMessage(msg, human);
+			boolean sendTelegram = enabled && dog.humanWantToPlay && !dog.stickThrown;
+			if (!enabled)
+				sendTelegram = dog.humanWantToPlay && dog.stickThrown;
+			if (sendTelegram) {
+				MessageManager.getInstance().dispatchMessage(msg, human);
+			}
 		}
 		success();
 	}

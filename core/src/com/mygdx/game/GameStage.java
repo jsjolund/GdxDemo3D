@@ -244,7 +244,7 @@ public class GameStage extends Stage implements Observable {
 	private class CharacterController extends Table implements Telegraph {
 		private class CharacterButton extends ImageButton {
 
-			HumanCharacter.CharacterState state;
+			CharacterState state;
 
 			CharacterButton(HumanCharacter.CharacterState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
 				super(new TextureRegionDrawable(buttonAtlas.findRegion(up)),
@@ -257,7 +257,22 @@ public class GameStage extends Stage implements Observable {
 						if (!CharacterButton.this.isChecked()) {
 							if (selectedCharacter instanceof HumanCharacter) {
 								HumanCharacter human = (HumanCharacter) selectedCharacter;
-								human.handleStateCommand(CharacterButton.this.state);
+								CharacterState hs = (CharacterState)human.stateMachine.getCurrentState();
+								if (CharacterButton.this.state.isMovementState()) {
+									if (hs.isIdleState()) {
+										human.moveState = CharacterButton.this.state;
+										human.handleStateCommand(CharacterButton.this.state.idleState);
+									}
+									else if (!hs.isMovementState()) {
+										human.handleStateCommand(CharacterButton.this.state.idleState);
+									}
+									else {
+										human.handleStateCommand(CharacterButton.this.state);
+									}
+								}
+								else {
+									human.handleStateCommand(CharacterButton.this.state);
+								}
 							}
 						}
 						return true;
@@ -277,7 +292,6 @@ public class GameStage extends Stage implements Observable {
 			throwButton = new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
 
 			radioGroup = new ButtonGroup<CharacterButton>(
-				whistleButton,
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
 				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
@@ -285,10 +299,13 @@ public class GameStage extends Stage implements Observable {
 				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
+			// Add whistle button and save the reference to the 1st cell
+			this.firstCell = add(whistleButton);
+
+			// Add radio buttons
 			for (CharacterButton btn : radioGroup.getButtons()) {
 				add(btn);
 			}
-			this.firstCell = getCell(whistleButton); // Save the reference to the 1st cell
 			
 			// Register this controller's interests
 			MessageManager.getInstance().addListeners(this,
@@ -299,28 +316,19 @@ public class GameStage extends Stage implements Observable {
 		
 		private final void setFirstRadioButton(CharacterButton btn, HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
-				CharacterButton prevSelecteBtn = radioGroup.getChecked();
-				clearFirstRadioButton(human);
+				whistleButton.setVisible(false);
+				throwButton.setVisible(false);
 				firstCell.setActor(btn);
 				btn.setVisible(true);
-				radioGroup.add(btn);
-				radioGroup.uncheckAll();
-				if (prevSelecteBtn != null)
-					prevSelecteBtn.setChecked(true);
+				btn.setChecked(false);
 				System.out.println("setFirstRadioButton = " + (btn == whistleButton ? "whistleButton" : (btn == throwButton ? "throwButton" : "???")));
 			}
 		}
 		
 		private final void clearFirstRadioButton(HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
-				CharacterButton prevSelecteBtn = radioGroup.getChecked();
-				radioGroup.remove(whistleButton);
-				radioGroup.remove(throwButton);
-				radioGroup.uncheckAll();
 				whistleButton.setVisible(false);
 				throwButton.setVisible(false);
-				if (prevSelecteBtn != null)
-					prevSelecteBtn.setChecked(true);
 			}
 		}
 
