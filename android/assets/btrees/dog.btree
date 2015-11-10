@@ -1,4 +1,5 @@
 import calculatePathToHuman:"com.mygdx.game.objects.dog.CalculatePathToHumanTask"
+import calculatePathToStick:"com.mygdx.game.objects.dog.CalculatePathToStickTask"
 import setThrowButton:"com.mygdx.game.objects.dog.SetThrowButtonTask"
 import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
 import piss:"com.mygdx.game.objects.dog.PissTask"
@@ -40,14 +41,17 @@ sequence
       humanWantToPlay?
       parallel policy:"selector" # wait for the man to throw the stick
         stickThrown?
-        sequence
-          spinAround
-          parallel policy:"selector"
-            wait seconds:"uniform,3,5"
-            randomSelector
-              stand
-              sit
+        alwaysFail
+          sequence
+            spinAround
+            parallel policy:"selector"
+              wait seconds:"uniform,3,5"
+              randomSelector
+                stand
+                sit
     setThrowButton enabled:false
-    #calculatePathToStick
-    run    # run and take the stick
+    calculatePathToStick
+    #run    # run and take the stick
+    piss  # This replaces the round trip. Use your imagination for now :)
+    #runBackToHuman
   
