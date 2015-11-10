@@ -168,7 +168,7 @@ public class GameRenderer implements Disposable, Observer {
 		shadowBatch.begin(shadowLight.getCamera());
 
 		shadowBatch.render(engine.getModelCache());
-		for (GameModel mdl : engine.getNonCachedModels()) {
+		for (GameModel mdl : engine.getDynamicModels()) {
 			if (isVisible(camera, mdl)) {
 				shadowBatch.render(mdl.modelInstance);
 			}
@@ -188,7 +188,7 @@ public class GameRenderer implements Disposable, Observer {
 			camera.update();
 			modelBatch.begin(camera);
 			modelBatch.render(engine.getModelCache(), environment);
-			for (GameModel mdl : engine.getNonCachedModels()) {
+			for (GameModel mdl : engine.getDynamicModels()) {
 				if (isVisible(camera, mdl)) {
 					modelBatch.render(mdl.modelInstance, environment);
 				}

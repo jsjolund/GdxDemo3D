@@ -145,7 +145,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	// Models
 	private boolean modelCacheDirty = true;
 	private ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
-	private Array<GameModel> nonCachedModels = new Array<GameModel>();
+	private Array<GameModel> dynamicModels = new Array<GameModel>();
 	private Bits visibleLayers = new Bits();
 
 	public GameEngine() {
@@ -223,30 +223,31 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		return modelCache;
 	}
 
-	public Array<GameModel> getNonCachedModels() {
+	public Array<GameModel> getDynamicModels() {
 		if (modelCacheDirty) {
 			updateModelCache(visibleLayers);
 		}
-		return nonCachedModels;
+		return dynamicModels;
 	}
 
 	private void updateModelCache(Bits visibleLayers) {
-		nonCachedModels.clear();
+		dynamicModels.clear();
 		modelCache.begin();
 		for (GameObject obj : objectsById.values()) {
 			if (obj instanceof GameModelBody) {
 				GameModelBody model = (GameModelBody) obj;
-				if (model.layers.intersects(visibleLayers)) {
-					// All bodies with mass of zero are static so cache them
-					if (model.mass == 0) {
+				if (model.mass == 0) {
+					// All bodies with mass of zero are static so cache them if visible
+					if (model.layers.intersects(visibleLayers) ){
 						modelCache.add(model.modelInstance);
-					} else {
-						nonCachedModels.add(model);
 					}
+				} else {
+					// Dynamic bodies are checked for visibility in render method
+					dynamicModels.add(model);
 				}
 			} else if (obj instanceof Billboard) {
 				// TODO: If more billboards than selection marker are ever used, handle them here
-				nonCachedModels.add((Billboard) obj);
+				dynamicModels.add((Billboard) obj);
 
 			} else if (obj instanceof GameModel) {
 				// TODO: If non-static models without bodies are ever used, handle them here
