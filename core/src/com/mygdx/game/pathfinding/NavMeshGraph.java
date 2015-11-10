@@ -16,6 +16,7 @@
 
 package com.mygdx.game.pathfinding;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.ai.pfa.indexed.IndexedGraph;
 import com.badlogic.gdx.graphics.Mesh;
@@ -25,6 +26,7 @@ import com.badlogic.gdx.graphics.g3d.model.MeshPart;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.Bits;
 
 import java.nio.FloatBuffer;
 
@@ -73,9 +75,17 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		}
 	}
 
-	private ArrayMap<Triangle, Array<Connection<Triangle>>> map;
+	public static final String tag = "NavMeshGraph";
+
+	private ArrayMap<Triangle, Array<Edge>> connectionMap;
+	private ArrayMap<Triangle, Array<Edge>> disconnectionMap;
+
 	private int[] meshPartTriIndexOffsets;
 	private int[] meshPartTriCounts;
+
+	private int numDisconnectedEdges;
+	private int numConnectedEdges;
+	private int numTotalEdges;
 
 
 	public NavMeshGraph(Model model) {
@@ -97,46 +107,65 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		Array<Triangle> triangles = createTriangles(vertexVectors, indices,
 				meshPartIndexOffsets, meshPartTriCounts);
 
-		map = createConnections(indexConnections, triangles, vertexVectors);
+		connectionMap = createConnectionMap(indexConnections, triangles, vertexVectors);
+		disconnectionMap = createDisconnectionMap(connectionMap);
+
+		// Count edges of different types
+		for (Array<Edge> edges : disconnectionMap.values()) {
+			numDisconnectedEdges += edges.size;
+		}
+		for (Array<Edge> edges : connectionMap.values()) {
+			numConnectedEdges += edges.size;
+		}
+		numConnectedEdges /= 2;
+		numTotalEdges = numConnectedEdges + numDisconnectedEdges;
+		Gdx.app.debug(tag, String.format(
+				"MeshParts: total=%s, Triangles: total=%s, Edges: connected=%s, disconnected=%s, total=%s",
+				getMeshPartCount(), getNodeCount(), getEdgeCountConnected(),
+				getEdgeCountDisconnected(), getEdgeCountTotal()));
 	}
+
 
 	/**
-	 * Get an array of the vertex indices from the mesh. Any vertices which share the same position will be counted
-	 * as a single vertex and share the same index. That is, position duplicates will be filtered out.
-	 * <p/>
-	 * TODO: can be optimized further
+	 * Map the disconnected edges for each triangle which does not have all three edges connected to other triangles.
 	 *
-	 * @param mesh
+	 * @param connectionMap
 	 * @return
 	 */
-	private static short[] getUniquePositionVertexIndices(Mesh mesh) {
-		FloatBuffer verticesBuffer = mesh.getVerticesBuffer();
-		int positionOffset = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position).offset / 4;
-		// Number of array elements which make up a vertex
-		int vertexSize = mesh.getVertexSize() / 4;
-		// The indices tell us which vertices are part of a triangle.
-		short[] indices = new short[mesh.getNumIndices()];
-		mesh.getIndices(indices);
+	private static ArrayMap<Triangle, Array<Edge>> createDisconnectionMap(
+			ArrayMap<Triangle, Array<Edge>> connectionMap) {
 
-		for (int i = 0; i < indices.length; i++) {
-			short indexI = indices[i];
-			int a = indexI * vertexSize + positionOffset;
-			float xi = verticesBuffer.get(a++);
-			float yi = verticesBuffer.get(a++);
-			float zi = verticesBuffer.get(a++);
-			for (int j = i + 1; j < indices.length; j++) {
-				short indexJ = indices[j];
-				int b = indexJ * vertexSize + positionOffset;
-				float xj = verticesBuffer.get(b++);
-				float yj = verticesBuffer.get(b++);
-				float zj = verticesBuffer.get(b++);
-				if (xi == xj && yi == yj && zi == zj) {
-					indices[j] = indexI;
+		ArrayMap<Triangle, Array<Edge>> disconnectionMap = new ArrayMap<Triangle, Array<Edge>>();
+
+		for (int i = 0; i < connectionMap.size; i++) {
+			Triangle tri = connectionMap.getKeyAt(i);
+			Array<Edge> connectedEdges = connectionMap.getValueAt(i);
+
+			Array<Edge> disconnectedEdges = new Array<Edge>();
+			disconnectionMap.put(tri, disconnectedEdges);
+
+			if (connectedEdges.size < 3) {
+				// This triangle does not have all edges connected to other triangles
+				boolean ab = true;
+				boolean bc = true;
+				boolean ca = true;
+				for (Edge edge : connectedEdges) {
+					if (edge.rightVertex == tri.a && edge.leftVertex == tri.b) ab = false;
+					else if (edge.rightVertex == tri.b && edge.leftVertex == tri.c) bc = false;
+					else if (edge.rightVertex == tri.c && edge.leftVertex == tri.a) ca = false;
 				}
+				if (ab) disconnectedEdges.add(new Edge(tri, null, tri.a, tri.b));
+				if (bc) disconnectedEdges.add(new Edge(tri, null, tri.b, tri.c));
+				if (ca) disconnectedEdges.add(new Edge(tri, null, tri.c, tri.a));
+			}
+			int totalEdges = (connectedEdges.size + disconnectedEdges.size);
+			if (totalEdges != 3) {
+				Gdx.app.debug(tag, String.format("Wrong number of edges (%s) in triangle %s ", totalEdges, tri.getIndex()));
 			}
 		}
-		return indices;
+		return disconnectionMap;
 	}
+
 
 	/**
 	 * Creates a map over each triangle and its Edge connections to other triangles. Each edge must follow the
@@ -149,15 +178,14 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @param vertexVectors
 	 * @return
 	 */
-	private static ArrayMap<Triangle, Array<Connection<Triangle>>> createConnections(
+	private static ArrayMap<Triangle, Array<Edge>> createConnectionMap(
 			Array<IndexConnection> indexConnections, Array<Triangle> triangles, Vector3[] vertexVectors) {
 
-		ArrayMap<Triangle, Array<Connection<Triangle>>> connectionMap =
-				new ArrayMap<Triangle, Array<Connection<Triangle>>>();
+		ArrayMap<Triangle, Array<Edge>> connectionMap = new ArrayMap<Triangle, Array<Edge>>();
 		connectionMap.ordered = true;
 
 		for (Triangle tri : triangles) {
-			connectionMap.put(tri, new Array<Connection<Triangle>>());
+			connectionMap.put(tri, new Array<Edge>());
 		}
 
 		for (IndexConnection i : indexConnections) {
@@ -172,6 +200,50 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		}
 		return connectionMap;
 	}
+
+	/**
+	 * Get an array of the vertex indices from the mesh. Any vertices which share the same position will be counted
+	 * as a single vertex and share the same index. That is, position duplicates will be filtered out.
+	 *
+	 * @param mesh
+	 * @return
+	 */
+	private static short[] getUniquePositionVertexIndices(Mesh mesh) {
+		FloatBuffer verticesBuffer = mesh.getVerticesBuffer();
+		int positionOffset = mesh.getVertexAttributes().findByUsage(VertexAttributes.Usage.Position).offset / 4;
+		// Number of array elements which make up a vertex
+		int vertexSize = mesh.getVertexSize() / 4;
+		// The indices tell us which vertices are part of a triangle.
+		short[] indices = new short[mesh.getNumIndices()];
+		mesh.getIndices(indices);
+		// Marks true if an index has already been compared to avoid unnecessary comparisons
+		Bits handledIndices = new Bits(mesh.getNumIndices());
+
+		for (int i = 0; i < indices.length; i++) {
+			short indexI = indices[i];
+			if (handledIndices.get(indexI)) {
+				// Index handled in an earlier iteration
+				continue;
+			}
+			int vBufIndexI = indexI * vertexSize + positionOffset;
+			float xi = verticesBuffer.get(vBufIndexI++);
+			float yi = verticesBuffer.get(vBufIndexI++);
+			float zi = verticesBuffer.get(vBufIndexI++);
+			for (int j = i + 1; j < indices.length; j++) {
+				short indexJ = indices[j];
+				int vBufIndexJ = indexJ * vertexSize + positionOffset;
+				float xj = verticesBuffer.get(vBufIndexJ++);
+				float yj = verticesBuffer.get(vBufIndexJ++);
+				float zj = verticesBuffer.get(vBufIndexJ++);
+				if (xi == xj && yi == yj && zi == zj) {
+					indices[j] = indexI;
+				}
+			}
+			handledIndices.set(indexI);
+		}
+		return indices;
+	}
+
 
 	/**
 	 * Creates triangle objects according to the index array, using Vector3 objects from the provided vector array.
@@ -232,7 +304,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 
 	/**
 	 * Loops through each triangle among the indices and searches for edges shared with other triangles.
-	 * TODO: Can be optimized a lot by removing triangles which have all their sides connected at some point.
+	 * TODO: Can be optimized by removing triangles which have all their sides connected at some point.
 	 *
 	 * @param indices
 	 * @return
@@ -242,8 +314,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		indexConnections.ordered = true;
 		short[] triA = new short[3];
 		short[] triB = new short[3];
-		short[] edgeA = new short[2];
-		short[] edgeB = new short[2];
+		short[] edge = new short[2];
 		short i = 0;
 
 		while (i < indices.length) {
@@ -257,12 +328,12 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 				triB[0] = indices[j++];
 				triB[1] = indices[j++];
 				triB[2] = indices[j++];
-				if (hasSharedEdgeIndices(triA, triB, edgeA, edgeB, false)) {
+				if (hasSharedEdgeIndices(triA, triB, edge)) {
 					indexConnections.add(new IndexConnection(
-							edgeA[0], edgeA[1],
+							edge[0], edge[1],
 							triAIndex, triBIndex));
 					indexConnections.add(new IndexConnection(
-							edgeB[0], edgeB[1],
+							edge[1], edge[0],
 							triBIndex, triAIndex));
 				}
 			}
@@ -277,73 +348,124 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 *
 	 * @param triA
 	 * @param triB
-	 * @param edgeA
-	 * @param edgeB
-	 * @param useZeroLengthEdges If true, then one shared vertex will count as a zero length shared edge.
+	 * @param edge Output, the indices of the shared vertices in the winding order of triA.
 	 * @return True if the triangles share an edge.
 	 */
-	private static boolean hasSharedEdgeIndices(short[] triA, short[] triB,
-												short[] edgeA, short[] edgeB,
-												boolean useZeroLengthEdges) {
-		int shared = 0;
+	private static boolean hasSharedEdgeIndices(short[] triA, short[] triB, short[] edge) {
+		edge[0] = -1;
+		edge[1] = -1;
+
 		int sharedI = 0;
 		for (int i = 0; i < 3; i++) {
 			short triAIndex = triA[i];
 			if (triAIndex == triB[0] || triAIndex == triB[1] || triAIndex == triB[2]) {
-				if (shared == 0) {
+				if (edge[0] == -1) {
 					// Shared index found
-					edgeA[0] = triAIndex;
+					edge[0] = triAIndex;
 					sharedI = i;
-					shared++;
 				} else {
 					// One is already shared
 					if (i == 2 && sharedI == 0) {
-						edgeA[1] = edgeA[0];
-						edgeA[0] = triAIndex;
+						// Swap places to follow the correct winding order
+						edge[1] = edge[0];
+						edge[0] = triAIndex;
 					} else {
-						edgeA[1] = triAIndex;
+						edge[1] = triAIndex;
 					}
-					shared++;
 					break;
 				}
 			}
 		}
-		if (useZeroLengthEdges && shared == 1) {
-			edgeA[1] = edgeA[0];
-			edgeB[0] = edgeA[0];
-			edgeB[1] = edgeA[0];
-			return true;
-		} else if (shared == 2) {
-			edgeB[1] = edgeA[0];
-			edgeB[0] = edgeA[1];
-			return true;
-		}
-		return false;
+		return (edge[0] != -1 && edge[1] != -1);
 	}
 
 	@Override
 	public int getNodeCount() {
-		return map.size;
+		return connectionMap.size;
 	}
 
+	/**
+	 * The number of triangles in specified MeshPart.
+	 *
+	 * @param meshPartIndex
+	 * @return
+	 */
 	public int getTriangleCount(int meshPartIndex) {
 		return meshPartTriCounts[meshPartIndex];
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
-		return map.getValueAt(fromNode.triIndex);
+		return (Array<Connection<Triangle>>) (Array<?>) connectionMap.getValueAt(fromNode.triIndex);
 	}
 
+
+	/**
+	 * Get triangle edges which do not connect to another triangle.
+	 *
+	 * @param triIndex
+	 * @return
+	 */
+	public Array<Edge> getDisconnections(int triIndex) {
+		return disconnectionMap.getValueAt(triIndex);
+	}
+
+	/**
+	 * Get a triangle using its index in the pathfinding graph.
+	 *
+	 * @param graphTriIndex
+	 * @return
+	 */
 	public Triangle getTriangleFromGraphIndex(int graphTriIndex) {
-		return map.getKeyAt(graphTriIndex);
+		return connectionMap.getKeyAt(graphTriIndex);
 	}
 
-	public Triangle getTriangleFromMeshPart(int meshPartIndex, int triIndex) {
-		return map.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + triIndex);
+	/**
+	 * Get a triangle using the index of a MeshPart and triangle index inside the Meshpart.
+	 *
+	 * @param meshPartIndex
+	 * @param meshPartTriIndex
+	 * @return
+	 */
+	public Triangle getTriangleFromMeshPart(int meshPartIndex, int meshPartTriIndex) {
+		return connectionMap.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + meshPartTriIndex);
 	}
 
+	/**
+	 * The number of MeshParts in the navigation mesh.
+	 *
+	 * @return
+	 */
 	public int getMeshPartCount() {
 		return meshPartTriIndexOffsets.length;
 	}
+
+	/**
+	 * The total number of edges in the navigation mesh.
+	 *
+	 * @return
+	 */
+	public int getEdgeCountTotal() {
+		return numTotalEdges;
+	}
+
+	/**
+	 * The number of (unique) edges which are connected to two triangles.
+	 *
+	 * @return
+	 */
+	public int getEdgeCountConnected() {
+		return numConnectedEdges;
+	}
+
+	/**
+	 * The number of edges which are only connected to one triangle.
+	 *
+	 * @return
+	 */
+	public int getEdgeCountDisconnected() {
+		return numDisconnectedEdges;
+	}
+
 }
