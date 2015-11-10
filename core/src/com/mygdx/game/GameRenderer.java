@@ -218,7 +218,7 @@ public class GameRenderer implements Disposable, Observer {
 			// Smoothed path
 			Vector3 q;
 			Vector3 p = selectedCharacter.getLinePathPosition(tmp);
-			for (int i = selectedCharacter.getCurrentSegment() + 1; i < selectedCharacter.pathToRender.size; i++) {
+			for (int i = selectedCharacter.getCurrentSegmentIndex() + 1; i < selectedCharacter.pathToRender.size; i++) {
 				q = selectedCharacter.pathToRender.get(i);
 				shapeRenderer.line(p, q);
 				p = q;
@@ -249,72 +249,82 @@ public class GameRenderer implements Disposable, Observer {
 		}
 		if (selectedCharacter == null) {
 			shapeRenderer.end();
-			return;
-		}
-		// Paint triangle path of selected character
-		if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
-			// Path triangles
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
-				Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
-				if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
-					shapeRenderer.setColor(1, 0, 0, 0.2f);
-				} else {
-					shapeRenderer.setColor(1, 1, 0, 0.2f);
-				}
-				if (triangleIsVisible(e.toNode)) {
-					shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-				}
-				if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
-					if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
+		} else {
+			// Paint triangle path of selected character
+			if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
+				// Path triangles
+				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+				for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
+					Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
+					if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
 						shapeRenderer.setColor(1, 0, 0, 0.2f);
 					} else {
 						shapeRenderer.setColor(1, 1, 0, 0.2f);
 					}
 					if (triangleIsVisible(e.toNode)) {
-						shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
+						shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
+					}
+					if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
+						if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
+							shapeRenderer.setColor(1, 0, 0, 0.2f);
+						} else {
+							shapeRenderer.setColor(1, 1, 0, 0.2f);
+						}
+						if (triangleIsVisible(e.toNode)) {
+							shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
+						}
 					}
 				}
-			}
-			// Shared triangle edges
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
-				Edge e = (Edge) connection;
-				if (triangleIsVisible(e.fromNode) || triangleIsVisible(e.toNode)) {
-					shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
+				// Shared triangle edges
+				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+				for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
+					Edge e = (Edge) connection;
+					if (triangleIsVisible(e.fromNode) || triangleIsVisible(e.toNode)) {
+						shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
+					}
+				}
+
+			} else if (selectedCharacter.currentTriangle != null) {
+				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+				Triangle tri = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex
+						());
+				shapeRenderer.setColor(1, 0, 0, 0.2f);
+				if (triangleIsVisible(tri)) {
+					shapeRenderer.triangle(tri.a, tri.b, tri.c);
 				}
 			}
 
-		} else if (selectedCharacter.currentTriangle != null) {
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			Triangle tri = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex
-					());
-			shapeRenderer.setColor(1, 0, 0, 0.2f);
-			if (triangleIsVisible(tri)) {
-				shapeRenderer.triangle(tri.a, tri.b, tri.c);
-			}
-		}
-
-		// Paint point path of selected character
-		if (selectedCharacter.navMeshPointPath.getSize() > 0) {
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			// Smoothed path
-			Vector3 q;
-			Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
-			float r = 0.02f;
-			float s = r / 2;
-			shapeRenderer.setColor(Color.WHITE);
-			for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
-				q = selectedCharacter.navMeshPointPath.getVector(i);
-				shapeRenderer.setColor(Color.CYAN);
-				shapeRenderer.line(p, q);
-				p = q;
+			// Paint point path of selected character
+			if (selectedCharacter.navMeshPointPath.getSize() > 0) {
+				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+				// Smoothed path
+				Vector3 q;
+				Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
+				float r = 0.02f;
+				float s = r / 2;
 				shapeRenderer.setColor(Color.WHITE);
-				shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
+				for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
+					q = selectedCharacter.navMeshPointPath.getVector(i);
+					shapeRenderer.setColor(Color.CYAN);
+					shapeRenderer.line(p, q);
+					p = q;
+					shapeRenderer.setColor(Color.WHITE);
+					shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
+				}
 			}
-		}
-		shapeRenderer.end();
 
+			// Character facing debug
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			Vector3 position = debugNodePos1;
+			Vector3 direction = debugNodePos2;
+			float radius = 2;
+			selectedCharacter.getGroundPosition(position);
+			selectedCharacter.getDirection(direction);
+			shapeRenderer.setColor(Color.WHITE);
+			shapeRenderer.line(position, direction.scl(radius).add(position));
+
+			shapeRenderer.end();
+		}
 		// Draw indices of the triangles
 		// TODO: Get rid of all the transform matrix setting
 		spriteBatch.begin();

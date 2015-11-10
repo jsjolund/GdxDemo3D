@@ -390,7 +390,7 @@ public class GameStage extends Stage implements Observable {
 			// Perform pathfinding only if a human character is selected and a movement button is checked
 			if (selectedCharacter instanceof HumanCharacter && radioGroup.getCheckedIndex() > -1 && radioGroup.getChecked().state.isMovementState()) {
 				if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-						selectedCharacter.getGroundPosition(),
+						selectedCharacter.getGroundPosition(tmp),
 						ray, visibleLayers,
 						GameSettings.CAMERA_PICK_RAY_DST,
 						selectedCharacter.navMeshGraphPath)) {
