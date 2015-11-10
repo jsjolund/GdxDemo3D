@@ -231,6 +231,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		return !steeringOutput.linear.isZero(getZeroLinearSpeedThreshold());
 	}
 
+	protected void clearSteering() {
+		steeringOutput.linear.setZero();
+	}
+
 	@Override
 	public Vector3 getLinearVelocity() {
 		return linearVelocity.set(body.getLinearVelocity());

@@ -41,88 +41,49 @@ public class HumanCharacter extends Ragdoll {
 		IDLE_STAND(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|idle_stand", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
 		IDLE_CROUCH(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
 		IDLE_CRAWL(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
 			}
 		},
 		MOVE_RUN(CharacterState.IDLE_STAND, 0.2f) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
-				entity.moveState = this;
 
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.runMultiplier);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.runMultiplier);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.runMultiplier);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.runMultiplier);
-
-				// If the entity owns a dog tell him you don't want to play and re-enable whistle
-				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
-					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
-				}
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.runMultiplier);
-				}
+				prepareToMove(entity, HumanSteerSettings.runMultiplier);
 			}
 		},
 		MOVE_WALK(CharacterState.IDLE_STAND, 0.4f) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
-				entity.moveState = this;
 
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration);
-
-				// If the entity owns a dog tell him you don't want to play and re-enable whistle
-				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
-					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
-				}
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius);
-				}
+				prepareToMove(entity, 1);
 			}
 		},
 		MOVE_CROUCH(CharacterState.IDLE_CROUCH, 0.5f) {
 			@Override
 			public void enter(HumanCharacter entity) {
+				entity.animationCompleted = false;
 				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
-				entity.moveState = this;
 
-				entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * HumanSteerSettings.crouchMultiplier);
-				entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * HumanSteerSettings.crouchMultiplier);
-
-				entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * HumanSteerSettings.crouchMultiplier);
-				entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * HumanSteerSettings.crouchMultiplier);
-
-				// If the entity owns a dog tell him you don't want to play and re-enable whistle
-				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
-					MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
-				}
-
-				if (entity.followPathSB != null) {
-					entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * HumanSteerSettings.crouchMultiplier);
-				}
+				prepareToMove(entity, HumanSteerSettings.crouchMultiplier);
 			}
 		},
 		MOVE_CRAWL() {},
@@ -151,10 +112,11 @@ public class HumanCharacter extends Ragdoll {
 					CharacterState nextState = CharacterState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
-							entity.moveState = previousState; // hmmm... is this really needed?
+//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState.idleState;
 						}
 						else if (previousState.isIdleState()) {
+//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState;
 						}
 					}
@@ -171,18 +133,20 @@ public class HumanCharacter extends Ragdoll {
 				entity.navMeshGraphPath.clear();
 				entity.finishSteering();
 				entity.body.setFriction(1);
+				entity.clearSteering(); 
 				CharacterState prevState = (CharacterState)entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
 					// Save animation speed multiplier
-					entity.animationSpeedMultiplier = prevState.multiplier; 
+					entity.animationSpeedMultiplier = prevState.animationMultiplier; 
 				}
+				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON, entity);
 			}
 
 			@Override
 			public void update(HumanCharacter entity) {
 				if (entity.isMoving()) {
 					// Keep on updating movement animation
-					super.update(entity);
+					updateAnimation(entity);
 				}
 				else {
 					Sounds.whistle.play();
@@ -196,10 +160,11 @@ public class HumanCharacter extends Ragdoll {
 					CharacterState nextState = CharacterState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
-							entity.moveState = previousState; // hmmm... is this really needed?
+//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState.idleState;
 						}
 						else if (previousState.isIdleState()) {
+//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState;
 						}
 					}
@@ -211,9 +176,6 @@ public class HumanCharacter extends Ragdoll {
 			public void exit(HumanCharacter entity) {
 				// Reset entity's animation speed multiplier
 				entity.animationSpeedMultiplier = -1;
-
-				// Disable whistle and throw buttons
-				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON, entity);
 			}
 		},
 		DEAD() {
@@ -239,7 +201,7 @@ public class HumanCharacter extends Ragdoll {
 		GLOBAL() {};
 
 		public final CharacterState idleState;
-		protected final float multiplier;
+		protected final float animationMultiplier;
 		
 		private CharacterState() {
 			this(false);
@@ -249,9 +211,9 @@ public class HumanCharacter extends Ragdoll {
 			this(null, idle ? -1 : 0);
 		}
 		
-		private CharacterState(CharacterState idleState, float multiplier) {
+		private CharacterState(CharacterState idleState, float animationMultiplier) {
 			this.idleState = idleState;
-			this.multiplier = multiplier;
+			this.animationMultiplier = animationMultiplier;
 		}
 
 		public boolean isMovementState() {
@@ -259,7 +221,27 @@ public class HumanCharacter extends Ragdoll {
 		}
 
 		public boolean isIdleState() {
-			return idleState == null && multiplier < 0;
+			return idleState == null && animationMultiplier < 0;
+		}
+
+		protected void prepareToMove(HumanCharacter entity, float steeringMultiplier) {
+			entity.moveState = this;
+
+			// Apply the multiplier to steering limits
+			entity.setMaxLinearSpeed(HumanSteerSettings.maxLinearSpeed * steeringMultiplier);
+			entity.setMaxLinearAcceleration(HumanSteerSettings.maxLinearAcceleration * steeringMultiplier);
+			entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * steeringMultiplier);
+			entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * steeringMultiplier);
+
+			if (entity.followPathSB != null) {
+				entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * steeringMultiplier);
+			}
+
+			// If the entity owns a dog tell him you don't want to play and re-enable whistle
+			if (entity.dog != null) {
+				MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
+				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE, entity);
+			}
 		}
 
 		@Override
@@ -292,14 +274,7 @@ public class HumanCharacter extends Ragdoll {
 				}
 			}
 
-			// update current state's animation
-			float deltaTime = Gdx.graphics.getDeltaTime();
-			// Use entity's animation speed multiplier, if any
-			float animationSpeedMultiplier = entity.animationSpeedMultiplier > 0 ? entity.animationSpeedMultiplier : multiplier;
-			if (animationSpeedMultiplier > 0) {
-				deltaTime *= entity.getLinearVelocity().len() * animationSpeedMultiplier;
-			}
-			entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
+			updateAnimation(entity);
 		}
 
 		@Override
@@ -309,6 +284,16 @@ public class HumanCharacter extends Ragdoll {
 		@Override
 		public boolean onMessage(HumanCharacter entity, Telegram telegram) {
 			return false;
+		}
+
+		protected void updateAnimation(HumanCharacter entity) {
+			float deltaTime = Gdx.graphics.getDeltaTime();
+			// Use entity's animation speed multiplier, if any
+			float multiplier = entity.animationSpeedMultiplier > 0 ? entity.animationSpeedMultiplier : animationMultiplier;
+			if (multiplier > 0) {
+				deltaTime *= entity.getLinearVelocity().len() * multiplier;
+			}
+			entity.animations.update(deltaTime * GameSettings.GAME_SPEED);
 		}
 	}
 
@@ -379,7 +364,7 @@ public class HumanCharacter extends Ragdoll {
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
 	private final SteerSettings steerSettings;
-	private CharacterState moveState = CharacterState.MOVE_WALK;
+	public CharacterState moveState = CharacterState.MOVE_WALK;
 	private boolean wasSteering = false;
 	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;

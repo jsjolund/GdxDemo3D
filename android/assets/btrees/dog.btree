@@ -40,14 +40,13 @@ sequence
       humanWantToPlay?
       parallel policy:"selector" # wait for the man to throw the stick
         stickThrown?
-        repeat
-          sequence
-            spinAround
-            parallel policy:"selector"
-              wait seconds:"uniform,3,5"
-              randomSelector
-                stand
-                sit
+        sequence
+          spinAround
+          parallel policy:"selector"
+            wait seconds:"uniform,3,5"
+            randomSelector
+              stand
+              sit
     setThrowButton enabled:false
     #calculatePathToStick
     run    # run and take the stick
