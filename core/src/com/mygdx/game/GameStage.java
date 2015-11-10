@@ -264,6 +264,7 @@ public class GameStage extends Stage implements Observable {
 										human.handleStateCommand(CharacterButton.this.state.idleState);
 									}
 									else if (!hs.isMovementState()) {
+										human.moveState = CharacterButton.this.state;
 										human.handleStateCommand(CharacterButton.this.state.idleState);
 									}
 									else {

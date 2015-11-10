@@ -181,21 +181,31 @@ public class HumanCharacter extends Ragdoll {
 		DEAD() {
 			@Override
 			public void enter(HumanCharacter entity) {
-				// Turn off animation, set ragdoll control
+				// Turn off animation
 				entity.animations.setAnimation("armature|idle_stand", -1);
 				entity.animations.paused = true;
+
+				// Clear path and stop steering
 				entity.steeringBehavior = null;
 				entity.navMeshPointPath.clear();
 				entity.navMeshGraphPath.clear();
 				entity.finishSteering();
 				entity.body.setFriction(1);
+
+				// Set ragdoll control
 				entity.setRagdollControl(true);
 			}
+
+//			@Override
+//			public void update(HumanCharacter entity) {
+//			}
 
 			@Override
 			public void exit(HumanCharacter entity) {
 				entity.animations.paused = false;
 				entity.setRagdollControl(false);
+				
+				entity.wasSteering = false;
 			}
 		},
 		GLOBAL() {};
@@ -225,6 +235,7 @@ public class HumanCharacter extends Ragdoll {
 		}
 
 		protected void prepareToMove(HumanCharacter entity, float steeringMultiplier) {
+			//System.out.println("Prepare to move -> " + name());
 			entity.moveState = this;
 
 			// Apply the multiplier to steering limits
@@ -250,6 +261,7 @@ public class HumanCharacter extends Ragdoll {
 
 		@Override
 		public void update(HumanCharacter entity) {
+			//System.out.println(">>>>>>> " + name());
 			if (entity.isSteering()) {
 				if (!entity.wasSteering) {
 					entity.wasSteering = true;
