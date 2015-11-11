@@ -34,9 +34,9 @@ import java.lang.reflect.Field;
  */
 public class BooleanSettingsMenu extends Table {
 
-	public static final String tag = "BooleanSettingsMenu";
+	private static final String tag = "BooleanSettingsMenu";
 
-	public BooleanSettingsMenu(String buttonText, Skin skin, Class booleanSettingsClass) {
+	public BooleanSettingsMenu(String buttonText, Skin skin, Class<?> booleanSettingsClass) {
 		final Table innerTable = new Table();
 
 		Field[] fields = booleanSettingsClass.getFields();
