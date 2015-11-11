@@ -285,7 +285,7 @@ public class GameStage extends Stage implements Observable {
 		private ButtonGroup<CharacterButton> radioGroup;
 		private CharacterButton whistleButton;
 		private CharacterButton throwButton;
-		private Cell<CharacterButton> firstCell;
+		private Cell<CharacterButton> dogCell;
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
@@ -301,7 +301,7 @@ public class GameStage extends Stage implements Observable {
 			);
 
 			// Add whistle button and save the reference to the 1st cell
-			this.firstCell = add(whistleButton);
+			this.dogCell = add(whistleButton);
 
 			// Add radio buttons
 			for (CharacterButton btn : radioGroup.getButtons()) {
@@ -310,26 +310,27 @@ public class GameStage extends Stage implements Observable {
 			
 			// Register this controller's interests
 			MessageManager.getInstance().addListeners(this,
-				GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON,
-				GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE,
-				GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_THROW);
+				GameMessages.GUI_CLEAR_DOG_BUTTON,
+				GameMessages.GUI_SET_DOG_BUTTON_TO_WHISTLE,
+				GameMessages.GUI_SET_DOG_BUTTON_TO_THROW);
 		}
 		
-		private final void setFirstRadioButton(CharacterButton btn, HumanCharacter human) {
+		private final void setDogButton(CharacterButton btn, HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
 				whistleButton.setVisible(false);
 				throwButton.setVisible(false);
-				firstCell.setActor(btn);
+				dogCell.setActor(btn);
 				btn.setVisible(true);
 				btn.setChecked(false);
-				System.out.println("setFirstRadioButton = " + (btn == whistleButton ? "whistleButton" : (btn == throwButton ? "throwButton" : "???")));
+				Gdx.app.log("CharacterController", "setDogButton: " + (btn == whistleButton ? "whistleButton" : (btn == throwButton ? "throwButton" : "???")));
 			}
 		}
 		
-		private final void clearFirstRadioButton(HumanCharacter human) {
+		private final void clearDogButton(HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
 				whistleButton.setVisible(false);
 				throwButton.setVisible(false);
+				Gdx.app.log("CharacterController", "clearDogButton");
 			}
 		}
 
@@ -357,17 +358,17 @@ public class GameStage extends Stage implements Observable {
 				// Restore the controller based on the newly selected human
 				if (human.dog != null) {
 					if (!human.dog.humanWantToPlay) {
-						this.setFirstRadioButton(whistleButton, human);
+						this.setDogButton(whistleButton, human);
 					}
 					else if (!human.dog.stickThrown) {
-						this.setFirstRadioButton(throwButton, human);
+						this.setDogButton(throwButton, human);
 					}
 					else {
-						this.clearFirstRadioButton(human);
+						this.clearDogButton(human);
 					}
 				}
 				else {
-					this.clearFirstRadioButton(human);
+					this.clearDogButton(human);
 				}
 				for (CharacterButton btn : radioGroup.getButtons()) {
 					if (btn.state == CharacterState.DEAD && human.stateMachine.getCurrentState() == CharacterState.DEAD) {
@@ -403,14 +404,14 @@ public class GameStage extends Stage implements Observable {
 		@Override
 		public boolean handleMessage (Telegram telegram) {
 			switch (telegram.message) {
-			case GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_WHISTLE:
-				setFirstRadioButton(whistleButton, (HumanCharacter)telegram.extraInfo);
+			case GameMessages.GUI_SET_DOG_BUTTON_TO_WHISTLE:
+				setDogButton(whistleButton, (HumanCharacter)telegram.extraInfo);
 				break;
-			case GameMessages.GUI_SET_1ST_RADIO_BUTTON_TO_THROW:
-				setFirstRadioButton(throwButton, (HumanCharacter)telegram.extraInfo);
+			case GameMessages.GUI_SET_DOG_BUTTON_TO_THROW:
+				setDogButton(throwButton, (HumanCharacter)telegram.extraInfo);
 				break;
-			case GameMessages.GUI_CLEAR_1ST_RADIO_BUTTON:
-				clearFirstRadioButton((HumanCharacter)telegram.extraInfo);
+			case GameMessages.GUI_CLEAR_DOG_BUTTON:
+				clearDogButton((HumanCharacter)telegram.extraInfo);
 				break;
 			}
 			return true;

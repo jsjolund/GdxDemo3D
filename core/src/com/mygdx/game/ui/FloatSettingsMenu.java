@@ -28,9 +28,9 @@ import java.lang.reflect.Field;
  */
 public class FloatSettingsMenu extends Table {
 
-	public static final String tag = "FloatSettingsMenu";
+	private static final String tag = "FloatSettingsMenu";
 
-	public FloatSettingsMenu(String buttonText, Skin skin, Class floatSettingsClass) {
+	public FloatSettingsMenu(String buttonText, Skin skin, Class<?> floatSettingsClass) {
 		final Table innerTable = new Table();
 
 		Field[] fields = floatSettingsClass.getFields();
