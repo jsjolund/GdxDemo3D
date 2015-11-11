@@ -468,6 +468,7 @@ public class GameStage extends Stage implements Observable {
 
 		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
 
+		// Create labels
 		mouseCoordsLabel = new ValueLabel<Vector3>("NavMesh: ", new Vector3(), skin) {
 			@Override
 			public Vector3 getValue() {
@@ -485,51 +486,71 @@ public class GameStage extends Stage implements Observable {
 				return Gdx.graphics.getFramesPerSecond();
 			}
 		};
+		
+		// Create controllers
 		speedController = new GameSpeedController(buttonsAtlas);
 		characterController = new CharacterController(buttonsAtlas);
 		characterController.setVisible(false); // initially no character is selected, so hide the controller
 		layerController = new LayerController(buttonsAtlas);
 		layerController.setLayer(Integer.MAX_VALUE);
 
+		// Add root table
 		rootTable = new Table();
 		addActor(rootTable);
 		rootTable.setDebug(true, true);
 
+		// Add top table with FPS and mouse coordinates
+		rootTable.row().top().left().colspan(3);
 		Table topTable = new Table();
-		topTable.add(fpsLabel).width(fpsLabel.getWidth()).top().left();
-		topTable.add(mouseCoordsLabel).padLeft(15).top().left();
-		topTable.add(new Table()).expandX().fillX();
-		rootTable.add(topTable).expandX().fillX();
+		topTable.add(fpsLabel).width(fpsLabel.getWidth());
+		topTable.add(mouseCoordsLabel).padLeft(15);
+		rootTable.add(topTable);
 
-		rootTable.row();
-		rootTable.add(new Table()).expandY().fillY();
-		rootTable.row();
-
-		humanSteerSettings = new FloatSettingsMenu("steering (human)", skin,
+		rootTable.row().bottom();
+		humanSteerSettings = new FloatSettingsMenu("Steering (human)", skin,
 				HumanCharacter.HumanSteerSettings.class);
-		dogSteerSettings = new FloatSettingsMenu("steering (dog)", skin,
+		dogSteerSettings = new FloatSettingsMenu("Steering (dog)", skin,
 				DogCharacter.DogSteerSettings.class);
 		steerSettings = new Table();
 		steerSettings.add(humanSteerSettings);
 
-		Table bottomRightTable = new Table();
-		bottomRightTable.add(new FloatSettingsMenu("shader", skin, ShaderSettings.class)).bottom();
-		bottomRightTable.add(new BooleanSettingsMenu("debug", skin, DebugViewSettings.class)).bottom();
-		bottomRightTable.add(steerSettings).bottom();
-		bottomRightTable.add(new Table()).expandX().fillX().bottom();
-		rootTable.add(bottomRightTable).expandX().fillX();
-
+		// Add bottom left table with settings
 		Table bottomLeftTable = new Table();
-		bottomLeftTable.add(layerController).right().colspan(2);
-		bottomLeftTable.row();
-		bottomLeftTable.add(characterController);
-		bottomLeftTable.add(speedController);
-		bottomLeftTable.setTransform(true);
-		bottomLeftTable.setOrigin(bottomLeftTable.getPrefWidth(), 0);
-		bottomLeftTable.setScale(0.5f);
-		rootTable.add(bottomLeftTable).bottom();
+		bottomLeftTable.add(new FloatSettingsMenu("Shader", skin, ShaderSettings.class)).bottom();
+		bottomLeftTable.add(new BooleanSettingsMenu("Debug", skin, DebugViewSettings.class)).bottom();
+		bottomLeftTable.add(steerSettings).bottom();
+		rootTable.add(bottomLeftTable).left();
 
-		rootTable.row();
+		// Add space between bottom left and bottom rignt tables
+		rootTable.add(new Actor()).width(10).grow();
+
+		// Add bottom right table with controllers
+		//
+		// FIXME: This is pretty ugly but we have to scale
+		// the table because button's images are too big. 
+		// Unfortunately, scaling the table does not change
+		// its size, which is problematic in resize method,
+		// so we have to override the pref size. :(
+		// Atlas and texture should be resize instead.
+		// Maybe sooner or later someone will do :) 
+		final float scale = 0.5f;
+		Table bottomRightTable = new Table() {
+			public float getPrefWidth () {
+				return super.getPrefWidth() * scale;
+			}
+			public float getPrefHeight () {
+				return super.getPrefHeight() * scale;
+			}
+		};
+		bottomRightTable.add(layerController).right().colspan(2);
+		bottomRightTable.row();
+		bottomRightTable.add(characterController);
+		bottomRightTable.add(speedController);
+		bottomRightTable.setTransform(true);
+		bottomRightTable.setOrigin(bottomRightTable.getPrefWidth()*scale, bottomRightTable.getPrefHeight()*scale);
+		bottomRightTable.setScale(scale);
+		rootTable.add(bottomRightTable).width(bottomRightTable.getPrefWidth()).height(bottomRightTable.getPrefHeight()).bottom().right();
+
 		rootTable.left().bottom();
 
 		getRoot().addCaptureListener(new InputListener() {
@@ -566,6 +587,26 @@ public class GameStage extends Stage implements Observable {
 		shapeRenderer.setProjectionMatrix(cameraUI.combined);
 
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
+
+		float scaleX = 1;
+		float scaleY = 1;
+		if (rootTable.getPrefWidth() > viewport.getScreenWidth())
+			scaleX -= (rootTable.getPrefWidth() - viewport.getScreenWidth()) / (float)rootTable.getPrefWidth();
+//		if (rootTable.getPrefHeight() > viewport.getScreenHeight())
+//			scaleY -= (rootTable.getPrefHeight() - viewport.getScreenHeight()) / (float)rootTable.getPrefHeight();
+
+		if (MathUtils.isEqual(scaleX, 1, 0.0001f) && MathUtils.isEqual(scaleY, 1, 0.0001f)) {
+			Gdx.app.log(tag, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+			rootTable.setTransform(false);
+			rootTable.setOrigin(0, 0);
+			rootTable.setScale(1);
+		}
+		else {
+			Gdx.app.log(tag, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+			rootTable.setTransform(true);
+			rootTable.setOrigin(0, 0);
+			rootTable.setScale(scaleX, scaleY);
+		}
 	}
 
 
