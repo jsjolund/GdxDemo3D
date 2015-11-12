@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.mygdx.game.GameMessages;
+import com.mygdx.game.utilities.Constants;
 
 /**
  * Created by Johannes Sjolund on 11/6/15.
@@ -116,14 +116,14 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	@Override
 	public boolean handleMessage (Telegram telegram) {
 		switch (telegram.message) {
-		case GameMessages.DOG_LETS_PLAY:
+		case Constants.MSG_DOG_LETS_PLAY:
 			humanWantToPlay = true;
 			stickThrown = false;
 			break;
-		case GameMessages.DOG_LETS_STOP_PLAYING:
+		case Constants.MSG_DOG_LETS_STOP_PLAYING:
 			humanWantToPlay = false;
 			break;
-		case GameMessages.DOG_STICK_THROWN:
+		case Constants.MSG_DOG_STICK_THROWN:
 			stickThrown = true;
 			break;
 		}

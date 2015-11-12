@@ -16,10 +16,13 @@
 
 package com.mygdx.game.objects;
 
+import static com.mygdx.game.utilities.Constants.PI;
+import static com.mygdx.game.utilities.Constants.PI0_25;
+import static com.mygdx.game.utilities.Constants.PI0_5;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Node;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
@@ -50,10 +53,6 @@ public abstract class Ragdoll extends GameCharacter {
 		// The node this bone should follow in animation mode
 		public Node followNode = null;
 	}
-
-	private final static float PI = MathUtils.PI;
-	private final static float PI2 = 0.5f * PI;
-	private final static float PI4 = 0.25f * PI;
 
 	public final ArrayMap<btRigidBody, RigidBodyNodeConnection> bodyPartMap = new ArrayMap<btRigidBody, RigidBodyNodeConnection>();
 	public final Array<Node> nodes = new Array<Node>();
@@ -309,10 +308,10 @@ public abstract class Ragdoll extends GameCharacter {
 		// Set the ragdollConstraints
 		a = "abdomen";
 		b = "chest";
-		localA.setFromEulerAnglesRad(0, PI4, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(0, PI4, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(0, PI0_25, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(0, PI0_25, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(hingeC = new btHingeConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		hingeC.setLimit(-PI4, PI2);
+		hingeC.setLimit(-PI0_25, PI0_5);
 
 		a = "chest";
 		b = "neck";
@@ -322,10 +321,10 @@ public abstract class Ragdoll extends GameCharacter {
 
 		a = "neck";
 		b = "head";
-		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		coneC.setLimit(PI4, PI4, PI4);
+		coneC.setLimit(PI0_25, PI0_25, PI0_25);
 
 		a = "abdomen";
 		b = "left_thigh";
@@ -333,7 +332,7 @@ public abstract class Ragdoll extends GameCharacter {
 				("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(0, 0, 0).scl(-1, 1, 1).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		coneC.setLimit(PI4, PI4, PI4);
+		coneC.setLimit(PI0_25, PI0_25, PI0_25);
 		coneC.setDamping(10);
 
 		a = "abdomen";
@@ -342,56 +341,55 @@ public abstract class Ragdoll extends GameCharacter {
 				("abdomen").y, 0);
 		localB.setFromEulerAnglesRad(0, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		coneC.setLimit(PI4, PI4, PI4);
+		coneC.setLimit(PI0_25, PI0_25, PI0_25);
 		coneC.setDamping(10);
 
 		a = "left_thigh";
 		b = "left_shin";
-		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(hingeC = new btHingeConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		hingeC.setLimit(0, PI4 * 3);
+		hingeC.setLimit(0, PI0_25 * 3);
 
 		a = "right_thigh";
 		b = "right_shin";
-		localA.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(-PI2, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(-PI0_5, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(hingeC = new btHingeConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		hingeC.setLimit(0, PI4 * 3);
+		hingeC.setLimit(0, PI0_25 * 3);
 
 		// TODO: causes shoulder rotation
 		a = "chest";
 		b = "left_upper_arm";
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(halfExtMap.get(a).x + halfExtMap.get(b).x, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(PI4, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localB.setFromEulerAnglesRad(PI0_25, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		coneC.setLimit(PI2, PI2, 0);
+		coneC.setLimit(PI0_5, PI0_5, 0);
 		coneC.setDamping(10);
 
 		// TODO: as above
 		a = "chest";
 		b = "right_upper_arm";
 		localA.setFromEulerAnglesRad(0, PI, 0).trn(-halfExtMap.get(a).x - halfExtMap.get(b).x, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(-PI4, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
+		localB.setFromEulerAnglesRad(-PI0_25, 0, 0).trn(0, -halfExtMap.get("right_upper_arm").y, 0);
 		this.constraints.add(coneC = new btConeTwistConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		coneC.setLimit(PI2, PI2, 0);
+		coneC.setLimit(PI0_5, PI0_5, 0);
 		coneC.setDamping(10);
 
 		a = "left_upper_arm";
 		b = "left_forearm";
-		localA.setFromEulerAnglesRad(PI2, 0, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(PI0_5, 0, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(PI0_5, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(hingeC = new btHingeConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, PI0_5);
 
 		a = "right_upper_arm";
 		b = "right_forearm";
-		localA.setFromEulerAnglesRad(PI2, 0, 0).trn(0, halfExtMap.get(a).y, 0);
-		localB.setFromEulerAnglesRad(PI2, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
+		localA.setFromEulerAnglesRad(PI0_5, 0, 0).trn(0, halfExtMap.get(a).y, 0);
+		localB.setFromEulerAnglesRad(PI0_5, 0, 0).trn(0, -halfExtMap.get(b).y, 0);
 		this.constraints.add(hingeC = new btHingeConstraint(bodyMap.get(a), bodyMap.get(b), localA, localB));
-		hingeC.setLimit(0, PI2);
+		hingeC.setLimit(0, PI0_5);
 
 	}
-
 
 }

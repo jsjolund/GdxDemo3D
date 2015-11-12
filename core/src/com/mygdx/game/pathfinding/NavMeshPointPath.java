@@ -16,6 +16,9 @@
 
 package com.mygdx.game.pathfinding;
 
+import static com.mygdx.game.utilities.Constants.V3_DOWN;
+import static com.mygdx.game.utilities.Constants.V3_UP;
+
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
@@ -71,12 +74,12 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		public final Vector3 pivot = new Vector3();
 
 		public void setLeftPlane(Vector3 pivot, Vector3 leftEdgeVertex) {
-			leftPlane.set(pivot, tmp1.set(pivot).add(UP), leftEdgeVertex);
+			leftPlane.set(pivot, tmp1.set(pivot).add(V3_UP), leftEdgeVertex);
 			leftPortal.set(leftEdgeVertex);
 		}
 
 		public void setRightPlane(Vector3 pivot, Vector3 rightEdgeVertex) {
-			rightPlane.set(pivot, tmp1.set(pivot).add(UP), rightEdgeVertex);
+			rightPlane.set(pivot, tmp1.set(pivot).add(V3_UP), rightEdgeVertex);
 			rightPlane.normal.scl(-1);
 			rightPlane.d = -rightPlane.d;
 			rightPortal.set(rightEdgeVertex);
@@ -95,8 +98,6 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 			return rightPlane.testPoint(point);
 		}
 	}
-
-	private static final Vector3 UP = Vector3.Y;
 
 	private final Plane crossingPlane = new Plane();
 	private final Vector3 tmp1 = new Vector3();
@@ -137,7 +138,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 
 		// Check that the start point is actually inside the start triangle, if not, project it to the closest
 		// triangle edge. Otherwise the funnel calculation might generate spurious path segments.
-		Ray ray = new Ray(tmp1.set(UP).scl(1000).add(start), tmp2.set(UP).scl(-1));
+		Ray ray = new Ray(tmp1.set(V3_UP).scl(1000).add(start), tmp2.set(V3_DOWN));
 		if (!Intersector.intersectRayTriangle(ray, startTri.a, startTri.b, startTri.c, null)) {
 			float minDst = Float.POSITIVE_INFINITY;
 			Vector3 projection = new Vector3();
@@ -343,7 +344,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		if (startIndex >= numEdges() || endIndex >= numEdges()) {
 			return;
 		}
-		crossingPlane.set(startPoint, tmp1.set(startPoint).add(UP), endPoint);
+		crossingPlane.set(startPoint, tmp1.set(startPoint).add(V3_UP), endPoint);
 
 		EdgePoint previousLast = lastPointAdded;
 
