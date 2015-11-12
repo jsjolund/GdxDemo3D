@@ -874,7 +874,6 @@ public class MyShapeRenderer implements Disposable {
 			renderer.vertex(x + cx, y + cy, 0);
 		}
 
-		float temp = cx;
 		cx = 0;
 		cy = 0;
 		renderer.color(colorBits);
@@ -929,7 +928,6 @@ public class MyShapeRenderer implements Disposable {
 			renderer.vertex(x + cx, y + cy, 0);
 		}
 
-		float temp = cx;
 		cx = radius;
 		cy = 0;
 		renderer.color(colorBits);
