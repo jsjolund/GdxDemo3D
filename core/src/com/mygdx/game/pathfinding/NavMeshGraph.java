@@ -132,8 +132,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @param connectionMap
 	 * @return
 	 */
-	private static ArrayMap<Triangle, Array<Edge>> createDisconnectionMap(
-			ArrayMap<Triangle, Array<Edge>> connectionMap) {
+	private static ArrayMap<Triangle, Array<Edge>> createDisconnectionMap(ArrayMap<Triangle, Array<Edge>> connectionMap) {
 
 		ArrayMap<Triangle, Array<Edge>> disconnectionMap = new ArrayMap<Triangle, Array<Edge>>();
 
@@ -312,29 +311,25 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	private static Array<IndexConnection> getIndexConnections(short[] indices) {
 		Array<IndexConnection> indexConnections = new Array<IndexConnection>();
 		indexConnections.ordered = true;
-		short[] triA = new short[3];
-		short[] triB = new short[3];
-		short[] edge = new short[2];
+		short[] edge = {-1, -1};
 		short i = 0;
-
+		short j, a0, a1, a2, b0, b1, b2, triAIndex, triBIndex;
 		while (i < indices.length) {
-			short triAIndex = (short) (i / 3);
-			triA[0] = indices[i++];
-			triA[1] = indices[i++];
-			triA[2] = indices[i++];
-			short j = i;
+			triAIndex = (short) (i / 3);
+			a0 = indices[i++];
+			a1 = indices[i++];
+			a2 = indices[i++];
+			j = i;
 			while (j < indices.length) {
-				short triBIndex = (short) (j / 3);
-				triB[0] = indices[j++];
-				triB[1] = indices[j++];
-				triB[2] = indices[j++];
-				if (hasSharedEdgeIndices(triA, triB, edge)) {
-					indexConnections.add(new IndexConnection(
-							edge[0], edge[1],
-							triAIndex, triBIndex));
-					indexConnections.add(new IndexConnection(
-							edge[1], edge[0],
-							triBIndex, triAIndex));
+				triBIndex = (short) (j / 3);
+				b0 = indices[j++];
+				b1 = indices[j++];
+				b2 = indices[j++];
+				if (hasSharedEdgeIndices(a0, a1, a2, b0, b1, b2, edge)) {
+					indexConnections.add(new IndexConnection(edge[0], edge[1], triAIndex, triBIndex));
+					indexConnections.add(new IndexConnection(edge[1], edge[0], triBIndex, triAIndex));
+					edge[0] = -1;
+					edge[1] = -1;
 				}
 			}
 		}
@@ -342,41 +337,41 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	}
 
 	/**
-	 * Checks if the two triangles have shared vertex indices. The edges will always follow the vertex winding orders
-	 * of the two triangles. Assuming all triangles have the same winding order, triangle A should have the opposite
+	 * Checks if the two triangles have shared vertex indices. The edge will always follow the vertex winding order
+	 * of the triangle A. Since all triangles have the same winding order, triangle A should have the opposite
 	 * edge direction to triangle B.
 	 *
-	 * @param triA
-	 * @param triB
-	 * @param edge Output, the indices of the shared vertices in the winding order of triA.
+	 * @param a0   Vertex index on triangle A
+	 * @param a1
+	 * @param a2
+	 * @param b0   Vertex index on triangle B
+	 * @param b1
+	 * @param b2
+	 * @param edge Output, the indices of the shared vertices in the winding order of triangle A.
 	 * @return True if the triangles share an edge.
 	 */
-	private static boolean hasSharedEdgeIndices(short[] triA, short[] triB, short[] edge) {
-		edge[0] = -1;
-		edge[1] = -1;
-
-		int sharedI = 0;
-		for (int i = 0; i < 3; i++) {
-			short triAIndex = triA[i];
-			if (triAIndex == triB[0] || triAIndex == triB[1] || triAIndex == triB[2]) {
-				if (edge[0] == -1) {
-					// Shared index found
-					edge[0] = triAIndex;
-					sharedI = i;
-				} else {
-					// One is already shared
-					if (i == 2 && sharedI == 0) {
-						// Swap places to follow the correct winding order
-						edge[1] = edge[0];
-						edge[0] = triAIndex;
-					} else {
-						edge[1] = triAIndex;
-					}
-					break;
-				}
-			}
+	private static boolean hasSharedEdgeIndices(short a0, short a1, short a2,
+												short b0, short b1, short b2, short[] edge) {
+		boolean match0 = (a0 == b0 || a0 == b1 || a0 == b2);
+		boolean match1 = (a1 == b0 || a1 == b1 || a1 == b2);
+		if (!match0 && !match1) {
+			return false;
+		} else if (match0 && match1) {
+			edge[0] = a0;
+			edge[1] = a1;
+			return true;
 		}
-		return (edge[0] != -1 && edge[1] != -1);
+		boolean match2 = (a2 == b0 || a2 == b1 || a2 == b2);
+		if (match0 && match2) {
+			edge[0] = a2;
+			edge[1] = a0;
+			return true;
+		} else if (match1 && match2) {
+			edge[0] = a1;
+			edge[1] = a2;
+			return true;
+		}
+		return false;
 	}
 
 	@Override

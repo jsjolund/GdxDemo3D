@@ -159,11 +159,6 @@ public class GameRenderer implements Disposable, Observer {
 	}
 
 	private void drawShadowBatch() {
-		int vw = viewport.getScreenWidth();
-		int vh = viewport.getScreenHeight();
-		int vx = viewport.getScreenX();
-		int vy = viewport.getScreenY();
-
 		shadowLight.begin(Vector3.Zero, camera.direction);
 		shadowBatch.begin(shadowLight.getCamera());
 
@@ -175,17 +170,13 @@ public class GameRenderer implements Disposable, Observer {
 		}
 		shadowBatch.end();
 		shadowLight.end();
-
-		viewport.update(vw, vh);
-		viewport.setScreenX(vx);
-		viewport.setScreenY(vy);
-		viewport.apply();
 	}
 
 	public void update(float deltaTime) {
+		camera.update();
 		if (DebugViewSettings.drawModels) {
 			drawShadowBatch();
-			camera.update();
+			viewport.apply();
 			modelBatch.begin(camera);
 			modelBatch.render(engine.getModelCache(), environment);
 			for (GameModel mdl : engine.getDynamicModels()) {
@@ -318,6 +309,10 @@ public class GameRenderer implements Disposable, Observer {
 			Vector3 position = debugNodePos1;
 			Vector3 direction = debugNodePos2;
 			float radius = 2;
+
+//			engine.getScene().navMesh.getClosestValidPointAt(selectedCharacter.currentTriangle,
+//					selectedCharacter.getGroundPosition(position),)
+
 			selectedCharacter.getGroundPosition(position);
 			selectedCharacter.getDirection(direction);
 			shapeRenderer.setColor(Color.WHITE);
