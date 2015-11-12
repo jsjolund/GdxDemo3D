@@ -256,6 +256,7 @@ public abstract class Ragdoll extends GameCharacter {
 		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
 		ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
 
+		@SuppressWarnings("unchecked")
 		Array<BlenderObject.BEmpty> empties =
 				new Json().fromJson(Array.class, BlenderObject.BEmpty.class, Gdx.files.local(ragdollJson));
 

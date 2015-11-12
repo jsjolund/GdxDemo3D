@@ -375,7 +375,6 @@ public class HumanCharacter extends Ragdoll {
 	public final StateMachine<HumanCharacter, CharacterState> stateMachine;
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
-	private final SteerSettings steerSettings;
 	public CharacterState moveState = CharacterState.MOVE_WALK;
 	private boolean wasSteering = false;
 	public DogCharacter dog;
@@ -413,8 +412,6 @@ public class HumanCharacter extends Ragdoll {
 		stateMachine.changeState(moveState);
 		// Then make the character idle
 		stateMachine.changeState(moveState.idleState);
-
-		steerSettings = new HumanSteerSettings();
 	}
 
 	public void assignDog(DogCharacter dog) {

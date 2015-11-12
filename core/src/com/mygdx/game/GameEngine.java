@@ -54,7 +54,6 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		private final Vector3 rayTo = new Vector3();
 		private final Vector3 tmp = new Vector3();
 		private final Ray ray = new Ray();
-		public Triangle triangle;
 		private Bits layers;
 		private float hitFraction = 1;
 		private float rayDistance = 0;
@@ -106,7 +105,6 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 				hitFraction = rayFrom.dst(tmp) / rayFrom.dst(rayTo);
 				if (hitFraction < this.hitFraction) {
 					this.hitFraction = hitFraction;
-					this.triangle = triangle;
 					rayResult.setHitFraction(hitFraction);
 					super.addSingleResult(rayResult, normalInWorldSpace);
 					return hitFraction;
