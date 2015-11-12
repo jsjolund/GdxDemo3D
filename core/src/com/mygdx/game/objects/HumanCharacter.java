@@ -86,7 +86,7 @@ public class HumanCharacter extends Ragdoll {
 				prepareToMove(entity, HumanSteerSettings.crouchMultiplier);
 			}
 		},
-		MOVE_CRAWL() {},
+		MOVE_CRAWL() {},  // Currently not used
 		THROW() {
 			@Override
 			public void enter(HumanCharacter entity) {
@@ -108,7 +108,7 @@ public class HumanCharacter extends Ragdoll {
 					}
 
 					// Transition to the appropriate idle state depending on the previous state
-					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+					CharacterState previousState = entity.stateMachine.getPreviousState();
 					CharacterState nextState = CharacterState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
@@ -134,7 +134,7 @@ public class HumanCharacter extends Ragdoll {
 				entity.finishSteering();
 				entity.body.setFriction(1);
 				entity.clearSteering(); 
-				CharacterState prevState = (CharacterState)entity.stateMachine.getPreviousState();
+				CharacterState prevState = entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
 					// Save animation speed multiplier
 					entity.animationSpeedMultiplier = prevState.animationMultiplier; 
@@ -156,7 +156,7 @@ public class HumanCharacter extends Ragdoll {
 							GameMessages.DOG_LETS_PLAY);
 					}
 					// Transition to the appropriate idle state depending on the previous state
-					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+					CharacterState previousState = entity.stateMachine.getPreviousState();
 					CharacterState nextState = CharacterState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
@@ -277,7 +277,7 @@ public class HumanCharacter extends Ragdoll {
 					}
 				}
 				else {
-					CharacterState previousState = (CharacterState)entity.stateMachine.getPreviousState();
+					CharacterState previousState = entity.stateMachine.getPreviousState();
 					if (previousState != null && previousState.isMovementState()) {
 						entity.moveState = previousState;
 						entity.stateMachine.changeState(previousState.idleState);
@@ -372,7 +372,7 @@ public class HumanCharacter extends Ragdoll {
 		}
 	}
 
-	public final StateMachine<HumanCharacter> stateMachine;
+	public final StateMachine<HumanCharacter, CharacterState> stateMachine;
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
 	private final SteerSettings steerSettings;
@@ -408,7 +408,7 @@ public class HumanCharacter extends Ragdoll {
 		animationListener = new CharacterAnimationListener();
 		animationCompleted = false;
 
-		stateMachine = new DefaultStateMachine<HumanCharacter>(this, CharacterState.GLOBAL);
+		stateMachine = new DefaultStateMachine<HumanCharacter, CharacterState>(this, CharacterState.GLOBAL);
 		// Set the steering variables associated with default move state (walking)
 		stateMachine.changeState(moveState);
 		// Then make the character idle
