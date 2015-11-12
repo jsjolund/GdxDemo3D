@@ -55,6 +55,7 @@ import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
 import com.mygdx.game.ui.*;
 import com.mygdx.game.utilities.CameraController;
+import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Observable;
 import com.mygdx.game.utilities.Observer;
 
@@ -310,9 +311,9 @@ public class GameStage extends Stage implements Observable {
 			
 			// Register this controller's interests
 			MessageManager.getInstance().addListeners(this,
-				GameMessages.GUI_CLEAR_DOG_BUTTON,
-				GameMessages.GUI_SET_DOG_BUTTON_TO_WHISTLE,
-				GameMessages.GUI_SET_DOG_BUTTON_TO_THROW);
+				Constants.MSG_GUI_CLEAR_DOG_BUTTON,
+				Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE,
+				Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW);
 		}
 		
 		private final void setDogButton(CharacterButton btn, HumanCharacter human) {
@@ -404,17 +405,17 @@ public class GameStage extends Stage implements Observable {
 		@Override
 		public boolean handleMessage (Telegram telegram) {
 			switch (telegram.message) {
-			case GameMessages.GUI_SET_DOG_BUTTON_TO_WHISTLE:
+			case Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE:
 				setDogButton(whistleButton, (HumanCharacter)telegram.extraInfo);
-				break;
-			case GameMessages.GUI_SET_DOG_BUTTON_TO_THROW:
+				return true;
+			case Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW:
 				setDogButton(throwButton, (HumanCharacter)telegram.extraInfo);
-				break;
-			case GameMessages.GUI_CLEAR_DOG_BUTTON:
+				return true;
+			case Constants.MSG_GUI_CLEAR_DOG_BUTTON:
 				clearDogButton((HumanCharacter)telegram.extraInfo);
-				break;
+				return true;
 			}
-			return true;
+			return false;
 		}
 	}
 
@@ -595,7 +596,8 @@ public class GameStage extends Stage implements Observable {
 //		if (rootTable.getPrefHeight() > viewport.getScreenHeight())
 //			scaleY -= (rootTable.getPrefHeight() - viewport.getScreenHeight()) / (float)rootTable.getPrefHeight();
 
-		if (MathUtils.isEqual(scaleX, 1, 0.0001f) && MathUtils.isEqual(scaleY, 1, 0.0001f)) {
+		float tolerance = 0.001f;
+		if (MathUtils.isEqual(scaleX, 1, tolerance) && MathUtils.isEqual(scaleY, 1, tolerance)) {
 			Gdx.app.log(tag, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
 			rootTable.setTransform(false);
 			rootTable.setOrigin(0, 0);

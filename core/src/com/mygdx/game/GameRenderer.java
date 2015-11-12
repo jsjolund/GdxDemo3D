@@ -127,7 +127,7 @@ public class GameRenderer implements Disposable, Observer {
 		shadowLight.dispose();
 	}
 
-	public void setEnvironmentLights(Array<BaseLight> lights, Vector3 sunDirection) {
+	public void setEnvironmentLights(Array<BaseLight<?>> lights, Vector3 sunDirection) {
 		environment = new Environment();
 		environment.add((shadowLight = new DirectionalShadowLight(
 				GameSettings.SHADOW_MAP_WIDTH,
@@ -144,7 +144,7 @@ public class GameRenderer implements Disposable, Observer {
 
 		float ambientLight = GameSettings.SCENE_AMBIENT_LIGHT;
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientLight, ambientLight, ambientLight, 1));
-		for (BaseLight light : lights) {
+		for (BaseLight<?> light : lights) {
 			environment.add(light);
 		}
 	}

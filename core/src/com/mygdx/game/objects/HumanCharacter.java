@@ -28,8 +28,8 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.mygdx.game.GameMessages;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Sounds;
 
 /**
@@ -104,7 +104,7 @@ public class HumanCharacter extends Ragdoll {
 					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
-							GameMessages.DOG_STICK_THROWN);
+							Constants.MSG_DOG_STICK_THROWN);
 					}
 
 					// Transition to the appropriate idle state depending on the previous state
@@ -139,7 +139,7 @@ public class HumanCharacter extends Ragdoll {
 					// Save animation speed multiplier
 					entity.animationSpeedMultiplier = prevState.animationMultiplier; 
 				}
-				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_CLEAR_DOG_BUTTON, entity);
+				MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_CLEAR_DOG_BUTTON, entity);
 			}
 
 			@Override
@@ -153,7 +153,7 @@ public class HumanCharacter extends Ragdoll {
 					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
-							GameMessages.DOG_LETS_PLAY);
+							Constants.MSG_DOG_LETS_PLAY);
 					}
 					// Transition to the appropriate idle state depending on the previous state
 					HumanState previousState = entity.stateMachine.getPreviousState();
@@ -250,8 +250,8 @@ public class HumanCharacter extends Ragdoll {
 
 			// If the entity owns a dog tell him you don't want to play and re-enable whistle
 			if (entity.dog != null) {
-				MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, GameMessages.DOG_LETS_STOP_PLAYING);
-				MessageManager.getInstance().dispatchMessage(GameMessages.GUI_SET_DOG_BUTTON_TO_WHISTLE, entity);
+				MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, Constants.MSG_DOG_LETS_STOP_PLAYING);
+				MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE, entity);
 			}
 		}
 

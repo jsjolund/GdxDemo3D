@@ -16,6 +16,12 @@
 
 package com.mygdx.game.blender;
 
+import static com.mygdx.game.utilities.Constants.V3_DOWN;
+
+import java.nio.FloatBuffer;
+import java.util.Comparator;
+import java.util.Iterator;
+
 import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
@@ -37,24 +43,36 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
-import com.badlogic.gdx.physics.bullet.collision.*;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
+import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btConvexHullShape;
+import com.badlogic.gdx.physics.bullet.collision.btConvexShape;
+import com.badlogic.gdx.physics.bullet.collision.btShapeHull;
+import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Json;
 import com.mygdx.game.GameEngine;
-import com.mygdx.game.objects.*;
+import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.GameModelBody;
+import com.mygdx.game.objects.GameObject;
+import com.mygdx.game.objects.HumanCharacter;
+import com.mygdx.game.objects.InvisibleBody;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
-
-import java.nio.FloatBuffer;
-import java.util.Comparator;
-import java.util.Iterator;
 
 /**
  * @author jsjolund
  */
 public class BlenderScene implements Disposable {
-
+	
 	/**
 	 * Used internally to map a model to a collision shape. A shape can be reused between game objects.
 	 */
@@ -132,8 +150,8 @@ public class BlenderScene implements Disposable {
 	public NavMesh navMesh;
 	public Entity navmeshEntity;
 	public BoundingBox worldBounds = new BoundingBox();
-	public Array<BaseLight> lights = new Array<BaseLight>();
-	public Vector3 shadowCameraDirection = new Vector3(Vector3.Y).scl(-1);
+	public Array<BaseLight<?>> lights = new Array<BaseLight<?>>();
+	public Vector3 shadowCameraDirection = new Vector3(V3_DOWN);
 	private BlenderObject.BCamera sceneCamera;
 
 	/**
@@ -285,7 +303,7 @@ public class BlenderScene implements Disposable {
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
 
-		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		Ray posGroundRay = new Ray(initialPosition, V3_DOWN);
 		dog.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
 		dog.layers.set(dog.currentTriangle.meshPartIndex);
 
@@ -327,7 +345,7 @@ public class BlenderScene implements Disposable {
 				initialPosition, new Vector3(0, 0, 0), new Vector3(1, 1, 1),
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId);
-		Ray posGroundRay = new Ray(initialPosition, new Vector3(0, -1, 0));
+		Ray posGroundRay = new Ray(initialPosition, V3_DOWN);
 		human.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
 		human.layers.set(human.currentTriangle.meshPartIndex);
 
@@ -448,7 +466,6 @@ public class BlenderScene implements Disposable {
 	private void addBodyModel(BlenderObject.BModel bModel) {
 		modelAssets.finishLoadingAsset(bModel.model_file_name);
 		Model model = modelAssets.get(bModel.model_file_name, Model.class);
-		btCollisionShape shape;
 
 		if (!shapesMap.containsKey(bModel.name)) {
 			GameModel gameModel = new GameModel(model, bModel.name, bModel.position, bModel.rotation, bModel.scale);
@@ -588,7 +605,7 @@ public class BlenderScene implements Disposable {
 	}
 
 	public void addLight(BlenderObject.BLight bLight) {
-		Vector3 direction = new Vector3(Vector3.Y).scl(-1);
+		Vector3 direction = new Vector3(V3_DOWN);
 		direction.rotate(Vector3.X, bLight.rotation.x);
 		direction.rotate(Vector3.Z, bLight.rotation.z);
 		direction.rotate(Vector3.Y, bLight.rotation.y);
@@ -599,18 +616,18 @@ public class BlenderScene implements Disposable {
 		float exponent = 1;
 
 		if (bLight.type.equals("PointLamp")) {
-			BaseLight light = new PointLight().set(
+			BaseLight<?> light = new PointLight().set(
 					bLight.lamp_color.r, bLight.lamp_color.g, bLight.lamp_color.b,
 					bLight.position, bLight.lamp_energy);
 			lights.add(light);
 
 		} else if (bLight.type.equals("SpotLamp")) {
-			BaseLight light = new SpotLight().set(bLight.lamp_color, bLight.position,
+			BaseLight<?> light = new SpotLight().set(bLight.lamp_color, bLight.position,
 					direction, intensity, cutoffAngle, exponent);
 			lights.add(light);
 
 		} else if (bLight.type.equals("SunLamp")) {
-			BaseLight light = new DirectionalLight().set(
+			BaseLight<?> light = new DirectionalLight().set(
 					bLight.lamp_color.r,
 					bLight.lamp_color.g,
 					bLight.lamp_color.b,
@@ -627,7 +644,7 @@ public class BlenderScene implements Disposable {
 	}
 
 	public void setToSceneCamera(GhostCamera camera) {
-		Vector3 direction = new Vector3(Vector3.Y).scl(-1);
+		Vector3 direction = new Vector3(V3_DOWN);
 		direction.rotate(Vector3.X, sceneCamera.rotation.x);
 		direction.rotate(Vector3.Z, sceneCamera.rotation.z);
 		direction.rotate(Vector3.Y, sceneCamera.rotation.y);
