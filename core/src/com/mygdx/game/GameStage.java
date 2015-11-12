@@ -49,7 +49,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.HumanCharacter;
-import com.mygdx.game.objects.HumanCharacter.CharacterState;
+import com.mygdx.game.objects.HumanCharacter.HumanState;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
@@ -244,9 +244,9 @@ public class GameStage extends Stage implements Observable {
 	private class CharacterController extends Table implements Telegraph {
 		private class CharacterButton extends ImageButton {
 
-			CharacterState state;
+			HumanState state;
 
-			CharacterButton(HumanCharacter.CharacterState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
+			CharacterButton(HumanState state, TextureAtlas buttonAtlas, String up, String down, String checked) {
 				super(new TextureRegionDrawable(buttonAtlas.findRegion(up)),
 						new TextureRegionDrawable(buttonAtlas.findRegion(down)),
 						new TextureRegionDrawable(buttonAtlas.findRegion(checked)));
@@ -257,7 +257,7 @@ public class GameStage extends Stage implements Observable {
 						if (!CharacterButton.this.isChecked()) {
 							if (selectedCharacter instanceof HumanCharacter) {
 								HumanCharacter human = (HumanCharacter) selectedCharacter;
-								CharacterState hs = human.stateMachine.getCurrentState();
+								HumanState hs = human.stateMachine.getCurrentState();
 								if (CharacterButton.this.state.isMovementState()) {
 									if (hs.isIdleState()) {
 										human.moveState = CharacterButton.this.state;
@@ -289,15 +289,15 @@ public class GameStage extends Stage implements Observable {
 		private GameCharacter selectedCharacter;
 
 		public CharacterController(TextureAtlas buttonAtlas) {
-			whistleButton = new CharacterButton(HumanCharacter.CharacterState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "whistle-down");
-			throwButton = new CharacterButton(HumanCharacter.CharacterState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
+			whistleButton = new CharacterButton(HumanState.WHISTLE, buttonAtlas, "whistle-up", "whistle-down", "whistle-down");
+			throwButton = new CharacterButton(HumanState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
 
 			radioGroup = new ButtonGroup<CharacterButton>(
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-				new CharacterButton(HumanCharacter.CharacterState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-				//new CharacterButton(HumanCharacter.CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(HumanCharacter.CharacterState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+				new CharacterButton(HumanState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+				new CharacterButton(HumanState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+				new CharacterButton(HumanState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+				//new CharacterButton(CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+				new CharacterButton(HumanState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
 			// Add whistle button and save the reference to the 1st cell
@@ -371,7 +371,7 @@ public class GameStage extends Stage implements Observable {
 					this.clearDogButton(human);
 				}
 				for (CharacterButton btn : radioGroup.getButtons()) {
-					if (btn.state == CharacterState.DEAD && human.stateMachine.getCurrentState() == CharacterState.DEAD) {
+					if (btn.state == HumanState.DEAD && human.stateMachine.getCurrentState() == HumanState.DEAD) {
 						btn.setChecked(true);
 						break;
 					}
