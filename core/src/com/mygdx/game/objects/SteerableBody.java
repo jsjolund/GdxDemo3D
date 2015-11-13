@@ -238,8 +238,14 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		return !steeringOutput.linear.isZero(getZeroLinearSpeedThreshold());
 	}
 
-	protected void clearSteering() {
+	protected void stopPathFollowing() {
+		// Clear path and stop steering
+		navMeshPointPath.clear();
+		navMeshGraphPath.clear();
+		steeringBehavior = null;
 		steeringOutput.linear.setZero();
+		finishSteering();
+		body.setFriction(1);
 	}
 
 	@Override
