@@ -112,11 +112,9 @@ public class HumanCharacter extends Ragdoll {
 					HumanState nextState = HumanState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
-//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState.idleState;
 						}
 						else if (previousState.isIdleState()) {
-//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState;
 						}
 					}
@@ -128,12 +126,8 @@ public class HumanCharacter extends Ragdoll {
 			@Override
 			public void enter(HumanCharacter entity) {
 				// Clear path and stop steering
-				entity.steeringBehavior = null;
-				entity.navMeshPointPath.clear();
-				entity.navMeshGraphPath.clear();
-				entity.finishSteering();
-				entity.body.setFriction(1);
-				entity.clearSteering(); 
+				entity.stopPathFollowing();
+				
 				HumanState prevState = entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
 					// Save animation speed multiplier
@@ -160,11 +154,9 @@ public class HumanCharacter extends Ragdoll {
 					HumanState nextState = HumanState.IDLE_STAND;
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
-//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState.idleState;
 						}
 						else if (previousState.isIdleState()) {
-//							entity.moveState = previousState; // hmmm... is this really needed?
 							nextState = previousState;
 						}
 					}
@@ -186,11 +178,7 @@ public class HumanCharacter extends Ragdoll {
 				entity.animations.paused = true;
 
 				// Clear path and stop steering
-				entity.steeringBehavior = null;
-				entity.navMeshPointPath.clear();
-				entity.navMeshGraphPath.clear();
-				entity.finishSteering();
-				entity.body.setFriction(1);
+				entity.stopPathFollowing();
 
 				// Set ragdoll control
 				entity.setRagdollControl(true);
@@ -204,8 +192,6 @@ public class HumanCharacter extends Ragdoll {
 			public void exit(HumanCharacter entity) {
 				entity.animations.paused = false;
 				entity.setRagdollControl(false);
-				
-				entity.wasSteering = false;
 			}
 		},
 		GLOBAL() {};
@@ -263,26 +249,14 @@ public class HumanCharacter extends Ragdoll {
 		public void update(HumanCharacter entity) {
 			//System.out.println(">>>>>>> " + name());
 			if (entity.isSteering()) {
-				if (!entity.wasSteering) {
-					entity.wasSteering = true;
+				if (!this.isMovementState()) {
 					entity.stateMachine.changeState(entity.moveState);
 					return;
 				}
 			} else {
-				if (entity.wasSteering) {
-					entity.wasSteering = false;
-					if (entity.stateMachine.getCurrentState() != HumanState.DEAD) {
-						entity.stateMachine.changeState(entity.moveState.idleState);
-						return;
-					}
-				}
-				else {
-					HumanState previousState = entity.stateMachine.getPreviousState();
-					if (previousState != null && previousState.isMovementState()) {
-						entity.moveState = previousState;
-						entity.stateMachine.changeState(previousState.idleState);
-						return;
-					}
+				if (this.isMovementState()) {
+					entity.stateMachine.changeState(this.idleState);
+					return;
 				}
 			}
 
@@ -376,7 +350,6 @@ public class HumanCharacter extends Ragdoll {
 	public final AnimationController animations;
 	public final CharacterAnimationListener animationListener;
 	public HumanState moveState = HumanState.MOVE_WALK;
-	private boolean wasSteering = false;
 	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;
 	private boolean animationCompleted;
