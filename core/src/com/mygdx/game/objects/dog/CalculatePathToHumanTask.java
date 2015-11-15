@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.HumanCharacter;
+import com.mygdx.game.pathfinding.Triangle;
 
 /**
  * @author davebaol
@@ -30,21 +31,35 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 
 	private static final Vector3 tmp1 = new Vector3();
 	private static final Vector3 tmp2 = new Vector3();
-	
-	public CalculatePathToHumanTask () {
+	private static final Vector3 tmp3 = new Vector3();
+	private static final Vector3 tmp4 = new Vector3();
+
+	public CalculatePathToHumanTask() {
 	}
 
 	@Override
-	public Status execute () {
+	public Status execute() {
 		DogCharacter dog = getObject();
 		HumanCharacter human = dog.human;
+
+		Vector3 humanDirection = human.getDirection(tmp1);
+		Vector3 humanPosition = human.getGroundPosition(tmp2);
+		float targetDogDistanceToHuman = 2;
+		Vector3 dogTargetPoint = tmp3;
+
+		Triangle dogTargetTri = GameEngine.engine.getScene().navMesh.getClosestValidPointAt(
+				humanPosition,
+				humanDirection,
+				targetDogDistanceToHuman,
+				dogTargetPoint);
+
 		if (GameEngine.engine.getScene().navMesh.getPath(
 				dog.currentTriangle,
 				dog.getGroundPosition(tmp1),
-				human.currentTriangle,
-				human.getGroundPosition(tmp2),
+				dogTargetTri,
+				dogTargetPoint,
 				dog.navMeshGraphPath)) {
-			
+
 			dog.calculateNewPath();
 			//success();
 		}
@@ -52,7 +67,7 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 	}
 
 	@Override
-	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
+	protected Task<DogCharacter> copyTo(Task<DogCharacter> task) {
 		return task;
 	}
 

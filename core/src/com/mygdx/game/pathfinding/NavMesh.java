@@ -297,18 +297,18 @@ public class NavMesh implements Disposable {
 	public Triangle getClosestTriangle(Vector3 fromPoint, Vector3 closestPoint) {
 		Triangle fromTri = null;
 		float minDst2 = Float.POSITIVE_INFINITY;
-		// Do a vertical ray test at the point
-		for (int meshPartIndex = 0; meshPartIndex < graph.getMeshPartCount(); meshPartIndex++) {
-			Triangle tri = verticalRayTest(fromPoint, tmpGetClosestTriangle, meshPartIndex);
-			float dst2 = fromPoint.dst2(tmpGetClosestTriangle);
-			if (dst2 < minDst2) {
-				minDst2 = dst2;
-				fromTri = tri;
-				closestPoint.set(tmpGetClosestTriangle);
-			}
-		}
+		// TODO: To use this, one must specify valid navmesh parts.
+//		for (int meshPartIndex = 0; meshPartIndex < graph.getMeshPartCount(); meshPartIndex++) {
+//			Triangle tri = verticalRayTest(fromPoint, tmpGetClosestTriangle, meshPartIndex);
+//			float dst2 = fromPoint.dst2(tmpGetClosestTriangle);
+//			if (dst2 < minDst2) {
+//				minDst2 = dst2;
+//				fromTri = tri;
+//				closestPoint.set(tmpGetClosestTriangle);
+//			}
+//		}
+		// Exhaustive scan through all the tris to find the closest tri and point
 		if (fromTri == null) {
-			// Ray test yielded nothing, scan through all the triangles.
 			for (int i = 0; i < graph.getNodeCount(); i++) {
 				Triangle tri = graph.getTriangleFromGraphIndex(i);
 				float dst2 = getClosestPoint(tri, fromPoint, tmpGetClosestTriangle);

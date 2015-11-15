@@ -312,7 +312,7 @@ public class GameRenderer implements Disposable, Observer {
 			Vector3 direction = debugNodePos2;
 			Vector3 closestPoint = tmp;
 			Vector3 aimPoint = tmp2;
-			float radius = 3;
+			float radius = 2;
 
 
 			selectedCharacter.getDirection(direction);
