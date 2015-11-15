@@ -77,8 +77,8 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 
 	public static final String tag = "NavMeshGraph";
 
-	private ArrayMap<Triangle, Array<Edge>> connectionMap;
-	private ArrayMap<Triangle, Array<Edge>> disconnectionMap;
+	private final ArrayMap<Triangle, Array<Edge>> sharedEdges;
+	private final ArrayMap<Triangle, Array<Edge>> isolatedEdgesMap;
 
 	private int[] meshPartTriIndexOffsets;
 	private int[] meshPartTriCounts;
@@ -107,32 +107,33 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		Array<Triangle> triangles = createTriangles(vertexVectors, indices,
 				meshPartIndexOffsets, meshPartTriCounts);
 
-		connectionMap = createConnectionMap(indexConnections, triangles, vertexVectors);
-		disconnectionMap = createDisconnectionMap(connectionMap);
+		sharedEdges = createSharedEdgesMap(indexConnections, triangles, vertexVectors);
+		isolatedEdgesMap = createIsolatedEdgesMap(sharedEdges);
 
 		// Count edges of different types
-		for (Array<Edge> edges : disconnectionMap.values()) {
+		for (Array<Edge> edges : isolatedEdgesMap.values()) {
 			numDisconnectedEdges += edges.size;
 		}
-		for (Array<Edge> edges : connectionMap.values()) {
+		for (Array<Edge> edges : sharedEdges.values()) {
 			numConnectedEdges += edges.size;
 		}
 		numConnectedEdges /= 2;
 		numTotalEdges = numConnectedEdges + numDisconnectedEdges;
 		Gdx.app.debug(tag, String.format(
 				"MeshParts: total=%s, Triangles: total=%s, Edges: connected=%s, disconnected=%s, total=%s",
-				getMeshPartCount(), getNodeCount(), getEdgeCountConnected(),
-				getEdgeCountDisconnected(), getEdgeCountTotal()));
+				getMeshPartCount(), getNodeCount(), getEdgeCountShared(),
+				getEdgeCountIsolated(), getEdgeCountTotal()));
+
 	}
 
 
 	/**
-	 * Map the disconnected edges for each triangle which does not have all three edges connected to other triangles.
+	 * Map the isolated edges for each triangle which does not have all three edges connected to other triangles.
 	 *
 	 * @param connectionMap
 	 * @return
 	 */
-	private static ArrayMap<Triangle, Array<Edge>> createDisconnectionMap(ArrayMap<Triangle, Array<Edge>> connectionMap) {
+	private static ArrayMap<Triangle, Array<Edge>> createIsolatedEdgesMap(ArrayMap<Triangle, Array<Edge>> connectionMap) {
 
 		ArrayMap<Triangle, Array<Edge>> disconnectionMap = new ArrayMap<Triangle, Array<Edge>>();
 
@@ -177,7 +178,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @param vertexVectors
 	 * @return
 	 */
-	private static ArrayMap<Triangle, Array<Edge>> createConnectionMap(
+	private static ArrayMap<Triangle, Array<Edge>> createSharedEdgesMap(
 			Array<IndexConnection> indexConnections, Array<Triangle> triangles, Vector3[] vertexVectors) {
 
 		ArrayMap<Triangle, Array<Edge>> connectionMap = new ArrayMap<Triangle, Array<Edge>>();
@@ -376,7 +377,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 
 	@Override
 	public int getNodeCount() {
-		return connectionMap.size;
+		return sharedEdges.size;
 	}
 
 	/**
@@ -392,9 +393,8 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
-		return (Array<Connection<Triangle>>) (Array<?>) connectionMap.getValueAt(fromNode.triIndex);
+		return (Array<Connection<Triangle>>) (Array<?>) sharedEdges.getValueAt(fromNode.triIndex);
 	}
-
 
 	/**
 	 * Get triangle edges which do not connect to another triangle.
@@ -402,9 +402,21 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @param triIndex
 	 * @return
 	 */
-	public Array<Edge> getDisconnections(int triIndex) {
-		return disconnectionMap.getValueAt(triIndex);
+	public Array<Edge> getIsolatedEdges(int triIndex) {
+		return isolatedEdgesMap.getValueAt(triIndex);
 	}
+
+	/**
+	 *
+	 * Get triangle edges which are connected to two triangles
+	 *
+	 * @param triIndex
+	 * @return
+	 */
+	public Array<Edge> getSharedEdges(int triIndex) {
+		return sharedEdges.getValueAt(triIndex);
+	}
+
 
 	/**
 	 * Get a triangle using its index in the pathfinding graph.
@@ -413,7 +425,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @return
 	 */
 	public Triangle getTriangleFromGraphIndex(int graphTriIndex) {
-		return connectionMap.getKeyAt(graphTriIndex);
+		return sharedEdges.getKeyAt(graphTriIndex);
 	}
 
 	/**
@@ -424,7 +436,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 * @return
 	 */
 	public Triangle getTriangleFromMeshPart(int meshPartIndex, int meshPartTriIndex) {
-		return connectionMap.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + meshPartTriIndex);
+		return sharedEdges.getKeyAt(meshPartTriIndexOffsets[meshPartIndex] + meshPartTriIndex);
 	}
 
 	/**
@@ -450,7 +462,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 *
 	 * @return
 	 */
-	public int getEdgeCountConnected() {
+	public int getEdgeCountShared() {
 		return numConnectedEdges;
 	}
 
@@ -459,7 +471,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	 *
 	 * @return
 	 */
-	public int getEdgeCountDisconnected() {
+	public int getEdgeCountIsolated() {
 		return numDisconnectedEdges;
 	}
 

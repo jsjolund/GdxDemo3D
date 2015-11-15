@@ -45,6 +45,7 @@ import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.GameModel;
 import com.mygdx.game.pathfinding.Edge;
+import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
@@ -64,6 +65,7 @@ public class GameRenderer implements Disposable, Observer {
 	private final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
 	private final Vector3 tmp = new Vector3();
+	private final Vector3 tmp2 = new Vector3();
 	private final Vector3 debugNodePos1 = new Vector3();
 	private final Vector3 debugNodePos2 = new Vector3();
 	private final Matrix4 tmpMatrix = new Matrix4();
@@ -304,19 +306,29 @@ public class GameRenderer implements Disposable, Observer {
 				}
 			}
 
-			// Character facing debug
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
+			// Closest point debug draw
+			NavMesh navMesh = engine.getScene().navMesh;
 			Vector3 position = debugNodePos1;
 			Vector3 direction = debugNodePos2;
-			float radius = 2;
+			Vector3 closestPoint = tmp;
+			Vector3 aimPoint = tmp2;
+			float radius = 3;
 
-//			engine.getScene().navMesh.getClosestValidPointAt(selectedCharacter.currentTriangle,
-//					selectedCharacter.getGroundPosition(position),)
 
-			selectedCharacter.getGroundPosition(position);
 			selectedCharacter.getDirection(direction);
+			selectedCharacter.transform.getTranslation(position);
+			aimPoint.set(direction).scl(radius).add(position);
+			Triangle closest = navMesh.getClosestValidPointAt(position, direction, radius, closestPoint);
+
+			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
+			shapeRenderer.setColor(0, 0, 1, 0.2f);
+			shapeRenderer.triangle(closest.a, closest.b, closest.c);
+
+			shapeRenderer.setColor(Color.GREEN);
+			shapeRenderer.box(aimPoint.x, aimPoint.y, aimPoint.z, 0.2f, 0.2f, 0.2f);
+
 			shapeRenderer.setColor(Color.WHITE);
-			shapeRenderer.line(position, direction.scl(radius).add(position));
+			shapeRenderer.box(closestPoint.x, closestPoint.y, closestPoint.z, 0.2f, 0.2f, 0.2f);
 
 			shapeRenderer.end();
 		}
@@ -337,7 +349,6 @@ public class GameRenderer implements Disposable, Observer {
 
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
-
 
 	private void drawArmature() {
 		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);

@@ -16,18 +16,18 @@
 
 package com.mygdx.game.pathfinding;
 
-import static com.mygdx.game.utilities.Constants.V3_DOWN;
-import static com.mygdx.game.utilities.Constants.V3_UP;
-
 import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
+import com.mygdx.game.utilities.GeometryUtils;
 
 import java.util.Iterator;
+
+import static com.mygdx.game.utilities.Constants.V3_DOWN;
+import static com.mygdx.game.utilities.Constants.V3_UP;
 
 /**
  * @author jsjolund
@@ -145,17 +145,17 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 			Vector3 newStart = new Vector3();
 			float dst;
 			// A-B
-			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.a, startTri.b, start)) < minDst) {
+			if ((dst = GeometryUtils.nearestSegmentPointSquareDistance(projection, startTri.a, startTri.b, start)) < minDst) {
 				minDst = dst;
 				newStart.set(projection);
 			}
 			// B-C
-			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.b, startTri.c, start)) < minDst) {
+			if ((dst = GeometryUtils.nearestSegmentPointSquareDistance(projection, startTri.b, startTri.c, start)) < minDst) {
 				minDst = dst;
 				newStart.set(projection);
 			}
 			// C-A
-			if ((dst = calculatePointSegmentSquareDistance(projection, startTri.c, startTri.a, start)) < minDst) {
+			if ((dst = GeometryUtils.nearestSegmentPointSquareDistance(projection, startTri.c, startTri.a, start)) < minDst) {
 				minDst = dst;
 				newStart.set(projection);
 			}
@@ -383,28 +383,4 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		}
 	}
 
-	/**
-	 * From com.badlogic.gdx.ai.steer.paths.LinePath
-	 * <p/>
-	 * Returns the square distance of the nearest point on line segment {@code a-b}, from point {@code c}.
-	 * Also, the {@code out} vector is assigned to the nearest point.
-	 *
-	 * @param out the output vector that contains the nearest point on return
-	 * @param a   the start point of the line segment
-	 * @param b   the end point of the line segment
-	 * @param c   the point to calculate the distance from
-	 * @author davebaol
-	 * @author Daniel Holderbaum
-	 */
-	private float calculatePointSegmentSquareDistance(Vector3 out, Vector3 a, Vector3 b, Vector3 c) {
-		out.set(a);
-		tmp1.set(b);
-		tmp2.set(c);
-
-		Vector3 ab = tmp1.sub(a);
-		float t = (tmp2.sub(a)).dot(ab) / ab.len2();
-		out.mulAdd(ab, MathUtils.clamp(t, 0, 1));
-
-		return out.dst2(c);
-	}
 }

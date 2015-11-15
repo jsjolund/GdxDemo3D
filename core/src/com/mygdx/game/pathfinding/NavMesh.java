@@ -22,6 +22,7 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
@@ -32,6 +33,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FloatArray;
+import com.mygdx.game.utilities.GeometryUtils;
 
 /**
  * @author jsjolund
@@ -42,21 +44,33 @@ public class NavMesh implements Disposable {
 
 	public final NavMeshGraph graph;
 
-	private final Vector3 rayFrom = new Vector3();
-	private final Vector3 rayTo = new Vector3();
-	private final FloatArray triAreasTmp = new FloatArray();
-	private final Array<Triangle> trisTmp = new Array<Triangle>();
-	private final Bits allMeshPartsTmp = new Bits();
-
 	private final btBvhTriangleMeshShape collisionShape;
 	private final NavMeshRaycastCallback raycastCallback;
 	private final NavMeshHeuristic heuristic;
 	private final IndexedAStarPathFinder<Triangle> pathFinder;
 
+	// Temporary memory used by various methods for calculations
+	private final FloatArray tmpFloatArrayGetRandomTriangle = new FloatArray();
+	private final Array<Triangle> tmpTriArrayGetRandomTriangle = new Array<Triangle>();
+	private final Bits tmpBitsGetRandomTriangle = new Bits();
+	private final Bits tmpBitsVerticalRayTest = new Bits();
+	private final Vector3 tmpGetClosestTriangle = new Vector3();
+	private final Vector3 tmpGetClosestPoint = new Vector3();
+	private final Ray tmpRayGetClosestPoint = new Ray();
+	private final Plane tmpPlaneGetClosestPoint = new Plane();
+	private final Vector3 tmpVerticalRayTest1 = new Vector3();
+	private final Vector3 tmpVerticalRayTest2 = new Vector3();
+	private final Ray tmpRayVerticalRayTest = new Ray();
+	private final Vector3 tmpVecgetClosestValidPointAt = new Vector3();
+	private final Vector3 tmpRayTestRayTo = new Vector3();
+	private final Vector3 tmpRayTestRayFrom = new Vector3();
+	private final Vector3 navMeshRayFrom = new Vector3();
+	private final Vector3 navMeshRayTo = new Vector3();
+
 	public NavMesh(Model model) {
 		btTriangleIndexVertexArray vertexArray = new btTriangleIndexVertexArray(model.meshParts);
 		collisionShape = new btBvhTriangleMeshShape(vertexArray, true);
-		raycastCallback = new NavMeshRaycastCallback(rayFrom, rayTo);
+		raycastCallback = new NavMeshRaycastCallback(navMeshRayFrom, navMeshRayTo);
 		raycastCallback.setFlags(btTriangleRaycastCallback.EFlags.kF_FilterBackfaces);
 		graph = new NavMeshGraph(model);
 		pathFinder = new IndexedAStarPathFinder<Triangle>(graph);
@@ -84,14 +98,14 @@ public class NavMesh implements Disposable {
 	public Triangle rayTest(Ray ray, float distance, Bits allowedMeshParts) {
 		Triangle hitTriangle = null;
 
-		rayFrom.set(ray.origin);
-		rayTo.set(ray.direction).scl(distance).add(rayFrom);
+		tmpRayTestRayFrom.set(ray.origin);
+		tmpRayTestRayTo.set(ray.direction).scl(distance).add(tmpRayTestRayFrom);
 		raycastCallback.setHitFraction(1);
 		raycastCallback.clearReport();
-		raycastCallback.setFrom(rayFrom);
-		raycastCallback.setTo(rayTo);
+		raycastCallback.setFrom(tmpRayTestRayFrom);
+		raycastCallback.setTo(tmpRayTestRayTo);
 		raycastCallback.setAllowedMeshPartIndices(allowedMeshParts);
-		collisionShape.performRaycast(raycastCallback, rayFrom, rayTo);
+		collisionShape.performRaycast(raycastCallback, tmpRayTestRayFrom, tmpRayTestRayTo);
 
 		if (raycastCallback.triangleIndex != -1) {
 			hitTriangle = graph.getTriangleFromMeshPart(raycastCallback.partId, raycastCallback.triangleIndex);
@@ -147,7 +161,6 @@ public class NavMesh implements Disposable {
 		return getPath(fromTri, fromPoint, toTri, toPoint, path);
 	}
 
-
 	/**
 	 * Calculate a triangle graph path between two triangles.
 	 *
@@ -178,11 +191,11 @@ public class NavMesh implements Disposable {
 	 * meaning large triangles will be chosen more often than small ones.
 	 */
 	public Triangle getRandomTriangle() {
-		allMeshPartsTmp.clear();
+		tmpBitsGetRandomTriangle.clear();
 		for (int i = 0; i < graph.getMeshPartCount(); i++) {
-			allMeshPartsTmp.set(i);
+			tmpBitsGetRandomTriangle.set(i);
 		}
-		return getRandomTriangle(allMeshPartsTmp);
+		return getRandomTriangle(tmpBitsGetRandomTriangle);
 	}
 
 	/**
@@ -201,10 +214,10 @@ public class NavMesh implements Disposable {
 	 * @return A random triangle.
 	 */
 	public Triangle getRandomTriangle(Bits allowedMeshParts) {
-		triAreasTmp.clear();
-		triAreasTmp.ordered = true;
-		trisTmp.clear();
-		trisTmp.ordered = true;
+		tmpFloatArrayGetRandomTriangle.clear();
+		tmpFloatArrayGetRandomTriangle.ordered = true;
+		tmpTriArrayGetRandomTriangle.clear();
+		tmpTriArrayGetRandomTriangle.ordered = true;
 
 		// To get a uniform distribution over the triangles in the mesh parts
 		// we must take areas of the triangles into account.
@@ -213,25 +226,154 @@ public class NavMesh implements Disposable {
 				for (int triIndex = 0; triIndex < graph.getTriangleCount(mpIndex); triIndex++) {
 					Triangle tri = graph.getTriangleFromMeshPart(mpIndex, triIndex);
 					float integratedArea = 0;
-					if (triAreasTmp.size > 0) {
-						integratedArea = triAreasTmp.get(triAreasTmp.size - 1);
+					if (tmpFloatArrayGetRandomTriangle.size > 0) {
+						integratedArea = tmpFloatArrayGetRandomTriangle.get(tmpFloatArrayGetRandomTriangle.size - 1);
 					}
-					triAreasTmp.add(integratedArea + tri.area());
-					trisTmp.add(tri);
+					tmpFloatArrayGetRandomTriangle.add(integratedArea + tri.area());
+					tmpTriArrayGetRandomTriangle.add(tri);
 				}
 			}
 		}
-		if (triAreasTmp.size == 0) {
+		if (tmpFloatArrayGetRandomTriangle.size == 0) {
 			return null;
 		}
-		float r = MathUtils.random(0f, triAreasTmp.get(triAreasTmp.size - 1));
+		float r = MathUtils.random(0f, tmpFloatArrayGetRandomTriangle.get(tmpFloatArrayGetRandomTriangle.size - 1));
 		int i;
-		for (i = 0; i < triAreasTmp.size; i++) {
-			if (r <= triAreasTmp.get(i)) {
+		for (i = 0; i < tmpFloatArrayGetRandomTriangle.size; i++) {
+			if (r <= tmpFloatArrayGetRandomTriangle.get(i)) {
 				break;
 			}
 		}
-		return trisTmp.get(i);
+		return tmpTriArrayGetRandomTriangle.get(i);
+	}
+
+	/**
+	 * Make a ray test at this point, using a ray spanning from far up in the sky, to far down in the ground.
+	 *
+	 * @param testPoint The test point
+	 * @param out The point of intersection between ray and triangle
+	 * @param meshPartIndex Which mesh parts to test.
+	 * @return The triangle, or null if ray did not hit any triangles.
+	 */
+	public Triangle verticalRayTest(Vector3 testPoint, Vector3 out, int meshPartIndex) {
+		tmpBitsVerticalRayTest.clear();
+		tmpBitsVerticalRayTest.set(meshPartIndex);
+		return verticalRayTest(testPoint, out, tmpBitsVerticalRayTest);
+	}
+
+	/**
+	 * Make a ray test at this point, using a ray spanning from far up in the sky, to far down in the ground.
+	 *
+	 * @param testPoint The test point
+	 * @param out The point of intersection between ray and triangle
+	 * @param allowedMeshParts Which mesh parts to test.
+	 * @return The triangle, or null if ray did not hit any triangles.
+	 */
+	public Triangle verticalRayTest(Vector3 testPoint, Vector3 out, Bits allowedMeshParts) {
+		tmpRayVerticalRayTest.set(tmpVerticalRayTest1.set(Vector3.Y).scl(500).add(testPoint), tmpVerticalRayTest2.set(Vector3.Y).scl(-1));
+		Triangle hitTri = rayTest(tmpRayVerticalRayTest, 1000, allowedMeshParts);
+		if (hitTri == null) {
+			// TODO: Perhaps this should be Nan?
+			out.set(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
+			return null;
+		} else {
+
+			Intersector.intersectRayTriangle(tmpRayVerticalRayTest, hitTri.a, hitTri.b, hitTri.c, out);
+			return hitTri;
+		}
+	}
+
+	/**
+	 * Ray tests the navmesh along up/down axis, if no triangles are found, it makes an
+	 * exhaustive search of all triangles on the navmesh.
+	 *
+	 * TODO: Exhaustive search is somewhat expensive depending on amount of
+	 * triangles in navmesh, maybe something like quadtrees can be used?
+	 *
+	 * @param fromPoint
+	 * @param closestPoint
+	 * @return
+	 */
+	public Triangle getClosestTriangle(Vector3 fromPoint, Vector3 closestPoint) {
+		Triangle fromTri = null;
+		float minDst2 = Float.POSITIVE_INFINITY;
+		// Do a vertical ray test at the point
+		for (int meshPartIndex = 0; meshPartIndex < graph.getMeshPartCount(); meshPartIndex++) {
+			Triangle tri = verticalRayTest(fromPoint, tmpGetClosestTriangle, meshPartIndex);
+			float dst2 = fromPoint.dst2(tmpGetClosestTriangle);
+			if (dst2 < minDst2) {
+				minDst2 = dst2;
+				fromTri = tri;
+				closestPoint.set(tmpGetClosestTriangle);
+			}
+		}
+		if (fromTri == null) {
+			// Ray test yielded nothing, scan through all the triangles.
+			for (int i = 0; i < graph.getNodeCount(); i++) {
+				Triangle tri = graph.getTriangleFromGraphIndex(i);
+				float dst2 = getClosestPoint(tri, fromPoint, tmpGetClosestTriangle);
+
+				if (dst2 < minDst2) {
+					minDst2 = dst2;
+					fromTri = tri;
+					closestPoint.set(tmpGetClosestTriangle);
+				}
+			}
+		}
+		return fromTri;
+	}
+
+	/**
+	 * Find the closest point on the triangle, given a measure point.
+	 *
+	 * @param tri The triangle
+	 * @param point The measure point
+	 * @param out Output for the closest point
+	 * @return The closest distance squared, between the triangle and measure point.
+	 */
+	public float getClosestPoint(Triangle tri, Vector3 point, Vector3 out) {
+		tmpPlaneGetClosestPoint.set(tri.a, tri.b, tri.c);
+		float minDst = tmpPlaneGetClosestPoint.distance(point);
+		Vector3 towardsPlane = tmpGetClosestPoint.set(tmpPlaneGetClosestPoint.normal).scl(minDst).add(point);
+		tmpRayGetClosestPoint.origin.set(point);
+		tmpRayGetClosestPoint.direction.set(point).sub(towardsPlane);
+		if (Intersector.intersectRayTriangle(tmpRayGetClosestPoint, tri.a, tri.b, tri.c, out)) {
+			minDst = minDst * minDst;
+		} else {
+			Vector3 nearest = tmpGetClosestPoint;
+			float dst2;
+			minDst = Float.POSITIVE_INFINITY;
+			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.a, tri.b, point)) < minDst) {
+				out.set(nearest);
+				minDst = dst2;
+			}
+			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.b, tri.c, point)) < minDst) {
+				out.set(nearest);
+				minDst = dst2;
+			}
+			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.c, tri.a, point)) < minDst) {
+				out.set(nearest);
+				minDst = dst2;
+			}
+		}
+		return minDst;
+	}
+
+	/**
+	 * Find triangle and point on the navmesh closest to fromPoint.
+	 *
+	 * @param fromPoint
+	 * @param direction
+	 * @param radius
+	 * @param out
+	 * @return
+	 */
+	public Triangle getClosestValidPointAt(Vector3 fromPoint, Vector3 direction,
+										   float radius, Vector3 out) {
+
+		// TODO: Continue here
+		Vector3 originalTargetPoint = tmpVecgetClosestValidPointAt.set(direction).nor().scl(radius).add(fromPoint);
+		return getClosestTriangle(originalTargetPoint, out);
 	}
 
 
