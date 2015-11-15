@@ -31,7 +31,6 @@ public abstract class OneShotAnimationTaskBase extends LoopedAnimationTaskBase {
 	public Status execute () {
 		DogCharacter dog = getObject();
 		updateAnimation(dog);
-		System.out.println("animationListener.animationFinished" + animationListener.animationFinished);
 		return animationListener.animationFinished? Status.SUCCEEDED : Status.RUNNING;
 	}
 
