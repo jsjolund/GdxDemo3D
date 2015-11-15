@@ -16,6 +16,7 @@
 
 package com.mygdx.game.objects.dog;
 
+import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
 import com.badlogic.gdx.ai.btree.annotation.TaskAttribute;
 import com.badlogic.gdx.ai.msg.MessageManager;
@@ -26,7 +27,7 @@ import com.mygdx.game.utilities.Constants;
 /**
  * @author davebaol
  */
-public class SetThrowButtonTask extends DogActionBase {
+public class SetThrowButtonTask extends LeafTask<DogCharacter> {
 
 	@TaskAttribute(required=true)
 	public boolean enabled;
@@ -38,7 +39,7 @@ public class SetThrowButtonTask extends DogActionBase {
 	}
 
 	@Override
-	public void run () {
+	public Status execute () {
 		DogCharacter dog = getObject();
 		HumanCharacter human = dog.human;
 		if (human.selected && dog.humanWantToPlay) {
@@ -50,14 +51,14 @@ public class SetThrowButtonTask extends DogActionBase {
 				MessageManager.getInstance().dispatchMessage(msg, human);
 			}
 		}
-		success();
+		return Status.SUCCEEDED;
 	}
 
 	@Override
 	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
 		SetThrowButtonTask stbTask = (SetThrowButtonTask)task;
 		stbTask.enabled = enabled;
-		return super.copyTo(task);
+		return task;
 	}
 
 }

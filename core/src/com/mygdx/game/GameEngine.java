@@ -45,7 +45,7 @@ import java.util.Iterator;
  * @author jsjolund
  */
 public class GameEngine extends PooledEngine implements Disposable, Observer {
-
+	
 	/**
 	 * A ClosestRayResultCallback which takes object layers into account (e.g. house floors)
 	 */
@@ -146,7 +146,13 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	private Array<GameModel> dynamicModels = new Array<GameModel>();
 	private Bits visibleLayers = new Bits();
 
+	// FIXME
+	// Ugly hack to access the engine from anywhere
+	public static GameEngine engine;
+
 	public GameEngine() {
+		GameEngine.engine = this; 
+		
 		collisionConfig = new btDefaultCollisionConfiguration();
 		dispatcher = new btCollisionDispatcher(collisionConfig);
 		broadphase = new btDbvtBroadphase();

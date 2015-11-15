@@ -21,28 +21,18 @@ import com.mygdx.game.objects.DogCharacter;
 /**
  * @author davebaol
  */
-public abstract class DogActionBase extends DogTaskBase {
-
-	public DogActionBase () {
+public abstract class OneShotAnimationTaskBase extends LoopedAnimationTaskBase {
+	
+	public OneShotAnimationTaskBase () {
+		super(-1, true);
 	}
 
 	@Override
-	public void start() {
+	public Status execute () {
 		DogCharacter dog = getObject();
-		dog.currentAnimationFinished = false;
-		startAnimation(dog);
-	}
-
-	@Override
-	public void run () {
-		DogCharacter dog = getObject();
-		if (dog.currentAnimationFinished) {
-			success();
-		}
-		else {
-			updateAnimation(dog);
-			running();
-		}
+		updateAnimation(dog);
+		System.out.println("animationListener.animationFinished" + animationListener.animationFinished);
+		return animationListener.animationFinished? Status.SUCCEEDED : Status.RUNNING;
 	}
 
 }

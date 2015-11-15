@@ -29,17 +29,8 @@ public class HumanWantToPlayCondition extends LeafTask<DogCharacter> {
 	}
 
 	@Override
-	public void start() {
-	}
-
-	@Override
-	public void run () {
-		if (getObject().humanWantToPlay) {
-			success();
-		}
-		else {
-			fail();
-		}
+	public Status execute () {
+		return getObject().humanWantToPlay? Status.SUCCEEDED : Status.FAILED;
 	}
 
 	@Override

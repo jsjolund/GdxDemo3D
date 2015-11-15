@@ -258,8 +258,8 @@ public class GameStage extends Stage implements Observable {
 						if (!CharacterButton.this.isChecked()) {
 							if (selectedCharacter instanceof HumanCharacter) {
 								HumanCharacter human = (HumanCharacter) selectedCharacter;
-								HumanState hs = human.stateMachine.getCurrentState();
 								if (CharacterButton.this.state.isMovementState()) {
+									HumanState hs = human.stateMachine.getCurrentState();
 									if (hs.isIdleState()) {
 										human.moveState = CharacterButton.this.state;
 										human.handleStateCommand(CharacterButton.this.state.idleState);
