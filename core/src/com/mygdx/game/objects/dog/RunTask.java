@@ -16,21 +16,22 @@
 
 package com.mygdx.game.objects.dog;
 
+import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
  * @author davebaol
  */
-public class RunTask extends DogTaskBase {
+public class RunTask extends LoopedAnimationTaskBase {
 
 	public RunTask () {
-		super(0.2f);
+		super(0.2f, true);
 	}
 
 	@Override
 	protected void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|move_run", -1, 1, dog.animationListener, 0.1f);
+		dog.animations.animate("armature|move_run", -1, 1, animationListener, 0.1f);
 
 		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed * DogSteerSettings.runMultiplier);
 		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration * DogSteerSettings.runMultiplier);
@@ -44,13 +45,22 @@ public class RunTask extends DogTaskBase {
 	}
 
 	@Override
-	public void run () {
-		// TODO: check if end of path reached
-		boolean endOfPath = true;
-		if (endOfPath)
-			success();
-		else
-			super.run();
+	public Status execute () {
+		DogCharacter dog = getObject();
+		updateAnimation(dog);
+		if (getStatus() == Task.Status.RUNNING && !dog.isSteering()) {
+			return Status.SUCCEEDED;
+		}
+		return Status.RUNNING;
+	}
+
+	@Override
+	public void end () {
+		super.end();
+//		DogCharacter dog = getObject();
+//		dog.animations.animate("armature|idle_stand", -1, 1, animationListener, 0.1f);
+//		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		//dog.currentAnimationFinished = false;
 	}
 
 }

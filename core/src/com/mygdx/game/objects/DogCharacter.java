@@ -1,7 +1,11 @@
 package com.mygdx.game.objects;
 
 import com.badlogic.gdx.ai.btree.BehaviorTree;
+import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.ai.btree.Task.Status;
+import com.badlogic.gdx.ai.btree.utils.BehaviorTreeLibrary;
 import com.badlogic.gdx.ai.btree.utils.BehaviorTreeLibraryManager;
+import com.badlogic.gdx.ai.btree.utils.BehaviorTreeParser;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -65,22 +69,8 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		}
 	}
 
-	public class CharacterAnimationListener implements AnimationController.AnimationListener {
-		@Override
-		public void onEnd(AnimationController.AnimationDesc animation) {
-			currentAnimationFinished = true;
-		}
-
-		@Override
-		public void onLoop(AnimationController.AnimationDesc animation) {
-			currentAnimationFinished = true;
-		}
-	}
-
 	public final BehaviorTree<DogCharacter> btree;
 	public final AnimationController animations;
-	public final CharacterAnimationListener animationListener;
-	public boolean currentAnimationFinished;
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
@@ -100,9 +90,18 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		body.setAngularFactor(Vector3.Y);
 
 		animations = new AnimationController(modelInstance);
-		animationListener = new CharacterAnimationListener();
 
+//		BehaviorTreeLibraryManager.getInstance().setLibrary(new BehaviorTreeLibrary(BehaviorTreeParser.DEBUG_HIGH));
 		btree = BehaviorTreeLibraryManager.getInstance().createBehaviorTree("btrees/dog.btree", this);
+//		btree.addListener(new BehaviorTree.Listener<DogCharacter>() {
+//			@Override
+//			public void statusUpdated (Task<DogCharacter> task, Status previousStatus) {
+//				System.out.println(task.getClass().getSimpleName() + ": " + previousStatus.name() + " -->" + task.getStatus().name());
+//			}
+//			@Override
+//			public void childAdded (Task<DogCharacter> task, int index) {
+//			}
+//		});
 
 		humanWantToPlay = false;
 	}

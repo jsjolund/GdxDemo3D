@@ -21,14 +21,14 @@ import com.mygdx.game.objects.DogCharacter;
 /**
  * @author davebaol
  */
-public class SpinAroundTask extends DogActionBase {
+public class SpinAroundTask extends OneShotAnimationTaskBase {
 
 	public SpinAroundTask () {
 	}
 
 	@Override
 	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|idle_search", -1, 1, dog.animationListener, 0.1f);
+		dog.animations.animate("armature|idle_search", 1, 1, animationListener, 0.1f);
 	}
 
 }

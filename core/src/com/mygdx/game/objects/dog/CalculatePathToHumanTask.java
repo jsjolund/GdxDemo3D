@@ -16,24 +16,44 @@
 
 package com.mygdx.game.objects.dog;
 
+import com.badlogic.gdx.ai.btree.LeafTask;
+import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.objects.HumanCharacter;
 
 /**
  * @author davebaol
  */
-public class CalculatePathToHumanTask extends DogActionBase {
+public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 
+	private static final Vector3 tmp1 = new Vector3();
+	private static final Vector3 tmp2 = new Vector3();
+	
 	public CalculatePathToHumanTask () {
 	}
 
-	public void startAnimation(DogCharacter dog) {
+	@Override
+	public Status execute () {
+		DogCharacter dog = getObject();
+		HumanCharacter human = dog.human;
+		if (GameEngine.engine.getScene().navMesh.getPath(
+				dog.currentTriangle,
+				dog.getGroundPosition(tmp1),
+				human.currentTriangle,
+				human.getGroundPosition(tmp2),
+				dog.navMeshGraphPath)) {
+			
+			dog.calculateNewPath();
+			//success();
+		}
+		return Status.SUCCEEDED;
 	}
 
 	@Override
-	public void run () {
-		// TODO: calculate destination and path 
-		
-		success();
+	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
+		return task;
 	}
 
 }

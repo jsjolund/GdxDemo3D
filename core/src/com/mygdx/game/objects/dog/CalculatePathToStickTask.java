@@ -16,12 +16,14 @@
 
 package com.mygdx.game.objects.dog;
 
+import com.badlogic.gdx.ai.btree.LeafTask;
+import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
  * @author davebaol
  */
-public class CalculatePathToStickTask extends DogActionBase {
+public class CalculatePathToStickTask extends LeafTask<DogCharacter> {
 
 	public CalculatePathToStickTask () {
 	}
@@ -35,10 +37,15 @@ public class CalculatePathToStickTask extends DogActionBase {
 	}
 
 	@Override
-	public void run () {
+	public Status execute () {
 		// TODO: calculate destination and path 
 		
-		success();
+		return Status.SUCCEEDED;
+	}
+
+	@Override
+	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
+		return task;
 	}
 
 }

@@ -29,17 +29,8 @@ public class StickThrownCondition extends LeafTask<DogCharacter> {
 	}
 
 	@Override
-	public void start() {
-	}
-
-	@Override
-	public void run () {
-		if (getObject().stickThrown) {
-			success();
-		}
-		else {
-			fail();
-		}
+	public Status execute () {
+		return getObject().stickThrown? Status.SUCCEEDED : Status.FAILED;
 	}
 
 	@Override

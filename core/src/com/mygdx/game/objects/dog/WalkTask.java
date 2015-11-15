@@ -22,7 +22,7 @@ import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 /**
  * @author davebaol
  */
-public class WalkTask extends DogTaskBase {
+public class WalkTask extends LoopedAnimationTaskBase {
 
 	public WalkTask () {
 		super(0.7f);
@@ -30,7 +30,7 @@ public class WalkTask extends DogTaskBase {
 
 	@Override
 	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|move_walk", -1, 1, dog.animationListener, 0.1f);
+		dog.animations.animate("armature|move_walk", -1, 1, animationListener, 0.1f);
 
 		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed);
 		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration);

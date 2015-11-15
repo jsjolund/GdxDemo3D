@@ -19,22 +19,41 @@ package com.mygdx.game.objects.dog;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.settings.GameSettings;
 
 /**
  * @author davebaol
  */
-public abstract class DogTaskBase extends LeafTask<DogCharacter> {
+public abstract class LoopedAnimationTaskBase extends LeafTask<DogCharacter> {
 
-	protected float animationSpeedMultiplier;
+	public static class TaskAnimationListener implements AnimationController.AnimationListener {
+		public boolean animationFinished;
+		@Override
+		public void onEnd(AnimationController.AnimationDesc animation) {
+			animationFinished = true;
+		}
 
-	public DogTaskBase () {
-		this(-1);
+		@Override
+		public void onLoop(AnimationController.AnimationDesc animation) {
+		}
 	}
 
-	public DogTaskBase (float animationSpeedMultiplier) {
+	protected float animationSpeedMultiplier;
+	protected TaskAnimationListener animationListener;
+
+	public LoopedAnimationTaskBase () {
+		this(-1, false);
+	}
+
+	public LoopedAnimationTaskBase (float animationSpeedMultiplier) {
+		this(animationSpeedMultiplier, false);
+	}
+
+	public LoopedAnimationTaskBase (float animationSpeedMultiplier, boolean useAnimationListener) {
 		this.animationSpeedMultiplier = animationSpeedMultiplier;
+		this.animationListener = useAnimationListener ? new TaskAnimationListener() : null;
 	}
 
 	protected abstract void startAnimation(DogCharacter dog);
@@ -51,19 +70,28 @@ public abstract class DogTaskBase extends LeafTask<DogCharacter> {
 
 	@Override
 	public void start() {
+		if (animationListener != null)
+			animationListener.animationFinished = false;
 		startAnimation(getObject());
 	}
 
 	@Override
-	public void run () {
+	public Status execute () {
 		updateAnimation(getObject());
-		running();
+		return Status.RUNNING;
+	}
+
+	@Override
+	public void end() {
+		if (animationListener != null)
+			animationListener.animationFinished = true;
 	}
 
 	@Override
 	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
-		DogTaskBase dogTask = (DogTaskBase)task;
+		LoopedAnimationTaskBase dogTask = (LoopedAnimationTaskBase)task;
 		dogTask.animationSpeedMultiplier = animationSpeedMultiplier;
+		dogTask.animationListener = animationListener == null? null : new TaskAnimationListener();
 		return task;
 	}
 }
