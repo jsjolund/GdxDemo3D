@@ -33,6 +33,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.FloatArray;
+import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.GeometryUtils;
 
 /**
@@ -250,8 +251,8 @@ public class NavMesh implements Disposable {
 	/**
 	 * Make a ray test at this point, using a ray spanning from far up in the sky, to far down in the ground.
 	 *
-	 * @param testPoint The test point
-	 * @param out The point of intersection between ray and triangle
+	 * @param testPoint     The test point
+	 * @param out           The point of intersection between ray and triangle
 	 * @param meshPartIndex Which mesh parts to test.
 	 * @return The triangle, or null if ray did not hit any triangles.
 	 */
@@ -262,15 +263,18 @@ public class NavMesh implements Disposable {
 	}
 
 	/**
-	 * Make a ray test at this point, using a ray spanning from far up in the sky, to far down in the ground.
+	 * Make a ray test at this point, using a ray spanning from far up in the sky, to far down in the ground,
+	 * along the up axis.
 	 *
-	 * @param testPoint The test point
-	 * @param out The point of intersection between ray and triangle
+	 * @param testPoint        The test point
+	 * @param out              The point of intersection between ray and triangle
 	 * @param allowedMeshParts Which mesh parts to test.
 	 * @return The triangle, or null if ray did not hit any triangles.
 	 */
 	public Triangle verticalRayTest(Vector3 testPoint, Vector3 out, Bits allowedMeshParts) {
-		tmpRayVerticalRayTest.set(tmpVerticalRayTest1.set(Vector3.Y).scl(500).add(testPoint), tmpVerticalRayTest2.set(Vector3.Y).scl(-1));
+		tmpRayVerticalRayTest.set(
+				tmpVerticalRayTest1.set(Constants.V3_UP).scl(500).add(testPoint),
+				tmpVerticalRayTest2.set(Constants.V3_DOWN));
 		Triangle hitTri = rayTest(tmpRayVerticalRayTest, 1000, allowedMeshParts);
 		if (hitTri == null) {
 			// TODO: Perhaps this should be Nan?
@@ -290,23 +294,32 @@ public class NavMesh implements Disposable {
 	 * TODO: Exhaustive search is somewhat expensive depending on amount of
 	 * triangles in navmesh, maybe something like quadtrees can be used?
 	 *
-	 * @param fromPoint
-	 * @param closestPoint
-	 * @return
+	 * @param fromPoint        Test point
+	 * @param closestPoint     Output for closest point on closest triangle
+	 * @param allowedMeshParts Indices of which mesh parts to ray test. If null, do only an exhaustive search.
+	 * @return The closest triangle
 	 */
-	public Triangle getClosestTriangle(Vector3 fromPoint, Vector3 closestPoint) {
+	public Triangle getClosestTriangle(Vector3 fromPoint,
+									   Vector3 closestPoint,
+									   Bits allowedMeshParts) {
 		Triangle fromTri = null;
 		float minDst2 = Float.POSITIVE_INFINITY;
-		// TODO: To use this, one must specify valid navmesh parts.
-//		for (int meshPartIndex = 0; meshPartIndex < graph.getMeshPartCount(); meshPartIndex++) {
-//			Triangle tri = verticalRayTest(fromPoint, tmpGetClosestTriangle, meshPartIndex);
-//			float dst2 = fromPoint.dst2(tmpGetClosestTriangle);
-//			if (dst2 < minDst2) {
-//				minDst2 = dst2;
-//				fromTri = tri;
-//				closestPoint.set(tmpGetClosestTriangle);
-//			}
-//		}
+
+		if (allowedMeshParts != null) {
+			for (int meshPartIndex = 0; meshPartIndex < graph.getMeshPartCount(); meshPartIndex++) {
+				if (!allowedMeshParts.get(meshPartIndex)) {
+					continue;
+				}
+				Triangle tri = verticalRayTest(fromPoint, tmpGetClosestTriangle, meshPartIndex);
+				float dst2 = fromPoint.dst2(tmpGetClosestTriangle);
+				if (dst2 < minDst2) {
+					minDst2 = dst2;
+					fromTri = tri;
+					closestPoint.set(tmpGetClosestTriangle);
+				}
+			}
+		}
+
 		// Exhaustive scan through all the tris to find the closest tri and point
 		if (fromTri == null) {
 			for (int i = 0; i < graph.getNodeCount(); i++) {
@@ -326,9 +339,9 @@ public class NavMesh implements Disposable {
 	/**
 	 * Find the closest point on the triangle, given a measure point.
 	 *
-	 * @param tri The triangle
+	 * @param tri   The triangle
 	 * @param point The measure point
-	 * @param out Output for the closest point
+	 * @param out   Output for the closest point
 	 * @return The closest distance squared, between the triangle and measure point.
 	 */
 	public float getClosestPoint(Triangle tri, Vector3 point, Vector3 out) {
@@ -360,20 +373,25 @@ public class NavMesh implements Disposable {
 	}
 
 	/**
-	 * Find triangle and point on the navmesh closest to fromPoint.
+	 * Find a valid point on the navmesh, between the reference point and a target
+	 * point 'radius' distance from it, in the reference direction.
 	 *
-	 * @param fromPoint
-	 * @param direction
-	 * @param radius
-	 * @param out
+	 * @param referencePoint     Reference point when setting the target point.
+	 * @param referenceDirection The direction from the reference point to set target point at
+	 * @param radius             The distance from the reference point to the target point
+	 * @param out                The closest triangle
+	 * @param allowedMeshParts   Indices of which mesh parts to ray test. If null, an exhaustive check
+	 *                           of all triangles is always done.
 	 * @return
 	 */
-	public Triangle getClosestValidPointAt(Vector3 fromPoint, Vector3 direction,
-										   float radius, Vector3 out) {
-
+	public Triangle getClosestValidPointAt(Vector3 referencePoint,
+										   Vector3 referenceDirection,
+										   float radius,
+										   Vector3 out,
+										   Bits allowedMeshParts) {
 		// TODO: Continue here
-		Vector3 originalTargetPoint = tmpVecgetClosestValidPointAt.set(direction).nor().scl(radius).add(fromPoint);
-		return getClosestTriangle(originalTargetPoint, out);
+		Vector3 originalTargetPoint = tmpVecgetClosestValidPointAt.set(referenceDirection).nor().scl(radius).add(referencePoint);
+		return getClosestTriangle(originalTargetPoint, out, allowedMeshParts);
 	}
 
 

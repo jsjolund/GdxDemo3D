@@ -316,9 +316,10 @@ public class GameRenderer implements Disposable, Observer {
 
 
 			selectedCharacter.getDirection(direction);
-			selectedCharacter.transform.getTranslation(position);
+			selectedCharacter.getGroundPosition(position);
 			aimPoint.set(direction).scl(radius).add(position);
-			Triangle closest = navMesh.getClosestValidPointAt(position, direction, radius, closestPoint);
+			Triangle closest = navMesh.getClosestValidPointAt(position, direction, radius,
+					closestPoint, selectedCharacter.layers);
 
 			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
 			shapeRenderer.setColor(0, 0, 1, 0.2f);
