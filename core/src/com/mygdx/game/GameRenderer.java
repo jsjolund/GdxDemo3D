@@ -201,7 +201,7 @@ public class GameRenderer implements Disposable, Observer {
 	}
 
 	private void drawPath() {
-		if (selectedCharacter != null && selectedCharacter.pathToRender.size > 0) {
+		if (selectedCharacter != null && selectedCharacter.pathToRender.size > 0 && selectedCharacter.getCurrentSegmentIndex() >= 0) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 			shapeRenderer.setColor(Color.CORAL);
