@@ -24,8 +24,10 @@ import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
@@ -127,11 +129,11 @@ public class HumanCharacter extends Ragdoll {
 			public void enter(HumanCharacter entity) {
 				// Clear path and stop steering
 				entity.stopPathFollowing();
-				
+
 				HumanState prevState = entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
 					// Save animation speed multiplier
-					entity.animationSpeedMultiplier = prevState.animationMultiplier; 
+					entity.animationSpeedMultiplier = prevState.animationMultiplier;
 				}
 				MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_CLEAR_DOG_BUTTON, entity);
 			}
@@ -210,15 +212,15 @@ public class HumanCharacter extends Ragdoll {
 
 		public final HumanState idleState;
 		protected final float animationMultiplier;
-		
+
 		private HumanState() {
 			this(false);
 		}
-		
+
 		private HumanState(boolean idle) {
 			this(null, idle ? -1 : 0);
 		}
-		
+
 		private HumanState(HumanState idleState, float animationMultiplier) {
 			this.idleState = idleState;
 			this.animationMultiplier = animationMultiplier;
@@ -367,6 +369,10 @@ public class HumanCharacter extends Ragdoll {
 	private boolean animationCompleted;
 	public boolean selected = false;
 
+	private final Vector3 tmpNodePos = new Vector3();
+	private final Vector3 tmpNodeOffset = new Vector3();
+	private final Quaternion tmpModelRot = new Quaternion();
+
 	public HumanCharacter(Model model,
 						  String id,
 						  Vector3 location,
@@ -407,7 +413,7 @@ public class HumanCharacter extends Ragdoll {
 	public boolean wantToPlay() {
 		return stateMachine.getCurrentState() == HumanState.WHISTLE;
 	}
-	
+
 //	@Override
 //	public void calculateNewPath() {
 //		if (stateMachine.getCurrentState() != CharacterState.DEAD) {
@@ -433,4 +439,23 @@ public class HumanCharacter extends Ragdoll {
 		return moveState.idleState;
 	}
 
+	public Vector3 getRightHandWorldPosition(Vector3 out) {
+		return getBoneMidpointWorldPosition("right_hand", out);
+	}
+
+	public Vector3 getLeftHandWorldPosition(Vector3 out) {
+		return getBoneMidpointWorldPosition("left_hand", out);
+	}
+
+	public Vector3 getBoneMidpointWorldPosition(String nodeId, Vector3 out) {
+		Node node = modelInstance.getNode(nodeId);
+		Node endPointNode = (node.hasChildren()) ? node.getChild(0) : node;
+		endPointNode.globalTransform.getTranslation(tmpNodePos);
+		endPointNode.localTransform.getTranslation(tmpNodeOffset).scl(0.5f);
+		tmpNodePos.add(tmpNodeOffset);
+		modelInstance.transform.getRotation(tmpModelRot);
+		tmpModelRot.transform(tmpNodePos);
+		tmpNodePos.add(getPosition());
+		return out.set(tmpNodePos);
+	}
 }

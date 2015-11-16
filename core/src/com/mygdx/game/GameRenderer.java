@@ -17,10 +17,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.pfa.Connection;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -30,23 +28,19 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
-import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.debugdrawers.ArmatureDebugDrawer;
+import com.mygdx.game.debugdrawers.NavMeshDebugDrawer;
 import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.GameModel;
-import com.mygdx.game.pathfinding.Edge;
-import com.mygdx.game.pathfinding.NavMesh;
-import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.shaders.UberShader;
@@ -65,11 +59,7 @@ public class GameRenderer implements Disposable, Observer {
 	private final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
 	private final Vector3 tmp = new Vector3();
-	private final Vector3 tmp2 = new Vector3();
-	private final Vector3 debugNodePos1 = new Vector3();
-	private final Vector3 debugNodePos2 = new Vector3();
-	private final Matrix4 tmpMatrix = new Matrix4();
-	private final Quaternion tmpQuat = new Quaternion();
+
 	private final Viewport viewport;
 	private GameCharacter selectedCharacter;
 	private BitmapFont font;
@@ -79,6 +69,9 @@ public class GameRenderer implements Disposable, Observer {
 	private GameEngine engine;
 	private Bits visibleLayers;
 	private Billboard markerBillboard;
+
+	private ArmatureDebugDrawer armatureDebugDrawer = new ArmatureDebugDrawer();
+	private NavMeshDebugDrawer navMeshDebugDrawer = new NavMeshDebugDrawer();
 
 	public GameRenderer(Viewport viewport, Camera camera, GameEngine engine) {
 		this.viewport = viewport;
@@ -192,13 +185,18 @@ public class GameRenderer implements Disposable, Observer {
 			modelBatch.end();
 		}
 		if (DebugViewSettings.drawArmature) {
-			drawArmature();
+			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+			armatureDebugDrawer.drawArmature(shapeRenderer, selectedCharacter, "armature");
+
 		}
 		if (DebugViewSettings.drawPath) {
 			drawPath();
 		}
 		if (DebugViewSettings.drawNavmesh) {
-			drawNavMesh();
+			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+			navMeshDebugDrawer.drawNavMesh(shapeRenderer, spriteBatch,
+					engine.getScene().navMesh, selectedCharacter,
+					visibleLayers, viewport.getCamera(), font);
 		}
 	}
 
@@ -220,174 +218,6 @@ public class GameRenderer implements Disposable, Observer {
 		}
 	}
 
-	private boolean triangleIsVisible(Triangle t) {
-		return (visibleLayers.nextSetBit(t.meshPartIndex) != -1);
-	}
-
-	private void drawNavMesh() {
-		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
-		// Paint navmesh
-		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		for (int i = 0; i < engine.getScene().navMesh.graph.getNodeCount(); i++) {
-			Triangle t = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(i);
-			if (triangleIsVisible(t)) {
-				shapeRenderer.setColor(Color.GRAY);
-				shapeRenderer.line(t.a, t.b);
-				shapeRenderer.line(t.b, t.c);
-				shapeRenderer.line(t.c, t.a);
-			}
-		}
-		if (selectedCharacter == null) {
-			shapeRenderer.end();
-		} else {
-			// Paint triangle path of selected character
-			if (selectedCharacter.navMeshGraphPath.getCount() > 0) {
-				// Path triangles
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				for (int i = 0; i < selectedCharacter.navMeshGraphPath.getCount(); i++) {
-					Edge e = (Edge) selectedCharacter.navMeshGraphPath.get(i);
-					if (selectedCharacter.currentTriangle.getIndex() == e.fromNode.getIndex()) {
-						shapeRenderer.setColor(1, 0, 0, 0.2f);
-					} else {
-						shapeRenderer.setColor(1, 1, 0, 0.2f);
-					}
-					if (triangleIsVisible(e.toNode)) {
-						shapeRenderer.triangle(e.fromNode.a, e.fromNode.b, e.fromNode.c);
-					}
-					if (i == selectedCharacter.navMeshGraphPath.getCount() - 1) {
-						if (selectedCharacter.currentTriangle.getIndex() == e.toNode.getIndex()) {
-							shapeRenderer.setColor(1, 0, 0, 0.2f);
-						} else {
-							shapeRenderer.setColor(1, 1, 0, 0.2f);
-						}
-						if (triangleIsVisible(e.toNode)) {
-							shapeRenderer.triangle(e.toNode.a, e.toNode.b, e.toNode.c);
-						}
-					}
-				}
-				// Shared triangle edges
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-				for (Connection<Triangle> connection : selectedCharacter.navMeshGraphPath) {
-					Edge e = (Edge) connection;
-					if (triangleIsVisible(e.fromNode) || triangleIsVisible(e.toNode)) {
-						shapeRenderer.line(e.rightVertex, e.leftVertex, Color.GREEN, Color.RED);
-					}
-				}
-
-			} else if (selectedCharacter.currentTriangle != null) {
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-				Triangle tri = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(selectedCharacter.currentTriangle.getIndex
-						());
-				shapeRenderer.setColor(1, 0, 0, 0.2f);
-				if (triangleIsVisible(tri)) {
-					shapeRenderer.triangle(tri.a, tri.b, tri.c);
-				}
-			}
-
-			// Paint point path of selected character
-			if (selectedCharacter.navMeshPointPath.getSize() > 0) {
-				shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-				// Smoothed path
-				Vector3 q;
-				Vector3 p = selectedCharacter.navMeshPointPath.getVector(selectedCharacter.navMeshPointPath.getSize() - 1);
-				float r = 0.02f;
-				float s = r / 2;
-				shapeRenderer.setColor(Color.WHITE);
-				for (int i = selectedCharacter.navMeshPointPath.getSize() - 1; i >= 0; i--) {
-					q = selectedCharacter.navMeshPointPath.getVector(i);
-					shapeRenderer.setColor(Color.CYAN);
-					shapeRenderer.line(p, q);
-					p = q;
-					shapeRenderer.setColor(Color.WHITE);
-					shapeRenderer.box(p.x - s, p.y - s, p.z + s, r, r, r);
-				}
-			}
-
-			// Closest point debug draw
-			NavMesh navMesh = engine.getScene().navMesh;
-			Vector3 position = debugNodePos1;
-			Vector3 direction = debugNodePos2;
-			Vector3 closestPoint = tmp;
-			Vector3 aimPoint = tmp2;
-			float radius = 2;
-
-
-			selectedCharacter.getDirection(direction);
-			selectedCharacter.getGroundPosition(position);
-			aimPoint.set(direction).scl(radius).add(position);
-			Triangle closest = navMesh.getClosestValidPointAt(position, direction, radius,
-					closestPoint, selectedCharacter.layers);
-
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
-			shapeRenderer.setColor(0, 0, 1, 0.2f);
-			shapeRenderer.triangle(closest.a, closest.b, closest.c);
-
-			shapeRenderer.setColor(Color.GREEN);
-			shapeRenderer.box(aimPoint.x, aimPoint.y, aimPoint.z, 0.2f, 0.2f, 0.2f);
-
-			shapeRenderer.setColor(Color.WHITE);
-			shapeRenderer.box(closestPoint.x, closestPoint.y, closestPoint.z, 0.2f, 0.2f, 0.2f);
-
-			shapeRenderer.end();
-		}
-		// Draw indices of the triangles
-		// TODO: Get rid of all the transform matrix setting
-		spriteBatch.begin();
-		spriteBatch.setProjectionMatrix(camera.combined);
-		for (int i = 0; i < engine.getScene().navMesh.graph.getNodeCount(); i++) {
-			Triangle t = engine.getScene().navMesh.graph.getTriangleFromGraphIndex(i);
-			if (triangleIsVisible(t)) {
-				tmpMatrix.set(camera.view).inv().getRotation(tmpQuat);
-				tmpMatrix.setToTranslation(t.centroid).rotate(tmpQuat);
-				spriteBatch.setTransformMatrix(tmpMatrix);
-				font.draw(spriteBatch, Integer.toString(t.triIndex), 0, 0);
-			}
-		}
-		spriteBatch.end();
-
-		Gdx.gl.glDisable(GL20.GL_BLEND);
-	}
-
-	private void drawArmature() {
-		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-		shapeRenderer.setColor(0, 1, 1, 1);
-		if (selectedCharacter != null) {
-			Node skeleton = selectedCharacter.modelInstance.getNode("armature");
-			if (skeleton != null) {
-				selectedCharacter.modelInstance.transform.getTranslation(tmp);
-				selectedCharacter.modelInstance.transform.getRotation(tmpQuat);
-				skeleton.globalTransform.getTranslation(debugNodePos1);
-				drawArmatureNodes(skeleton, tmp, tmpQuat, debugNodePos1, debugNodePos2);
-			}
-		}
-		shapeRenderer.end();
-	}
-
-	private void drawArmatureNodes(Node currentNode, Vector3 modelPos, Quaternion modelRot,
-								   Vector3 parentNodePos, Vector3 currentNodePos) {
-		currentNode.globalTransform.getTranslation(currentNodePos);
-		modelRot.transform(currentNodePos);
-		currentNodePos.add(modelPos);
-		shapeRenderer.setColor(Color.GREEN);
-		shapeRenderer.box(currentNodePos.x, currentNodePos.y, currentNodePos.z, 0.01f, 0.01f, 0.01f);
-		shapeRenderer.setColor(Color.YELLOW);
-		if (currentNode.hasParent()) {
-			shapeRenderer.line(parentNodePos, currentNodePos);
-		}
-		if (currentNode.hasChildren()) {
-			float x = currentNodePos.x;
-			float y = currentNodePos.y;
-			float z = currentNodePos.z;
-			for (Node child : currentNode.getChildren()) {
-				drawArmatureNodes(child, modelPos, modelRot, currentNodePos, parentNodePos);
-				currentNodePos.set(x, y, z);
-			}
-		}
-	}
 
 	public void setSelectionMarker(Billboard markerBillboard) {
 		this.markerBillboard = markerBillboard;
