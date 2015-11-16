@@ -33,6 +33,7 @@ import com.mygdx.game.pathfinding.NavMeshPointPath;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.utilities.BulletLocation;
 import com.mygdx.game.utilities.BulletSteeringUtils;
+import com.mygdx.game.utilities.Constants;
 
 /**
  * @author jsjolund
@@ -128,35 +129,35 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 
-		if (steeringBehavior == null) {
-			return;
-		}
-
-		// Calculate steering acceleration
-		steeringBehavior.calculateSteering(steeringOutput);
-
-		boolean isSteering = isSteering();
-		if (isSteering && !wasSteering) {
-			startSteering();
-		} else if (!isSteering && wasSteering) {
-			finishSteering();
-		}
-
-		// Apply steering acceleration
-		applySteering(steeringOutput, deltaTime);
-
-		// Check if steering target path segment changed.
-		int traversedSegments = followPathSB.getPathParam().getSegmentIndex() - currentSegmentIndex;
-		if (traversedSegments > 0) {
-			// Update rotation and current navmesh triangle.
-			currentSegmentIndex = followPathSB.getPathParam().getSegmentIndex();
-			LinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
-			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
-			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
-			currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
-			layers.clear();
-			layers.set(currentTriangle.meshPartIndex);
-		}
+//		if (steeringBehavior == null) {
+//			return;
+//		}
+//
+//		// Calculate steering acceleration
+//		steeringBehavior.calculateSteering(steeringOutput);
+//
+//		boolean isSteering = isSteering();
+//		if (isSteering && !wasSteering) {
+//			startSteering();
+//		} else if (!isSteering && wasSteering) {
+//			finishSteering();
+//		}
+//
+//		// Apply steering acceleration
+//		applySteering(steeringOutput, deltaTime);
+//
+//		// Check if steering target path segment changed.
+//		int traversedSegments = followPathSB.getPathParam().getSegmentIndex() - currentSegmentIndex;
+//		if (traversedSegments > 0) {
+//			// Update rotation and current navmesh triangle.
+//			currentSegmentIndex = followPathSB.getPathParam().getSegmentIndex();
+//			LinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
+//			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
+//			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
+//			currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
+//			layers.clear();
+//			layers.set(currentTriangle.meshPartIndex);
+//		}
 	}
 
 	public int getCurrentSegmentIndex() {
@@ -330,12 +331,14 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	@Override
 	public float getOrientation() {
-		return body.getWorldTransform().getRotation(tmpQuat).getYawRad();
+		return transform.getRotation(tmpQuat).getAngleAroundRad(Constants.V3_UP);
 	}
 
 	@Override
 	public void setOrientation(float orientation) {
-		body.getWorldTransform().setToRotationRad(0, 1, 0, orientation);
+		position = getPosition();
+		transform.setFromEulerAnglesRad(orientation, 0, 0).setTranslation(position);
+		body.setWorldTransform(transform);
 	}
 
 	@Override

@@ -39,6 +39,7 @@ import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
+import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.GhostCamera;
 
 /**
@@ -112,7 +113,7 @@ public class GameScreen implements Screen {
 		h1.assignDog(d1);
 		h2.assignDog(d2);
 		h3.assignDog(d3);
-		
+
 		Billboard markerBillboard = blenderScene.spawnSelectionBillboard(camera);
 		renderSys.setSelectionMarker(markerBillboard);
 
@@ -125,6 +126,12 @@ public class GameScreen implements Screen {
 		for (GameModel tree : trees) {
 			Gdx.app.debug(tag, "Found tree at " + tree.transform.getTranslation(new Vector3()));
 		}
+
+		d1.setOrientation(Constants.PI);
+		Gdx.app.debug(tag, String.format("Orientation of Dog 1 is %s radians", d1.getOrientation()));
+		h1.setOrientation(Constants.PI0_5);
+		Gdx.app.debug(tag, String.format("Orientation of Human 1 is %s radians", h1.getOrientation()));
+
 	}
 
 	@Override
