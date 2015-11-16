@@ -1,5 +1,6 @@
 import calculatePathToHuman:"com.mygdx.game.objects.dog.CalculatePathToHumanTask"
 import calculatePathToStick:"com.mygdx.game.objects.dog.CalculatePathToStickTask"
+import adjustOrientation:"com.mygdx.game.objects.dog.AdjustOrientationTask"
 import setThrowButton:"com.mygdx.game.objects.dog.SetThrowButtonTask"
 import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
 import piss:"com.mygdx.game.objects.dog.PissTask"
@@ -36,12 +37,13 @@ sequence
   sequence
     calculatePathToHuman
     run
+    adjustOrientation
     setThrowButton enabled:true
     parallel
       humanWantToPlay?
       parallel policy:"selector" # wait for the man to throw the stick
         stickThrown?
-        alwaysFail
+        repeat
           sequence
             spinAround
             parallel policy:"selector"
