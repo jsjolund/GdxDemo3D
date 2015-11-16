@@ -182,6 +182,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	protected void startSteering() {
 		wasSteering = true;
 		body.setFriction(0);
+		transform.getRotation(currentFacingQuat, true);
 	}
 
 	protected void finishSteering() {
