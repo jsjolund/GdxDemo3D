@@ -23,6 +23,7 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc;
 import com.badlogic.gdx.math.MathUtils;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.utilities.Constants;
+import com.mygdx.game.utilities.Sounds;
 
 /**
  * @author davebaol
@@ -58,6 +59,7 @@ public class AdjustOrientationTask extends OneShotAnimationTaskBase {
 			updateAnimation(dog);
 			return Status.RUNNING;
 		}
+		Sounds.bark.play();
 		float newOrientation = ArithmeticUtils.wrapAngleAroundZero(dog.getOrientation() - orientationDiff  + Constants.PI);
 		dog.setOrientation(newOrientation);
 		Gdx.app.log(getClass().getSimpleName(), "dog.orientation   = " + (MathUtils.radiansToDegrees * dog.getOrientation()));
