@@ -21,17 +21,21 @@ import com.badlogic.gdx.audio.Sound;
 
 public class Sounds {
 
+	static public Sound bark;
 	static public Sound whistle;
 	
 	private Sounds () {
 	}
 
 	public static void load() {
+		bark = load("sounds/bark.mp3");
 		whistle = load("sounds/whistle.mp3");
 	}
 
 	public static void dispose() {
+		bark.dispose();
 		whistle.dispose();
+		
 	}
 
 	private static Sound load(String file) {
