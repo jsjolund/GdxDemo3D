@@ -204,7 +204,7 @@ public class GameRenderer implements Disposable, Observer {
 					engine.getScene().navMesh, selectedCharacter,
 					visibleLayers, viewport.getCamera(), font);
 		}
-		if (DebugViewSettings.drawMouseWorldAxis) {
+		if (DebugViewSettings.drawMouseNavMeshPos) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			drawMouseWorldAxis();
 		}

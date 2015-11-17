@@ -115,7 +115,9 @@ public class GameStage extends Stage implements Observable {
 		private final Vector2 lastTouchDown = new Vector2();
 
 		private final Vector3 tmp = new Vector3();
-		private final Vector3 mouseCoords = new Vector3();
+		private final Vector3 mouseNavMeshPos = new Vector3();
+		private final Vector2 mouseScreenPos = new Vector2();
+
 
 		private final IntIntMap keys = new IntIntMap();
 
@@ -202,17 +204,18 @@ public class GameStage extends Stage implements Observable {
 				}
 				lastDragProcessed.set(screenX, screenY);
 			}
-			mouseMoved(screenX,screenY);
+			mouseMoved(screenX, screenY);
 			return true;
 		}
 
 		@Override
 		public boolean mouseMoved(int screenX, int screenY) {
 			movedRay.set(viewport.getPickRay(screenX, screenY));
-			Entity e = engine.rayTest(movedRay, mouseCoords, GameEngine.NAVMESH_FLAG,
+			Entity e = engine.rayTest(movedRay, mouseNavMeshPos, GameEngine.NAVMESH_FLAG,
 					GameEngine.NAVMESH_FLAG, GameSettings.CAMERA_PICK_RAY_DST, null);
-			if (e == null) mouseCoords.set(Float.NaN, Float.NaN, Float.NaN);
-			notifyCursorWorldPosition(mouseCoords.x, mouseCoords.y, mouseCoords.z);
+			if (e == null) mouseNavMeshPos.set(Float.NaN, Float.NaN, Float.NaN);
+			notifyCursorWorldPosition(mouseNavMeshPos.x, mouseNavMeshPos.y, mouseNavMeshPos.z);
+			mouseScreenPos.set(screenX, screenY);
 			return true;
 		}
 
@@ -421,7 +424,8 @@ public class GameStage extends Stage implements Observable {
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas buttonsAtlas;
-	private final ValueLabel<Vector3> mouseCoordsLabel;
+
+	private  final MouseNavMeshCoordLabel mouseCoordLabel;
 	private final Camera cameraUI;
 	private final Camera camera3D;
 	private final Skin skin;
@@ -438,7 +442,67 @@ public class GameStage extends Stage implements Observable {
 	private final Table steerSettings;
 
 	private final Vector3 tmp = new Vector3();
+	private final Vector2 tmpV2 = new Vector2();
+
 	private Bits visibleLayers;
+
+	private class FloatValue {
+		float f;
+		@Override
+		public String toString() {
+			return Float.toString(f);
+		}
+	}
+
+	private class MouseNavMeshCoordLabel extends Table {
+		public MouseNavMeshCoordLabel(Skin skin) {
+			// Create labels
+			ValueLabel<FloatValue> mouseLabelX = new ValueLabel<FloatValue>("x: ", new FloatValue(), skin) {
+				FloatValue fv = new FloatValue();
+				@Override
+				public FloatValue getValue() {
+					fv.f = worldInputProcessor.mouseNavMeshPos.x;
+					return fv;
+				}
+				@Override
+				public void copyValue(FloatValue newValue, FloatValue oldValue) {
+					oldValue.f = newValue.f;
+				}
+			};
+			// Create labels
+			ValueLabel<FloatValue> mouseLabelY = new ValueLabel<FloatValue>("y: ", new FloatValue(), skin) {
+				FloatValue fv = new FloatValue();
+				@Override
+				public FloatValue getValue() {
+					fv.f = worldInputProcessor.mouseNavMeshPos.y;
+					return fv;
+				}
+				@Override
+				public void copyValue(FloatValue newValue, FloatValue oldValue) {
+					oldValue.f = newValue.f;
+				}
+			};
+			// Create labels
+			ValueLabel<FloatValue> mouseLabelZ = new ValueLabel<FloatValue>("z: ", new FloatValue(), skin) {
+				FloatValue fv = new FloatValue();
+				@Override
+				public FloatValue getValue() {
+					fv.f = worldInputProcessor.mouseNavMeshPos.z;
+					return fv;
+				}
+				@Override
+				public void copyValue(FloatValue newValue, FloatValue oldValue) {
+					oldValue.f = newValue.f;
+				}
+			};
+			// This should be floating
+			add(mouseLabelX).left();
+			row();
+			add(mouseLabelY).left();
+			row();
+			add(mouseLabelZ).left();
+		}
+	}
 
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
 		super(viewport);
@@ -465,18 +529,9 @@ public class GameStage extends Stage implements Observable {
 
 		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
 
-		// Create labels
-		mouseCoordsLabel = new ValueLabel<Vector3>("NavMesh: ", new Vector3(), skin) {
-			@Override
-			public Vector3 getValue() {
-				return worldInputProcessor.mouseCoords;
-			}
+		mouseCoordLabel = new MouseNavMeshCoordLabel(skin);
+		addActor(mouseCoordLabel);
 
-			@Override
-			public void copyValue(Vector3 newValue, Vector3 oldValue) {
-				oldValue.set(newValue);
-			}
-		};
 		fpsLabel = new IntValueLabel("FPS: ", 999, skin) {
 			@Override
 			public int getValue() {
@@ -500,7 +555,8 @@ public class GameStage extends Stage implements Observable {
 		rootTable.row().top().left().colspan(3);
 		Table topTable = new Table();
 		topTable.add(fpsLabel).width(fpsLabel.getWidth());
-		topTable.add(mouseCoordsLabel).padLeft(15);
+//		topTable.add(mouseCoordsLabel).padLeft(15);
+
 		rootTable.add(topTable);
 
 		rootTable.row().bottom();
@@ -637,6 +693,15 @@ public class GameStage extends Stage implements Observable {
 			shapeRenderer.begin();
 			rootTable.drawDebug(shapeRenderer);
 			shapeRenderer.end();
+		}
+		if (DebugViewSettings.drawMouseNavMeshPos) {
+			screenToStageCoordinates(tmpV2.set(worldInputProcessor.mouseScreenPos));
+			mouseCoordLabel.setPosition(tmpV2.x + 75, tmpV2.y - 50);
+			if (!mouseCoordLabel.isVisible()) {
+				mouseCoordLabel.setVisible(true);
+			}
+		} else if (mouseCoordLabel.isVisible()) {
+			mouseCoordLabel.setVisible(false);
 		}
 	}
 
