@@ -59,6 +59,7 @@ public class GameRenderer implements Disposable, Observer {
 	private final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
 	private final Vector3 tmp = new Vector3();
+	private final Vector3 cursorWorldPosition = new Vector3();
 
 	private final Viewport viewport;
 	private GameCharacter selectedCharacter;
@@ -110,6 +111,11 @@ public class GameRenderer implements Disposable, Observer {
 	@Override
 	public void notifyLayerChanged(Bits layer) {
 		this.visibleLayers = layer;
+	}
+
+	@Override
+	public void notifyCursorWorldPosition(float x, float y, float z) {
+		this.cursorWorldPosition.set(x, y, z);
 	}
 
 	@Override
@@ -198,6 +204,25 @@ public class GameRenderer implements Disposable, Observer {
 					engine.getScene().navMesh, selectedCharacter,
 					visibleLayers, viewport.getCamera(), font);
 		}
+		if (DebugViewSettings.drawMouseWorldAxis) {
+			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
+			drawMouseWorldAxis();
+		}
+	}
+
+	private void drawMouseWorldAxis() {
+		Vector3 v = cursorWorldPosition;
+		if (Float.isNaN(v.x) || Float.isNaN(v.y) || Float.isNaN(v.z)) {
+			return;
+		}
+		shapeRenderer.begin();
+		shapeRenderer.setColor(Color.RED);
+		shapeRenderer.line(v, tmp.set(v).add(Vector3.X));
+		shapeRenderer.setColor(Color.GREEN);
+		shapeRenderer.line(v, tmp.set(v).add(Vector3.Y));
+		shapeRenderer.setColor(Color.BLUE);
+		shapeRenderer.line(v, tmp.set(v).add(Vector3.Z));
+		shapeRenderer.end();
 	}
 
 	private void drawPath() {

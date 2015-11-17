@@ -330,15 +330,35 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		return body.getWorldTransform().getTranslation(position);
 	}
 
+	/**
+	 * Get the rotation of the model for this Steerable, around the Y-axis.
+	 * This might not be equal to the rotation of the collision body while steering is active.
+	 * <p>
+	 * When orientation is 0, character faces positive X axis.
+	 * Rotating [0:PI] makes the character turn to the left from its perspective.
+	 * Rotating [0:-PI] turns it right.
+	 *
+	 * @return
+	 */
 	@Override
 	public float getOrientation() {
-		return transform.getRotation(tmpQuat).getAngleAroundRad(Constants.V3_UP);
+		return BulletSteeringUtils.vectorToAngle(getDirection(tmpVec));
 	}
 
+	/**
+	 * Set the rotation of the model and collision body for this Steerable, around the Y-axis.
+	 * <p>
+	 * When orientation is 0, character faces positive X axis.
+	 * Rotating [0:PI] makes the character turn to the left from its perspective.
+	 * Rotating [0:-PI] turns it right.
+	 *
+	 * @param orientation
+	 */
 	@Override
 	public void setOrientation(float orientation) {
 		position = getPosition();
-		transform.setFromEulerAnglesRad(orientation, 0, 0).setTranslation(position);
+		BulletSteeringUtils.angleToVector(tmpVec, -orientation);
+		transform.setToLookAt(tmpVec, Constants.V3_UP).setTranslation(position);
 		body.setWorldTransform(transform);
 	}
 

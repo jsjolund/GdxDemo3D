@@ -32,4 +32,5 @@ public interface Observable {
 
 	void notifyObserversLayerChanged(Bits layer);
 
+	void notifyCursorWorldPosition(float x, float y, float z);
 }

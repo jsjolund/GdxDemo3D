@@ -45,7 +45,7 @@ import java.util.Iterator;
  * @author jsjolund
  */
 public class GameEngine extends PooledEngine implements Disposable, Observer {
-	
+
 	/**
 	 * A ClosestRayResultCallback which takes object layers into account (e.g. house floors)
 	 */
@@ -151,8 +151,8 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	public static GameEngine engine;
 
 	public GameEngine() {
-		GameEngine.engine = this; 
-		
+		GameEngine.engine = this;
+
 		collisionConfig = new btDefaultCollisionConfiguration();
 		dispatcher = new btCollisionDispatcher(collisionConfig);
 		broadphase = new btDbvtBroadphase();
@@ -369,6 +369,11 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	public void notifyLayerChanged(Bits layer) {
 		visibleLayers = layer;
 		modelCacheDirty = true;
+	}
+
+	@Override
+	public void notifyCursorWorldPosition(float x, float y, float z) {
+
 	}
 
 //	public class CollisionContactListener extends ContactListener {

@@ -202,6 +202,7 @@ public class GameStage extends Stage implements Observable {
 				}
 				lastDragProcessed.set(screenX, screenY);
 			}
+			mouseMoved(screenX,screenY);
 			return true;
 		}
 
@@ -211,6 +212,7 @@ public class GameStage extends Stage implements Observable {
 			Entity e = engine.rayTest(movedRay, mouseCoords, GameEngine.NAVMESH_FLAG,
 					GameEngine.NAVMESH_FLAG, GameSettings.CAMERA_PICK_RAY_DST, null);
 			if (e == null) mouseCoords.set(Float.NaN, Float.NaN, Float.NaN);
+			notifyCursorWorldPosition(mouseCoords.x, mouseCoords.y, mouseCoords.z);
 			return true;
 		}
 
@@ -263,16 +265,13 @@ public class GameStage extends Stage implements Observable {
 									if (hs.isIdleState()) {
 										human.moveState = CharacterButton.this.state;
 										human.handleStateCommand(CharacterButton.this.state.idleState);
-									}
-									else if (!hs.isMovementState()) {
+									} else if (!hs.isMovementState()) {
 										human.moveState = CharacterButton.this.state;
 										human.handleStateCommand(CharacterButton.this.state.idleState);
-									}
-									else {
+									} else {
 										human.handleStateCommand(CharacterButton.this.state);
 									}
-								}
-								else {
+								} else {
 									human.handleStateCommand(CharacterButton.this.state);
 								}
 							}
@@ -294,11 +293,11 @@ public class GameStage extends Stage implements Observable {
 			throwButton = new CharacterButton(HumanState.THROW, buttonAtlas, "throw-up", "throw-down", "throw-down");
 
 			radioGroup = new ButtonGroup<CharacterButton>(
-				new CharacterButton(HumanState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
-				new CharacterButton(HumanState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
-				new CharacterButton(HumanState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
-				//new CharacterButton(CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
-				new CharacterButton(HumanState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
+					new CharacterButton(HumanState.MOVE_RUN, buttonAtlas, "run-up", "run-down", "run-down"),
+					new CharacterButton(HumanState.MOVE_WALK, buttonAtlas, "walk-up", "walk-down", "walk-down"),
+					new CharacterButton(HumanState.MOVE_CROUCH, buttonAtlas, "crouch-up", "crouch-down", "crouch-down"),
+					//new CharacterButton(CharacterState.MOVE_CRAWL, buttonAtlas, "crawl-up", "crawl-down", "crawl-down"),
+					new CharacterButton(HumanState.DEAD, buttonAtlas, "kill-up", "kill-down", "kill-down")
 			);
 
 			// Add whistle button and save the reference to the 1st cell
@@ -308,14 +307,14 @@ public class GameStage extends Stage implements Observable {
 			for (CharacterButton btn : radioGroup.getButtons()) {
 				add(btn);
 			}
-			
+
 			// Register this controller's interests
 			MessageManager.getInstance().addListeners(this,
-				Constants.MSG_GUI_CLEAR_DOG_BUTTON,
-				Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE,
-				Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW);
+					Constants.MSG_GUI_CLEAR_DOG_BUTTON,
+					Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE,
+					Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW);
 		}
-		
+
 		private final void setDogButton(CharacterButton btn, HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
 				whistleButton.setVisible(false);
@@ -326,7 +325,7 @@ public class GameStage extends Stage implements Observable {
 				Gdx.app.log("CharacterController", "setDogButton: " + (btn == whistleButton ? "whistleButton" : (btn == throwButton ? "throwButton" : "???")));
 			}
 		}
-		
+
 		private final void clearDogButton(HumanCharacter human) {
 			if (human != null && human == selectedCharacter) {
 				whistleButton.setVisible(false);
@@ -344,7 +343,7 @@ public class GameStage extends Stage implements Observable {
 				HumanCharacter human = (HumanCharacter) selectedCharacter;
 				human.selected = false;
 			}
-			
+
 			// Select new character
 			selectedCharacter = character;
 			notifyObserversEntitySelected(selectedCharacter);
@@ -360,15 +359,12 @@ public class GameStage extends Stage implements Observable {
 				if (human.dog != null) {
 					if (!human.dog.humanWantToPlay) {
 						this.setDogButton(whistleButton, human);
-					}
-					else if (!human.dog.stickThrown) {
+					} else if (!human.dog.stickThrown) {
 						this.setDogButton(throwButton, human);
-					}
-					else {
+					} else {
 						this.clearDogButton(human);
 					}
-				}
-				else {
+				} else {
 					this.clearDogButton(human);
 				}
 				for (CharacterButton btn : radioGroup.getButtons()) {
@@ -403,17 +399,17 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		@Override
-		public boolean handleMessage (Telegram telegram) {
+		public boolean handleMessage(Telegram telegram) {
 			switch (telegram.message) {
-			case Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE:
-				setDogButton(whistleButton, (HumanCharacter)telegram.extraInfo);
-				return true;
-			case Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW:
-				setDogButton(throwButton, (HumanCharacter)telegram.extraInfo);
-				return true;
-			case Constants.MSG_GUI_CLEAR_DOG_BUTTON:
-				clearDogButton((HumanCharacter)telegram.extraInfo);
-				return true;
+				case Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE:
+					setDogButton(whistleButton, (HumanCharacter) telegram.extraInfo);
+					return true;
+				case Constants.MSG_GUI_SET_DOG_BUTTON_TO_THROW:
+					setDogButton(throwButton, (HumanCharacter) telegram.extraInfo);
+					return true;
+				case Constants.MSG_GUI_CLEAR_DOG_BUTTON:
+					clearDogButton((HumanCharacter) telegram.extraInfo);
+					return true;
 			}
 			return false;
 		}
@@ -487,7 +483,7 @@ public class GameStage extends Stage implements Observable {
 				return Gdx.graphics.getFramesPerSecond();
 			}
 		};
-		
+
 		// Create controllers
 		speedController = new GameSpeedController(buttonsAtlas);
 		characterController = new CharacterController(buttonsAtlas);
@@ -528,18 +524,19 @@ public class GameStage extends Stage implements Observable {
 		// Add bottom right table with controllers
 		//
 		// FIXME: This is pretty ugly but we have to scale
-		// the table because button's images are too big. 
+		// the table because button's images are too big.
 		// Unfortunately, scaling the table does not change
 		// its size, which is problematic in resize method,
 		// so we have to override the pref size. :(
 		// Atlas and texture should be resize instead.
-		// Maybe sooner or later someone will do :) 
+		// Maybe sooner or later someone will do :)
 		final float scale = 0.5f;
 		Table bottomRightTable = new Table() {
-			public float getPrefWidth () {
+			public float getPrefWidth() {
 				return super.getPrefWidth() * scale;
 			}
-			public float getPrefHeight () {
+
+			public float getPrefHeight() {
 				return super.getPrefHeight() * scale;
 			}
 		};
@@ -548,7 +545,7 @@ public class GameStage extends Stage implements Observable {
 		bottomRightTable.add(characterController);
 		bottomRightTable.add(speedController);
 		bottomRightTable.setTransform(true);
-		bottomRightTable.setOrigin(bottomRightTable.getPrefWidth()*scale, bottomRightTable.getPrefHeight()*scale);
+		bottomRightTable.setOrigin(bottomRightTable.getPrefWidth() * scale, bottomRightTable.getPrefHeight() * scale);
 		bottomRightTable.setScale(scale);
 		rootTable.add(bottomRightTable).width(bottomRightTable.getPrefWidth()).height(bottomRightTable.getPrefHeight()).bottom().right();
 
@@ -592,7 +589,7 @@ public class GameStage extends Stage implements Observable {
 		float scaleX = 1;
 		float scaleY = 1;
 		if (rootTable.getPrefWidth() > viewport.getScreenWidth())
-			scaleX -= (rootTable.getPrefWidth() - viewport.getScreenWidth()) / (float)rootTable.getPrefWidth();
+			scaleX -= (rootTable.getPrefWidth() - viewport.getScreenWidth()) / (float) rootTable.getPrefWidth();
 //		if (rootTable.getPrefHeight() > viewport.getScreenHeight())
 //			scaleY -= (rootTable.getPrefHeight() - viewport.getScreenHeight()) / (float)rootTable.getPrefHeight();
 
@@ -602,8 +599,7 @@ public class GameStage extends Stage implements Observable {
 			rootTable.setTransform(false);
 			rootTable.setOrigin(0, 0);
 			rootTable.setScale(1);
-		}
-		else {
+		} else {
 			Gdx.app.log(tag, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
 			rootTable.setTransform(true);
 			rootTable.setOrigin(0, 0);
@@ -665,6 +661,13 @@ public class GameStage extends Stage implements Observable {
 	public void notifyObserversLayerChanged(Bits layer) {
 		for (Observer observer : observers) {
 			observer.notifyLayerChanged(layer);
+		}
+	}
+
+	@Override
+	public void notifyCursorWorldPosition(float x, float y, float z) {
+		for (Observer observer : observers) {
+			observer.notifyCursorWorldPosition(x, y, z);
 		}
 	}
 }

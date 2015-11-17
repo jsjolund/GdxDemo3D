@@ -27,4 +27,6 @@ public interface Observer {
 	void notifyEntitySelected(GameCharacter entity);
 
 	void notifyLayerChanged(Bits layer);
+
+	void notifyCursorWorldPosition(float x, float y, float z);
 }

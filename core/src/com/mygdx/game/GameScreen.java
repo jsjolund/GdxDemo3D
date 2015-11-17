@@ -128,9 +128,31 @@ public class GameScreen implements Screen {
 		}
 
 		d1.setOrientation(Constants.PI);
+
 		Gdx.app.debug(tag, String.format("Orientation of Dog 1 is %s radians", d1.getOrientation()));
-		h1.setOrientation(Constants.PI0_5);
-		Gdx.app.debug(tag, String.format("Orientation of Human 1 is %s radians", h1.getOrientation()));
+		float r;
+		String out = "Orientation (radians) Human 1:\t%s should be %s";
+		h1.setOrientation(r = 0);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = Constants.PI0_25);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = Constants.PI0_5);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = Constants.PI0_75);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+
+		// Reported as -3.1415925, but ok since rotations are in ranges [0:PI] and [0:-PI]
+		h1.setOrientation(r = Constants.PI);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+
+		h1.setOrientation(r = -Constants.PI);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = -Constants.PI0_75);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = -Constants.PI0_5);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
+		h1.setOrientation(r = -Constants.PI0_25);
+		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
 
 	}
 
