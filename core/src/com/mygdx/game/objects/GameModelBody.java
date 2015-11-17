@@ -33,6 +33,9 @@ import com.badlogic.gdx.utils.Array;
  */
 public class GameModelBody extends GameModel {
 
+	/**
+	 * Synchronizes the model world transform with the rigid body world transform
+	 */
 	public class PhysicsMotionState extends btMotionState {
 		public final Matrix4 transform;
 
@@ -52,15 +55,54 @@ public class GameModelBody extends GameModel {
 	}
 
 	private final static Vector3 localInertia = new Vector3();
+	/**
+	 * Bullet rigid body
+	 */
 	public final btRigidBody body;
+	/**
+	 * Flag for which collision layers this body belongs to
+	 */
 	public final short belongsToFlag;
+	/**
+	 * Flag for which collision layers this body collides with
+	 */
 	public final short collidesWithFlag;
+	/**
+	 * Collision shape which was used to create the rigid body.
+	 */
 	public final btCollisionShape shape;
+	/**
+	 * Provides information to create a rigid body
+	 */
 	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
+	/**
+	 * {@see PhysicsMotionState}
+	 */
 	public final PhysicsMotionState motionState;
+	/**
+	 * Mass of the rigid body. From Bullet docs, works best if in range (0:1]
+	 */
 	public final float mass;
+	/**
+	 * Physics constraints belonging to this rigid body
+	 */
 	public Array<btTypedConstraint> constraints = new Array<btTypedConstraint>();
 
+	/**
+	 * Creates a model with rigid body
+	 *
+	 * @param model            Model to instantiate
+	 * @param id               Name of model
+	 * @param location         World position at which to place the model instance
+	 * @param rotation         The rotation of the model instance in degrees
+	 * @param scale            Scale of the model instance
+	 * @param shape            Collision shape with which to construct a rigid body
+	 * @param mass             Mass of the body
+	 * @param belongsToFlag    Flag for which collision layers this body belongs to
+	 * @param collidesWithFlag Flag for which collision layers this body collides with
+	 * @param callback         If this body should trigger collision contact callbacks.
+	 * @param noDeactivate     If this body should never 'sleep'
+	 */
 	public GameModelBody(Model model,
 						 String id,
 						 Vector3 location,

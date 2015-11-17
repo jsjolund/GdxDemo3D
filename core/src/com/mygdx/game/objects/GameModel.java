@@ -29,17 +29,55 @@ import com.badlogic.gdx.utils.Bits;
  * @author jsjolund
  */
 public class GameModel extends GameObject {
+
 	public static final String tag = "ModelComponent";
+
+	/**
+	 * Center of bounding box for model instance
+	 */
 	public final Vector3 center = new Vector3();
+	/**
+	 * Dimensions of bounding box for model instance
+	 */
 	public final Vector3 dimensions = new Vector3();
+	/**
+	 * Bounding radius of model instance
+	 */
 	public final float boundingRadius;
+	/**
+	 * Model bounding box
+	 */
 	public final BoundingBox boundingBox = new BoundingBox();
+	/**
+	 * Model instance half extents, half of dimensions
+	 */
 	public final Vector3 halfExtents = new Vector3();
+	/**
+	 * Name of model
+	 */
 	public final String id;
+	/**
+	 * Global transform for model instance
+	 */
 	public final Matrix4 transform;
+	/**
+	 * Which rendering layers (house levels) this model instance is visible on
+	 */
 	public Bits layers = new Bits();
+	/**
+	 * The model instance for this object
+	 */
 	public ModelInstance modelInstance;
 
+	/**
+	 * Holds a an instance of the model.
+	 *
+	 * @param model    Model to instantiate
+	 * @param id       Name of model
+	 * @param location World position at which to place the model instance
+	 * @param rotation The rotation of the model instance in degrees
+	 * @param scale    Scale of the model instance
+	 */
 	public GameModel(Model model,
 					 String id,
 					 Vector3 location,

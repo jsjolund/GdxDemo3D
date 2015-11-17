@@ -16,10 +16,6 @@
 
 package com.mygdx.game.objects;
 
-import static com.mygdx.game.utilities.Constants.PI;
-import static com.mygdx.game.utilities.Constants.PI0_25;
-import static com.mygdx.game.utilities.Constants.PI0_5;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -41,12 +37,18 @@ import com.mygdx.game.settings.GameSettings;
 
 import java.util.Iterator;
 
+import static com.mygdx.game.utilities.Constants.*;
+
 /**
  * @author jsjolund
  */
 public abstract class Ragdoll extends GameCharacter {
 
-	public class RigidBodyNodeConnection {
+	/**
+	 * Stores connection data between a rigid body and the model nodes which follow
+	 * or control the body.
+	 */
+	private class RigidBodyNodeConnection {
 		// Stores the offset from the center of a rigid body to the node which connects to it
 		// Used when multiple nodes should follow one body under ragdoll controll
 		public ArrayMap<Node, Vector3> bodyNodeOffsets = new ArrayMap<Node, Vector3>();
@@ -54,16 +56,54 @@ public abstract class Ragdoll extends GameCharacter {
 		public Node followNode = null;
 	}
 
+	/**
+	 * Maps a ragdoll rigid body to one or more model nodes. Also stores the position offset between them.
+	 */
 	public final ArrayMap<btRigidBody, RigidBodyNodeConnection> bodyPartMap = new ArrayMap<btRigidBody, RigidBodyNodeConnection>();
-	public final Array<Node> nodes = new Array<Node>();
-	public final Matrix4 capsuleTransform = new Matrix4();
-	public final Matrix4 resetRotationTransform = new Matrix4();
-	public final Matrix4 tmpMatrix = new Matrix4();
-	public final Vector3 tmpVec = new Vector3();
-	public final Vector3 nodeTranslation = new Vector3();
-	public final Vector3 capsuleTranslation = new Vector3();
-	public boolean ragdollControl = false;
+	/**
+	 * Stores which nodes have been mapped to a ragdoll rigid body
+	 */
+	private final Array<Node> ragdollMappedNodes = new Array<Node>();
+	/**
+	 * Temporary storage for the capsule body world transform
+	 */
+	private final Matrix4 capsuleTransform = new Matrix4();
+	/**
+	 * Temporary transform used when the body is under ragdoll control
+	 */
+	private final Matrix4 resetRotationTransform = new Matrix4();
+	/**
+	 * Temporary storage for node translation during calculations
+	 */
+	private final Vector3 nodeTranslation = new Vector3();
+	/**
+	 * Temporary storage for capsule translation
+	 */
+	private final Vector3 capsuleTranslation = new Vector3();
 
+	private boolean ragdollControl = false;
+
+	private final Vector3 tmpVec = new Vector3();
+	private final Matrix4 tmpMatrix = new Matrix4();
+
+	/**
+	 * Constructs a ragdoll out of rigid bodies using physics constraints.
+	 *
+	 * @param model            Model to instantiate
+	 * @param id               Name of model
+	 * @param location         World position at which to place the model instance
+	 * @param rotation         The rotation of the model instance in degrees
+	 * @param scale            Scale of the model instance
+	 * @param shape            Collision shape with which to construct a rigid body
+	 * @param mass             Mass of the body
+	 * @param belongsToFlag    Flag for which collision layers this body belongs to
+	 * @param collidesWithFlag Flag for which collision layers this body collides with
+	 * @param callback         If this body should trigger collision contact callbacks.
+	 * @param noDeactivate     If this body should never 'sleep'
+	 * @param ragdollJson      Json file with body part definitions
+	 * @param armatureNodeId   The id of the root node in the model animation armature
+	 * @param steerSettings    Steerable settings
+	 */
 	public Ragdoll(Model model,
 				   String id,
 				   Vector3 location,
@@ -104,6 +144,9 @@ public abstract class Ragdoll extends GameCharacter {
 		bodyPartMap.clear();
 	}
 
+	/**
+	 * Updates the nodes of the model instance to follow the rigid body parts
+	 */
 	private void updateArmatureToBodies() {
 		// Let dynamicsworld control ragdoll. Loop over all ragdoll part collision shapes
 		// and their node connection data.
@@ -135,6 +178,9 @@ public abstract class Ragdoll extends GameCharacter {
 		modelInstance.calculateTransforms();
 	}
 
+	/**
+	 * Updates the rigid body parts to follow nodes of the model instance
+	 */
 	private void updateBodiesToArmature() {
 		// Ragdoll parts should follow the model animation.
 		// Loop over each part and set it to the global transform of the armature node it should follow.
@@ -152,6 +198,12 @@ public abstract class Ragdoll extends GameCharacter {
 		}
 	}
 
+	/**
+	 * Enable or disable ragdoll control. During ragdoll control, the animation armature nodes follow
+	 * the simulation of the rigid bodies. Otherwise, the rigid bodies follow the armature nodes.
+	 *
+	 * @param setRagdollControl
+	 */
 	public void setRagdollControl(boolean setRagdollControl) {
 
 		if (setRagdollControl) {
@@ -179,7 +231,7 @@ public abstract class Ragdoll extends GameCharacter {
 			// We don't want to use the translation, rotation, scale values of the model when calculating the
 			// model transform, and we don't want the nodes inherit the transform of the parent node,
 			// since the physics engine will be controlling the nodes.
-			for (Node node : nodes) {
+			for (Node node : ragdollMappedNodes) {
 				node.isAnimated = true;
 				node.inheritTransform = false;
 			}
@@ -191,7 +243,7 @@ public abstract class Ragdoll extends GameCharacter {
 			modelInstance.transform = motionState.transform;
 
 			// Reset the nodes to default model animation state.
-			for (Node node : nodes) {
+			for (Node node : ragdollMappedNodes) {
 				node.isAnimated = false;
 				node.inheritTransform = true;
 			}
@@ -218,8 +270,8 @@ public abstract class Ragdoll extends GameCharacter {
 		RigidBodyNodeConnection conn = bodyPartMap.get(bodyPart);
 		conn.bodyNodeOffsets.put(node, nodeBodyOffset);
 
-		if (!nodes.contains(node, true)) {
-			nodes.add(node);
+		if (!ragdollMappedNodes.contains(node, true)) {
+			ragdollMappedNodes.add(node);
 		}
 	}
 
@@ -238,8 +290,8 @@ public abstract class Ragdoll extends GameCharacter {
 		node.getChild(0).localTransform.getTranslation(offsetTranslation).scl(0.5f);
 		conn.bodyNodeOffsets.put(node, offsetTranslation);
 
-		if (!nodes.contains(node, true)) {
-			nodes.add(node);
+		if (!ragdollMappedNodes.contains(node, true)) {
+			ragdollMappedNodes.add(node);
 		}
 	}
 
