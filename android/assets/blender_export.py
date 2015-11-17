@@ -85,12 +85,18 @@ class BlenderModel(BlenderObject):
         super().__init__(blender_object)
         self.filename = filename
 
-    def get_model_name(self):
+    def get_model_file_name(self):
         return self.filename + "_" + self.name_array[0]
+
+    def get_model_name(self):
+        return self.name_array[0]
+
+    def get_mesh_name(self):
+        return self.blender_object.data.name
 
     def serialize(self):
         super().serialize()
-        self.entry["model_file_name"] = self.get_model_name()
+        self.entry["model_file_name"] = self.get_model_file_name()
         return self.entry
 
 
@@ -214,38 +220,110 @@ def fbx_conv(fbx_file_path, g3db_output_path):
     return g3db_file_path
 
 
+class ModelToMeshMap(object):
+    def __init__(self):
+        self.model_to_mesh_dict = {}
+        self.longest_model_name = 0
+        self.longest_model_file_name = 0
+        self.longest_mesh_name = 0
+
+    def add_model_mesh_object_entry(self, model_name, mesh_name, game_object):
+        if model_name in self.model_to_mesh_dict:
+            mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
+            if mesh_name in mesh_to_obj_dict:
+                mesh_to_obj_dict[mesh_name].append(game_object)
+            else:
+                mesh_to_obj_dict[mesh_name] = [game_object]
+        else:
+            self.model_to_mesh_dict[model_name] = {mesh_name: [game_object]}
+
+        if len(model_name) > self.longest_model_name:
+            self.longest_model_name = len(model_name)
+        if len(mesh_name) > self.longest_mesh_name:
+            self.longest_mesh_name = len(mesh_name)
+        file_name = game_object.get_model_file_name() + ".g3db"
+        if len(file_name) > self.longest_model_file_name:
+            self.longest_model_file_name = len(file_name)
+
+    def has_conflicting_models_names(self):
+        for model_name in self.model_to_mesh_dict:
+            mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
+            if len(mesh_to_obj_dict) > 1:
+                return True
+        return False
+
+    def print_conflicting_model_names(self):
+        print("ERROR: Conflicting meshes for models:")
+        for model_name in self.model_to_mesh_dict:
+            mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
+            if len(mesh_to_obj_dict) > 1:
+                problem = "Models named {} have conflicting meshes: ".format((model_name))
+                offset = len(problem)
+                for mesh_name in mesh_to_obj_dict:
+                    if offset is len(problem):
+                        problem += mesh_name
+                        print(problem)
+                    else:
+                        print(" " * offset + mesh_name)
+        print("Rename the models if they are different, link the meshes (Alt+D) if they are identical.")
+
+    def get_export_targets(self):
+        targets = []
+        for model_name in self.model_to_mesh_dict:
+            mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
+            for mesh_name in mesh_to_obj_dict:
+                first_game_object_with_name = mesh_to_obj_dict[mesh_name][0]
+                targets.append(first_game_object_with_name)
+        return targets
+
+    def print_summary(self):
+        col_offset = 3
+        max_line_width = 0
+        print()
+        model_header = "MODEL NAME"
+        file_name_header = "FILE NAME"
+        file_name_header_spacing = self.longest_model_name - len(model_header) + col_offset
+        mesh_header = "MESH NAME"
+        mesh_header_spacing = self.longest_model_file_name - len(file_name_header) + col_offset
+        print(model_header + " " * file_name_header_spacing + file_name_header + " " * mesh_header_spacing + mesh_header)
+        for model_name in self.model_to_mesh_dict:
+            mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
+            spacing = (self.longest_mesh_name - len(model_name) + col_offset)
+            output = model_name + spacing * " "
+            line_width = len(output)
+            for mesh_name in mesh_to_obj_dict:
+                game_object = mesh_to_obj_dict[mesh_name][0]
+                file_name = game_object.get_model_file_name() + ".g3db"
+                spacing = (self.longest_model_file_name - len(file_name) + col_offset)
+                if (len(mesh_to_obj_dict)) > 1:
+                    if len(output) > line_width:
+                        output += "\n" + " " * line_width
+                        output += file_name + spacing * " "
+                        output += mesh_name
+                    else:
+                        output += file_name + spacing * " "
+                        output += mesh_name
+                else:
+                    output += file_name + spacing * " "
+                    output += mesh_name
+            print(output)
+
+
 def get_export_objects(blender_model_list):
     """
     Get a list of all models which need to be exported (those with unique meshes)
     :param blender_model_list: The models to consider
     :return: The objects which will be exported
     """
-    model_to_mesh_map = {}
+    model_to_mesh_map = ModelToMeshMap()
     for obj in blender_model_list:
-        mesh_name = obj.blender_object.data.name
-        model_name = obj.name_array[0]
+        model_to_mesh_map.add_model_mesh_object_entry(obj.get_model_name(), obj.get_mesh_name(), obj)
 
-        # Map which meshes map to this model name
-        if model_name in model_to_mesh_map:
-            if not mesh_name in model_to_mesh_map.get(model_name):
-                model_to_mesh_map.get(model_name).append(mesh_name)
-        else:
-            model_to_mesh_map[model_name] = [mesh_name]
-
-    export_objects = []
-    for key in model_to_mesh_map:
-        if len(model_to_mesh_map[key]) > 1:
-            print("ERROR: Conflicting meshes for export object: '{}'.\nRename objects or link the meshes: {}\n".format(
-                key, str(model_to_mesh_map[key])))
-            return []
-        else:
-            export_objects.append(obj)
-
-    print("INFO: Found export targets:")
-    for o in export_objects:
-        print(o.name)
-
-    return export_objects
+    if model_to_mesh_map.has_conflicting_models_names():
+        model_to_mesh_map.print_conflicting_model_names()
+        return []
+    model_to_mesh_map.print_summary()
+    return model_to_mesh_map.get_export_targets()
 
 
 def create_blender_object_map(filename, scene_objects):
@@ -293,7 +371,7 @@ def create_blender_object_map(filename, scene_objects):
 
 
 def main():
-    print("\nStarting scene export...")
+    print("\n### Starting scene export...")
     blender_file_basedir = os.path.dirname(bpy.data.filepath)
     blender_filename_noext = bpy.path.basename(bpy.context.blend_data.filepath).split(".")[0]
 
@@ -313,13 +391,12 @@ def main():
     print()
 
     export_objects = get_export_objects(blender_object_map[BlenderModel.category])
-    print()
 
     # Export models as fbx to temp dir, then convert them to g3db
     with tempfile.TemporaryDirectory() as tmpdirname:
         fbx_file_paths = []
         for game_object in export_objects:
-            fbx_file_path = os.path.join(tmpdirname, game_object.get_model_name() + ".fbx")
+            fbx_file_path = os.path.join(tmpdirname, game_object.get_model_file_name() + ".fbx")
             write_fbx(game_object, fbx_file_path)
             fbx_file_paths.append(fbx_file_path)
 
@@ -335,7 +412,7 @@ def main():
         print("\nINFO: Created g3db model files:")
         for g3db in g3db_file_paths:
             print(g3db)
-    print("\nFinished.")
+    print("\n### Finished.")
     print("\n\n")
 
 

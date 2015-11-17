@@ -72,7 +72,7 @@ import com.mygdx.game.utilities.ModelFactory;
  * @author jsjolund
  */
 public class BlenderScene implements Disposable {
-	
+
 	/**
 	 * Used internally to map a model to a collision shape. A shape can be reused between game objects.
 	 */
@@ -285,7 +285,7 @@ public class BlenderScene implements Disposable {
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
 		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
-		String modelFile = "models/g3db/dog_model.g3db";
+		String modelFile = "models/g3db/dog_dog.g3db";
 		modelAssets.load(modelFile, Model.class, param);
 		modelAssets.finishLoading();
 		Model model = modelAssets.get(modelFile);
@@ -329,7 +329,7 @@ public class BlenderScene implements Disposable {
 		param.textureParameter.genMipMaps = true;
 		param.textureParameter.minFilter = Texture.TextureFilter.MipMap;
 		param.textureParameter.magFilter = Texture.TextureFilter.Linear;
-		String modelFile = "models/g3db/character_male_base.g3db";
+		String modelFile = "models/g3db/character_human.g3db";
 		modelAssets.load(modelFile, Model.class, param);
 		modelAssets.finishLoading();
 		Model model = modelAssets.get(modelFile);
