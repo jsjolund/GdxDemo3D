@@ -124,7 +124,7 @@ public class GameScreen implements Screen {
 		Array<GameModel> trees = new Array<GameModel>();
 		blenderScene.getGameModelById("tree_0", trees);
 		for (GameModel tree : trees) {
-			Gdx.app.debug(tag, "Found tree at " + tree.transform.getTranslation(new Vector3()));
+			Gdx.app.debug(tag, "Found tree at " + tree.modelTransform.getTranslation(new Vector3()));
 		}
 
 		d1.setOrientation(Constants.PI);

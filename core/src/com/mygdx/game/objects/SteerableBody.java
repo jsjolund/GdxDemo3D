@@ -57,33 +57,90 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	private final SteerSettings steerSettings;
-	public NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
-	public NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
+
+	/**
+	 * Path of triangles on the navigation mesh. Used to construct path points.
+	 */
+	public final NavMeshGraphPath navMeshGraphPath = new NavMeshGraphPath();
+	/**
+	 * Path points on the navigation mesh, which the steerable will follow.
+	 */
+	public final NavMeshPointPath navMeshPointPath = new NavMeshPointPath();
+	/**
+	 * Triangle which the sterrable is standing on
+	 */
 	public Triangle currentTriangle;
-	public Array<Vector3> pathToRender = new Array<Vector3>();
+	/**
+	 * Path which is rendered on screen
+	 */
+	public final Array<Vector3> pathToRender = new Array<Vector3>();
+	/**
+	 * Steering behaviour for path following
+	 */
 	public FollowPath<Vector3, LinePath.LinePathParam> followPathSB;
+	/**
+	 * Holds the path segments for steering behaviour
+	 */
 	protected LinePath<Vector3> linePath;
-	protected Vector3 position = new Vector3();
-	protected Vector3 targetFacing = new Vector3(Vector3.Z);
-	protected Quaternion targetFacingQuat = new Quaternion();
-	protected Quaternion currentFacingQuat = new Quaternion();
-	SteeringAcceleration<Vector3> steeringOutput = new SteeringAcceleration<Vector3>(new Vector3());
+	/**
+	 * Outputs the linear steering of the steering behaviour.
+	 * Angular steering is currently not used.
+	 */
+	final SteeringAcceleration<Vector3> steeringOutput = new SteeringAcceleration<Vector3>(new Vector3());
+	/**
+	 * Holds the current steering behaviour
+	 */
 	SteeringBehavior<Vector3> steeringBehavior;
-	private Matrix4 tmpMatrix = new Matrix4();
-	private Vector3 linearVelocity = new Vector3();
-	private Vector3 angularVelocity = new Vector3();
+	/**
+	 * Used to adjust model orientation when following a path.
+	 */
+	protected final Quaternion targetOrientation = new Quaternion();
+	protected final Quaternion currentOrientation = new Quaternion();
+	protected final Vector3 targetOrientationVector = new Vector3(Vector3.Z);
+
+	/**
+	 * Holds steering data. Use getters and setters.
+	 */
+	private Vector3 position = new Vector3();
+	private final Vector3 linearVelocity = new Vector3();
+	private final Vector3 angularVelocity = new Vector3();
 	private float zeroLinearSpeedThreshold;
 	private float maxLinearSpeed;
 	private float maxLinearAcceleration;
 	private boolean tagged;
 	private float maxAngularSpeed;
 	private float maxAngularAcceleration;
-	private Vector3 tmpVec = new Vector3();
-	private Quaternion tmpQuat = new Quaternion();
-	private int currentSegmentIndex = -1;
-	private boolean wasSteering = false;
-	private Array<Vector3> centerOfMassPath = new Array<Vector3>();
 
+	/**
+	 * Path segment index the steerable is currently following.
+	 */
+	private int currentSegmentIndex = -1;
+	/**
+	 * Points from which to construct the path segments the steerable should follow
+	 */
+	private final Array<Vector3> centerOfMassPath = new Array<Vector3>();
+	/**
+	 * Various temporary objects used in calculation
+	 */
+	private boolean wasSteering = false;
+	private final Matrix4 tmpMatrix = new Matrix4();
+	private final Vector3 tmpVec = new Vector3();
+	private final Quaternion tmpQuat = new Quaternion();
+
+	/**
+	 * @param model            Model to instantiate
+	 * @param id               Name of model
+	 * @param location         World position at which to place the model instance
+	 * @param rotation         The rotation of the model instance in degrees
+	 * @param scale            Scale of the model instance
+	 * @param shape            Collision shape with which to construct a rigid body
+	 * @param mass             Mass of the body
+	 * @param belongsToFlag    Flag for which collision layers this body belongs to
+	 * @param collidesWithFlag Flag for which collision layers this body collides with
+	 * @param callback         If this body should trigger collision contact callbacks.
+	 * @param noDeactivate     If this body should never 'sleep'
+	 * @param steerSettings    Steerable settings
+	 */
 	public SteerableBody(Model model, String id,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
@@ -99,6 +156,9 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
 	}
 
+	/**
+	 * Calculate the navigation mesh point path, then set steering behaviour to follow it.
+	 */
 	public void calculateNewPath() {
 		navMeshPointPath.calculateForGraphPath(navMeshGraphPath);
 
@@ -146,20 +206,55 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Apply steering acceleration
 		applySteering(steeringOutput, deltaTime);
 
-		// Check if steering target path segment changed.
-		int traversedSegments = followPathSB.getPathParam().getSegmentIndex() - currentSegmentIndex;
-		if (traversedSegments > 0) {
-			// Update rotation and current navmesh triangle.
-			currentSegmentIndex = followPathSB.getPathParam().getSegmentIndex();
-			LinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
-			targetFacing.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
-			targetFacingQuat.setFromMatrix(true, tmpMatrix.setToLookAt(targetFacing, Vector3.Y));
-			currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
-			layers.clear();
-			layers.set(currentTriangle.meshPartIndex);
-		}
+
 	}
 
+	/**
+	 * Start steering. Friction must be zero for steering to work correctly.
+	 */
+	protected void startSteering() {
+		wasSteering = true;
+		body.setFriction(0);
+		modelTransform.getRotation(currentOrientation, true);
+	}
+
+	/**
+	 * Stops the steering by clearing the navigation mesh path and
+	 * removing the steering behaviour. Then calls {@link #finishSteering()}
+	 */
+	protected void stopPathFollowing() {
+		// Clear path and stop steering
+		navMeshPointPath.clear();
+		navMeshGraphPath.clear();
+		steeringBehavior = null;
+		steeringOutput.linear.setZero();
+		finishSteering();
+	}
+
+	/**
+	 * Resets normal friction of body so it cannot slide down most slopes.
+	 * Removes any angular velocity the body accumulated.
+	 * Sets the body to the orientation of the model.
+	 */
+	protected void finishSteering() {
+		wasSteering = false;
+		body.setFriction(steerSettings.getIdleFriction());
+		body.setAngularVelocity(Vector3.Zero);
+		// Since we were only rotating the model when steering, set body to
+		// model rotation when finished moving.
+		position = getPosition();
+		modelTransform.setFromEulerAngles(
+				currentOrientation.getYaw(),
+				currentOrientation.getPitch(),
+				currentOrientation.getRoll()).setTranslation(position);
+		body.setWorldTransform(modelTransform);
+
+		pathToRender.clear();
+	}
+
+	/**
+	 * Path segment index the steerable is currently following.
+	 */
 	public int getCurrentSegmentIndex() {
 		return currentSegmentIndex;
 	}
@@ -179,29 +274,14 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		return out;
 	}
 
-	protected void startSteering() {
-		wasSteering = true;
-		body.setFriction(0);
-		transform.getRotation(currentFacingQuat, true);
-	}
 
-	protected void finishSteering() {
-		wasSteering = false;
-		body.setFriction(steerSettings.getIdleFriction());
-		body.setAngularVelocity(Vector3.Zero);
-		// Since we were only rotating the model when steering, set body to
-		// model rotation when finished moving.
-		position = getPosition();
-		transform.setFromEulerAngles(
-				currentFacingQuat.getYaw(),
-				currentFacingQuat.getPitch(),
-				currentFacingQuat.getRoll()).setTranslation(position);
-		body.setWorldTransform(transform);
-
-		pathToRender.clear();
-	}
-
-
+	/**
+	 * Applies the linear component of the steering behaviour. As for the angular component,
+	 * the orientation of the model is set to follow the orientation of the path segments.
+	 *
+	 * @param steering
+	 * @param deltaTime
+	 */
 	protected void applySteering(SteeringAcceleration<Vector3> steering, float deltaTime) {
 		boolean anyAccelerations = false;
 		// Update position and linear velocity
@@ -222,33 +302,47 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				body.setLinearVelocity(velocity.scl(maxLinearSpeed / (float) Math.sqrt(currentSpeedSquare)));
 			}
 
-			// Set facing of model, setting facing of body causes problems when applying force.
-			currentFacingQuat.slerp(targetFacingQuat, 10 * deltaTime);
+
+			// Check if steering target path segment changed.
+			int traversedSegments = followPathSB.getPathParam().getSegmentIndex() - currentSegmentIndex;
+			if (traversedSegments > 0) {
+				// Update model target orientation. Current orientation wi
+				currentSegmentIndex = followPathSB.getPathParam().getSegmentIndex();
+				LinePath.Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
+				targetOrientationVector.set(segment.getEnd()).sub(segment.getBegin()).scl(1, 0, -1).nor();
+				targetOrientation.setFromMatrix(true, tmpMatrix.setToLookAt(targetOrientationVector, Vector3.Y));
+				// Update current navmesh triangle
+				currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
+				// Set model to be visible on the same layer as mesh part index of current triangle
+				visibleOnLayers.clear();
+				visibleOnLayers.set(currentTriangle.meshPartIndex);
+			}
+
+
+			// Set current orientation of model, setting orientation of body causes problems when applying force.
+			currentOrientation.slerp(targetOrientation, 10 * deltaTime);
 			Vector3 position = getPosition();
-			transform.setFromEulerAngles(
-					currentFacingQuat.getYaw(),
-					currentFacingQuat.getPitch(),
-					currentFacingQuat.getRoll()).setTranslation(position);
+			modelTransform.setFromEulerAngles(
+					currentOrientation.getYaw(),
+					currentOrientation.getPitch(),
+					currentOrientation.getRoll()).setTranslation(position);
 		}
 	}
 
+	/**
+	 * @return True if linear velocity of body is not within threshold of zero
+	 */
 	public boolean isMoving() {
 		return !body.getLinearVelocity().isZero(getZeroLinearSpeedThreshold());
 	}
 
+	/**
+	 * @return True if linear steering output  is not within threshold of zero
+	 */
 	public boolean isSteering() {
 		return !steeringOutput.linear.isZero(getZeroLinearSpeedThreshold());
 	}
 
-	protected void stopPathFollowing() {
-		// Clear path and stop steering
-		navMeshPointPath.clear();
-		navMeshGraphPath.clear();
-		steeringBehavior = null;
-		steeringOutput.linear.setZero();
-		finishSteering();
-		body.setFriction(1);
-	}
 
 	@Override
 	public Vector3 getLinearVelocity() {
@@ -358,8 +452,8 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	public void setOrientation(float orientation) {
 		position = getPosition();
 		BulletSteeringUtils.angleToVector(tmpVec, -orientation);
-		transform.setToLookAt(tmpVec, Constants.V3_UP).setTranslation(position);
-		body.setWorldTransform(transform);
+		modelTransform.setToLookAt(tmpVec, Constants.V3_UP).setTranslation(position);
+		body.setWorldTransform(modelTransform);
 	}
 
 	@Override
@@ -390,12 +484,12 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	/**
-	 * Returns the direction the model is facing.
+	 * Sets the vector to point in the direction the model is facing
 	 *
 	 * @param out Output vector
 	 * @return The output vector for chaining
 	 */
 	public Vector3 getDirection(Vector3 out) {
-		return transform.getRotation(tmpQuat, true).transform(out.set(Vector3.Z));
+		return modelTransform.getRotation(tmpQuat, true).transform(out.set(Vector3.Z));
 	}
 }

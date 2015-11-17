@@ -104,8 +104,8 @@ public class GameRenderer implements Disposable, Observer {
 	public void notifyEntitySelected(GameCharacter entity) {
 		selectedCharacter = entity;
 		markerBillboard.setFollowTransform(entity.motionState.transform, entity.selectionMarkerOffset);
-		markerBillboard.layers.clear();
-		markerBillboard.layers.or(entity.layers);
+		markerBillboard.visibleOnLayers.clear();
+		markerBillboard.visibleOnLayers.or(entity.visibleOnLayers);
 	}
 
 	@Override
@@ -150,8 +150,14 @@ public class GameRenderer implements Disposable, Observer {
 		}
 	}
 
+	/**
+	 * Checks if a model is visible using camera frustum culling and model layer visibility.
+	 * @param camera
+	 * @param gameModel
+	 * @return
+	 */
 	private boolean isVisible(final Camera camera, final GameModel gameModel) {
-		if (!gameModel.layers.intersects(visibleLayers)) {
+		if (!gameModel.visibleOnLayers.intersects(visibleLayers)) {
 			return false;
 		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
@@ -210,6 +216,9 @@ public class GameRenderer implements Disposable, Observer {
 		}
 	}
 
+	/**
+	 * Draws a kind of compass, showing the world axis
+	 */
 	private void drawMouseWorldAxis() {
 		Vector3 v = cursorWorldPosition;
 		if (Float.isNaN(v.x) || Float.isNaN(v.y) || Float.isNaN(v.z)) {
@@ -225,6 +234,9 @@ public class GameRenderer implements Disposable, Observer {
 		shapeRenderer.end();
 	}
 
+	/**
+	 * Draws the path of selected character
+	 */
 	private void drawPath() {
 		if (selectedCharacter != null && selectedCharacter.pathToRender.size > 0 && selectedCharacter.getCurrentSegmentIndex() >= 0) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);

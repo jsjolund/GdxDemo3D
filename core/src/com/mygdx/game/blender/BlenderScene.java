@@ -305,7 +305,7 @@ public class BlenderScene implements Disposable {
 
 		Ray posGroundRay = new Ray(initialPosition, V3_DOWN);
 		dog.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
-		dog.layers.set(dog.currentTriangle.meshPartIndex);
+		dog.visibleOnLayers.set(dog.currentTriangle.meshPartIndex);
 
 		add(dog);
 
@@ -347,7 +347,7 @@ public class BlenderScene implements Disposable {
 				callback, noDeactivate, ragdollJson, armatureNodeId);
 		Ray posGroundRay = new Ray(initialPosition, V3_DOWN);
 		human.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
-		human.layers.set(human.currentTriangle.meshPartIndex);
+		human.visibleOnLayers.set(human.currentTriangle.meshPartIndex);
 
 		add(human);
 
@@ -497,7 +497,7 @@ public class BlenderScene implements Disposable {
 
 		for (int i = 0; i < bModel.layers.length; i++) {
 			if (bModel.layers[i]) {
-				entity.layers.set(i);
+				entity.visibleOnLayers.set(i);
 			}
 		}
 
@@ -521,7 +521,7 @@ public class BlenderScene implements Disposable {
 		add(entity);
 		for (int i = 0; i < bModel.layers.length; i++) {
 			if (bModel.layers[i]) {
-				entity.layers.set(i);
+				entity.visibleOnLayers.set(i);
 			}
 		}
 	}

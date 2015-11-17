@@ -184,7 +184,7 @@ public abstract class Ragdoll extends GameCharacter {
 	private void updateBodiesToArmature() {
 		// Ragdoll parts should follow the model animation.
 		// Loop over each part and set it to the global transform of the armature node it should follow.
-		capsuleTransform.set(transform);
+		capsuleTransform.set(modelTransform);
 		for (Iterator<ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection>> iterator
 			 = bodyPartMap.iterator(); iterator.hasNext(); ) {
 			ObjectMap.Entry<btRigidBody, RigidBodyNodeConnection> entry = iterator.next();

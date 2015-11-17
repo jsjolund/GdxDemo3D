@@ -42,6 +42,11 @@ import com.mygdx.game.utilities.Observer;
 import java.util.Iterator;
 
 /**
+ * Class which keeps track of game objects, performs physics simulation and collision detection,
+ * as well as decides which models to render.
+ * This class extends {@link PooledEngine} from Ashley, but not all the methods of the super class
+ * will work correctly.
+ *
  * @author jsjolund
  */
 public class GameEngine extends PooledEngine implements Disposable, Observer {
@@ -89,7 +94,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 
 			if (entity instanceof GameModel) {
 				GameModel model = (GameModel) entity;
-				if (hitFraction < this.hitFraction && model.layers.intersects(layers)) {
+				if (hitFraction < this.hitFraction && model.visibleOnLayers.intersects(layers)) {
 					this.hitFraction = hitFraction;
 					super.addSingleResult(rayResult, normalInWorldSpace);
 					return hitFraction;
@@ -242,7 +247,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 				GameModelBody model = (GameModelBody) obj;
 				if (model.mass == 0) {
 					// All bodies with mass of zero are static so cache them if visible
-					if (model.layers.intersects(visibleLayers) ){
+					if (model.visibleOnLayers.intersects(visibleLayers)) {
 						modelCache.add(model.modelInstance);
 					}
 				} else {
@@ -256,7 +261,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 			} else if (obj instanceof GameModel) {
 				// TODO: If non-static models without bodies are ever used, handle them here
 				GameModel model = (GameModel) obj;
-				if (model.layers.intersects(visibleLayers)) {
+				if (model.visibleOnLayers.intersects(visibleLayers)) {
 					modelCache.add(model.modelInstance);
 				}
 			}

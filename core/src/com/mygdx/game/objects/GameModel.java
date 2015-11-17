@@ -59,15 +59,15 @@ public class GameModel extends GameObject {
 	/**
 	 * Global transform for model instance
 	 */
-	public final Matrix4 transform;
+	public final Matrix4 modelTransform;
 	/**
 	 * Which rendering layers (house levels) this model instance is visible on
 	 */
-	public Bits layers = new Bits();
+	public final Bits visibleOnLayers = new Bits();
 	/**
 	 * The model instance for this object
 	 */
-	public ModelInstance modelInstance;
+	public final ModelInstance modelInstance;
 
 	/**
 	 * Holds a an instance of the model.
@@ -104,7 +104,7 @@ public class GameModel extends GameObject {
 		boundingBox.getCenter(center);
 		boundingBox.getDimensions(dimensions);
 		boundingRadius = dimensions.len() / 2f;
-		transform = modelInstance.transform;
+		modelTransform = modelInstance.transform;
 		halfExtents.set(dimensions).scl(0.5f);
 	}
 

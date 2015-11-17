@@ -153,7 +153,7 @@ public class NavMeshDebugDrawer {
 		character.getGroundPosition(position);
 		aimPoint.set(direction).scl(radius).add(position);
 		Triangle closest = navMesh.getClosestValidPointAt(position, direction, radius,
-				closestPoint, character.layers);
+				closestPoint, character.visibleOnLayers);
 
 		shapeRenderer.set(MyShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(0, 0, 1, 0.2f);
