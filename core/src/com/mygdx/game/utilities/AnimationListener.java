@@ -14,24 +14,31 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects.dog;
+package com.mygdx.game.utilities;
 
-import com.mygdx.game.objects.DogCharacter;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 
 /**
  * @author davebaol
  */
-public abstract class OneShotAnimationTaskBase extends LoopedAnimationTaskBase {
+public class AnimationListener implements AnimationController.AnimationListener {
 	
-	public OneShotAnimationTaskBase () {
-		super(-1, true);
+	boolean animationCompleted;
+
+	public boolean isAnimationCompleted () {
+		return animationCompleted;
+	}
+
+	public void setAnimationCompleted (boolean animationCompleted) {
+		this.animationCompleted = animationCompleted;
 	}
 
 	@Override
-	public Status execute () {
-		DogCharacter dog = getObject();
-		updateAnimation(dog);
-		return animationListener.isAnimationCompleted()? Status.SUCCEEDED : Status.RUNNING;
+	public void onEnd(AnimationController.AnimationDesc animation) {
+		animationCompleted = true;
 	}
 
+	@Override
+	public void onLoop(AnimationController.AnimationDesc animation) {
+	}
 }

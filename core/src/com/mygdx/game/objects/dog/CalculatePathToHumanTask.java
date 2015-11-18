@@ -32,7 +32,6 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 	private static final Vector3 tmp1 = new Vector3();
 	private static final Vector3 tmp2 = new Vector3();
 	private static final Vector3 tmp3 = new Vector3();
-	private static final Vector3 tmp4 = new Vector3();
 
 	public CalculatePathToHumanTask() {
 	}
@@ -61,9 +60,9 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 				dog.navMeshGraphPath)) {
 
 			dog.calculateNewPath();
-			//success();
+			return Status.SUCCEEDED;
 		}
-		return Status.SUCCEEDED;
+		return Status.FAILED;
 	}
 
 	@Override

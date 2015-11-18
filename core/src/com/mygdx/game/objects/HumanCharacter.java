@@ -17,6 +17,8 @@
 
 package com.mygdx.game.objects;
 
+import java.util.EnumMap;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.State;
@@ -31,6 +33,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Sounds;
 
@@ -43,29 +46,25 @@ public class HumanCharacter extends Ragdoll {
 		IDLE_STAND(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|idle_stand", -1, 1, entity.animationListener, 0.2f);
+				entity.animations.animate("armature|idle_stand", -1, 1, animationListener(entity), 0.2f);
 			}
 		},
 		IDLE_CROUCH(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
+				entity.animations.animate("armature|idle_crouch", -1, 1, animationListener(entity), 0.2f);
 			}
 		},
 		IDLE_CRAWL(true) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|idle_crouch", -1, 1, entity.animationListener, 0.2f);
+				entity.animations.animate("armature|idle_crouch", -1, 1, animationListener(entity), 0.2f);
 			}
 		},
 		MOVE_RUN(HumanState.IDLE_STAND, 0.2f) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|move_run", -1, 1, entity.animationListener, 0.1f);
+				entity.animations.animate("armature|move_run", -1, 1, animationListener(entity), 0.1f);
 
 				prepareToMove(entity, HumanSteerSettings.runMultiplier);
 			}
@@ -73,8 +72,7 @@ public class HumanCharacter extends Ragdoll {
 		MOVE_WALK(HumanState.IDLE_STAND, 0.4f) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|move_walk", -1, 1, entity.animationListener, 0.1f);
+				entity.animations.animate("armature|move_walk", -1, 1, animationListener(entity), 0.1f);
 
 				prepareToMove(entity, 1);
 			}
@@ -82,8 +80,7 @@ public class HumanCharacter extends Ragdoll {
 		MOVE_CROUCH(HumanState.IDLE_CROUCH, 0.5f) {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|move_crouch", -1, 1, entity.animationListener, 0.15f);
+				entity.animations.animate("armature|move_crouch", -1, 1, animationListener(entity), 0.15f);
 
 				prepareToMove(entity, HumanSteerSettings.crouchMultiplier);
 			}
@@ -92,23 +89,22 @@ public class HumanCharacter extends Ragdoll {
 		THROW() {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animationCompleted = false;
-				entity.animations.animate("armature|action_throw", 1, 1, entity.animationListener, 0.1f);
+				entity.animations.animate("armature|action_throw", 1, 1, animationListener(entity), 0.1f);
+
+				// If the entity owns a dog send it a delayed message to emulate reaction time
+				if (entity.dog != null) {
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.3f, 1.2f, .6f), null, entity.dog,
+						Constants.MSG_DOG_STICK_THROWN);
+				}
 			}
 
 			@Override
 			public void update(HumanCharacter entity) {
-				if (!entity.animationCompleted) {
-					// Keep on updating throw animation
-					super.update(entity);
-				}
-				else {
-					// If the entity owns a dog send it a delayed message to emulate reaction time
-					if (entity.dog != null) {
-						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
-							Constants.MSG_DOG_STICK_THROWN);
-					}
+				// Keep on updating throw animation
+				updateAnimation(entity);
 
+				AnimationListener animationListener = (AnimationListener)entity.animations.current.listener;
+				if (animationListener.isAnimationCompleted()) {
 					// Transition to the appropriate idle state depending on the previous state
 					HumanState previousState = entity.stateMachine.getPreviousState();
 					HumanState nextState = HumanState.IDLE_STAND;
@@ -234,6 +230,13 @@ public class HumanCharacter extends Ragdoll {
 			return idleState == null && animationMultiplier < 0;
 		}
 
+		protected AnimationListener animationListener(HumanCharacter entity) {
+			AnimationListener animationListener = entity.stateAnimationListeners.get(this);
+			if (animationListener != null)
+				animationListener.setAnimationCompleted(false);
+			return animationListener;
+		}
+		
 		protected void prepareToMove(HumanCharacter entity, float steeringMultiplier) {
 			//System.out.println("Prepare to move -> " + name());
 			entity.moveState = this;
@@ -261,7 +264,6 @@ public class HumanCharacter extends Ragdoll {
 
 		@Override
 		public void update(HumanCharacter entity) {
-			//System.out.println(">>>>>>> human.state.update: " + name());
 			if (entity.isSteering()) {
 				if (!this.isMovementState()) {
 					entity.stateMachine.changeState(entity.moveState);
@@ -348,25 +350,12 @@ public class HumanCharacter extends Ragdoll {
 		}
 	}
 
-	public class CharacterAnimationListener implements AnimationController.AnimationListener {
-		@Override
-		public void onEnd(AnimationController.AnimationDesc animation) {
-			animationCompleted = true;
-		}
-
-		@Override
-		public void onLoop(AnimationController.AnimationDesc animation) {
-			animationCompleted = true;
-		}
-	}
-
 	public final StateMachine<HumanCharacter, HumanState> stateMachine;
 	public final AnimationController animations;
-	public final CharacterAnimationListener animationListener;
+	public final EnumMap<HumanState, AnimationListener> stateAnimationListeners;
 	public HumanState moveState = HumanState.MOVE_WALK;
 	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;
-	private boolean animationCompleted;
 	public boolean selected = false;
 
 	private final Vector3 tmpNodePos = new Vector3();
@@ -394,10 +383,13 @@ public class HumanCharacter extends Ragdoll {
 		// Only allow physics engine to turn player capsule around the up axis
 		body.setAngularFactor(Vector3.Y);
 
+		// Create the animation controllers
 		animations = new AnimationController(modelInstance);
-		animationListener = new CharacterAnimationListener();
-		animationCompleted = false;
+		// Create animation listeners for states that need one
+		stateAnimationListeners = new EnumMap<HumanState, AnimationListener>(HumanState.class);
+		stateAnimationListeners.put(HumanState.THROW, new AnimationListener());
 
+		// Create the state machine
 		stateMachine = new DefaultStateMachine<HumanCharacter, HumanState>(this, HumanState.GLOBAL);
 		// Set the steering variables associated with default move state (walking)
 		stateMachine.changeState(moveState);
