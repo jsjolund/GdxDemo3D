@@ -14,31 +14,27 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects.dog;
+package com.mygdx.game.utilities;
 
-import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
+import com.badlogic.gdx.ai.steer.SteeringBehavior;
+import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.GameRenderer;
 
 /**
  * @author davebaol
  */
-public class WalkTask extends LoopedAnimationTaskBase {
+public interface Steerer {
 
-	public WalkTask () {
-		super(0.7f);
-	}
+	public SteeringBehavior<Vector3> getSteeringBehavior();
 
-	@Override
-	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|move_walk", -1, 1, animationListener, 0.1f);
+	public void startSteering();
 
-		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed);
-		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration);
+	public void stopSteering();
 
-		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed);
-		dog.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration);
+	public void finishSteering();
 
-		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius);
-	}
+	public void onSteering();
+
+	public void draw(GameRenderer gameRenderer);
 
 }

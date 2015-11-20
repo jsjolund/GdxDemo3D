@@ -31,8 +31,12 @@ import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.utils.Bits;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Sounds;
@@ -123,8 +127,8 @@ public class HumanCharacter extends Ragdoll {
 		WHISTLE() {
 			@Override
 			public void enter(HumanCharacter entity) {
-				// Clear path and stop steering
-				entity.stopPathFollowing();
+				// Stop steering
+				entity.stopSteering();
 
 				HumanState prevState = entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
@@ -175,8 +179,8 @@ public class HumanCharacter extends Ragdoll {
 				entity.animations.setAnimation("armature|idle_stand", -1);
 				entity.animations.paused = true;
 
-				// Clear path and stop steering
-				entity.stopPathFollowing();
+				// Stop steering
+				entity.stopSteering();
 
 				// Set ragdoll control
 				entity.setRagdollControl(true);
@@ -238,7 +242,6 @@ public class HumanCharacter extends Ragdoll {
 		}
 		
 		protected void prepareToMove(HumanCharacter entity, float steeringMultiplier) {
-			//System.out.println("Prepare to move -> " + name());
 			entity.moveState = this;
 
 			// Apply the multiplier to steering limits
@@ -247,9 +250,7 @@ public class HumanCharacter extends Ragdoll {
 			entity.setMaxAngularSpeed(HumanSteerSettings.maxAngularSpeed * steeringMultiplier);
 			entity.setMaxAngularAcceleration(HumanSteerSettings.maxAngularAcceleration * steeringMultiplier);
 
-			if (entity.followPathSB != null) {
-				entity.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * steeringMultiplier);
-			}
+			entity.followPathSteerer.followPathSB.setDecelerationRadius(HumanSteerSettings.decelerationRadius * steeringMultiplier);
 
 			// If the entity owns a dog tell him you don't want to play and re-enable whistle
 			if (entity.dog != null) {
@@ -357,6 +358,8 @@ public class HumanCharacter extends Ragdoll {
 	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;
 	public boolean selected = false;
+	
+	final FollowPathSteerer followPathSteerer;
 
 	private final Vector3 tmpNodePos = new Vector3();
 	private final Vector3 tmpNodeOffset = new Vector3();
@@ -383,6 +386,9 @@ public class HumanCharacter extends Ragdoll {
 		// Only allow physics engine to turn player capsule around the up axis
 		body.setAngularFactor(Vector3.Y);
 
+		// Create path follower
+		followPathSteerer = new FollowPathSteerer(this);
+
 		// Create the animation controllers
 		animations = new AnimationController(modelInstance);
 		// Create animation listeners for states that need one
@@ -406,17 +412,26 @@ public class HumanCharacter extends Ragdoll {
 		return stateMachine.getCurrentState() == HumanState.WHISTLE;
 	}
 
-//	@Override
-//	public void calculateNewPath() {
-//		if (stateMachine.getCurrentState() != CharacterState.DEAD) {
-//			super.calculateNewPath();
-//		}
-//	}
-
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
 		stateMachine.update();
+	}
+
+	@Override
+	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
+		followPath(ray, visibleLayers);
+	}
+
+	public void followPath(Ray ray, Bits visibleLayers) {
+		if (GameEngine.engine.getScene().navMesh.getPath(currentTriangle,
+				getGroundPosition(tmpNodePos),
+				ray, visibleLayers,
+				GameSettings.CAMERA_PICK_RAY_DST,
+				followPathSteerer.navMeshGraphPath)) {
+
+			followPathSteerer.calculateNewPath();
+		}
 	}
 
 	public void handleStateCommand(HumanState newState) {
