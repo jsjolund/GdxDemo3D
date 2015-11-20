@@ -42,6 +42,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.IntIntMap;
@@ -446,53 +447,29 @@ public class GameStage extends Stage implements Observable {
 
 	private Bits visibleLayers;
 
-	private class FloatValue {
-		float f;
-		@Override
-		public String toString() {
-			return Float.toString(f);
-		}
-	}
-
 	private class MouseNavMeshCoordLabel extends Table {
 		public MouseNavMeshCoordLabel(Skin skin) {
-			// Create labels
-			ValueLabel<FloatValue> mouseLabelX = new ValueLabel<FloatValue>("x: ", new FloatValue(), skin) {
-				FloatValue fv = new FloatValue();
+			align(Align.topLeft); // Fix flickering due to the variable width of rows
+
+			// Create label X
+			FloatValueLabel mouseLabelX = new FloatValueLabel("x: ", 0, skin) {
 				@Override
-				public FloatValue getValue() {
-					fv.f = worldInputProcessor.mouseNavMeshPos.x;
-					return fv;
-				}
-				@Override
-				public void copyValue(FloatValue newValue, FloatValue oldValue) {
-					oldValue.f = newValue.f;
+				public float getValue() {
+					return worldInputProcessor.mouseNavMeshPos.x;
 				}
 			};
-			// Create labels
-			ValueLabel<FloatValue> mouseLabelY = new ValueLabel<FloatValue>("y: ", new FloatValue(), skin) {
-				FloatValue fv = new FloatValue();
+			// Create label Y
+			FloatValueLabel mouseLabelY = new FloatValueLabel("y: ", 0, skin) {
 				@Override
-				public FloatValue getValue() {
-					fv.f = worldInputProcessor.mouseNavMeshPos.y;
-					return fv;
-				}
-				@Override
-				public void copyValue(FloatValue newValue, FloatValue oldValue) {
-					oldValue.f = newValue.f;
+				public float getValue() {
+					return worldInputProcessor.mouseNavMeshPos.y;
 				}
 			};
-			// Create labels
-			ValueLabel<FloatValue> mouseLabelZ = new ValueLabel<FloatValue>("z: ", new FloatValue(), skin) {
-				FloatValue fv = new FloatValue();
+			// Create label Z
+			FloatValueLabel mouseLabelZ = new FloatValueLabel("z: ", 0, skin) {
 				@Override
-				public FloatValue getValue() {
-					fv.f = worldInputProcessor.mouseNavMeshPos.z;
-					return fv;
-				}
-				@Override
-				public void copyValue(FloatValue newValue, FloatValue oldValue) {
-					oldValue.f = newValue.f;
+				public float getValue() {
+					return worldInputProcessor.mouseNavMeshPos.z;
 				}
 			};
 			// This should be floating
@@ -696,7 +673,7 @@ public class GameStage extends Stage implements Observable {
 		}
 		if (DebugViewSettings.drawMouseNavMeshPos) {
 			screenToStageCoordinates(tmpV2.set(worldInputProcessor.mouseScreenPos));
-			mouseCoordLabel.setPosition(tmpV2.x + 75, tmpV2.y - 50);
+			mouseCoordLabel.setPosition(tmpV2.x + 10, tmpV2.y - 10);
 			if (!mouseCoordLabel.isVisible()) {
 				mouseCoordLabel.setVisible(true);
 			}

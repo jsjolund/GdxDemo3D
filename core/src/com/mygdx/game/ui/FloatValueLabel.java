@@ -21,45 +21,43 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.StringBuilder;
 
-/** A label continuously showing the most up-to-date integer value prefixed by a constant string.
+/** A label continuously showing the most up-to-date float value prefixed by a constant string.
  * 
  * @author davebaol */
-public abstract class ValueLabel<T> extends Label {
+public abstract class FloatValueLabel extends Label {
 
-	T oldValue;
+	float oldValue;
 	int appendIndex;
 
-	public ValueLabel (CharSequence text, T initialValue, Skin skin) {
+	public FloatValueLabel (CharSequence text, float initialValue, Skin skin) {
 		this(text, initialValue, skin.get(LabelStyle.class));
 	}
 
-	public ValueLabel (CharSequence text, T initialValue, Skin skin, String styleName) {
+	public FloatValueLabel (CharSequence text, float initialValue, Skin skin, String styleName) {
 		this(text, initialValue, skin.get(styleName, LabelStyle.class));
 	}
 
-	public ValueLabel (CharSequence text, T initialValue, Skin skin, String fontName, Color color) {
+	public FloatValueLabel (CharSequence text, float initialValue, Skin skin, String fontName, Color color) {
 		this(text, initialValue, new LabelStyle(skin.getFont(fontName), color));
 	}
 
-	public ValueLabel (CharSequence text, T initialValue, Skin skin, String fontName, String colorName) {
+	public FloatValueLabel (CharSequence text, float initialValue, Skin skin, String fontName, String colorName) {
 		this(text, initialValue, new LabelStyle(skin.getFont(fontName), skin.getColor(colorName)));
 	}
 
-	public ValueLabel (CharSequence text, T initialValue, LabelStyle style) {
+	public FloatValueLabel (CharSequence text, float initialValue, LabelStyle style) {
 		super(text.toString() + initialValue, style);
 		this.oldValue = initialValue;
 		this.appendIndex = text.length();
 	}
 
-	public abstract T getValue();
-
-	public abstract void copyValue(T newValue, T oldValue);
+	public abstract float getValue();
 
 	@Override
 	public void act (float delta) {
-		T newValue = getValue();
-		if (!oldValue.equals(newValue)) {
-			copyValue(newValue, oldValue);
+		float newValue = getValue();
+		if (oldValue != newValue) {
+			oldValue = newValue;
 			StringBuilder sb = getText();
 			sb.setLength(appendIndex);
 			sb.append(oldValue);
