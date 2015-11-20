@@ -52,17 +52,7 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 				targetDogDistanceToHuman,
 				dogTargetPoint, human.visibleOnLayers);
 
-		if (GameEngine.engine.getScene().navMesh.getPath(
-				dog.currentTriangle,
-				dog.getGroundPosition(tmp1),
-				dogTargetTri,
-				dogTargetPoint,
-				dog.navMeshGraphPath)) {
-
-			dog.calculateNewPath();
-			return Status.SUCCEEDED;
-		}
-		return Status.FAILED;
+		return  dog.followPath(dogTargetTri, dogTargetPoint) ? Status.SUCCEEDED : Status.FAILED;
 	}
 
 	@Override

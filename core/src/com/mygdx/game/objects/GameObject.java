@@ -17,6 +17,8 @@
 package com.mygdx.game.objects;
 
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.Bits;
 
 /**
  * @author jsjolund
@@ -25,4 +27,7 @@ public abstract class GameObject extends Entity {
 	public abstract void update(float deltaTime);
 
 	public abstract void dispose();
+
+	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
+	}
 }

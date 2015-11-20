@@ -180,7 +180,7 @@ public class GameStage extends Stage implements Observable {
 					characterController.handleCharacterSelection((GameCharacter) hitEntity);
 
 				} else if (hitEntity == engine.getScene().navmeshEntity) {
-					characterController.handleCharacterPathing(touchUpRay, visibleLayers);
+					characterController.handleMovementRequest(touchUpRay, visibleLayers);
 				}
 			}
 			isDragging = false;
@@ -388,17 +388,10 @@ public class GameStage extends Stage implements Observable {
 			}
 		}
 
-		public void handleCharacterPathing(Ray ray, Bits visibleLayers) {
-			// Perform pathfinding only if a human character is selected and a movement button is checked
-			if (selectedCharacter instanceof HumanCharacter && radioGroup.getCheckedIndex() > -1 && radioGroup.getChecked().state.isMovementState()) {
-				if (engine.getScene().navMesh.getPath(selectedCharacter.currentTriangle,
-						selectedCharacter.getGroundPosition(tmp),
-						ray, visibleLayers,
-						GameSettings.CAMERA_PICK_RAY_DST,
-						selectedCharacter.navMeshGraphPath)) {
-
-					selectedCharacter.calculateNewPath();
-				}
+		public void handleMovementRequest(Ray ray, Bits visibleLayers) {
+			// Handle movement request only if a character is selected and a movement button is checked
+			if (selectedCharacter != null && radioGroup.getCheckedIndex() > -1 && radioGroup.getChecked().state.isMovementState()) {
+				selectedCharacter.handleMovementRequest(ray, visibleLayers);
 			}
 		}
 
@@ -528,13 +521,9 @@ public class GameStage extends Stage implements Observable {
 		addActor(rootTable);
 		rootTable.setDebug(true, true);
 
-		// Add top table with FPS and mouse coordinates
+		// Add top left row with FPS
 		rootTable.row().top().left().colspan(3);
-		Table topTable = new Table();
-		topTable.add(fpsLabel).width(fpsLabel.getWidth());
-//		topTable.add(mouseCoordsLabel).padLeft(15);
-
-		rootTable.add(topTable);
+		rootTable.add(fpsLabel);
 
 		rootTable.row().bottom();
 		humanSteerSettings = new FloatSettingsMenu("Steering (human)", skin,

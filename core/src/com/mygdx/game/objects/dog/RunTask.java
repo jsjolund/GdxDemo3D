@@ -39,9 +39,7 @@ public class RunTask extends LoopedAnimationTaskBase {
 		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed * DogSteerSettings.runMultiplier);
 		dog.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration * DogSteerSettings.runMultiplier);
 
-		if (dog.followPathSB != null) {
-			dog.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * DogSteerSettings.runMultiplier);
-		}
+		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * DogSteerSettings.runMultiplier);
 	}
 
 	@Override
@@ -52,15 +50,6 @@ public class RunTask extends LoopedAnimationTaskBase {
 			return Status.SUCCEEDED;
 		}
 		return Status.RUNNING;
-	}
-
-	@Override
-	public void end () {
-		super.end();
-//		DogCharacter dog = getObject();
-//		dog.animations.animate("armature|idle_stand", -1, 1, animationListener, 0.1f);
-//		System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-		//dog.currentAnimationFinished = false;
 	}
 
 }

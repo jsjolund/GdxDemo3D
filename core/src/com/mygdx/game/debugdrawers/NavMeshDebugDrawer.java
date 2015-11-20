@@ -30,6 +30,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Bits;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.pathfinding.*;
+import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
 /**
@@ -183,10 +184,11 @@ public class NavMeshDebugDrawer {
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		drawNavMeshTriangles();
-		if (character != null) {
-			drawPathTriangles(character.navMeshGraphPath, character.currentTriangle);
-			if (character.navMeshPointPath.getSize() > 0) {
-				drawPathPoints(character.navMeshPointPath);
+		if (character != null && character.steerer instanceof FollowPathSteerer) {
+			FollowPathSteerer fpSteerer = (FollowPathSteerer)character.steerer;
+			drawPathTriangles(fpSteerer.navMeshGraphPath, character.currentTriangle);
+			if (fpSteerer.navMeshPointPath.getSize() > 0) {
+				drawPathPoints(fpSteerer.navMeshPointPath);
 			}
 			drawClosestPointDebug(character);
 		}

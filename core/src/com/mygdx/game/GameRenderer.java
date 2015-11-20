@@ -54,14 +54,24 @@ public class GameRenderer implements Disposable, Observer {
 
 	public static final String tag = "GameRenderer";
 
+	/**
+	 * Temporary vector that steerers can use to draw
+	 */
+	public final Vector3 vTmpDraw1 = new Vector3();
+
+	/**
+	 * Temporary vector that steerers can use to draw
+	 */
+	public final Vector3 vTmpDraw2 = new Vector3();
+
 	private final ModelBatch modelBatch;
 	private final ModelBatch shadowBatch;
-	private final MyShapeRenderer shapeRenderer;
+	public final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
 	private final Vector3 tmp = new Vector3();
 	private final Vector3 cursorWorldPosition = new Vector3();
 
-	private final Viewport viewport;
+	public final Viewport viewport;
 	private GameCharacter selectedCharacter;
 	private BitmapFont font;
 	private Camera camera;
@@ -201,8 +211,8 @@ public class GameRenderer implements Disposable, Observer {
 			armatureDebugDrawer.drawArmature(shapeRenderer, selectedCharacter, "armature");
 
 		}
-		if (DebugViewSettings.drawPath) {
-			drawPath();
+		if (DebugViewSettings.drawSteering) {
+			drawSteering();
 		}
 		if (DebugViewSettings.drawNavmesh) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
@@ -221,40 +231,23 @@ public class GameRenderer implements Disposable, Observer {
 	 */
 	private void drawMouseWorldAxis() {
 		Vector3 v = cursorWorldPosition;
-		if (Float.isNaN(v.x) || Float.isNaN(v.y) || Float.isNaN(v.z)) {
-			return;
-		}
-		shapeRenderer.begin();
-		shapeRenderer.setColor(Color.RED);
-		shapeRenderer.line(v, tmp.set(v).add(Vector3.X));
-		shapeRenderer.setColor(Color.GREEN);
-		shapeRenderer.line(v, tmp.set(v).add(Vector3.Y));
-		shapeRenderer.setColor(Color.BLUE);
-		shapeRenderer.line(v, tmp.set(v).add(Vector3.Z));
-		shapeRenderer.end();
-	}
-
-	/**
-	 * Draws the path of selected character
-	 */
-	private void drawPath() {
-		if (selectedCharacter != null && selectedCharacter.pathToRender.size > 0 && selectedCharacter.getCurrentSegmentIndex() >= 0) {
-			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
-			shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(Color.CORAL);
-
-			// Smoothed path
-			Vector3 q;
-			Vector3 p = selectedCharacter.getLinePathPosition(tmp);
-			for (int i = selectedCharacter.getCurrentSegmentIndex() + 1; i < selectedCharacter.pathToRender.size; i++) {
-				q = selectedCharacter.pathToRender.get(i);
-				shapeRenderer.line(p, q);
-				p = q;
-			}
+		if (!Float.isNaN(v.x + v.y + v.z)) { // No vector component is NaN
+			shapeRenderer.begin();
+			shapeRenderer.line(v.x, v.y, v.z, v.x + 1, v.y, v.z, Color.RED, Color.RED);
+			shapeRenderer.line(v.x, v.y, v.z, v.x, v.y + 1, v.z, Color.GREEN, Color.GREEN);
+			shapeRenderer.line(v.x, v.y, v.z, v.x, v.y, v.z + 1, Color.BLUE, Color.BLUE);
 			shapeRenderer.end();
 		}
 	}
 
+	/**
+	 * Draws the steering behavior of selected character
+	 */
+	private void drawSteering() {
+		if (selectedCharacter != null && selectedCharacter.steerer != null) {
+			selectedCharacter.steerer.draw(this);
+		}
+	}
 
 	public void setSelectionMarker(Billboard markerBillboard) {
 		this.markerBillboard = markerBillboard;

@@ -8,6 +8,9 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.GameEngine;
+import com.mygdx.game.pathfinding.Triangle;
+import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.Constants;
 
 /**
@@ -67,6 +70,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 
 	public final BehaviorTree<DogCharacter> btree;
 	public final AnimationController animations;
+	public final FollowPathSteerer followPathSteerer;
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
@@ -87,9 +91,29 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 
 		animations = new AnimationController(modelInstance);
 
+		// Create behavior tree
 		btree = BehaviorTreeLibraryManager.getInstance().createBehaviorTree("btrees/dog.btree", this);
 
+		// Create path follower
+		followPathSteerer = new FollowPathSteerer(this);
+
 		humanWantToPlay = false;
+	}
+
+	private Vector3 tmp1 = new Vector3();
+	
+	public boolean followPath(Triangle targetTriangle, Vector3 targetPoint) {
+		if (GameEngine.engine.getScene().navMesh.getPath(
+				currentTriangle,
+				getGroundPosition(tmp1),
+				targetTriangle,
+				targetPoint,
+				followPathSteerer.navMeshGraphPath)) {
+
+			followPathSteerer.calculateNewPath();
+			return true;
+		}
+		return false;
 	}
 
 	@Override
