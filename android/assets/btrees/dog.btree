@@ -11,30 +11,12 @@ import stand:"com.mygdx.game.objects.dog.StandTask"
 import humanWantToPlay?:"com.mygdx.game.objects.dog.HumanWantToPlayCondition"
 import stickThrown?:"com.mygdx.game.objects.dog.StickThrownCondition"
 
-
-#sequence
-#  lieDown
-#  piss
-#  spinAround
-#  sit
-
-#randomSequence
-#  piss
-#  spinAround
-#  repeat times:"uniform,2,4"
-#    parallel policy:"selector"
-#      wait seconds:"uniform,5,8"
-#      randomSelector
-#        stand
-#        sit
-#        lieDown
-
-        
+    
 sequence
-  parallel policy:"selector"  # lie down if the man don't wan't to play
+  parallel policy:"selector"  # lie down if the man don't want to play
     humanWantToPlay?
     lieDown    
-  sequence
+  sequence  # ok the man want to play
     calculatePathToHuman
     run
     adjustOrientation
@@ -45,15 +27,13 @@ sequence
         stickThrown?
         repeat
           sequence
-            spinAround
             parallel policy:"selector"
               wait seconds:"uniform,3,5"
               randomSelector
                 stand
                 sit
+            spinAround
     setThrowButton enabled:false
     calculatePathToStick
-    #run    # run and take the stick
-    piss  # This replaces the round trip. Use your imagination for now :)
-    #runBackToHuman
+    piss    # well, the dog should run and take the stick instead. Use your imagination for now :)
   
