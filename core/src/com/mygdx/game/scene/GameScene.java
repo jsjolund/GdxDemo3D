@@ -31,6 +31,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.utils.*;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.blender.BlenderAssetManager;
@@ -236,6 +237,11 @@ public class GameScene implements Disposable {
 					bp.callback, bp.noDeactivate);
 			obj.visibleOnLayers.clear();
 			obj.visibleOnLayers.or(bp.visibleOnLayers);
+
+			if (bp.name.startsWith("door")) {
+				obj.constraints.add(new btHingeConstraint(obj.body, new Vector3(0, 0, -0.6f), Vector3.Y));
+			}
+
 			addGameObject(obj);
 
 		} else if (bp.model == null && bp.shape != null) {
