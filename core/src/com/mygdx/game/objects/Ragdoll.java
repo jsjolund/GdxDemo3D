@@ -49,7 +49,7 @@ public abstract class Ragdoll extends GameCharacter {
 	 */
 	private class RigidBodyNodeConnection {
 		// Stores the offset from the center of a rigid body to the node which connects to it
-		// Used when multiple nodes should follow one body under ragdoll controll
+		// Used when multiple nodes should follow one body under ragdoll control
 		public ArrayMap<Node, Vector3> bodyNodeOffsets = new ArrayMap<Node, Vector3>();
 		// The node this bone should follow in animation mode
 		public Node followNode = null;

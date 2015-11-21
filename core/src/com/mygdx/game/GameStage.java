@@ -266,14 +266,11 @@ public class GameStage extends Stage implements Observable {
 								HumanCharacter human = (HumanCharacter) selectedCharacter;
 								if (CharacterButton.this.state.isMovementState()) {
 									HumanState hs = human.stateMachine.getCurrentState();
-									if (hs.isIdleState()) {
-										human.moveState = CharacterButton.this.state;
-										human.handleStateCommand(CharacterButton.this.state.idleState);
-									} else if (!hs.isMovementState()) {
-										human.moveState = CharacterButton.this.state;
-										human.handleStateCommand(CharacterButton.this.state.idleState);
-									} else {
+									if (hs.isMovementState()) {
 										human.handleStateCommand(CharacterButton.this.state);
+									} else {
+										human.moveState = CharacterButton.this.state;
+										human.handleStateCommand(CharacterButton.this.state.idleState);
 									}
 								} else {
 									human.handleStateCommand(CharacterButton.this.state);
@@ -412,8 +409,8 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
-	private class MouseNavMeshCoordLabel extends Table {
-		public MouseNavMeshCoordLabel(Skin skin) {
+	private class MouseNavMeshCoordTable extends Table {
+		public MouseNavMeshCoordTable(Skin skin) {
 			align(Align.topLeft); // Fix flickering due to the variable width of rows
 
 			// Create label X
@@ -444,6 +441,17 @@ public class GameStage extends Stage implements Observable {
 			row();
 			add(mouseLabelZ).left();
 		}
+
+		@Override
+		public void act(float delta) {
+			boolean visible = DebugViewSettings.drawMouseNavMeshPos;
+			setVisible(visible);
+			if (visible) {
+				screenToStageCoordinates(tmpV2.set(worldInputProcessor.mouseScreenPos));
+				setPosition(tmpV2.x + 10, tmpV2.y - 10);
+				super.act(delta);  // No need to update this actor if it's not visible
+			}
+		}
 	}
 	public static final String tag = "GameStage";
 	private final Viewport viewport;
@@ -451,15 +459,12 @@ public class GameStage extends Stage implements Observable {
 	private final ShapeRenderer shapeRenderer;
 	private final Table rootTable;
 	private final TextureAtlas buttonsAtlas;
-	private final MouseNavMeshCoordLabel mouseCoordLabel;
 	private final Camera cameraUI;
-	private final Camera camera3D;
 	private final Skin skin;
 	private final CameraController cameraController;
 	private final GameEngine engine;
 	private final Array<Observer> observers = new Array<Observer>();
 	private final WorldInputProcessor worldInputProcessor;
-	private final Label fpsLabel;
 	private final GameSpeedController speedController;
 	private final CharacterController characterController;
 	private final LayerController layerController;
@@ -474,7 +479,6 @@ public class GameStage extends Stage implements Observable {
 		super(viewport);
 		this.engine = engine;
 		this.viewport = viewport;
-		this.camera3D = viewport.getCamera();
 		this.cameraController = cameraController;
 
 		visibleLayers = new Bits();
@@ -495,15 +499,7 @@ public class GameStage extends Stage implements Observable {
 
 		buttonsAtlas = new TextureAtlas(Gdx.files.internal("skins/buttons.atlas"));
 
-		mouseCoordLabel = new MouseNavMeshCoordLabel(skin);
-		addActor(mouseCoordLabel);
-
-		fpsLabel = new IntValueLabel("FPS: ", 999, skin) {
-			@Override
-			public int getValue() {
-				return Gdx.graphics.getFramesPerSecond();
-			}
-		};
+		addActor(new MouseNavMeshCoordTable(skin));
 
 		// Create controllers
 		speedController = new GameSpeedController(buttonsAtlas);
@@ -517,9 +513,14 @@ public class GameStage extends Stage implements Observable {
 		addActor(rootTable);
 		rootTable.setDebug(true, true);
 
-		// Add top left row with FPS
+		// Add top left row with FPS label
 		rootTable.row().top().left().colspan(3);
-		rootTable.add(fpsLabel);
+		rootTable.add(new IntValueLabel("FPS: ", 999, skin) {
+			@Override
+			public int getValue() {
+				return Gdx.graphics.getFramesPerSecond();
+			}
+		});
 
 		rootTable.row().bottom();
 		humanSteerSettings = new FloatSettingsMenu("Steering (human)", skin,
@@ -536,7 +537,7 @@ public class GameStage extends Stage implements Observable {
 		bottomLeftTable.add(steerSettings).bottom();
 		rootTable.add(bottomLeftTable).left();
 
-		// Add space between bottom left and bottom rignt tables
+		// Add space between bottom left and bottom right tables
 		rootTable.add(new Actor()).width(10).grow();
 
 		// Add bottom right table with controllers
@@ -655,15 +656,6 @@ public class GameStage extends Stage implements Observable {
 			shapeRenderer.begin();
 			rootTable.drawDebug(shapeRenderer);
 			shapeRenderer.end();
-		}
-		if (DebugViewSettings.drawMouseNavMeshPos) {
-			screenToStageCoordinates(tmpV2.set(worldInputProcessor.mouseScreenPos));
-			mouseCoordLabel.setPosition(tmpV2.x + 10, tmpV2.y - 10);
-			if (!mouseCoordLabel.isVisible()) {
-				mouseCoordLabel.setVisible(true);
-			}
-		} else if (mouseCoordLabel.isVisible()) {
-			mouseCoordLabel.setVisible(false);
 		}
 	}
 
