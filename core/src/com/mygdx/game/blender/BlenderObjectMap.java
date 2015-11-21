@@ -35,11 +35,11 @@ class BlenderObjectMap<T extends BlenderObject> extends ArrayMap<String, Array<T
 	public Array<T> addFromJson(String jsonPath, Class<T> type) {
 		Array<T> objects = deserialize(jsonPath, type);
 		for (T object : objects) {
-			if (containsKey(object.id)) {
-				get(object.id).add(object);
+			if (containsKey(object.name)) {
+				get(object.name).add(object);
 			} else {
 				Array<T> array = new Array<T>();
-				put(object.id, array);
+				put(object.name, array);
 				array.add(object);
 			}
 		}
@@ -50,16 +50,12 @@ class BlenderObjectMap<T extends BlenderObject> extends ArrayMap<String, Array<T
 		return (jsonPath == null) ? new Array<T>() : new Json().fromJson(Array.class, type, Gdx.files.local(jsonPath));
 	}
 
-	public int amountIds() {
-		return size;
-	}
-
 	public void add(T object) {
-		if (containsKey(object.id)) {
-			get(object.id).add(object);
+		if (containsKey(object.name)) {
+			get(object.name).add(object);
 		} else {
 			Array<T> array = new Array<T>();
-			put(object.id, array);
+			put(object.name, array);
 			array.add(object);
 		}
 	}
@@ -70,12 +66,12 @@ class BlenderObjectMap<T extends BlenderObject> extends ArrayMap<String, Array<T
 		}
 	}
 
-	public Array<T> removeById(String id) {
-		return removeKey(id);
+	public Array<T> removeByName(String name) {
+		return removeKey(name);
 	}
 
-	public Array<T> getById(String id) {
-		return get(id);
+	public Array<T> getByName(String name) {
+		return get(name);
 	}
 
 }

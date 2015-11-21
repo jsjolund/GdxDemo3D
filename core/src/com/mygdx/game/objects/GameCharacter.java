@@ -27,14 +27,14 @@ public abstract class GameCharacter extends SteerableBody {
 
 	public final Vector3 selectionMarkerOffset;
 
-	public GameCharacter(Model model, String id,
+	public GameCharacter(Model model, String name,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
 						 short belongsToFlag, short collidesWithFlag,
 						 boolean callback, boolean noDeactivate,
 						 SteerSettings steerSettings) {
 
-		super(model, id, location, rotation, scale, shape, mass, belongsToFlag, collidesWithFlag, callback,
+		super(model, name, location, rotation, scale, shape, mass, belongsToFlag, collidesWithFlag, callback,
 				noDeactivate, steerSettings);
 		selectionMarkerOffset = new Vector3(0, -halfExtents.y * 0.95f, 0);
 	}

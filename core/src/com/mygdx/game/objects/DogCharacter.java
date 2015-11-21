@@ -75,12 +75,12 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
 
-	public DogCharacter(Model model, String id,
+	public DogCharacter(Model model, String name,
 						Vector3 location, Vector3 rotation, Vector3 scale,
 						btCollisionShape shape, float mass,
 						short belongsToFlag, short collidesWithFlag,
 						boolean callback, boolean noDeactivate) {
-		super(model, id,
+		super(model, name,
 				location, rotation, scale,
 				shape, mass,
 				belongsToFlag, collidesWithFlag,
@@ -101,7 +101,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	}
 
 	private Vector3 tmp1 = new Vector3();
-	
+
 	public boolean followPath(Triangle targetTriangle, Vector3 targetPoint) {
 		if (GameEngine.engine.getScene().navMesh.getPath(
 				currentTriangle,

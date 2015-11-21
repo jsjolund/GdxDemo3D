@@ -69,7 +69,7 @@ class BlenderObject(object):
         self.entry = {}
 
     def serialize(self):
-        self.entry["id"] = self.name_array[0]
+        self.entry["name"] = self.name_array[0]
         self.entry["type"] = self.type_name
         self.entry["layers"] = self.layers
         self.entry["custom_properties"] = self.custom_properties

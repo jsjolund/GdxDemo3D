@@ -240,7 +240,7 @@ public class HumanCharacter extends Ragdoll {
 				animationListener.setAnimationCompleted(false);
 			return animationListener;
 		}
-		
+
 		protected void prepareToMove(HumanCharacter entity, float steeringMultiplier) {
 			entity.moveState = this;
 
@@ -358,7 +358,7 @@ public class HumanCharacter extends Ragdoll {
 	public DogCharacter dog;
 	private float animationSpeedMultiplier = -1;
 	public boolean selected = false;
-	
+
 	final FollowPathSteerer followPathSteerer;
 
 	private final Vector3 tmpNodePos = new Vector3();
@@ -366,7 +366,7 @@ public class HumanCharacter extends Ragdoll {
 	private final Quaternion tmpModelRot = new Quaternion();
 
 	public HumanCharacter(Model model,
-						  String id,
+						  String name,
 						  Vector3 location,
 						  Vector3 rotation,
 						  Vector3 scale,
@@ -379,7 +379,7 @@ public class HumanCharacter extends Ragdoll {
 						  String ragdollJson,
 						  String armatureNodeId) {
 
-		super(model, id, location, rotation, scale,
+		super(model, name, location, rotation, scale,
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId,
 				new HumanSteerSettings());

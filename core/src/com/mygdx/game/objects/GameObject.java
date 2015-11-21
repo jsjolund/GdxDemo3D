@@ -24,10 +24,10 @@ import com.badlogic.gdx.utils.Bits;
  * @author jsjolund
  */
 public abstract class GameObject extends Entity {
-	public final String id;
+	public final String name;
 
-	public GameObject(String id) {
-		this.id = id;
+	public GameObject(String name) {
+		this.name = name;
 	}
 
 	public abstract void update(float deltaTime);

@@ -87,7 +87,7 @@ public abstract class Ragdoll extends GameCharacter {
 	 * Constructs a ragdoll out of rigid bodies using physics constraints.
 	 *
 	 * @param model            Model to instantiate
-	 * @param id               Name of model
+	 * @param name               Name of model
 	 * @param location         World position at which to place the model instance
 	 * @param rotation         The rotation of the model instance in degrees
 	 * @param scale            Scale of the model instance
@@ -102,7 +102,7 @@ public abstract class Ragdoll extends GameCharacter {
 	 * @param steerSettings    Steerable settings
 	 */
 	public Ragdoll(Model model,
-				   String id,
+				   String name,
 				   Vector3 location,
 				   Vector3 rotation,
 				   Vector3 scale,
@@ -116,7 +116,7 @@ public abstract class Ragdoll extends GameCharacter {
 				   String armatureNodeId,
 				   SteerSettings steerSettings) {
 
-		super(model, id, location, rotation, scale, shape, mass,
+		super(model, name, location, rotation, scale, shape, mass,
 				belongsToFlag, collidesWithFlag, callback, noDeactivate, steerSettings);
 
 		createRagdoll(ragdollJson, armatureNodeId);
@@ -313,10 +313,10 @@ public abstract class Ragdoll extends GameCharacter {
 			halfExtents.x = Math.abs(halfExtents.x);
 			halfExtents.y = Math.abs(halfExtents.y);
 			halfExtents.z = Math.abs(halfExtents.z);
-			halfExtMap.put(empty.id, halfExtents);
+			halfExtMap.put(empty.name, halfExtents);
 
 			float partMass = Float.parseFloat(empty.custom_properties.get("mass"));
-			massMap.put(empty.id, super.mass * partMass);
+			massMap.put(empty.name, super.mass * partMass);
 		}
 
 		ArrayMap<String, btCollisionShape> shapeMap = new ArrayMap<String, btCollisionShape>();

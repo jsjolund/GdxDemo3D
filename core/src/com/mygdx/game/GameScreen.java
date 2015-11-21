@@ -97,7 +97,7 @@ public class GameScreen implements Screen {
 		defaultScene.assets.loadPlaceholders("models/json/scene0_light.json", BlenderLight.class);
 		defaultScene.assets.loadPlaceholders("models/json/scene0_camera.json", BlenderCamera.class);
 
-		// Since blender placeholder objects from different .blend scenes might have string id collisions,
+		// Since blender placeholder objects from different .blend scenes might have string name collisions,
 		// load each into a new scene  then distribute shared object blueprints among game scenes (only one scene so far).
 		sceneManager.get("human_scene").assets.loadPlaceholders("models/json/human_empty.json", BlenderEmpty.class);
 		sceneManager.get("human_scene").assets.loadPlaceholders("models/json/human_model.json", BlenderModel.class);
@@ -110,7 +110,7 @@ public class GameScreen implements Screen {
 		Model billboardModel = ModelFactory.buildBillboardModel(texture, 1, 1);
 		sceneManager.get("utils_scene").assets.manageDisposable("markerModel", billboardModel, Model.class);
 		GameObjectBlueprint markerBlueprint = new GameObjectBlueprint();
-		markerBlueprint.id = "marker";
+		markerBlueprint.name = "marker";
 		markerBlueprint.model = billboardModel;
 		sceneManager.addSharedBlueprint("marker", markerBlueprint);
 
@@ -119,7 +119,7 @@ public class GameScreen implements Screen {
 		humanBlueprint.rotation = new Vector3();
 		humanBlueprint.scale = new Vector3(1, 1, 1);
 		humanBlueprint.model = sceneManager.get("human_scene").assets.getAsset("human", Model.class);
-		humanBlueprint.id = "human";
+		humanBlueprint.name = "human";
 		humanBlueprint.shape = new btCapsuleShape(0.4f, 1.1f);
 		humanBlueprint.shapeType = "capsule"; // TODO: Create enums
 		humanBlueprint.mass = 1;
@@ -135,7 +135,7 @@ public class GameScreen implements Screen {
 		dogBlueprint.rotation = new Vector3();
 		dogBlueprint.scale = new Vector3(0.3f, 0.3f, 0.3f);
 		dogBlueprint.model = sceneManager.get("dog_scene").assets.getAsset("dog", Model.class);
-		dogBlueprint.id = "dog";
+		dogBlueprint.name = "dog";
 		dogBlueprint.shape = new btCapsuleShape(0.4f, 0.5f);
 		dogBlueprint.shapeType = "capsule";
 		dogBlueprint.mass = 1;

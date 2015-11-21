@@ -41,7 +41,7 @@ public class GameObjectBlueprint implements Disposable {
 	public static String blenderCollisionShapeField = "collision_shape";
 	public static String blenderMassField = "mass";
 	public String type;
-	public String id;
+	public String name;
 	public Vector3 position;
 	public Vector3 rotation;
 	public Vector3 scale;
@@ -75,11 +75,11 @@ public class GameObjectBlueprint implements Disposable {
 		if (!blenderEmpty.custom_properties.containsKey(blenderCollisionShapeField)
 				|| !blenderEmpty.custom_properties.containsKey(blenderMassField)) {
 			throw new GdxRuntimeException(String.format("Cannot load collision shape data from '%s'",
-					blenderEmpty.id));
+					blenderEmpty.name));
 		}
 		this.shapeType = blenderEmpty.custom_properties.get(blenderCollisionShapeField);
 		this.mass = Float.parseFloat(blenderEmpty.custom_properties.get(blenderMassField));
-		this.id = blenderEmpty.id;
+		this.name = blenderEmpty.name;
 		this.position = blenderEmpty.position;
 		this.rotation = blenderEmpty.rotation;
 		this.scale = blenderEmpty.scale;
@@ -106,7 +106,7 @@ public class GameObjectBlueprint implements Disposable {
 		GameModel.applyTransform(position, rotation, blenderModel.scale, modelInstance);
 
 		this.shape = Bullet.obtainStaticNodeShape(modelInstance.nodes);
-		this.shapeType = String.format("static_node_shape_%s", blenderModel.id);
+		this.shapeType = String.format("static_node_shape_%s", blenderModel.name);
 		setCollisionFlags(this.mass);
 	}
 
@@ -116,7 +116,7 @@ public class GameObjectBlueprint implements Disposable {
 		if (!blenderEmpty.custom_properties.containsKey(blenderCollisionShapeField)
 				|| !blenderEmpty.custom_properties.containsKey(blenderMassField)) {
 			throw new GdxRuntimeException(String.format("Cannot load collision shape data for %s from '%s'",
-					blenderModel.id, blenderEmpty.id));
+					blenderModel.name, blenderEmpty.name));
 		}
 		this.shapeType = blenderEmpty.custom_properties.get(blenderCollisionShapeField);
 		this.mass = Float.parseFloat(blenderEmpty.custom_properties.get(blenderMassField));
@@ -161,7 +161,7 @@ public class GameObjectBlueprint implements Disposable {
 
 		} else {
 			throw new GdxRuntimeException(String.format("Cannot load collision shape data for %s from '%s'",
-					blenderModel.id, blenderEmpty.id));
+					blenderModel.name, blenderEmpty.name));
 		}
 		setCollisionFlags(this.mass);
 	}
@@ -170,7 +170,7 @@ public class GameObjectBlueprint implements Disposable {
 	public String toString() {
 		final StringBuffer sb = new StringBuffer("GameObjectBlueprint{");
 		sb.append("armatureNodeId='").append(armatureNodeId).append('\'');
-		sb.append(", id='").append(id).append('\'');
+		sb.append(", name='").append(name).append('\'');
 		sb.append(", model=").append(model);
 		sb.append(", rotation=").append(rotation);
 		sb.append(", scale=").append(scale);
@@ -190,7 +190,7 @@ public class GameObjectBlueprint implements Disposable {
 
 	private void setFromModel(BlenderModel blenderModel, Model model) {
 		this.model = model;
-		this.id = blenderModel.id;
+		this.name = blenderModel.name;
 		this.position = blenderModel.position;
 		this.rotation = blenderModel.rotation;
 		this.scale = blenderModel.scale;

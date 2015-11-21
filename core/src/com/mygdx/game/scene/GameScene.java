@@ -78,10 +78,10 @@ public class GameScene implements Disposable {
 	}
 
 	public void addGameObject(GameObject obj) {
-		if (!gameObjects.containsKey(obj.id)) {
-			gameObjects.put(obj.id, new Array<GameObject>());
+		if (!gameObjects.containsKey(obj.name)) {
+			gameObjects.put(obj.name, new Array<GameObject>());
 		}
-		gameObjects.get(obj.id).add(obj);
+		gameObjects.get(obj.name).add(obj);
 	}
 
 	public void getGameModelById(String id, Array<GameObject> out) {
@@ -170,7 +170,7 @@ public class GameScene implements Disposable {
 		Array<BlenderModel> navmeshObjects = new Array<BlenderModel>();
 		assets.getPlaceholders("navmesh", BlenderModel.class, navmeshObjects);
 		GameObjectBlueprint navmeshBp = new GameObjectBlueprint();
-		navmeshBp.id = "navmesh";
+		navmeshBp.name = "navmesh";
 		navmeshBp.model = assets.getAsset("navmesh", Model.class);
 		navmeshBp.position = navmeshObjects.first().position;
 		navmeshBp.rotation = navmeshObjects.first().rotation;
@@ -186,7 +186,7 @@ public class GameScene implements Disposable {
 	public HumanCharacter spawnHuman(String sharedBlueprintId, Vector3 initialPosition) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		HumanCharacter obj = new HumanCharacter(
-				bp.model, bp.id,
+				bp.model, bp.name,
 				initialPosition, bp.rotation, bp.scale,
 				bp.shape, bp.mass,
 				bp.belongsToFlag, bp.collidesWithFlag,
@@ -200,7 +200,7 @@ public class GameScene implements Disposable {
 	public DogCharacter spawnDog(String sharedBlueprintId, Vector3 initialPosition) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		DogCharacter obj = new DogCharacter(
-				bp.model, bp.id,
+				bp.model, bp.name,
 				initialPosition, bp.rotation, bp.scale,
 				bp.shape, bp.mass,
 				bp.belongsToFlag, bp.collidesWithFlag,
@@ -221,7 +221,7 @@ public class GameScene implements Disposable {
 
 	public Billboard spawnSelectionBillboard(String sharedBlueprintId, Camera camera) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
-		Billboard obj = new Billboard(bp.model, bp.id, camera, true, new Matrix4(), new Vector3());
+		Billboard obj = new Billboard(bp.model, bp.name, camera, true, new Matrix4(), new Vector3());
 		addGameObject(obj);
 		return obj;
 	}
@@ -229,7 +229,7 @@ public class GameScene implements Disposable {
 	private void spawnFromBlueprint(GameObjectBlueprint bp) {
 		if (bp.model != null && bp.shape != null) {
 			GameModelBody obj = new GameModelBody(
-					bp.model, bp.id,
+					bp.model, bp.name,
 					bp.position, bp.rotation, bp.scale,
 					bp.shape, bp.mass,
 					bp.belongsToFlag, bp.collidesWithFlag,
@@ -239,14 +239,14 @@ public class GameScene implements Disposable {
 			addGameObject(obj);
 
 		} else if (bp.model == null && bp.shape != null) {
-			InvisibleBody obj = new InvisibleBody(bp.id, bp.shape, bp.mass,
+			InvisibleBody obj = new InvisibleBody(bp.name, bp.shape, bp.mass,
 					bp.position, bp.rotation,
 					bp.belongsToFlag, bp.collidesWithFlag,
 					bp.callback, bp.noDeactivate);
 			addGameObject(obj);
 
 		} else if (bp.model != null) {
-			GameModel obj = new GameModel(bp.model, bp.id, bp.position, bp.rotation, bp.scale);
+			GameModel obj = new GameModel(bp.model, bp.name, bp.position, bp.rotation, bp.scale);
 			obj.visibleOnLayers.clear();
 			obj.visibleOnLayers.or(bp.visibleOnLayers);
 			addGameObject(obj);
@@ -277,7 +277,7 @@ public class GameScene implements Disposable {
 	 */
 	private void setNavmesh(GameObjectBlueprint bp) {
 		// We need to set the node transforms before calculating the navmesh shape
-		GameModel gameModel = new GameModel(bp.model, bp.id, bp.position, bp.rotation, bp.scale);
+		GameModel gameModel = new GameModel(bp.model, bp.name, bp.position, bp.rotation, bp.scale);
 
 		Array<NodePart> nodes = gameModel.modelInstance.model.getNode("navmesh").parts;
 		// Sort the model meshParts array according to material name

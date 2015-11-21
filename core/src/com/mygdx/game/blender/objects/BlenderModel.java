@@ -29,12 +29,12 @@ public class BlenderModel extends BlenderObject {
 	/**
 	 * Placeholder for a {@link ModelInstance}
 	 *
-	 * @param id
+	 * @param name
 	 * @param path
 	 */
-	public BlenderModel(String id, String path) {
+	public BlenderModel(String name, String path) {
 		this.model_file_name = path;
-		super.id = id;
+		super.name = name;
 	}
 
 	public BlenderModel() {

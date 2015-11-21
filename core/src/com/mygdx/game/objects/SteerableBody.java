@@ -68,7 +68,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * Holds the active steerer
 	 */
 	public Steerer steerer;
-	
+
 	/**
 	 * Used to adjust model orientation when following a path.
 	 */
@@ -99,7 +99,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	/**
 	 * @param model            Model to instantiate
-	 * @param id               Name of model
+	 * @param name               Name of model
 	 * @param location         World position at which to place the model instance
 	 * @param rotation         The rotation of the model instance in degrees
 	 * @param scale            Scale of the model instance
@@ -111,13 +111,13 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * @param noDeactivate     If this body should never 'sleep'
 	 * @param steerSettings    Steerable settings
 	 */
-	public SteerableBody(Model model, String id,
+	public SteerableBody(Model model, String name,
 						 Vector3 location, Vector3 rotation, Vector3 scale,
 						 btCollisionShape shape, float mass,
 						 short belongsToFlag, short collidesWithFlag,
 						 boolean callback, boolean noDeactivate,
 						 SteerSettings steerSettings) {
-		super(model, id,
+		super(model, name,
 				location, rotation, scale,
 				shape, mass,
 				belongsToFlag, collidesWithFlag,

@@ -50,31 +50,31 @@ public class BlenderAssetManager implements Disposable {
 		/**
 		 * Add a disposable asset to be held
 		 *
-		 * @param id    Asset id
+		 * @param name    Asset name
 		 * @param asset The asset
 		 * @param type  Type of asset
 		 */
-		public void add(String id, T asset, Class<T> type) {
+		public void add(String name, T asset, Class<T> type) {
 			if (!map.containsKey(type)) {
 				map.put(type, new ObjectMap<String, T>());
 			}
 			ObjectMap<String, T> innerMap = map.get(type);
-			if (innerMap.containsKey(id)) {
+			if (innerMap.containsKey(name)) {
 				throw new GdxRuntimeException(String.format(
-						"Asset id is already used, try changing it: '%s'", id));
+						"Asset name is already used, try changing it: '%s'", name));
 			}
-			innerMap.put(id, asset);
+			innerMap.put(name, asset);
 		}
 
 		/**
 		 * Get a held asset
 		 *
-		 * @param id
+		 * @param name
 		 * @param type
 		 * @return
 		 */
-		public T get(String id, Class<T> type) {
-			return map.get(type).get(id);
+		public T get(String name, Class<T> type) {
+			return map.get(type).get(name);
 		}
 
 		public boolean contains(String id, Class<T> type) {
@@ -95,8 +95,8 @@ public class BlenderAssetManager implements Disposable {
 	private class BlenderTexture extends BlenderObject {
 		String filePath;
 
-		public BlenderTexture(String id, String filePath) {
-			this.id = id;
+		public BlenderTexture(String name, String filePath) {
+			this.name = name;
 			this.filePath = filePath;
 		}
 	}
@@ -173,17 +173,17 @@ public class BlenderAssetManager implements Disposable {
 
 		if (type == Model.class) {
 			try {
-				String fileName = models.getById(assetId).first().model_file_name;
+				String fileName = models.getByName(assetId).first().model_file_name;
 				filePath = String.format("%s%s%s", modelPath, fileName, modelExt);
 			} catch (Exception e) {
-				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', id:'%s'", type, assetId));
+				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', name:'%s'", type, assetId));
 			}
 
 		} else if (type == Texture.class) {
 			try {
-				filePath = textures.getById(assetId).first().filePath;
+				filePath = textures.getByName(assetId).first().filePath;
 			} catch (Exception e) {
-				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', id:'%s'", type, assetId));
+				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', name:'%s'", type, assetId));
 			}
 		}
 
@@ -219,9 +219,8 @@ public class BlenderAssetManager implements Disposable {
 		getTypeMap(type).addAll(instances);
 	}
 
-	public <S extends Array<T>, T extends BlenderObject> S getPlaceholders(String assetId, Class<T> type, Array<T> out) {
-
-		Array<T> instances = getTypeMap(type).getById(assetId);
+	public <S extends Array<T>, T extends BlenderObject> S getPlaceholders(String assetName, Class<T> type, Array<T> out) {
+		Array<T> instances = getTypeMap(type).getByName(assetName);
 		if (instances != null) {
 			out.addAll(instances);
 		}

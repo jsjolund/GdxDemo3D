@@ -38,14 +38,14 @@ public class Billboard extends GameModel {
 
 	/**
 	 * @param model           The model which is to be instantiated
-	 * @param id              Id of the model (doesn't really matter)
+	 * @param name              Id of the model (doesn't really matter)
 	 * @param camera          The camera which the billboard should face
 	 * @param faceUp          If true, the model will always face the Y-axis, but otherwise rotate with the camera
 	 * @param followTransform The billboard will follow the translation of this matrix
 	 * @param offset          Constant offset from the follow-matrix translation
 	 */
-	public Billboard(Model model, String id, Camera camera, boolean faceUp, Matrix4 followTransform, Vector3 offset) {
-		super(model, id, followTransform.getTranslation(new Vector3()), new Vector3(), new Vector3(1, 1, 1));
+	public Billboard(Model model, String name, Camera camera, boolean faceUp, Matrix4 followTransform, Vector3 offset) {
+		super(model, name, followTransform.getTranslation(new Vector3()), new Vector3(), new Vector3(1, 1, 1));
 		this.faceUp = faceUp;
 		this.offset.set(offset);
 		this.followTransform = followTransform;

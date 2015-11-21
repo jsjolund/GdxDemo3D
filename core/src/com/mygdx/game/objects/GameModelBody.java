@@ -92,7 +92,7 @@ public class GameModelBody extends GameModel {
 	 * Creates a model with rigid body
 	 *
 	 * @param model            Model to instantiate
-	 * @param id               Name of model
+	 * @param name               Name of model
 	 * @param location         World position at which to place the model instance
 	 * @param rotation         The rotation of the model instance in degrees
 	 * @param scale            Scale of the model instance
@@ -104,7 +104,7 @@ public class GameModelBody extends GameModel {
 	 * @param noDeactivate     If this body should never 'sleep'
 	 */
 	public GameModelBody(Model model,
-						 String id,
+						 String name,
 						 Vector3 location,
 						 Vector3 rotation,
 						 Vector3 scale,
@@ -115,7 +115,7 @@ public class GameModelBody extends GameModel {
 						 boolean callback,
 						 boolean noDeactivate) {
 
-		super(model, id, location, rotation, scale);
+		super(model, name, location, rotation, scale);
 
 		this.mass = mass;
 		this.shape = shape;

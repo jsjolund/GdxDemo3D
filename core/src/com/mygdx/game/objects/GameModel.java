@@ -69,18 +69,18 @@ public class GameModel extends GameObject {
 	/**
 	 * Holds a an instance of the model.
 	 *
-	 * @param id       Name of model
+	 * @param name       Name of model
 	 * @param model    Model to instantiate
 	 * @param location World position at which to place the model instance
 	 * @param rotation The rotation of the model instance in degrees
 	 * @param scale    Scale of the model instance
 	 */
 	public GameModel(Model model,
-					 String id,
+					 String name,
 					 Vector3 location,
 					 Vector3 rotation,
 					 Vector3 scale) {
-		super(id);
+		super(name);
 		modelInstance = new ModelInstance(model);
 
 		applyTransform(location, rotation, scale, modelInstance);
