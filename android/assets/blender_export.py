@@ -69,13 +69,15 @@ class BlenderObject(object):
         self.entry = {}
 
     def serialize(self):
-        self.entry["name"] = self.name_array[0]
+        self.entry["id"] = self.name_array[0]
         self.entry["type"] = self.type_name
-        self.entry["position"] = {"x": self.loc.x, "y": self.loc.y, "z": self.loc.z}
-        self.entry["rotation"] = {"x": self.rot[0], "y": self.rot[1], "z": self.rot[2]}
-        self.entry["scale"] = {"x": self.scl.x, "y": self.scl.y, "z": self.scl.z}
         self.entry["layers"] = self.layers
         self.entry["custom_properties"] = self.custom_properties
+
+        # Convert to y-axis up
+        self.entry["position"] = {"x": self.loc.x, "y": self.loc.z, "z": -self.loc.y}
+        self.entry["rotation"] = {"x": self.rot[0], "y": self.rot[2], "z": -self.rot[1]}
+        self.entry["scale"] = {"x": self.scl.x, "y": self.scl.z, "z": self.scl.y}
 
 
 class BlenderModel(BlenderObject):

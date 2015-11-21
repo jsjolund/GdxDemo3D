@@ -179,7 +179,7 @@ public class GameStage extends Stage implements Observable {
 				if (hitEntity instanceof GameCharacter) {
 					characterController.handleCharacterSelection((GameCharacter) hitEntity);
 
-				} else if (hitEntity == engine.getScene().navmeshEntity) {
+				} else if (hitEntity == engine.getScene().navmeshBody) {
 					characterController.handleMovementRequest(touchUpRay, visibleLayers);
 				}
 			}
@@ -412,34 +412,6 @@ public class GameStage extends Stage implements Observable {
 		}
 	}
 
-	public static final String tag = "GameStage";
-	private final Viewport viewport;
-	private final SpriteBatch batch;
-	private final ShapeRenderer shapeRenderer;
-	private final Table rootTable;
-	private final TextureAtlas buttonsAtlas;
-
-	private  final MouseNavMeshCoordLabel mouseCoordLabel;
-	private final Camera cameraUI;
-	private final Camera camera3D;
-	private final Skin skin;
-	private final CameraController cameraController;
-	private final GameEngine engine;
-	private final Array<Observer> observers = new Array<Observer>();
-	private final WorldInputProcessor worldInputProcessor;
-	private final Label fpsLabel;
-	private final GameSpeedController speedController;
-	private final CharacterController characterController;
-	private final LayerController layerController;
-	private final FloatSettingsMenu humanSteerSettings;
-	private final FloatSettingsMenu dogSteerSettings;
-	private final Table steerSettings;
-
-	private final Vector3 tmp = new Vector3();
-	private final Vector2 tmpV2 = new Vector2();
-
-	private Bits visibleLayers;
-
 	private class MouseNavMeshCoordLabel extends Table {
 		public MouseNavMeshCoordLabel(Skin skin) {
 			align(Align.topLeft); // Fix flickering due to the variable width of rows
@@ -473,6 +445,30 @@ public class GameStage extends Stage implements Observable {
 			add(mouseLabelZ).left();
 		}
 	}
+	public static final String tag = "GameStage";
+	private final Viewport viewport;
+	private final SpriteBatch batch;
+	private final ShapeRenderer shapeRenderer;
+	private final Table rootTable;
+	private final TextureAtlas buttonsAtlas;
+	private final MouseNavMeshCoordLabel mouseCoordLabel;
+	private final Camera cameraUI;
+	private final Camera camera3D;
+	private final Skin skin;
+	private final CameraController cameraController;
+	private final GameEngine engine;
+	private final Array<Observer> observers = new Array<Observer>();
+	private final WorldInputProcessor worldInputProcessor;
+	private final Label fpsLabel;
+	private final GameSpeedController speedController;
+	private final CharacterController characterController;
+	private final LayerController layerController;
+	private final FloatSettingsMenu humanSteerSettings;
+	private final FloatSettingsMenu dogSteerSettings;
+	private final Table steerSettings;
+	private final Vector3 tmp = new Vector3();
+	private final Vector2 tmpV2 = new Vector2();
+	private Bits visibleLayers;
 
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
 		super(viewport);

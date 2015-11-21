@@ -37,13 +37,15 @@ public class InvisibleBody extends GameObject {
 	public final btRigidBody.btRigidBodyConstructionInfo constructionInfo;
 	protected final float mass;
 
-	public InvisibleBody(btCollisionShape shape,
+	public InvisibleBody(String id,
+						 btCollisionShape shape,
 						 float mass,
 						 Matrix4 transform,
 						 short belongsToFlag,
 						 short collidesWithFlag,
 						 boolean callback,
 						 boolean noDeactivate) {
+		super(id);
 		this.mass = mass;
 		this.shape = shape;
 		this.belongsToFlag = belongsToFlag;
@@ -69,7 +71,8 @@ public class InvisibleBody extends GameObject {
 		}
 	}
 
-	public InvisibleBody(btCollisionShape shape,
+	public InvisibleBody(String id,
+						 btCollisionShape shape,
 						 float mass,
 						 Vector3 location,
 						 Vector3 rotation,
@@ -77,7 +80,7 @@ public class InvisibleBody extends GameObject {
 						 short collidesWithFlag,
 						 boolean callback,
 						 boolean noDeactivate) {
-		this(shape, mass,
+		this(id, shape, mass,
 				new Matrix4()
 						.rotate(Vector3.X, rotation.x)
 						.rotate(Vector3.Z, rotation.z)

@@ -30,7 +30,7 @@ import com.badlogic.gdx.utils.Bits;
  */
 public class GameModel extends GameObject {
 
-	public static final String tag = "ModelComponent";
+	public static final String tag = "GameModel";
 
 	/**
 	 * Center of bounding box for model instance
@@ -52,10 +52,7 @@ public class GameModel extends GameObject {
 	 * Model instance half extents, half of dimensions
 	 */
 	public final Vector3 halfExtents = new Vector3();
-	/**
-	 * Name of model
-	 */
-	public final String id;
+
 	/**
 	 * Global transform for model instance
 	 */
@@ -72,8 +69,8 @@ public class GameModel extends GameObject {
 	/**
 	 * Holds a an instance of the model.
 	 *
-	 * @param model    Model to instantiate
 	 * @param id       Name of model
+	 * @param model    Model to instantiate
 	 * @param location World position at which to place the model instance
 	 * @param rotation The rotation of the model instance in degrees
 	 * @param scale    Scale of the model instance
@@ -83,18 +80,10 @@ public class GameModel extends GameObject {
 					 Vector3 location,
 					 Vector3 rotation,
 					 Vector3 scale) {
-		this.id = id;
+		super(id);
 		modelInstance = new ModelInstance(model);
 
-		for (Node node : modelInstance.nodes) {
-			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-		}
-		modelInstance.transform.rotate(Vector3.X, rotation.x);
-		modelInstance.transform.rotate(Vector3.Z, rotation.z);
-		modelInstance.transform.rotate(Vector3.Y, rotation.y);
-		modelInstance.transform.setTranslation(location);
-
-		modelInstance.calculateTransforms();
+		applyTransform(location, rotation, scale, modelInstance);
 
 		try {
 			modelInstance.calculateBoundingBox(boundingBox);
@@ -106,6 +95,19 @@ public class GameModel extends GameObject {
 		boundingRadius = dimensions.len() / 2f;
 		modelTransform = modelInstance.transform;
 		halfExtents.set(dimensions).scl(0.5f);
+	}
+
+	public static void applyTransform(Vector3 location, Vector3 rotation, Vector3 scale,
+									  ModelInstance modelInstance) {
+		for (Node node : modelInstance.nodes) {
+			node.scale.set(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
+		}
+		modelInstance.transform.rotate(Vector3.X, rotation.x);
+		modelInstance.transform.rotate(Vector3.Z, rotation.z);
+		modelInstance.transform.rotate(Vector3.Y, rotation.y);
+		modelInstance.transform.setTranslation(location);
+
+		modelInstance.calculateTransforms();
 	}
 
 

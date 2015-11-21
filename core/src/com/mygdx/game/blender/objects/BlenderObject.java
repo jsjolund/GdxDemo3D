@@ -14,26 +14,23 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects;
+package com.mygdx.game.blender.objects;
 
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.utils.Bits;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.ArrayMap;
 
 /**
+ * A generic game object placeholder
+ *
  * @author jsjolund
  */
-public abstract class GameObject extends Entity {
-	public final String id;
+public abstract class BlenderObject {
 
-	public GameObject(String id) {
-		this.id = id;
-	}
-
-	public abstract void update(float deltaTime);
-
-	public abstract void dispose();
-
-	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
-	}
+	public String type;
+	public String id;
+	public Vector3 position;
+	public Vector3 rotation;
+	public Vector3 scale;
+	public boolean[] layers;
+	public ArrayMap<String, String> custom_properties;
 }

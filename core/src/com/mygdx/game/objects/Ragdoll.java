@@ -31,8 +31,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ObjectMap;
-import com.mygdx.game.blender.BlenderObject;
-import com.mygdx.game.blender.BlenderScene;
+import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.settings.GameSettings;
 
 import java.util.Iterator;
@@ -80,11 +79,9 @@ public abstract class Ragdoll extends GameCharacter {
 	 * Temporary storage for capsule translation
 	 */
 	private final Vector3 capsuleTranslation = new Vector3();
-
-	private boolean ragdollControl = false;
-
 	private final Vector3 tmpVec = new Vector3();
 	private final Matrix4 tmpMatrix = new Matrix4();
+	private boolean ragdollControl = false;
 
 	/**
 	 * Constructs a ragdoll out of rigid bodies using physics constraints.
@@ -308,19 +305,18 @@ public abstract class Ragdoll extends GameCharacter {
 		ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
 
 		@SuppressWarnings("unchecked")
-		Array<BlenderObject.BEmpty> empties =
-				new Json().fromJson(Array.class, BlenderObject.BEmpty.class, Gdx.files.local(ragdollJson));
+		Array<BlenderEmpty> empties =
+				new Json().fromJson(Array.class, BlenderEmpty.class, Gdx.files.local(ragdollJson));
 
-		for (BlenderObject.BEmpty empty : empties) {
-			BlenderScene.blenderToGdxCoordinates(empty);
+		for (BlenderEmpty empty : empties) {
 			Vector3 halfExtents = new Vector3(empty.scale);
 			halfExtents.x = Math.abs(halfExtents.x);
 			halfExtents.y = Math.abs(halfExtents.y);
 			halfExtents.z = Math.abs(halfExtents.z);
-			halfExtMap.put(empty.name, halfExtents);
+			halfExtMap.put(empty.id, halfExtents);
 
 			float partMass = Float.parseFloat(empty.custom_properties.get("mass"));
-			massMap.put(empty.name, super.mass * partMass);
+			massMap.put(empty.id, super.mass * partMass);
 		}
 
 		ArrayMap<String, btCollisionShape> shapeMap = new ArrayMap<String, btCollisionShape>();
@@ -337,7 +333,7 @@ public abstract class Ragdoll extends GameCharacter {
 			btCollisionShape partShape = new btBoxShape(partHalfExt);
 			shapeMap.put(partName, partShape);
 
-			InvisibleBody phyCmp = new InvisibleBody(
+			InvisibleBody phyCmp = new InvisibleBody(partName,
 					partShape, partMass, new Matrix4(), this.belongsToFlag,
 					this.collidesWithFlag, false, true);
 			phyCmp.constructionInfo.dispose();

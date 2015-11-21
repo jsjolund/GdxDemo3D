@@ -14,26 +14,16 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects;
 
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.utils.Bits;
+package com.mygdx.game.blender.objects;
+
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 
 /**
+ * Placeholder for a {@link PerspectiveCamera}
+ *
  * @author jsjolund
  */
-public abstract class GameObject extends Entity {
-	public final String id;
-
-	public GameObject(String id) {
-		this.id = id;
-	}
-
-	public abstract void update(float deltaTime);
-
-	public abstract void dispose();
-
-	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
-	}
+public class BlenderCamera extends BlenderObject {
+	public float fov;
 }

@@ -14,26 +14,30 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects;
+package com.mygdx.game.blender.objects;
 
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.utils.Bits;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 
 /**
+ * Placeholder for a {@link ModelInstance}
+ *
  * @author jsjolund
  */
-public abstract class GameObject extends Entity {
-	public final String id;
+public class BlenderModel extends BlenderObject {
+	public String model_file_name;
 
-	public GameObject(String id) {
-		this.id = id;
+	/**
+	 * Placeholder for a {@link ModelInstance}
+	 *
+	 * @param id
+	 * @param path
+	 */
+	public BlenderModel(String id, String path) {
+		this.model_file_name = path;
+		super.id = id;
 	}
 
-	public abstract void update(float deltaTime);
+	public BlenderModel() {
 
-	public abstract void dispose();
-
-	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
 	}
 }

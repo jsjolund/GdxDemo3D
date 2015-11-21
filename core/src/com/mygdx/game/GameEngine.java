@@ -33,9 +33,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.LongMap;
-import com.mygdx.game.blender.BlenderScene;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.Triangle;
+import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.Observer;
 
@@ -100,7 +100,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 					return hitFraction;
 				}
 
-			} else if (entity.getId() == scene.navmeshEntity.getId()) {
+			} else if (entity.getId() == scene.navmeshBody.getId()) {
 				Triangle triangle = scene.navMesh.rayTest(ray, rayDistance, layers);
 				if (triangle == null) {
 					// Triangle is not on allowed layer
@@ -127,7 +127,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
 	public final static short ALL_FLAG = -1;
-
+	// FIXME
+	// Ugly hack to access the engine from anywhere
+	public static GameEngine engine;
 	// Bullet classes
 	public final btDynamicsWorld dynamicsWorld;
 	private final btDispatcher dispatcher;
@@ -136,24 +138,16 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	private final DebugDrawer debugDrawer;
 	private final LayeredClosestRayResultCallback callback = new LayeredClosestRayResultCallback(Vector3.Zero, Vector3.Z);
 	private final btCollisionConfiguration collisionConfig;
-
 	private final Vector3 rayFrom = new Vector3();
 	private final Vector3 rayTo = new Vector3();
-
 	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
 	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
-
-	private BlenderScene scene;
-
+	private GameScene scene;
 	// Models
 	private boolean modelCacheDirty = true;
 	private ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
 	private Array<GameModel> dynamicModels = new Array<GameModel>();
 	private Bits visibleLayers = new Bits();
-
-	// FIXME
-	// Ugly hack to access the engine from anywhere
-	public static GameEngine engine;
 
 	public GameEngine() {
 		GameEngine.engine = this;
@@ -193,19 +187,20 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		return null;
 	}
 
-	public BlenderScene getScene() {
+	public GameScene getScene() {
 		return scene;
 	}
 
-	public void setScene(BlenderScene scene) {
+	public void setScene(GameScene scene) {
 		// TODO: Remove any previous scene
 		this.scene = scene;
 
-		addEntity(scene.navmeshEntity);
+		addEntity(scene.navmeshBody);
 
-		Iterator<GameObject> objs = scene.getGameObjects();
-		while (objs.hasNext()) {
-			addEntity(objs.next());
+		Array<GameObject> objs = new Array<GameObject>();
+		scene.getGameObjects(objs);
+		for (GameObject obj : objs) {
+			addEntity(obj);
 		}
 	}
 

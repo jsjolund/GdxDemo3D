@@ -1,0 +1,1 @@
+[{"scale": {"z": 1.0, "x": 1.0, "y": 1.0}, "position": {"z": -0.0, "x": 0.0, "y": 0.0}, "id": "human", "custom_properties": {}, "layers": [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false], "rotation": {"z": -0.0, "x": 0.0, "y": 0.0}, "type": "Mesh", "model_file_name": "human_human"}]
