@@ -200,6 +200,16 @@ varying vec3 v_ambientLight;
 
 #define saturate(x) clamp( x, 0.0, 1.0 )
 
+////////////////////////////////////////////////////////////////////////////////////
+////////// HUE, VALUE, SATURATION
+///////////////////////////////////////////////////////////////////////////////////
+uniform float u_hue;
+uniform float u_saturation;
+uniform float u_value;
+uniform float u_specOpacity;
+uniform float u_lightIntensity;
+uniform float u_ambient;
+
 vec3 rgb2hsv(vec3 c) {
 	vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
 	vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
@@ -214,18 +224,50 @@ vec3 hsv2rgb(vec3 c) {
 	vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
 	return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
-uniform float u_hue;
-uniform float u_saturation;
-uniform float u_value;
-uniform float u_specOpacity;
-uniform float u_lightIntensity;
-uniform float u_ambient;
+
+////////////////////////////////////////////////////////////////////////////////////
+////////// VERTEX COLOR TEXTURE BLENDING
+///////////////////////////////////////////////////////////////////////////////////
+uniform sampler2D redVertexColorBlendTexture;
+uniform sampler2D greenVertexColorBlendTexture;
+uniform sampler2D blueVertexColorBlendTexture;
+
+#if defined(redVertexColorBlendFlag)
+#define fetchTexRed(texCoord, defaultValue) texture2D(redVertexColorBlendTexture, texCoord) * 0.5
+#else
+#define fetchTexRed(texCoord, defaultValue) (defaultValue)
+#endif
+
+#if defined(greenVertexColorBlendFlag)
+#define fetchTexGreen(texCoord, defaultValue) texture2D(greenVertexColorBlendTexture, texCoord) * 0.5
+#else
+#define fetchTexGreen(texCoord, defaultValue) (defaultValue)
+#endif
+
+#if defined(blueVertexColorBlendFlag)
+#define fetchTexBlue(texCoord, defaultValue) texture2D(blueVertexColorBlendTexture, texCoord) * 0.5
+#else
+#define fetchTexBlue(texCoord, defaultValue) (defaultValue)
+#endif
 
 void main() {
 	pullColor();
 	pullTexCoord0();
 
-	vec4 diffuse = applyColorDiffuse(g_color);
+	vec4 diffuse0 = applyColorDiffuse(vec4(1.0));
+	vec4 blendRed = fetchTexRed(g_texCoord0, vec4(1.0));
+	vec4 blendGreen = fetchTexGreen(g_texCoord0, vec4(1.0));
+	vec4 blendBlue = fetchTexBlue(g_texCoord0, vec4(1.0));
+
+	float redness = saturate(v_color.r - (v_color.g + v_color.b) * 0.5);
+	float greenness = saturate(v_color.g - (v_color.r + v_color.b) * 0.5);
+	float blueness = saturate(v_color.b - (v_color.r + v_color.g) * 0.5);
+
+	vec4 diffuse = diffuse0;
+	diffuse = mix(diffuse, blendGreen,greenness);
+	diffuse = mix(diffuse, blendRed,  redness);
+	diffuse = mix(diffuse, blendBlue,  blueness);
+
 	vec3 specular = fetchColorSpecular();
 
 	#ifdef normalTextureFlag
@@ -275,4 +317,5 @@ void main() {
     fcol.rgb = hsv2rgb(hsv);
 
 	gl_FragColor = fcol;
+
 }

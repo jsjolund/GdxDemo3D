@@ -20,6 +20,7 @@ import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
@@ -42,6 +43,7 @@ import com.mygdx.game.blender.objects.BlenderModel;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.GhostCamera;
+import com.mygdx.game.utilities.VertexColorTextureBlend;
 
 import java.util.Comparator;
 
@@ -89,6 +91,47 @@ public class GameScene implements Disposable {
 		out.addAll(gameObjects.get(id));
 	}
 
+	private void setVColorBlendAttributes() {
+		Array<String> modelsIdsInScene = assets.getPlaceholderIdsByType(BlenderModel.class);
+		Array<BlenderModel> instancesWithId = new Array<BlenderModel>();
+		for (String id : modelsIdsInScene) {
+			instancesWithId.clear();
+			assets.getPlaceholders(id, BlenderModel.class, instancesWithId);
+			for (BlenderModel blenderModel : instancesWithId) {
+				// Maybe check if
+				// renderable.meshPart.mesh.getVertexAttribute(VertexAttributes.Usage.ColorUnpacked) != null
+				if (blenderModel.custom_properties.containsKey("v_color_material_blend")) {
+					Model model = assets.getAsset(id, Model.class);
+					String redMaterialName = blenderModel.custom_properties.get("v_color_material_red");
+					String greenMaterialName = blenderModel.custom_properties.get("v_color_material_green");
+					String blueMaterialName = blenderModel.custom_properties.get("v_color_material_blue");
+
+					TextureAttribute redTexAttr = (TextureAttribute)
+							model.getMaterial(redMaterialName).get(TextureAttribute.Diffuse);
+					TextureAttribute greenTexAttr = (TextureAttribute)
+							model.getMaterial(greenMaterialName).get(TextureAttribute.Diffuse);
+					TextureAttribute blueTexAttr = (TextureAttribute)
+							model.getMaterial(blueMaterialName).get(TextureAttribute.Diffuse);
+					VertexColorTextureBlend redAttribute =
+							new VertexColorTextureBlend(VertexColorTextureBlend.Red,
+									redTexAttr.textureDescription.texture);
+					VertexColorTextureBlend greenAttribute =
+							new VertexColorTextureBlend(VertexColorTextureBlend.Green,
+									greenTexAttr.textureDescription.texture);
+					VertexColorTextureBlend blueAttribute =
+							new VertexColorTextureBlend(VertexColorTextureBlend.Blue,
+									blueTexAttr.textureDescription.texture);
+					for (Node node : model.nodes) {
+						for (NodePart nodePart : node.parts) {
+							nodePart.material.set(redAttribute, greenAttribute, blueAttribute);
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+
 	public void spawnGameObjectsFromPlaceholders() {
 		Gdx.app.debug(tag, "Spawning predefined game objects.");
 		// TODO: Clean this up
@@ -99,6 +142,8 @@ public class GameScene implements Disposable {
 		Array<BlenderEmpty> emptiesWithId = new Array<BlenderEmpty>();
 		Array<BlenderModel> instancesWithId = new Array<BlenderModel>();
 		Vector3 tmpScale = new Vector3();
+
+		setVColorBlendAttributes();
 
 		for (String id : modelsIdsInScene) {
 			// TODO: handle this in a better way
@@ -239,7 +284,10 @@ public class GameScene implements Disposable {
 			obj.visibleOnLayers.or(bp.visibleOnLayers);
 
 			if (bp.name.startsWith("door")) {
-				obj.constraints.add(new btHingeConstraint(obj.body, new Vector3(0, 0, -0.6f), Vector3.Y));
+				btHingeConstraint hinge = new btHingeConstraint(
+						obj.body, new Vector3(0, 0, -obj.halfExtents.z), Vector3.Y);
+				hinge.enableAngularMotor(true,0,0.1f);
+				obj.constraints.add(hinge);
 			}
 
 			addGameObject(obj);

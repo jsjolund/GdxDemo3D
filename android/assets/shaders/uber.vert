@@ -325,7 +325,7 @@ void calculateTangentVectors() {
 ////// AMBIENT LIGHT
 //////////////////////////////////////////////////////
 #ifdef ambientLightFlag
-#ifndef ambientFlag
+#ifndef ambientFlagu_normalTexture
 #define ambientFlag
 #endif
 uniform vec3 u_ambientLight;

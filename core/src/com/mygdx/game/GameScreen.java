@@ -166,14 +166,14 @@ public class GameScreen implements Screen {
 		stage.addObserver(engine);
 
 		// Supply the name of the shared blueprint "human", along with position
-		HumanCharacter h1 = defaultScene.spawnHuman("human", new Vector3(5, 1, 0));
-		HumanCharacter h2 = defaultScene.spawnHuman("human", new Vector3(0, 1, 5));
-		HumanCharacter h3 = defaultScene.spawnHuman("human", new Vector3(10, 1, 5));
-		HumanCharacter h4 = defaultScene.spawnHuman("human", new Vector3(-12, 4, 10));
+		HumanCharacter h1 = defaultScene.spawnHuman("human", new Vector3(20, 1, 0));
+		HumanCharacter h2 = defaultScene.spawnHuman("human", new Vector3(24, 1, -5));
+		HumanCharacter h3 = defaultScene.spawnHuman("human", new Vector3(20, 1, 5));
+		HumanCharacter h4 = defaultScene.spawnHuman("human", new Vector3(-10, 4, 10));
 
-		DogCharacter d1 = defaultScene.spawnDog("dog", new Vector3(7, 2, 0));
-		DogCharacter d2 = defaultScene.spawnDog("dog", new Vector3(12, 2, 0));
-		DogCharacter d3 = defaultScene.spawnDog("dog", new Vector3(15, 2, 0));
+		DogCharacter d1 = defaultScene.spawnDog("dog", new Vector3(7, 2, -10));
+		DogCharacter d2 = defaultScene.spawnDog("dog", new Vector3(12, 2, 10));
+		DogCharacter d3 = defaultScene.spawnDog("dog", new Vector3(15, 2, 4));
 
 		// Assign each dog to a human
 		h1.assignDog(d1);

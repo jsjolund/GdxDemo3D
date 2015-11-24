@@ -47,6 +47,7 @@ import math
 import subprocess
 import json
 import tempfile
+import sys
 
 import bpy
 from mathutils import Vector
@@ -56,6 +57,7 @@ class BlenderObject(object):
     def __init__(self, blender_object):
         self.blender_object = blender_object
         self.name = blender_object.name
+        self.blender_name = blender_object.name
         self.name_array = str(blender_object.name).split(".")
         self.loc = blender_object.location.copy()
         self.rote = blender_object.rotation_euler.copy()
@@ -155,73 +157,6 @@ class Color(object):
         self.b = 0.0
 
 
-def write_json(json_file_path, objects):
-    """
-    Serialize the "BlenderObjects" and write them to json file
-    :param json_file_path:
-    :param objects:
-    :return:
-    """
-    json_out = []
-    for obj in objects:
-        json_out.append(obj.serialize())
-    json_file = open(json_file_path, "w")
-    json_file.write(json.dumps(json_out))
-    json_file.write("\n")
-    print("INFO: Wrote to " + json_file_path)
-    json_file.close()
-
-
-def write_fbx(game_object, fbx_file_path):
-    # deselect all
-    for item in bpy.context.selectable_objects:
-        item.select = False
-
-    blender_object = game_object.blender_object
-
-    # Select object any connected armatures
-    blender_object.select = True
-    for mod in blender_object.modifiers:
-        if type(mod) is bpy.types.ArmatureModifier:
-            mod.object.select = True
-    bpy.context.scene.objects.active = blender_object
-
-    # Reset location, rotation and scale before exporting
-    blender_object.location.zero()
-    blender_object.rotation_euler.zero()
-    blender_object.scale = Vector((1.0, 1.0, 1.0))
-    bpy.ops.export_scene.fbx(filepath=fbx_file_path,
-                             version='BIN7400',
-                             path_mode="RELATIVE",
-                             use_selection=True,
-                             use_tspace=True,
-                             use_mesh_modifiers=True,
-                             object_types={'MESH', 'ARMATURE'})
-    blender_object.location = game_object.loc.copy()
-    blender_object.rotation_euler = game_object.rote.copy()
-    blender_object.scale = game_object.scl.copy()
-
-    # Deselect object and any armatures
-    blender_object.select = False
-    for mod in blender_object.modifiers:
-        if type(mod) is bpy.types.ArmatureModifier:
-            mod.object.select = False
-
-
-def fbx_conv(fbx_file_path, g3db_output_path):
-    """
-    Convert an fbx file to g3db with fbx-conv
-    :param g3db_output_path:
-    :param fbx_file_path:
-    :return: The path of the g3db file
-    """
-    basename_ext = os.path.basename(fbx_file_path)
-    basename_no_ext, fbx_ext = os.path.splitext(basename_ext)
-    g3db_file_path = os.path.join(g3db_output_path, basename_no_ext + ".g3db")
-    subprocess.call(["fbx-conv", "-f", fbx_file_path, g3db_file_path])
-    return g3db_file_path
-
-
 class ModelToMeshMap(object):
     def __init__(self):
         self.model_to_mesh_dict = {}
@@ -259,14 +194,12 @@ class ModelToMeshMap(object):
         for model_name in self.model_to_mesh_dict:
             mesh_to_obj_dict = self.model_to_mesh_dict[model_name]
             if len(mesh_to_obj_dict) > 1:
-                problem = "Models named {} have conflicting meshes: ".format((model_name))
-                offset = len(problem)
+                print("Models named {} have conflicting meshes:".format((model_name)))
                 for mesh_name in mesh_to_obj_dict:
-                    if offset is len(problem):
-                        problem += mesh_name
-                        print(problem)
-                    else:
-                        print(" " * offset + mesh_name)
+                    print("\n\nMESH: {}\nLINKED MODELS: ".format((model_name)), end="")
+                    for game_object in mesh_to_obj_dict[mesh_name]:
+                        print(game_object.blender_name, end=", ")
+                print()
         print("Rename the models if they are different, link the meshes (Alt+D) if they are identical.")
 
     def get_export_targets(self):
@@ -309,6 +242,82 @@ class ModelToMeshMap(object):
                     output += file_name + spacing * " "
                     output += mesh_name
             print(output)
+        print()
+
+
+def write_json(json_file_path, objects):
+    """
+    Serialize the "BlenderObjects" and write them to json file
+    :param json_file_path:
+    :param objects:
+    :return:
+    """
+    json_out = []
+    for obj in objects:
+        json_out.append(obj.serialize())
+    json_file = open(json_file_path, "w")
+    json_file.write(json.dumps(json_out))
+    json_file.write("\n")
+    print("INFO: Wrote to " + json_file_path)
+    json_file.close()
+
+
+def write_fbx(game_object, fbx_file_path):
+    # deselect all
+    for item in bpy.context.selectable_objects:
+        item.select = False
+
+    blender_object = game_object.blender_object
+
+    # Select object any connected armatures
+    blender_object.select = True
+    for mod in blender_object.modifiers:
+        if type(mod) is bpy.types.ArmatureModifier:
+            mod.object.select = True
+    bpy.context.scene.objects.active = blender_object
+
+    # Reset location, rotation and scale before exporting
+    blender_object.location.zero()
+    blender_object.rotation_euler.zero()
+    blender_object.scale = Vector((1.0, 1.0, 1.0))
+    status = True
+    try:
+        out = bpy.ops.export_scene.fbx(filepath=fbx_file_path,
+                                       version='BIN7400',
+                                       path_mode="RELATIVE",
+                                       use_selection=True,
+                                       use_tspace=True,
+                                       use_mesh_modifiers=True,
+                                       object_types={'MESH', 'ARMATURE'})
+    except RuntimeError:
+        status = False
+
+    blender_object.location = game_object.loc.copy()
+    blender_object.rotation_euler = game_object.rote.copy()
+    blender_object.scale = game_object.scl.copy()
+
+    # Deselect object and any armatures
+    blender_object.select = False
+    for mod in blender_object.modifiers:
+        if type(mod) is bpy.types.ArmatureModifier:
+            mod.object.select = False
+    return status
+
+
+def fbx_conv(fbx_file_path, g3db_output_path):
+    """
+    Convert an fbx file to g3db with fbx-conv
+    :param g3db_output_path:
+    :param fbx_file_path:
+    :return: The path of the g3db file
+    """
+    basename_ext = os.path.basename(fbx_file_path)
+    basename_no_ext, fbx_ext = os.path.splitext(basename_ext)
+    g3db_file_path = os.path.join(g3db_output_path, basename_no_ext + ".g3db")
+    subprocess.call(["fbx-conv", "-f", fbx_file_path, g3db_file_path])
+    return g3db_file_path
+
+
 
 
 def get_export_objects(blender_model_list):
@@ -321,10 +330,11 @@ def get_export_objects(blender_model_list):
     for obj in blender_model_list:
         model_to_mesh_map.add_model_mesh_object_entry(obj.get_model_name(), obj.get_mesh_name(), obj)
 
+    model_to_mesh_map.print_summary()
     if model_to_mesh_map.has_conflicting_models_names():
         model_to_mesh_map.print_conflicting_model_names()
         return []
-    model_to_mesh_map.print_summary()
+
     return model_to_mesh_map.get_export_targets()
 
 
@@ -394,12 +404,18 @@ def main():
 
     export_objects = get_export_objects(blender_object_map[BlenderModel.category])
 
+    if len(export_objects) == 0:
+        print("\nFound no export targets.\n### Aborted\n\n")
+        return
+
     # Export models as fbx to temp dir, then convert them to g3db
     with tempfile.TemporaryDirectory() as tmpdirname:
         fbx_file_paths = []
         for game_object in export_objects:
             fbx_file_path = os.path.join(tmpdirname, game_object.get_model_file_name() + ".fbx")
-            write_fbx(game_object, fbx_file_path)
+            if not write_fbx(game_object, fbx_file_path):
+                print("\nFailed to export model '{}'\n### Aborted\n\n".format(game_object.blender_name))
+                return
             fbx_file_paths.append(fbx_file_path)
 
         g3db_output_path = os.path.join(os.path.dirname(blender_file_basedir), "g3db")
@@ -414,8 +430,7 @@ def main():
         print("\nINFO: Created g3db model files:")
         for g3db in g3db_file_paths:
             print(g3db)
-    print("\n### Finished.")
-    print("\n\n")
+    print("\n### Finished\n\n")
 
 
 if __name__ == "__main__":
