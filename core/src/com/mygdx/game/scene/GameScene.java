@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -42,6 +43,7 @@ import com.mygdx.game.blender.objects.BlenderLight;
 import com.mygdx.game.blender.objects.BlenderModel;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
+import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
 
@@ -74,6 +76,7 @@ public class GameScene implements Disposable {
 	public Array<BaseLight<?>> lights = new Array<BaseLight<?>>();
 	public Vector3 shadowCameraDirection = new Vector3(V3_DOWN);
 	private BlenderCamera sceneCamera;
+	private final Ray tmpRay = new Ray();
 
 	public GameScene(String modelPath, String modelExt, ObjectMap<String, GameObjectBlueprint> sharedBlueprints) {
 		this.sharedBlueprints = sharedBlueprints;
@@ -228,7 +231,6 @@ public class GameScene implements Disposable {
 		}
 	}
 
-
 	public HumanCharacter spawnHuman(String sharedBlueprintId, Vector3 initialPosition) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		HumanCharacter obj = new HumanCharacter(
@@ -256,12 +258,28 @@ public class GameScene implements Disposable {
 		return obj;
 	}
 
-	private <T extends SteerableBody> void setSteerableData(T obj) {
-		Ray posGroundRay = new Ray(obj.getPosition(), V3_DOWN);
-		obj.currentTriangle = navMesh.rayTest(posGroundRay, 100, null);
-		if (obj.currentTriangle == null) {
-			throw new GdxRuntimeException(String.format("Failed to find navigation mesh position for %s", obj));
-		}
+	/**
+	 * Finds the current triangle and sets the model to be visible on the same layer as mesh part index of current triangle
+	 * @param obj the steerable body
+	 */
+	public <T extends SteerableBody> void setSteerableData(T obj) {
+		final Vector3 pos = obj.getPosition();
+		final Ray posGroundRay = tmpRay.set(pos, V3_DOWN);
+		tmpRay.origin.y -= obj.halfExtents.y;
+//		final Triangle curTri = obj.currentTriangle;
+//		if (curTri == null || navMesh.getClosestPoint(curTri, tmpRay.origin, new Vector3()) > 1f) {
+//			Triangle newTriangle = navMesh.rayTest(posGroundRay, 100f, null);
+//			if (newTriangle == null) {
+//				if (obj.currentTriangle == null) {
+					Gdx.app.log(tag, String.format("Frame %d: Finding closest navigation mesh position for %s", Gdx.graphics.getFrameId(), obj));
+					obj.currentTriangle = navMesh.getClosestTriangle(pos, tmpRay.origin, null);
+//				}
+//			}
+//			else {
+//				obj.currentTriangle = newTriangle;
+//			}
+//		}
+		obj.visibleOnLayers.clear();
 		obj.visibleOnLayers.set(obj.currentTriangle.meshPartIndex);
 	}
 

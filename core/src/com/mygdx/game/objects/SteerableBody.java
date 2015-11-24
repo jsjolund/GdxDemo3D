@@ -24,6 +24,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.utilities.BulletLocation;
 import com.mygdx.game.utilities.BulletSteeringUtils;
@@ -80,6 +81,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * Holds steering data. Use getters and setters.
 	 */
 	private Vector3 position = new Vector3();
+	private float boundingRadius;
 	private final Vector3 linearVelocity = new Vector3();
 	private final Vector3 angularVelocity = new Vector3();
 	private float zeroLinearSpeedThreshold;
@@ -122,6 +124,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				shape, mass,
 				belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
+		this.boundingRadius = (boundingBox.getWidth() + boundingBox.getDepth()) / 4;
 		this.steerSettings = steerSettings;
 		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
 	}
@@ -169,7 +172,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			steerer.stopSteering();
 		}
 		steerer = null;
-		steeringOutput.linear.setZero();
+		steeringOutput.setZero();
 	}
 
 	/**
@@ -194,7 +197,6 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			steerer.finishSteering();
 		}
 	}
-
 
 	/**
 	 * Applies the linear component of the steering behaviour. As for the angular component,
@@ -223,7 +225,19 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				body.setLinearVelocity(velocity.scl(maxLinearSpeed / (float) Math.sqrt(currentSpeedSquare)));
 			}
 
+			// Notify the active steerer
 			steerer.onSteering();
+			
+			GameEngine.engine.getScene().setSteerableData(this);
+
+			// Calculate the target orientation of the model based on the direction of motion
+			// Note that the entity might twitch or jitter slightly when it finds itself in a situation with  
+			// conflicting responses from different behaviors. If you need to mitigate this scenario you can decouple
+			// the heading from the velocity vector and average its value over the last few frames, for instance 5.
+			// This smoothed heading vector will be used to work out model's orientation.
+			velocity = body.getLinearVelocity();
+			if (!velocity.isZero(getZeroLinearSpeedThreshold()))
+				setModelTargetOrientation(velocity.x, velocity.z);
 
 			// Set current orientation of model, setting orientation of body causes problems when applying force.
 			currentOrientation.slerp(targetOrientation, 10 * deltaTime);

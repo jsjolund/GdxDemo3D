@@ -172,7 +172,7 @@ public class GameRenderer implements Disposable, Observer {
 		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
 		tmp.add(gameModel.center);
-		return camera.frustum.sphereInFrustum(tmp, gameModel.boundingRadius);
+		return camera.frustum.sphereInFrustum(tmp, gameModel.boundingBoxRadius);
 	}
 
 	private void drawShadowBatch() {

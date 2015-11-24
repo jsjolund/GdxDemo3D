@@ -41,9 +41,9 @@ public class GameModel extends GameObject {
 	 */
 	public final Vector3 dimensions = new Vector3();
 	/**
-	 * Bounding radius of model instance
+	 * Bounding box radius of model instance
 	 */
-	public final float boundingRadius;
+	public final float boundingBoxRadius;
 	/**
 	 * Model bounding box
 	 */
@@ -92,7 +92,7 @@ public class GameModel extends GameObject {
 		}
 		boundingBox.getCenter(center);
 		boundingBox.getDimensions(dimensions);
-		boundingRadius = dimensions.len() / 2f;
+		boundingBoxRadius = dimensions.len() / 2f;
 		modelTransform = modelInstance.transform;
 		halfExtents.set(dimensions).scl(0.5f);
 	}
