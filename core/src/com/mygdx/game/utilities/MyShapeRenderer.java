@@ -934,6 +934,56 @@ public class MyShapeRenderer implements Disposable {
 		renderer.vertex(x + cx, y + cy, 0);
 	}
 
+	/** Draws a circle using {@link ShapeType#Line} or {@link ShapeType#Filled}. */
+	public void circle3(float x, float y, float z, float radius, int segments) {
+		if (segments <= 0) throw new IllegalArgumentException("segments must be > 0.");
+		float colorBits = color.toFloatBits();
+		float angle = 2 * MathUtils.PI / segments;
+		float cos = MathUtils.cos(angle);
+		float sin = MathUtils.sin(angle);
+		float cx = radius, cz = 0;
+		if (shapeType == ShapeType.Line) {
+			check(ShapeType.Line, ShapeType.Filled, segments * 2 + 2);
+			for (int i = 0; i < segments; i++) {
+				renderer.color(colorBits);
+				renderer.vertex(x + cx, y, z + cz);
+				float temp = cx;
+				cx = cos * cx - sin * cz;
+				cz = sin * temp + cos * cz;
+				renderer.color(colorBits);
+				renderer.vertex(x + cx, y, z + cz);
+			}
+			// Ensure the last segment is identical to the first.
+			renderer.color(colorBits);
+			renderer.vertex(x + cx, y, z + cz);
+		} else {
+			check(ShapeType.Line, ShapeType.Filled, segments * 3 + 3);
+			segments--;
+			for (int i = 0; i < segments; i++) {
+				renderer.color(colorBits);
+				renderer.vertex(x, y, z);
+				renderer.color(colorBits);
+				renderer.vertex(x + cx, y, z + cz);
+				float temp = cx;
+				cx = cos * cx - sin * cz;
+				cz = sin * temp + cos * cz;
+				renderer.color(colorBits);
+				renderer.vertex(x + cx, y, z + cz);
+			}
+			// Ensure the last segment is identical to the first.
+			renderer.color(colorBits);
+			renderer.vertex(x, y, z);
+			renderer.color(colorBits);
+			renderer.vertex(x + cx, y, z + cz);
+		}
+
+		cx = radius;
+		cz = 0;
+		renderer.color(colorBits);
+//		renderer.vertex(x + cx, y + cy, 0);
+		renderer.vertex(x + cx, y, z + cz);
+	}
+
 	/** Calls {@link #ellipse(float, float, float, float, int)} by estimating the number of segments needed for a smooth ellipse. */
 	public void ellipse(float x, float y, float width, float height) {
 		ellipse(x, y, width, height, Math.max(1, (int) (12 * (float) Math.cbrt(Math.max(width * 0.5f, height * 0.5f)))));

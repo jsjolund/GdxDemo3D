@@ -191,6 +191,8 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		return scene;
 	}
 
+	public Array<SteerableBody> characters = new Array<SteerableBody>();
+
 	public void setScene(GameScene scene) {
 		// TODO: Remove any previous scene
 		this.scene = scene;
@@ -201,6 +203,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		scene.getGameObjects(objs);
 		for (GameObject obj : objs) {
 			addEntity(obj);
+			if (obj.name.equals("human") || obj.name.equals("dog")) {
+				characters.add((SteerableBody)obj);
+			}
 		}
 	}
 
