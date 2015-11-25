@@ -65,6 +65,23 @@ public class Triangle implements IndexedNode<Triangle> {
 	}
 
 	/**
+	 * Calculates the angle in radians between a reference vector and the (plane) normal of the triangle.
+	 *
+	 * @param reference
+	 * @return
+	 */
+	public float getAngle(Vector3 reference) {
+		float x = reference.x;
+		float y = reference.y;
+		float z = reference.z;
+		Vector3 normal = reference;
+		normal.set(a).sub(b).crs(b.x - c.x, b.y - c.y, b.z - c.z).nor();
+		float angle = (float) Math.acos(normal.dot(x, y, z) / (normal.len() * Math.sqrt(x * x + y * y + z * z)));
+		reference.set(x, y, z);
+		return angle;
+	}
+
+	/**
 	 * Calculates a random point in this triangle.
 	 *
 	 * @param out Output vector
