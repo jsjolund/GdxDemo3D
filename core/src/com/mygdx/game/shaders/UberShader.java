@@ -22,6 +22,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.mygdx.game.settings.ShaderSettings;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
@@ -78,19 +79,19 @@ public class UberShader extends DefaultShader {
 
 		// Texture blending by vertex color
 		if (renderable.material.has(VertexColorTextureBlend.Red)) {
-			Texture t = ((TextureAttribute)
-					renderable.material.get(VertexColorTextureBlend.Red)).textureDescription.texture;
-			set(u_vcoltex_red, context.textureBinder.bind(t));
+			TextureDescriptor td = ((TextureAttribute)
+					renderable.material.get(VertexColorTextureBlend.Red)).textureDescription;
+			set(u_vcoltex_red, context.textureBinder.bind(td));
 		}
 		if (renderable.material.has(VertexColorTextureBlend.Green)) {
-			Texture t = ((TextureAttribute)
-					renderable.material.get(VertexColorTextureBlend.Green)).textureDescription.texture;
-			set(u_vcoltex_green, context.textureBinder.bind(t));
+			TextureDescriptor td = ((TextureAttribute)
+					renderable.material.get(VertexColorTextureBlend.Green)).textureDescription;
+			set(u_vcoltex_green, context.textureBinder.bind(td));
 		}
 		if (renderable.material.has(VertexColorTextureBlend.Blue)) {
-			Texture t = ((TextureAttribute)
-					renderable.material.get(VertexColorTextureBlend.Blue)).textureDescription.texture;
-			set(u_vcoltex_blue, context.textureBinder.bind(t));
+			TextureDescriptor td = ((TextureAttribute)
+					renderable.material.get(VertexColorTextureBlend.Blue)).textureDescription;
+			set(u_vcoltex_blue, context.textureBinder.bind(td));
 		}
 
 		super.render(renderable, combinedAttributes);
