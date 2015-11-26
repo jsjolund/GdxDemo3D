@@ -17,7 +17,6 @@
 package com.mygdx.game.steerers;
 
 import com.badlogic.gdx.ai.GdxAI;
-import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.steer.behaviors.CollisionAvoidance;
@@ -42,45 +41,6 @@ import com.mygdx.game.utilities.Steerer;
  * @author davebaol
  */
 public class FollowPathSteerer implements Steerer {
-
-	// This should become part of gdx-ai since the ability to know
-	// the selected behavior is generally useful.
-	private static class MyPrioritySteering extends PrioritySteering<Vector3> {
-		protected int selectedBehaviorIndex;
-
-		public MyPrioritySteering(Steerable<Vector3> owner, float epsilon) {
-			super(owner, epsilon);
-		}
-
-		public int getSelectedBehaviorIndex() {
-			return selectedBehaviorIndex;
-		}
-
-		@Override
-		protected SteeringAcceleration<Vector3> calculateRealSteering(SteeringAcceleration<Vector3> steering) {
-			// We'll need epsilon squared later.
-			float epsilonSquared = epsilon * epsilon;
-
-			// Go through the behaviors until one has a large enough acceleration
-			int n = behaviors.size;
-			selectedBehaviorIndex = -1;
-			for (int i = 0; i < n; i++) {
-				selectedBehaviorIndex = i;
-				SteeringBehavior<Vector3> behavior = behaviors.get(i);
-
-				// Calculate the behavior's steering
-				behavior.calculateSteering(steering);
-
-				// If we're above the threshold return the current steering
-				if (steering.calculateSquareMagnitude() > epsilonSquared) return steering;
-			}
-
-			// If we get here, it means that no behavior had a large enough acceleration,
-			// so return the small acceleration from the final behavior or zero if there are
-			// no behaviors in the list.
-			return n > 0 ? steering : steering.setZero();
-		}
-	}
 
 	private final SteerableBody steerableBody;
 
@@ -122,7 +82,7 @@ public class FollowPathSteerer implements Steerer {
 	private final CollisionAvoidance<Vector3> collisionAvoidanceSB;
 	private final RadiusProximity<Vector3> proximity;
 
-	public final MyPrioritySteering prioritySteering;
+	public final PrioritySteering<Vector3> prioritySteering;
 
 	public FollowPathSteerer(final SteerableBody steerableBody) {
 		this.steerableBody = steerableBody;
@@ -142,9 +102,9 @@ public class FollowPathSteerer implements Steerer {
 			}
 		};
 
-		this.prioritySteering = new MyPrioritySteering(steerableBody, 0.001f); //
-		prioritySteering.add(collisionAvoidanceSB); //
-		prioritySteering.add(followPathSB);
+		this.prioritySteering = new PrioritySteering<Vector3>(steerableBody, 0.001f) //
+			.add(collisionAvoidanceSB) //
+			.add(followPathSB);
 	}
 
 	/**
