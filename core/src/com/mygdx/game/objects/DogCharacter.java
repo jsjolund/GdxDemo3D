@@ -11,6 +11,7 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.steerers.FollowPathSteerer;
+import com.mygdx.game.steerers.WanderSteerer;
 import com.mygdx.game.utilities.Constants;
 
 /**
@@ -71,6 +72,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public final BehaviorTree<DogCharacter> btree;
 	public final AnimationController animations;
 	public final FollowPathSteerer followPathSteerer;
+	public final WanderSteerer wanderSteerer;
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
@@ -96,6 +98,9 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 
 		// Create path follower
 		followPathSteerer = new FollowPathSteerer(this);
+
+		// Create wander steerer
+		wanderSteerer = new WanderSteerer(this);
 
 		humanWantToPlay = false;
 	}

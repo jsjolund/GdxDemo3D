@@ -17,28 +17,25 @@
 package com.mygdx.game.objects.dog;
 
 import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
  * @author davebaol
  */
-public class WalkTask extends LoopedAnimationTaskBase {
-
-	public WalkTask () {
-		super(0.7f);
+public class WanderTask extends MoveTaskBase {
+	
+	public WanderTask () {
 	}
 
 	@Override
-	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|move_walk", -1, 1, animationListener, 0.1f);
+	protected void startAnimation (DogCharacter dog) {
+		super.startAnimation(dog);
+		dog.wanderSteerer.startWandering();
+	}
 
-		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed);
-		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration);
-
-		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed);
-		dog.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration);
-
-		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius);
+	@Override
+	public void end () {
+		getObject().wanderSteerer.stopWandering();
+		super.end();
 	}
 
 }

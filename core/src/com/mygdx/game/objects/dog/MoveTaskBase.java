@@ -17,39 +17,39 @@
 package com.mygdx.game.objects.dog;
 
 import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.ai.btree.annotation.TaskAttribute;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
  * @author davebaol
  */
-public class RunTask extends LoopedAnimationTaskBase {
+public abstract class MoveTaskBase extends LoopedAnimationTaskBase {
 
-	public RunTask () {
-		super(0.2f, true);
+	@TaskAttribute(required=true)
+	public Gait gait;
+	
+	public MoveTaskBase () {
+		this.gait = Gait.Walk;
 	}
 
 	@Override
-	protected void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|move_run", -1, 1, animationListener, 0.1f);
+	protected void startAnimation (DogCharacter dog) {
+		this.animationSpeedMultiplier = gait.animationSpeedMultiplier;
+		dog.animations.animate(gait.animationId, -1, 1, animationListener, 0.1f);
 
-		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed * DogSteerSettings.runMultiplier);
-		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration * DogSteerSettings.runMultiplier);
-
-		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed * DogSteerSettings.runMultiplier);
-		dog.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration * DogSteerSettings.runMultiplier);
-
-		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * DogSteerSettings.runMultiplier);
+		float steeringMultiplier = gait.getSteeringMultiplier();
+		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed * steeringMultiplier);
+		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration * steeringMultiplier);
+		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed * steeringMultiplier);
+		dog.setMaxAngularAcceleration(DogSteerSettings.maxAngularAcceleration * steeringMultiplier);
 	}
 
 	@Override
-	public Status execute () {
-		DogCharacter dog = getObject();
-		updateAnimation(dog);
-		if (getStatus() == Task.Status.RUNNING && !dog.isSteering()) {
-			return Status.SUCCEEDED;
-		}
-		return Status.RUNNING;
+	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
+		MoveTaskBase wanderTask = (MoveTaskBase)task;
+		wanderTask.gait = gait;
+		return super.copyTo(task);
 	}
 
 }
