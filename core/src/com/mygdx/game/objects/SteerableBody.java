@@ -70,6 +70,8 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 */
 	public Steerer steerer;
 
+	private boolean isSteering;
+
 	/**
 	 * Used to adjust model orientation when following a path.
 	 */
@@ -138,25 +140,31 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		}
 
 		// Calculate steering acceleration
-		steerer.getSteeringBehavior().calculateSteering(steeringOutput);
+		isSteering = steerer.calculateSteering(steeringOutput);
 
-		boolean isSteering = isSteering();
-		if (isSteering && !wasSteering) {
-			startSteering();
-		} else if (!isSteering && wasSteering) {
-			finishSteering();
+		if (isSteering) {
+			if (!wasSteering) {
+				// Start steering since this character was not already steering
+				startSteering();
+			}
+			
+			// Apply steering acceleration since this character is steering
+			applySteering(steeringOutput, deltaTime);
+			
+		} else if (wasSteering) {
+			// Stop steering since this character is not steering now but was steering before
+			stopSteering(true);
 		}
 
-		// Apply steering acceleration
-		applySteering(steeringOutput, deltaTime);
 	}
 
 	/**
-	 * Start steering. Friction must be zero for steering to work correctly.
+	 * Starts steering; this clears friction and gravity since this character is now controlled by the steerer.
 	 */
 	protected void startSteering() {
 		wasSteering = true;
 		body.setFriction(0);
+		body.setGravity(Vector3.Zero);
 		modelTransform.getRotation(currentOrientation, true);
 		if (steerer != null) {
 			steerer.startSteering();
@@ -164,23 +172,12 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	/**
-	 * Stops the steering by removing the steering provider after invoking {@link #finishSteering()}
-	 */
-	protected void stopSteering() {
-		finishSteering();
-		if (steerer != null) {
-			steerer.stopSteering();
-		}
-		steerer = null;
-		steeringOutput.setZero();
-	}
-
-	/**
-	 * Resets normal friction of body so it cannot slide down most slopes.
+	 * Stops steering; this restores normal friction and gravity so it cannot slide down most slopes.
 	 * Removes any angular velocity the body accumulated.
 	 * Sets the body to the orientation of the model.
+	 * @param clearLinearVelocity whether linear velocity should be cleared or not 
 	 */
-	protected void finishSteering() {
+	protected void stopSteering(boolean clearLinearVelocity) {
 		wasSteering = false;
 		body.setFriction(steerSettings.getIdleFriction());
 		body.setAngularVelocity(Vector3.Zero);
@@ -193,8 +190,16 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				currentOrientation.getRoll()).setTranslation(position);
 		body.setWorldTransform(modelTransform);
 
+		body.setGravity(GameEngine.engine.dynamicsWorld.getGravity());
+
 		if (steerer != null) {
-			steerer.finishSteering();
+			steerer.stopSteering();
+		}
+
+		steerer = null;
+		steeringOutput.setZero();
+		if (clearLinearVelocity) {
+			body.setLinearVelocity(Vector3.Zero);
 		}
 	}
 
@@ -206,52 +211,36 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * @param deltaTime
 	 */
 	protected void applySteering(SteeringAcceleration<Vector3> steering, float deltaTime) {
-		boolean anyAccelerations = false;
-		// Update position and linear velocity
-		if (!steering.linear.isZero()) {
-			// this method internally scales the force by deltaTime
-			body.applyCentralForce(steering.linear);
-			anyAccelerations = true;
-		}
-
-		if (anyAccelerations) {
-			body.activate();
-
-			// Cap the linear speed
-			Vector3 velocity = body.getLinearVelocity();
-			float currentSpeedSquare = velocity.len2();
-			float maxLinearSpeed = getMaxLinearSpeed();
-			if (currentSpeedSquare > maxLinearSpeed * maxLinearSpeed) {
-				body.setLinearVelocity(velocity.scl(maxLinearSpeed / (float) Math.sqrt(currentSpeedSquare)));
-			}
-
-			// Notify the active steerer
-			steerer.onSteering();
+		// Update linear velocity trimming it to maximum speed
+		linearVelocity.set(body.getLinearVelocity().mulAdd(steering.linear, deltaTime).limit(getMaxLinearSpeed()));
+		body.setLinearVelocity(linearVelocity);
 			
-			GameEngine.engine.getScene().setSteerableData(this);
+		GameEngine.engine.getScene().setSteerableData(this);
 
-			// Calculate the target orientation of the model based on the direction of motion
-			// Note that the entity might twitch or jitter slightly when it finds itself in a situation with  
-			// conflicting responses from different behaviors. If you need to mitigate this scenario you can decouple
-			// the heading from the velocity vector and average its value over the last few frames, for instance 5.
-			// This smoothed heading vector will be used to work out model's orientation.
-			velocity = body.getLinearVelocity();
-			if (!velocity.isZero(getZeroLinearSpeedThreshold()))
-				setModelTargetOrientation(velocity.x, velocity.z);
+		// Calculate the target orientation of the model based on the direction of motion
+		// Note that the entity might twitch or jitter slightly when it finds itself in a situation with  
+		// conflicting responses from different behaviors. If you need to mitigate this scenario you can decouple
+		// the heading from the velocity vector and average its value over the last few frames, for instance 5.
+		// This smoothed heading vector will be used to work out model's orientation.
+		if (!linearVelocity.isZero(getZeroLinearSpeedThreshold())) {
+			position = getPosition();
+			targetOrientationVector.set(linearVelocity.x, 0, -linearVelocity.z).nor();
+			modelTransform.setToLookAt(targetOrientationVector, Constants.V3_UP).setTranslation(position);
+			body.setWorldTransform(modelTransform);
+
+//			setModelTargetOrientation(linearVelocity.x, linearVelocity.z);
+			targetOrientation.setFromMatrix(true, tmpMatrix.setToLookAt(targetOrientationVector, Constants.V3_UP));
 
 			// Set current orientation of model, setting orientation of body causes problems when applying force.
 			currentOrientation.slerp(targetOrientation, 10 * deltaTime);
-			Vector3 position = getPosition();
+			//Vector3 position = getPosition();
 			modelTransform.setFromEulerAngles(
 					currentOrientation.getYaw(),
 					currentOrientation.getPitch(),
 					currentOrientation.getRoll()).setTranslation(position);
 		}
-	}
 
-	public void setModelTargetOrientation(float x, float z) {
-		targetOrientationVector.set(x, 0, -z).nor();
-		targetOrientation.setFromMatrix(true, tmpMatrix.setToLookAt(targetOrientationVector, Vector3.Y));
+		body.activate();
 	}
 
 	/**
@@ -265,7 +254,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * @return True if linear steering output  is not within threshold of zero
 	 */
 	public boolean isSteering() {
-		return !steeringOutput.linear.isZero(getZeroLinearSpeedThreshold());
+		return steerer != null && isSteering;
 	}
 
 

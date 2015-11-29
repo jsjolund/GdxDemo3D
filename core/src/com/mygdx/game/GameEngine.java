@@ -149,6 +149,8 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	private Array<GameModel> dynamicModels = new Array<GameModel>();
 	private Bits visibleLayers = new Bits();
 
+	public Array<SteerableBody> characters = new Array<SteerableBody>();
+
 	public GameEngine() {
 		GameEngine.engine = this;
 
@@ -190,8 +192,6 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 	public GameScene getScene() {
 		return scene;
 	}
-
-	public Array<SteerableBody> characters = new Array<SteerableBody>();
 
 	public void setScene(GameScene scene) {
 		// TODO: Remove any previous scene

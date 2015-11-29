@@ -127,8 +127,8 @@ public class HumanCharacter extends Ragdoll {
 		WHISTLE() {
 			@Override
 			public void enter(HumanCharacter entity) {
-				// Stop steering
-				entity.stopSteering();
+				// Stop steering and let friction and gravity arrest the entity
+				entity.stopSteering(false);
 
 				HumanState prevState = entity.stateMachine.getPreviousState();
 				if (prevState != null && prevState.isMovementState()) {
@@ -179,8 +179,8 @@ public class HumanCharacter extends Ragdoll {
 				entity.animations.setAnimation("armature|idle_stand", -1);
 				entity.animations.paused = true;
 
-				// Stop steering
-				entity.stopSteering();
+				// Stop steering and let friction and gravity arrest the entity
+				entity.stopSteering(false);
 
 				// Set ragdoll control
 				entity.setRagdollControl(true);

@@ -16,25 +16,35 @@
 
 package com.mygdx.game.utilities;
 
+import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.GameRenderer;
+import com.mygdx.game.objects.SteerableBody;
 
 /**
  * @author davebaol
  */
-public interface Steerer {
+public abstract class Steerer {
 
-	public SteeringBehavior<Vector3> getSteeringBehavior();
+	protected final SteerableBody steerableBody;
 
-	public void startSteering();
+	public Steerer(SteerableBody steerableBody) {
+		this.steerableBody = steerableBody;
+	}
 
-	public void stopSteering();
+	public boolean calculateSteering (SteeringAcceleration<Vector3> steering) {
+		return processSteering(getSteeringBehavior().calculateSteering(steering));
+	}
 
-	public void finishSteering();
+	public abstract SteeringBehavior<Vector3> getSteeringBehavior();
 
-	public void onSteering();
+	public abstract boolean processSteering(SteeringAcceleration<Vector3> steering);
 
-	public void draw(GameRenderer gameRenderer);
+	public abstract void startSteering();
+
+	public abstract void stopSteering();
+
+	public abstract void draw(GameRenderer gameRenderer);
 
 }

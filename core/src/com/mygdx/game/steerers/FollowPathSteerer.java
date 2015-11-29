@@ -19,30 +19,23 @@ package com.mygdx.game.steerers;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.SteeringBehavior;
-import com.badlogic.gdx.ai.steer.behaviors.CollisionAvoidance;
 import com.badlogic.gdx.ai.steer.behaviors.FollowPath;
-import com.badlogic.gdx.ai.steer.behaviors.PrioritySteering;
-import com.badlogic.gdx.ai.steer.proximities.RadiusProximity;
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
+import com.badlogic.gdx.ai.steer.utils.paths.LinePath.LinePathParam;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.mygdx.game.GameEngine;
 import com.mygdx.game.GameRenderer;
 import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
-import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.MyShapeRenderer;
-import com.mygdx.game.utilities.Steerer;
 
 /**
  * @author jsjolund
  * @author davebaol
  */
-public class FollowPathSteerer implements Steerer {
-
-	private final SteerableBody steerableBody;
+public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 
 	/**
 	 * Path of triangles on the navigation mesh. Used to construct path points.
@@ -79,32 +72,15 @@ public class FollowPathSteerer implements Steerer {
 	 */
 	private final Array<Vector3> centerOfMassPath = new Array<Vector3>();
 
-	private final CollisionAvoidance<Vector3> collisionAvoidanceSB;
-	private final RadiusProximity<Vector3> proximity;
-
-	public final PrioritySteering<Vector3> prioritySteering;
-
 	public FollowPathSteerer(final SteerableBody steerableBody) {
-		this.steerableBody = steerableBody;
+		super(steerableBody);
 
 		// At least two points are needed to construct a line path
 		Array<Vector3> waypoints = new Array<Vector3>(new Vector3[]{new Vector3(), new Vector3(1, 0, 1)});
 		this.linePath = new LinePath<Vector3>(waypoints, true);
 		this.followPathSB = new FollowPath<Vector3, LinePath.LinePathParam>(steerableBody, linePath, 1);
 
-		this.proximity = new RadiusProximity<Vector3>(steerableBody, GameEngine.engine.characters, steerableBody.getBoundingRadius() * 1.8f);
-		this.collisionAvoidanceSB = new CollisionAvoidance<Vector3>(steerableBody, proximity) {
-			@Override
-			protected SteeringAcceleration<Vector3> calculateRealSteering(SteeringAcceleration<Vector3> steering) {
-				super.calculateRealSteering(steering);
-				steering.linear.y = 0; // remove any vertical acceleration
-				return steering;
-			}
-		};
-
-		this.prioritySteering = new PrioritySteering<Vector3>(steerableBody, 0.001f) //
-			.add(collisionAvoidanceSB) //
-			.add(followPathSB);
+		this.prioritySteering.add(followPathSB);
 	}
 
 	/**
@@ -125,13 +101,8 @@ public class FollowPathSteerer implements Steerer {
 		}
 		linePath.createPath(centerOfMassPath);
 
-		// If the path ends on a slope, increase arrival tolerance to prevent the steerable from never arriving
-		// at the end point.
-		float endTriSlope = navMeshGraphPath.getEndTriangle().getAngle(Constants.V3_UP);
-
 		followPathSB.setTimeToTarget(steerableBody.steerSettings.getTimeToTarget())
-				.setArrivalTolerance(steerableBody.steerSettings.getArrivalTolerance()
-						+ endTriSlope)
+				.setArrivalTolerance(steerableBody.steerSettings.getArrivalTolerance())
 				.setDecelerationRadius(steerableBody.steerSettings.getDecelerationRadius())
 				.setPredictionTime(steerableBody.steerSettings.getPredictionTime())
 				.setPathOffset(steerableBody.steerSettings.getPathOffset());
@@ -165,13 +136,9 @@ public class FollowPathSteerer implements Steerer {
 	@Override
 	public void stopSteering() {
 		// Clear path
+		pathToRender.clear();
 		navMeshPointPath.clear();
 		navMeshGraphPath.clear();
-	}
-
-	@Override
-	public void finishSteering() {
-		pathToRender.clear();
 	}
 
 	boolean deadlockDetection;
@@ -181,9 +148,29 @@ public class FollowPathSteerer implements Steerer {
 	static final float maxNoCollisionTime = deadlockTime + .5f;
 
 	@Override
-	public void onSteering() {
+	public boolean processSteering(SteeringAcceleration<Vector3> steering) {
+
+		// Check if steering target path segment changed.
+		LinePathParam pathParam = followPathSB.getPathParam();
+		int traversedSegment = pathParam.getSegmentIndex();
+		if (traversedSegment > currentSegmentIndex) {
+			// Update model target orientation. Current orientation wi
+			currentSegmentIndex = traversedSegment;
+/*
+//			Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
+//			steerableBody.setModelTargetOrientation(segment.getEnd().x - segment.getBegin().x, segment.getEnd().z - segment.getBegin().z);
+			// Update current navmesh triangle
+			steerableBody.currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
+			// Set model to be visible on the same layer as mesh part index of current triangle
+			steerableBody.visibleOnLayers.clear();
+			steerableBody.visibleOnLayers.set(steerableBody.currentTriangle.meshPartIndex);
+ */
+		}
 
 		if (prioritySteering.getSelectedBehaviorIndex() == 0) {
+			/*
+			 * Collision avoidance management
+			 */
 			float pr = proximity.getRadius() * 1.5f;
 			if (linePath.getEndPoint().dst2(steerableBody.getPosition()) <= pr * pr) {
 				// Disable collision avoidance near the end of the path since the obstacle
@@ -204,32 +191,31 @@ public class FollowPathSteerer implements Steerer {
 				collisionDuration = 0;
 				deadlockDetection = true;
 			}
-		} else {
-			if (deadlockDetection && !collisionAvoidanceSB.isEnabled() && GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > maxNoCollisionTime) {
-				collisionAvoidanceSB.setEnabled(true);
-				deadlockDetection = false;
-			}
+			return true;
 		}
 
-		// Check if steering target path segment changed.
-		int traversedSegment = followPathSB.getPathParam().getSegmentIndex();
-		if (traversedSegment > currentSegmentIndex) {
-			// Update model target orientation. Current orientation wi
-			currentSegmentIndex = traversedSegment;
-/*
-//			Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
-//			steerableBody.setModelTargetOrientation(segment.getEnd().x - segment.getBegin().x, segment.getEnd().z - segment.getBegin().z);
-			// Update current navmesh triangle
-			steerableBody.currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
-			// Set model to be visible on the same layer as mesh part index of current triangle
-			steerableBody.visibleOnLayers.clear();
-			steerableBody.visibleOnLayers.set(steerableBody.currentTriangle.meshPartIndex);
- */
+		/*
+		 * Path following management
+		 */
+
+		// Check if we are at the end of the path
+		if (steering.isZero() && steerableBody.getPosition().dst2(linePath.getEndPoint()) < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
+			return false;
 		}
+
+		// Check if collision avoidance must be re-enabled
+		if (deadlockDetection && !collisionAvoidanceSB.isEnabled() && GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > maxNoCollisionTime) {
+				collisionAvoidanceSB.setEnabled(true);
+				deadlockDetection = false;
+		}
+		
+		return true;
 	}
 
 	@Override
 	public void draw(GameRenderer gameRenderer) {
+		super.draw(gameRenderer);
+		
 		if (pathToRender.size > 0 && currentSegmentIndex >= 0) {
 			MyShapeRenderer shapeRenderer = gameRenderer.shapeRenderer;
 			shapeRenderer.setProjectionMatrix(gameRenderer.viewport.getCamera().combined);
@@ -254,12 +240,6 @@ public class FollowPathSteerer implements Steerer {
 				shapeRenderer.line(p, q);
 				p = q;
 			}
-
-			// Draw collision avoidance proximity
-			shapeRenderer.set(MyShapeRenderer.ShapeType.Line);
-			shapeRenderer.setColor(Color.YELLOW);
-			Vector3 pos = steerableBody.getPosition();
-			shapeRenderer.circle3(pos.x, pos.y - steerableBody.halfExtents.y, pos.z, proximity.getRadius(), 12);
 
 			shapeRenderer.end();
 		}
