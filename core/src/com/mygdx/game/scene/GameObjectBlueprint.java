@@ -201,9 +201,6 @@ public class GameObjectBlueprint implements Disposable {
 			}
 		}
 
-		if (blenderModel.custom_properties.containsKey("v_color_material_blend")) {
-
-		}
 	}
 
 	@Override
