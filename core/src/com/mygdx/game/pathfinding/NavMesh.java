@@ -22,7 +22,6 @@ import com.badlogic.gdx.ai.pfa.indexed.IndexedAStarPathFinder;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
@@ -56,9 +55,6 @@ public class NavMesh implements Disposable {
 	private final Bits tmpBitsGetRandomTriangle = new Bits();
 	private final Bits tmpBitsVerticalRayTest = new Bits();
 	private final Vector3 tmpGetClosestTriangle = new Vector3();
-	private final Vector3 tmpGetClosestPoint = new Vector3();
-	private final Ray tmpRayGetClosestPoint = new Ray();
-	private final Plane tmpPlaneGetClosestPoint = new Plane();
 	private final Vector3 tmpVerticalRayTest1 = new Vector3();
 	private final Vector3 tmpVerticalRayTest2 = new Vector3();
 	private final Ray tmpRayVerticalRayTest = new Ray();
@@ -324,7 +320,7 @@ public class NavMesh implements Disposable {
 		if (fromTri == null) {
 			for (int i = 0; i < graph.getNodeCount(); i++) {
 				Triangle tri = graph.getTriangleFromGraphIndex(i);
-				float dst2 = getClosestPoint(tri, fromPoint, tmpGetClosestTriangle);
+				float dst2 = GeometryUtils.getClosestPointOnTriangle(tri.a, tri.b, tri.c, fromPoint, tmpGetClosestTriangle);
 
 				if (dst2 < minDst2) {
 					minDst2 = dst2;
@@ -334,42 +330,6 @@ public class NavMesh implements Disposable {
 			}
 		}
 		return fromTri;
-	}
-
-	/**
-	 * Find the closest point on the triangle, given a measure point.
-	 *
-	 * @param tri   The triangle
-	 * @param point The measure point
-	 * @param out   Output for the closest point
-	 * @return The closest distance squared, between the triangle and measure point.
-	 */
-	public float getClosestPoint(Triangle tri, Vector3 point, Vector3 out) {
-		tmpPlaneGetClosestPoint.set(tri.a, tri.b, tri.c);
-		float minDst = tmpPlaneGetClosestPoint.distance(point);
-		Vector3 towardsPlane = tmpGetClosestPoint.set(tmpPlaneGetClosestPoint.normal).scl(minDst).add(point);
-		tmpRayGetClosestPoint.origin.set(point);
-		tmpRayGetClosestPoint.direction.set(point).sub(towardsPlane);
-		if (Intersector.intersectRayTriangle(tmpRayGetClosestPoint, tri.a, tri.b, tri.c, out)) {
-			minDst = minDst * minDst;
-		} else {
-			Vector3 nearest = tmpGetClosestPoint;
-			float dst2;
-			minDst = Float.POSITIVE_INFINITY;
-			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.a, tri.b, point)) < minDst) {
-				out.set(nearest);
-				minDst = dst2;
-			}
-			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.b, tri.c, point)) < minDst) {
-				out.set(nearest);
-				minDst = dst2;
-			}
-			if ((dst2 = GeometryUtils.nearestSegmentPointSquareDistance(nearest, tri.c, tri.a, point)) < minDst) {
-				out.set(nearest);
-				minDst = dst2;
-			}
-		}
-		return minDst;
 	}
 
 	/**
@@ -393,6 +353,5 @@ public class NavMesh implements Disposable {
 		Vector3 originalTargetPoint = tmpVecgetClosestValidPointAt.set(referenceDirection).nor().scl(radius).add(referencePoint);
 		return getClosestTriangle(originalTargetPoint, out, allowedMeshParts);
 	}
-
 
 }
