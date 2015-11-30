@@ -36,13 +36,16 @@ public class WanderSteerer extends CollisionAvoidanceSteererBase {
 	public WanderSteerer(final SteerableBody steerableBody) {
 		super(steerableBody);
 
-		this.wanderSB = new Wander<Vector3>(steerableBody)
-			//.setFaceEnabled(true) // We want to use Face internally (independent facing is on)
-			//.setAlignTolerance(0.001f) // Used by Face
-			//.setDecelerationRadius(5) // Used by Face
-			//.setTimeToTarget(0.1f) // Used by Face
-			.setWanderOffset(8) //
-			//.setWanderOrientation(10) //
+		this.wanderSB = new Wander<Vector3>(steerableBody) {
+			@Override
+			protected SteeringAcceleration<Vector3> calculateRealSteering(SteeringAcceleration<Vector3> steering) {
+				super.calculateRealSteering(steering);
+				steering.linear.y = 0; // remove any vertical acceleration
+				return steering;
+			}
+		};
+		this.wanderSB.setWanderOffset(8) //
+			.setWanderOrientation(0) //
 			.setWanderRadius(0.5f) //
 			.setWanderRate(MathUtils.PI2 * 4);
 
@@ -81,13 +84,15 @@ public class WanderSteerer extends CollisionAvoidanceSteererBase {
 		// Draw wander circle
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(Color.CORAL);
-		shapeRenderer.circle3(wanderSB.getWanderCenter().x, wanderSB.getWanderCenter().y, wanderSB.getWanderCenter().z, wanderSB.getWanderRadius(), 12);
+		Vector3 wanderCenter = wanderSB.getWanderCenter();
+		shapeRenderer.circle3(wanderCenter.x, wanderCenter.y - steerableBody.halfExtents.y, wanderCenter.z, wanderSB.getWanderRadius(), 12);
 		shapeRenderer.end();
 
 		// Draw wander target
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Filled);
 		shapeRenderer.setColor(Color.CORAL);
-		shapeRenderer.circle3(wanderSB.getInternalTargetPosition().x, wanderSB.getInternalTargetPosition().y, wanderSB.getInternalTargetPosition().z, .1f, 6);
+		Vector3 wanderTarget = wanderSB.getInternalTargetPosition();
+		shapeRenderer.circle3(wanderTarget.x, wanderTarget.y - steerableBody.halfExtents.y, wanderTarget.z, .1f, 6);
 		shapeRenderer.end();
 	}
 

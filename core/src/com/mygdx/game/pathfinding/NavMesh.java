@@ -284,6 +284,22 @@ public class NavMesh implements Disposable {
 	}
 
 	/**
+	 * Make a ray test along the up/down axis using a ray with origin at the given point and spanning down toward the ground
+	 * for the specified distance.
+	 * 
+	 * @param testPoint        The origin to the ray
+	 * @param distance         The length of the ray toward the ground
+	 * @param allowedMeshParts Which mesh parts to test.
+	 * @return The triangle, or null if ray did not hit any triangles.
+	 */
+	public Triangle groundRayTest(Vector3 testPoint, float distance, Bits allowedMeshParts) {
+		tmpRayVerticalRayTest.set(
+				tmpVerticalRayTest1.set(testPoint),
+				tmpVerticalRayTest2.set(Constants.V3_DOWN));
+		return rayTest(tmpRayVerticalRayTest, distance, allowedMeshParts);
+	}
+
+	/**
 	 * Ray tests the navmesh along up/down axis, if no triangles are found, it makes an
 	 * exhaustive search of all triangles on the navmesh.
 	 *

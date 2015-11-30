@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.mygdx.game.GameEngine;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.steerers.WanderSteerer;
@@ -105,20 +104,8 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		humanWantToPlay = false;
 	}
 
-	private Vector3 tmp1 = new Vector3();
-
 	public boolean followPath(Triangle targetTriangle, Vector3 targetPoint) {
-		if (GameEngine.engine.getScene().navMesh.getPath(
-				currentTriangle,
-				getGroundPosition(tmp1),
-				targetTriangle,
-				targetPoint,
-				followPathSteerer.navMeshGraphPath)) {
-
-			followPathSteerer.calculateNewPath();
-			return true;
-		}
-		return false;
+		return followPathSteerer.calculateNewPath(targetTriangle, targetPoint);
 	}
 
 	@Override

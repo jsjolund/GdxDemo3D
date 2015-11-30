@@ -203,6 +203,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		scene.getGameObjects(objs);
 		for (GameObject obj : objs) {
 			addEntity(obj);
+			
+			// TODO: handle this in a better way
+			// Ideally the engine should not know the name of the entities in the scene
 			if (obj.name.equals("human") || obj.name.equals("dog")) {
 				characters.add((SteerableBody)obj);
 			}
