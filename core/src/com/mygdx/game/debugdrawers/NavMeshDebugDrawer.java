@@ -186,7 +186,7 @@ public class NavMeshDebugDrawer {
 		drawNavMeshTriangles();
 		if (character != null && character.steerer instanceof FollowPathSteerer) {
 			FollowPathSteerer fpSteerer = (FollowPathSteerer)character.steerer;
-			drawPathTriangles(fpSteerer.navMeshGraphPath, character.currentTriangle);
+			drawPathTriangles(fpSteerer.navMeshGraphPath, character.getCurrentTriangle());
 			if (fpSteerer.navMeshPointPath.getSize() > 0) {
 				drawPathPoints(fpSteerer.navMeshPointPath);
 			}

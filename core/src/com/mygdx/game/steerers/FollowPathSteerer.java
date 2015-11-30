@@ -24,11 +24,16 @@ import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath.LinePathParam;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Bits;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.GameRenderer;
 import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
+import com.mygdx.game.pathfinding.Triangle;
+import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
 /**
@@ -83,11 +88,40 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		this.prioritySteering.add(followPathSB);
 	}
 
+	private Vector3 tmpVec1 = new Vector3();
+
+	public boolean calculateNewPath(Ray ray, Bits visibleLayers) {
+		if (GameEngine.engine.getScene().navMesh.getPath(
+				steerableBody.getCurrentTriangle(),
+				steerableBody.getGroundPosition(tmpVec1),
+				ray, visibleLayers,
+				GameSettings.CAMERA_PICK_RAY_DST,
+				navMeshGraphPath)) {
+
+			calculateNewPath0();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean calculateNewPath(Triangle targetTriangle, Vector3 targetPoint) {
+		if (GameEngine.engine.getScene().navMesh.getPath(
+				steerableBody.getCurrentTriangle(),
+				steerableBody.getGroundPosition(tmpVec1),
+				targetTriangle,
+				targetPoint,
+				navMeshGraphPath)) {
+
+			calculateNewPath0();
+			return true;
+		}
+		return false;
+	}
+
 	/**
 	 * Calculate the navigation mesh point path, then assign this steering provider to the owner
 	 */
-	public void calculateNewPath() {
-
+	private void calculateNewPath0() {
 		navMeshPointPath.calculateForGraphPath(navMeshGraphPath);
 
 		pathToRender.clear();

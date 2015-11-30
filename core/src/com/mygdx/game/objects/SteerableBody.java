@@ -16,6 +16,7 @@
 
 package com.mygdx.game.objects;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.steer.Steerable;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.utils.Location;
@@ -26,6 +27,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.pathfinding.Triangle;
+import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.utilities.BulletLocation;
 import com.mygdx.game.utilities.BulletSteeringUtils;
 import com.mygdx.game.utilities.Constants;
@@ -54,10 +56,9 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	public final SteerSettings steerSettings;
 
-	/**
-	 * Triangle which the steerable is standing on
-	 */
-	public Triangle currentTriangle;
+	private Triangle currentTriangle;
+
+	private long currentTriangleFrameId = Gdx.graphics.getFrameId() + 12345L;
 
 	/**
 	 * Outputs the linear steering of the steering behaviour.
@@ -204,6 +205,15 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	/**
+	 * Finds the current triangle and sets the model to be visible on the same layer as mesh part index of current triangle
+	 * @param scene the game scene
+	 */
+	public void updateSteerableData(GameScene scene) {
+		visibleOnLayers.clear();
+		visibleOnLayers.set(getCurrentTriangle(scene).meshPartIndex);
+	}
+
+	/**
 	 * Applies the linear component of the steering behaviour. As for the angular component,
 	 * the orientation of the model is set to follow the orientation of the path segments.
 	 *
@@ -214,8 +224,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Update linear velocity trimming it to maximum speed
 		linearVelocity.set(body.getLinearVelocity().mulAdd(steering.linear, deltaTime).limit(getMaxLinearSpeed()));
 		body.setLinearVelocity(linearVelocity);
-			
-		GameEngine.engine.getScene().setSteerableData(this);
+		
+		// Maybe we should do this even if applySteering is not invoked
+		// since the entity might move because of other bodies that are pushing it 
+		updateSteerableData(GameEngine.engine.getScene());
 
 		// Calculate the target orientation of the model based on the direction of motion
 		// Note that the entity might twitch or jitter slightly when it finds itself in a situation with  
@@ -228,12 +240,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			modelTransform.setToLookAt(targetOrientationVector, Constants.V3_UP).setTranslation(position);
 			body.setWorldTransform(modelTransform);
 
-//			setModelTargetOrientation(linearVelocity.x, linearVelocity.z);
 			targetOrientation.setFromMatrix(true, tmpMatrix.setToLookAt(targetOrientationVector, Constants.V3_UP));
 
 			// Set current orientation of model, setting orientation of body causes problems when applying force.
 			currentOrientation.slerp(targetOrientation, 10 * deltaTime);
-			//Vector3 position = getPosition();
 			modelTransform.setFromEulerAngles(
 					currentOrientation.getYaw(),
 					currentOrientation.getPitch(),
@@ -405,5 +415,33 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 */
 	public Vector3 getDirection(Vector3 out) {
 		return modelTransform.getRotation(tmpQuat, true).transform(out.set(Vector3.Z));
+	}
+	
+	/**
+	 * Returns the triangle which the steerable is standing on
+	 */
+	public Triangle getCurrentTriangle() {
+		return getCurrentTriangle(GameEngine.engine.getScene());
+	}
+
+	public Triangle getCurrentTriangle(GameScene scene) {
+		long frameId = Gdx.graphics.getFrameId();
+		// Find the triangle at most once per frame
+		if (currentTriangleFrameId != frameId) {
+			currentTriangleFrameId = frameId;
+			final Vector3 pos = getPosition();
+			// This test is O(1) and, according to the coherence assumption, it should succeed most of the times
+			// since the entity is usually not be far from where it was in the previous frame
+			currentTriangle = scene.navMesh.groundRayTest(pos, halfExtents.y + .2f, null);
+			if (currentTriangle == null) {
+				//Gdx.app.log(tag, String.format("Frame %d: Finding closest navigation mesh position for %s", frameId, this));
+				// This test is O(n) where n is the number of meshes.
+				currentTriangle = scene.navMesh.getClosestTriangle(pos, tmpVec, null);
+			}
+			else {
+				//Gdx.app.log(tag, String.format("Frame %d: Vertical test has found navigation mesh for %s", frameId, this));
+			}
+		}
+		return currentTriangle;
 	}
 }

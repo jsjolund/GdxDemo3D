@@ -34,7 +34,6 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.Bits;
-import com.mygdx.game.GameEngine;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.AnimationListener;
@@ -420,18 +419,7 @@ public class HumanCharacter extends Ragdoll {
 
 	@Override
 	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
-		followPath(ray, visibleLayers);
-	}
-
-	public void followPath(Ray ray, Bits visibleLayers) {
-		if (GameEngine.engine.getScene().navMesh.getPath(currentTriangle,
-				getGroundPosition(tmpNodePos),
-				ray, visibleLayers,
-				GameSettings.CAMERA_PICK_RAY_DST,
-				followPathSteerer.navMeshGraphPath)) {
-
-			followPathSteerer.calculateNewPath();
-		}
+		followPathSteerer.calculateNewPath(ray, visibleLayers);
 	}
 
 	public void handleStateCommand(HumanState newState) {
