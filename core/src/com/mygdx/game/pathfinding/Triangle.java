@@ -88,12 +88,14 @@ public class Triangle implements IndexedNode<Triangle> {
 	 * @return Output for chaining
 	 */
 	public Vector3 getRandomPoint(Vector3 out) {
-		float r1 = MathUtils.random(0f, 1f);
-		float r2 = MathUtils.random(0f, 1f);
-		float sr1 = (float) Math.sqrt(r1);
-		out.x = (1 - sr1) * a.x + sr1 * (1 - r2) * b.x + (sr1 * r2) * c.x;
-		out.y = (1 - sr1) * a.y + sr1 * (1 - r2) * b.y + (sr1 * r2) * c.y;
-		out.z = (1 - sr1) * a.z + sr1 * (1 - r2) * b.z + (sr1 * r2) * c.z;
+		final float sr1 = (float) Math.sqrt(MathUtils.random());
+		final float r2 = MathUtils.random();
+		final float k1 = 1 - sr1;
+		final float k2 = sr1 * (1 - r2);
+		final float k3 = sr1 * r2;
+		out.x = k1 * a.x + k2 * b.x + k3 * c.x;
+		out.y = k1 * a.y + k2 * b.y + k3 * c.y;
+		out.z = k1 * a.z + k2 * b.z + k3 * c.z;
 		return out;
 	}
 
@@ -103,11 +105,16 @@ public class Triangle implements IndexedNode<Triangle> {
 	 * @return
 	 */
 	public float area() {
-		double ab = a.dst(b);
-		double bc = b.dst(c);
-		double ca = a.dst(c);
-		double s = (ab + bc + ca) / 2;
-		return (float) Math.sqrt(s * (s - ab) * (s - bc) * (s - ca));
+		final float abx = b.x - a.x;
+		final float aby = b.y - a.y;
+		final float abz = b.z - a.z;
+		final float acx = c.x - a.x;
+		final float acy = c.y - a.y;
+		final float acz = c.z - a.z;
+		final float r = aby * acz - abz * acy;
+		final float s = abz * acx - abx * acz;
+		final float t = abx * acy - aby * acx;
+		return 0.5f * (float) Math.sqrt(r * r + s * s + t * t);
 	}
 }
 

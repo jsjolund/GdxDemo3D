@@ -14,7 +14,10 @@ import com.mygdx.game.steerers.WanderSteerer;
 import com.mygdx.game.utilities.Constants;
 
 /**
- * Created by Johannes Sjolund on 11/6/15.
+ * A dog character whose brain is modeled through a behavior tree.
+ * 
+ * @author jsjolund
+ * @author davebaol
  */
 public class DogCharacter extends GameCharacter implements Telegraph {
 

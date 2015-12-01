@@ -431,7 +431,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			currentTriangleFrameId = frameId;
 			final Vector3 pos = getPosition();
 			// This test is O(1) and, according to the coherence assumption, it should succeed most of the times
-			// since the entity is usually not be far from where it was in the previous frame
+			// since the entity is usually not far from where it was in the previous frame
 			currentTriangle = scene.navMesh.groundRayTest(pos, halfExtents.y + .2f, null);
 			if (currentTriangle == null) {
 				//Gdx.app.log(tag, String.format("Frame %d: Finding closest navigation mesh position for %s", frameId, this));
