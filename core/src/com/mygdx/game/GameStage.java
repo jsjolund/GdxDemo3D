@@ -508,8 +508,33 @@ public class GameStage extends Stage implements Observable {
 		layerController = new LayerController(buttonsAtlas);
 		layerController.setLayer(Integer.MAX_VALUE);
 
-		// Add root table
-		rootTable = new Table();
+		// Create a root table that auto-scales on resize
+		rootTable = new Table() {
+			@Override
+			protected void sizeChanged () {
+				super.sizeChanged();
+				
+				float scaleX = 1;
+				float scaleY = 1;
+				float scaleTolerance = 0.001f;
+				if (getPrefWidth() > getWidth())
+					scaleX -= (rootTable.getPrefWidth() - getWidth()) / (float) getPrefWidth();
+//				if (getPrefHeight() > getHeight())
+//					scaleY -= (getPrefHeight() - getHeight()) / (float)getPrefHeight();
+
+				if (MathUtils.isEqual(scaleX, 1, scaleTolerance) && MathUtils.isEqual(scaleY, 1, scaleTolerance)) {
+					Gdx.app.log(tag, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+					setTransform(false);
+					setOrigin(0, 0);
+					setScale(1);
+				} else {
+					Gdx.app.log(tag, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+					setTransform(true);
+					setOrigin(0, 0);
+					setScale(scaleX, scaleY);
+				}
+			}
+		};
 		addActor(rootTable);
 		rootTable.setDebug(true, true);
 
@@ -545,9 +570,8 @@ public class GameStage extends Stage implements Observable {
 		// FIXME: This is pretty ugly but we have to scale
 		// the table because button's images are too big.
 		// Unfortunately, scaling the table does not change
-		// its size, which is problematic in resize method,
-		// so we have to override the pref size. :(
-		// Atlas and texture should be resize instead.
+		// its size, so we have to override the preferred size. :(
+		// Atlas and texture should be resized instead.
 		// Maybe sooner or later someone will do :)
 		final float scale = 0.5f;
 		Table bottomRightTable = new Table() {
@@ -603,27 +627,8 @@ public class GameStage extends Stage implements Observable {
 		batch.setProjectionMatrix(cameraUI.combined);
 		shapeRenderer.setProjectionMatrix(cameraUI.combined);
 
+		// Resize the root table that will auto-scale if needed
 		rootTable.setSize(viewport.getScreenWidth(), viewport.getScreenHeight());
-
-		float scaleX = 1;
-		float scaleY = 1;
-		if (rootTable.getPrefWidth() > viewport.getScreenWidth())
-			scaleX -= (rootTable.getPrefWidth() - viewport.getScreenWidth()) / (float) rootTable.getPrefWidth();
-//		if (rootTable.getPrefHeight() > viewport.getScreenHeight())
-//			scaleY -= (rootTable.getPrefHeight() - viewport.getScreenHeight()) / (float)rootTable.getPrefHeight();
-
-		float tolerance = 0.001f;
-		if (MathUtils.isEqual(scaleX, 1, tolerance) && MathUtils.isEqual(scaleY, 1, tolerance)) {
-			Gdx.app.log(tag, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
-			rootTable.setTransform(false);
-			rootTable.setOrigin(0, 0);
-			rootTable.setScale(1);
-		} else {
-			Gdx.app.log(tag, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
-			rootTable.setTransform(true);
-			rootTable.setOrigin(0, 0);
-			rootTable.setScale(scaleX, scaleY);
-		}
 	}
 
 

@@ -41,6 +41,8 @@ import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Sounds;
 
 /**
+ * A human character whose brain is modeled through a finite state machine.
+ * 
  * @author jsjolund
  */
 public class HumanCharacter extends Ragdoll {

@@ -45,7 +45,6 @@ import com.mygdx.game.scene.GameSceneManager;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
-import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
 
@@ -165,20 +164,25 @@ public class GameScreen implements Screen {
 		stage.addObserver(renderSys);
 		stage.addObserver(engine);
 
-		// Supply the name of the shared blueprint "human", along with position
-		HumanCharacter h1 = defaultScene.spawnHuman("human", new Vector3(20, 1, 0));
-		HumanCharacter h2 = defaultScene.spawnHuman("human", new Vector3(24, 1, -5));
-		HumanCharacter h3 = defaultScene.spawnHuman("human", new Vector3(20, 1, 5));
-		HumanCharacter h4 = defaultScene.spawnHuman("human", new Vector3(-10, 4, 10));
+		// Create humans by supplying the name of the shared blueprint "human", along with position
+		HumanCharacter[] humans = new HumanCharacter[] {
+			defaultScene.spawnHuman("human", new Vector3(20, 1, 0), 0),
+			defaultScene.spawnHuman("human", new Vector3(24, 1, -5)),
+			defaultScene.spawnHuman("human", new Vector3(20, 1, 5)),
+			defaultScene.spawnHuman("human", new Vector3(-10, 4, 10))
+		};
 
-		DogCharacter d1 = defaultScene.spawnDog("dog", new Vector3(7, 0.5f, -10));
-		DogCharacter d2 = defaultScene.spawnDog("dog", new Vector3(12, 0.5f, 10));
-		DogCharacter d3 = defaultScene.spawnDog("dog", new Vector3(15, 0.5f, 4));
+		// Create dogs by supplying the name of the shared blueprint "dog", along with position
+		DogCharacter[] dogs = new DogCharacter[] {
+			defaultScene.spawnDog("dog", new Vector3(7, 0.5f, -10)),
+			defaultScene.spawnDog("dog", new Vector3(12, 0.5f, 10)),
+			defaultScene.spawnDog("dog", new Vector3(15, 0.5f, 4))
+		};
 
 		// Assign each dog to a human
-		h1.assignDog(d1);
-		h2.assignDog(d2);
-		h3.assignDog(d3);
+		for (int i = 0, n = Math.min(humans.length, dogs.length); i < n; i ++) {
+			humans[i].assignDog(dogs[i]);
+		}
 
 		// Grabs all the game objects from the scene
 		engine.setScene(defaultScene);
@@ -191,34 +195,6 @@ public class GameScreen implements Screen {
 			GameModel tree = (GameModel) obj;
 			Gdx.app.debug(tag, "Found tree at " + tree.modelTransform.getTranslation(new Vector3()));
 		}
-
-		d1.setOrientation(Constants.PI);
-
-		Gdx.app.debug(tag, String.format("Orientation of Dog 1 is %s radians", d1.getOrientation()));
-		float r;
-		String out = "Orientation (radians) Human 1:\t%s should be %s";
-		h1.setOrientation(r = 0);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = Constants.PI0_25);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = Constants.PI0_5);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = Constants.PI0_75);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-
-		// Reported as -3.1415925, but ok since rotations are in ranges [0:PI] and [0:-PI]
-		h1.setOrientation(r = Constants.PI);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-
-		h1.setOrientation(r = -Constants.PI);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = -Constants.PI0_75);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = -Constants.PI0_5);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-		h1.setOrientation(r = -Constants.PI0_25);
-		Gdx.app.debug(tag, String.format(out, h1.getOrientation(), r));
-
 	}
 
 	@Override

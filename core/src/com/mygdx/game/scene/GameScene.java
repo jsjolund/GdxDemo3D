@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.graphics.g3d.model.NodePart;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -41,6 +42,7 @@ import com.mygdx.game.blender.objects.BlenderLight;
 import com.mygdx.game.blender.objects.BlenderModel;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
+import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
 
@@ -228,6 +230,10 @@ public class GameScene implements Disposable {
 	}
 
 	public HumanCharacter spawnHuman(String sharedBlueprintId, Vector3 initialPosition) {
+		return spawnHuman(sharedBlueprintId, initialPosition, Float.NaN);
+	}
+
+	public HumanCharacter spawnHuman(String sharedBlueprintId, Vector3 initialPosition, float initialOrientation) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		HumanCharacter obj = new HumanCharacter(
 				bp.model, bp.name,
@@ -236,12 +242,17 @@ public class GameScene implements Disposable {
 				bp.belongsToFlag, bp.collidesWithFlag,
 				bp.callback, bp.noDeactivate,
 				bp.ragdollJson, bp.armatureNodeId);
+		setSteerableOrientation(obj, initialOrientation);
 		obj.updateSteerableData(this);
 		addGameObject(obj);
 		return obj;
 	}
 
 	public DogCharacter spawnDog(String sharedBlueprintId, Vector3 initialPosition) {
+		return spawnDog(sharedBlueprintId, initialPosition, Float.NaN);
+	}
+
+	public DogCharacter spawnDog(String sharedBlueprintId, Vector3 initialPosition, float initialOrientation) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		DogCharacter obj = new DogCharacter(
 				bp.model, bp.name,
@@ -249,9 +260,19 @@ public class GameScene implements Disposable {
 				bp.shape, bp.mass,
 				bp.belongsToFlag, bp.collidesWithFlag,
 				bp.callback, bp.noDeactivate);
+		setSteerableOrientation(obj, initialOrientation);
 		obj.updateSteerableData(this);
 		addGameObject(obj);
 		return obj;
+	}
+	
+	private static void setSteerableOrientation(SteerableBody entity, float orientation) {
+		if (Float.isNaN(orientation)) {
+			orientation = MathUtils.random(-Constants.PI, Constants.PI);
+		}
+		entity.setOrientation(orientation);
+		Gdx.app.debug(tag, String.format("%s: Orientation in radians is %s should be %s",
+				entity.getClass().getSimpleName(), entity.getOrientation(), orientation));
 	}
 
 	public Billboard spawnSelectionBillboard(String sharedBlueprintId, Camera camera) {
