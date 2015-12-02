@@ -101,8 +101,6 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 				callback, noDeactivate,
 				new DogSteerSettings());
 
-		body.setAngularFactor(Vector3.Y);
-
 		animations = new AnimationController(modelInstance);
 
 		// Create behavior tree
