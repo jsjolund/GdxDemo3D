@@ -34,6 +34,8 @@ import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Steerer;
 
 /**
+ * A {@code SteerableBody} has the ability to exploit steering behaviors through its active {@link #steerer}.
+ *  
  * @author jsjolund
  */
 public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
@@ -130,6 +132,15 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		this.boundingRadius = (boundingBox.getWidth() + boundingBox.getDepth()) / 4;
 		this.steerSettings = steerSettings;
 		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
+
+		// Don't allow physics engine to turn character around any axis.
+		// This prevents it from gaining any angular velocity as a result of collisions, for instance.
+		// Usually, you use angular factor Vector3.Y, which allows the engine to turn it only around
+		// the up axis, but here we can use Vector3.Zero since we directly set linear and angular
+		// velocity in applySteering() instead of using force and torque.
+		// This gives us (almost?) total control over character's motion.
+		// Of course, subclasses can specify different angular factor, if needed.
+		body.setAngularFactor(Vector3.Zero);
 	}
 
 	@Override

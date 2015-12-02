@@ -384,8 +384,6 @@ public class HumanCharacter extends Ragdoll {
 				shape, mass, belongsToFlag, collidesWithFlag,
 				callback, noDeactivate, ragdollJson, armatureNodeId,
 				new HumanSteerSettings());
-		// Only allow physics engine to turn player capsule around the up axis
-		body.setAngularFactor(Vector3.Y);
 
 		// Create path follower
 		followPathSteerer = new FollowPathSteerer(this);

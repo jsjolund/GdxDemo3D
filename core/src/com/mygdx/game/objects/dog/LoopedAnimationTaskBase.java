@@ -86,7 +86,7 @@ public abstract class LoopedAnimationTaskBase extends LeafTask<DogCharacter> {
 			return;
 		}
 
-		// Start the new animation since the dog has take a proper speed for enough time
+		// Start the new animation since the dog has maintained appropriate speed for long enough
 		dog.currentTaskAnimation = ta;
 		dog.monitoredTaskAnimation = null;
 		dog.switchAnimationTime = -1;
