@@ -21,14 +21,14 @@ import com.mygdx.game.objects.DogCharacter;
 /**
  * @author davebaol
  */
-public class WanderTask extends MoveTaskBase {
+public class WanderTask extends MovementAnimationTaskBase {
 	
 	public WanderTask () {
 	}
 
 	@Override
-	protected void startAnimation (DogCharacter dog) {
-		super.startAnimation(dog);
+	protected void setSteeringLimits (DogCharacter dog, float steeringMultiplier) {
+		super.setSteeringLimits(dog, steeringMultiplier);
 		dog.wanderSteerer.startWandering();
 	}
 

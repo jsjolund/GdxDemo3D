@@ -16,7 +16,6 @@
 
 package com.mygdx.game.objects.dog;
 
-import com.mygdx.game.objects.DogCharacter;
 
 /**
  * @author davebaol
@@ -27,8 +26,8 @@ public class LieDownTask extends LoopedAnimationTaskBase {
 	}
 
 	@Override
-	protected void startAnimation (DogCharacter dog) {
-		dog.animations.animate("armature|idle_lie_down", -1, 1, animationListener, 0.1f);
+	protected TaskAnimation getTaskAnimation () {
+		return TaskAnimation.LieDown;
 	}
 
 }

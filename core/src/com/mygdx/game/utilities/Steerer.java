@@ -43,7 +43,7 @@ public abstract class Steerer {
 
 	public abstract void startSteering();
 
-	public abstract void stopSteering();
+	public abstract boolean stopSteering();
 
 	public abstract void draw(GameRenderer gameRenderer);
 
