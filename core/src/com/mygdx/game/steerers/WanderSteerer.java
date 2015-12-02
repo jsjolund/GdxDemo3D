@@ -71,7 +71,8 @@ public class WanderSteerer extends CollisionAvoidanceSteererBase {
 	}
 
 	@Override
-	public void stopSteering () {
+	public boolean stopSteering () {
+		return false;
 	}
 	
 	

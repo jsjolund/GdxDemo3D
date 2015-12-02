@@ -16,7 +16,6 @@
 
 package com.mygdx.game.objects.dog;
 
-import com.mygdx.game.objects.DogCharacter;
 
 /**
  * @author davebaol
@@ -26,8 +25,9 @@ public class PissTask extends OneShotAnimationTaskBase {
 	public PissTask () {
 	}
 
-	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|action_piss", 1, 1, animationListener, 0.1f);
+	@Override
+	protected TaskAnimation getTaskAnimation () {
+		return TaskAnimation.Piss;
 	}
 
 }

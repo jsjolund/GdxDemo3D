@@ -24,14 +24,19 @@ import com.mygdx.game.objects.DogCharacter;
 public abstract class OneShotAnimationTaskBase extends LoopedAnimationTaskBase {
 	
 	public OneShotAnimationTaskBase () {
-		super(-1, true);
+		super(true); // Use an animation listener
+	}
+
+	@Override
+	protected int getAnimationLoopCount () {
+		return 1; // one shot
 	}
 
 	@Override
 	public Status execute () {
 		DogCharacter dog = getObject();
 		updateAnimation(dog);
-		return animationListener.isAnimationCompleted()? Status.SUCCEEDED : Status.RUNNING;
+		return animationListener == dog.currentAnimationListener && animationListener.isAnimationCompleted()? Status.SUCCEEDED : Status.RUNNING;
 	}
 
 }

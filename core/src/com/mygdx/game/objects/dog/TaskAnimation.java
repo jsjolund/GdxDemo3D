@@ -19,16 +19,23 @@ package com.mygdx.game.objects.dog;
 import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
+ * An enumeration of task animations.
+ * 
  * @author davebaol
  */
-public enum Gait {
-	Walk("armature|move_walk", 0.7f) {
+public enum TaskAnimation {
+	Stand("armature|idle_stand"),
+	Sit("armature|idle_sit"),
+	LieDown("armature|idle_lie_down"),
+	Piss("armature|action_piss"),
+	SpinAround("armature|idle_search"),
+	Walk("armature|move_walk", 0.7f, Stand) {
 		@Override
 		public float getSteeringMultiplier() {
 			return 1f;
 		}
 	},
-	Run("armature|move_run", 0.2f) {
+	Run("armature|move_run", 0.2f, Stand) {
 		@Override
 		public float getSteeringMultiplier() {
 			return DogSteerSettings.runMultiplier;
@@ -37,11 +44,29 @@ public enum Gait {
 	
 	public final String animationId;
 	public final float animationSpeedMultiplier;
+	public final TaskAnimation idleTaskAnimation;
 	
-	Gait(String animationId, float animationSpeedMultiplier) {
-		this.animationId = animationId;
-		this.animationSpeedMultiplier = animationSpeedMultiplier;
+	/**
+	 * Creates an idle task animation 
+	 * @param animationId the animation id
+	 */
+	TaskAnimation(String animationId) {
+		this(animationId, -1, null);
 	}
 	
-	public abstract float getSteeringMultiplier();
+	/**
+	 * Creates a movement or idle task animation
+	 * @param animationId the animation id
+	 * @param animationSpeedMultiplier the animation speed multiplier
+	 * @param idleTaskAnimation the animation to use when the speed is close enough to 0 (is {@code null} for idle task animations)
+	 */
+	TaskAnimation(String animationId, float animationSpeedMultiplier, TaskAnimation idleTaskAnimation) {
+		this.animationId = animationId;
+		this.animationSpeedMultiplier = animationSpeedMultiplier;
+		this.idleTaskAnimation = idleTaskAnimation;
+	}
+	
+	public float getSteeringMultiplier() {
+		return -1;
+	}
 }

@@ -168,11 +168,12 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	}
 
 	@Override
-	public void stopSteering() {
+	public boolean stopSteering() {
 		// Clear path
 		pathToRender.clear();
 		navMeshPointPath.clear();
 		navMeshGraphPath.clear();
+		return false;
 	}
 
 	boolean deadlockDetection;

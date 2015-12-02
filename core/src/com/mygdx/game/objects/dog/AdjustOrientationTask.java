@@ -37,25 +37,40 @@ public class AdjustOrientationTask extends OneShotAnimationTaskBase {
 	}
 
 	@Override
-	public void startAnimation(DogCharacter dog) {
-		AnimationDesc animationDesc = dog.animations.animate("armature|idle_search", 1, 1, animationListener, 0.1f);
-		Gdx.app.log(getClass().getSimpleName(), "--------- Adjust dog orientation ----------");
-		Gdx.app.log(getClass().getSimpleName(), "human.orientation = " + (MathUtils.radiansToDegrees * dog.human.getOrientation()));
-		Gdx.app.log(getClass().getSimpleName(), "dog.orientation   = " + (MathUtils.radiansToDegrees * dog.getOrientation()));
-		orientationDiff = dog.getOrientation() - dog.human.getOrientation();
-		Gdx.app.log(getClass().getSimpleName(), "orientationDiff = " + (MathUtils.radiansToDegrees * orientationDiff));
-		float wrappedOD = orientationDiff + Constants.PI;
-		Gdx.app.log(getClass().getSimpleName(), "wrappedOD = " + (MathUtils.radiansToDegrees * wrappedOD));
-		float startTime = GdxAI.getTimepiece().getTime();
-		stopTime = startTime + animationDesc.duration * wrappedOD / Constants.PI2;
-		Gdx.app.log(getClass().getSimpleName(), "animationDesc.totalDuration = " + animationDesc.duration);
-		Gdx.app.log(getClass().getSimpleName(), "animationDesc.playDuration = " + (stopTime - startTime));
+	protected TaskAnimation getTaskAnimation () {
+		return TaskAnimation.SpinAround;
+	}
+
+	@Override
+	public AnimationDesc startAnimation(DogCharacter dog) {
+		AnimationDesc animationDesc = super.startAnimation(dog);
+		stopTime = -1;
+		if (dog.currentTaskAnimation == getTaskAnimation()) {
+			Gdx.app.log(getClass().getSimpleName(), "--------- Adjust dog orientation ----------");
+			Gdx.app.log(getClass().getSimpleName(), "human.orientation = " + (MathUtils.radiansToDegrees * dog.human.getOrientation()));
+			Gdx.app.log(getClass().getSimpleName(), "dog.orientation   = " + (MathUtils.radiansToDegrees * dog.getOrientation()));
+			orientationDiff = dog.getOrientation() - dog.human.getOrientation();
+			Gdx.app.log(getClass().getSimpleName(), "orientationDiff = " + (MathUtils.radiansToDegrees * orientationDiff));
+			float wrappedOD = orientationDiff + Constants.PI;
+			Gdx.app.log(getClass().getSimpleName(), "wrappedOD = " + (MathUtils.radiansToDegrees * wrappedOD));
+			float startTime = GdxAI.getTimepiece().getTime();
+			stopTime = startTime + animationDesc.duration * wrappedOD / Constants.PI2;
+			Gdx.app.log(getClass().getSimpleName(), "animationDesc.totalDuration = " + animationDesc.duration);
+			Gdx.app.log(getClass().getSimpleName(), "animationDesc.playDuration = " + (stopTime - startTime));
+		}
+		return animationDesc;
+	}
+
+	@Override
+	public void start () {
+		stopTime = -1;
+		super.start();
 	}
 
 	@Override
 	public Status execute () {
 		DogCharacter dog = getObject();
-		if (GdxAI.getTimepiece().getTime() < stopTime + .2f) {
+		if (stopTime == -1 || GdxAI.getTimepiece().getTime() < stopTime + .2f) {
 			updateAnimation(dog);
 			return Status.RUNNING;
 		}

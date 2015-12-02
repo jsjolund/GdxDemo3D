@@ -24,21 +24,22 @@ import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 /**
  * @author davebaol
  */
-public abstract class MoveTaskBase extends LoopedAnimationTaskBase {
+public abstract class MovementAnimationTaskBase extends LoopedAnimationTaskBase {
 
 	@TaskAttribute(required=true)
-	public Gait gait;
+	public TaskAnimation gait;
 	
-	public MoveTaskBase () {
-		this.gait = Gait.Walk;
+	public MovementAnimationTaskBase () {
+		this.gait = TaskAnimation.Walk;
+	}
+	
+	@Override
+	protected TaskAnimation getTaskAnimation() {
+		return gait;
 	}
 
 	@Override
-	protected void startAnimation (DogCharacter dog) {
-		this.animationSpeedMultiplier = gait.animationSpeedMultiplier;
-		dog.animations.animate(gait.animationId, -1, 1, animationListener, 0.1f);
-
-		float steeringMultiplier = gait.getSteeringMultiplier();
+	protected void setSteeringLimits (DogCharacter dog, float steeringMultiplier) {
 		dog.setMaxLinearSpeed(DogSteerSettings.maxLinearSpeed * steeringMultiplier);
 		dog.setMaxLinearAcceleration(DogSteerSettings.maxLinearAcceleration * steeringMultiplier);
 		dog.setMaxAngularSpeed(DogSteerSettings.maxAngularSpeed * steeringMultiplier);
@@ -47,8 +48,8 @@ public abstract class MoveTaskBase extends LoopedAnimationTaskBase {
 
 	@Override
 	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
-		MoveTaskBase wanderTask = (MoveTaskBase)task;
-		wanderTask.gait = gait;
+		MovementAnimationTaskBase thisTask = (MovementAnimationTaskBase)task;
+		thisTask.gait = gait;
 		return super.copyTo(task);
 	}
 

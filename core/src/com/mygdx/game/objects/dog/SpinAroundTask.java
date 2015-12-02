@@ -16,7 +16,6 @@
 
 package com.mygdx.game.objects.dog;
 
-import com.mygdx.game.objects.DogCharacter;
 
 /**
  * @author davebaol
@@ -27,8 +26,8 @@ public class SpinAroundTask extends OneShotAnimationTaskBase {
 	}
 
 	@Override
-	public void startAnimation(DogCharacter dog) {
-		dog.animations.animate("armature|idle_search", 1, 1, animationListener, 0.1f);
+	protected TaskAnimation getTaskAnimation () {
+		return TaskAnimation.SpinAround;
 	}
 
 }

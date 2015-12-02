@@ -8,9 +8,11 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.objects.dog.TaskAnimation;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.steerers.WanderSteerer;
+import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
 
 /**
@@ -78,6 +80,14 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
+	
+	/*
+	 * Fields used to switch animation
+	 */
+	public TaskAnimation currentTaskAnimation;
+	public AnimationListener currentAnimationListener;
+	public TaskAnimation monitoredTaskAnimation;
+	public float switchAnimationTime;
 
 	public DogCharacter(Model model, String name,
 						Vector3 location, Vector3 rotation, Vector3 scale,

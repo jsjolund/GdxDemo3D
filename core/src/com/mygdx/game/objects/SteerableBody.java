@@ -194,7 +194,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		body.setGravity(GameEngine.engine.dynamicsWorld.getGravity());
 
 		if (steerer != null) {
-			steerer.stopSteering();
+			clearLinearVelocity = steerer.stopSteering();
 		}
 
 		steerer = null;
@@ -224,6 +224,9 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		// Update linear velocity trimming it to maximum speed
 		linearVelocity.set(body.getLinearVelocity().mulAdd(steering.linear, deltaTime).limit(getMaxLinearSpeed()));
 		body.setLinearVelocity(linearVelocity);
+
+		// Clear angular velocity possibly due to collision
+		body.setAngularVelocity(Vector3.Zero);
 		
 		// Maybe we should do this even if applySteering is not invoked
 		// since the entity might move because of other bodies that are pushing it 

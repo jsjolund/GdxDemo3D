@@ -23,15 +23,15 @@ import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 /**
  * @author davebaol
  */
-public class FollowPathTask extends MoveTaskBase {
+public class FollowPathTask extends MovementAnimationTaskBase {
 
 	public FollowPathTask () {
 	}
 
 	@Override
-	protected void startAnimation (DogCharacter dog) {
-		super.startAnimation(dog);
-		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * gait.getSteeringMultiplier());
+	protected void setSteeringLimits (DogCharacter dog, float steeringMultiplier) {
+		super.setSteeringLimits(dog, steeringMultiplier);
+		dog.followPathSteerer.followPathSB.setDecelerationRadius(DogSteerSettings.decelerationRadius * steeringMultiplier);
 	}
 
 	@Override
