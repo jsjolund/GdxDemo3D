@@ -173,7 +173,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		pathToRender.clear();
 		navMeshPointPath.clear();
 		navMeshGraphPath.clear();
-		return true;
+		return false;
 	}
 
 	boolean deadlockDetection;
