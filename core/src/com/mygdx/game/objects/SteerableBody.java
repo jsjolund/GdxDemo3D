@@ -129,7 +129,12 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				shape, mass,
 				belongsToFlag, collidesWithFlag,
 				callback, noDeactivate);
+		
+		// Set the bounding radius used by steering behaviors like collision avoidance, 
+		// raycast collision avoidance and some others. Note that calculation only takes
+		// into account dimensions on the horizontal plane since we are in 2.5D
 		this.boundingRadius = (boundingBox.getWidth() + boundingBox.getDepth()) / 4;
+
 		this.steerSettings = steerSettings;
 		setZeroLinearSpeedThreshold(steerSettings.getZeroLinearSpeedThreshold());
 
@@ -236,8 +241,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		linearVelocity.set(body.getLinearVelocity().mulAdd(steering.linear, deltaTime).limit(getMaxLinearSpeed()));
 		body.setLinearVelocity(linearVelocity);
 
-		// Clear angular velocity possibly due to collision
-		body.setAngularVelocity(Vector3.Zero);
+		// Failed attempt to clear angular velocity possibly due to collision
+		// Actually, this issue has been fixed by setting the angular factor
+		// to Vector3.Zero in SteerableBody constructor
+		//body.setAngularVelocity(Vector3.Zero);
 		
 		// Maybe we should do this even if applySteering is not invoked
 		// since the entity might move because of other bodies that are pushing it 

@@ -18,6 +18,8 @@ package com.mygdx.game.objects.dog;
 
 
 /**
+ * Idle task that makes the dog sit.
+ * 
  * @author davebaol
  */
 public class SitTask extends LoopedAnimationTaskBase {

@@ -18,6 +18,8 @@ package com.mygdx.game.objects.dog;
 
 
 /**
+ * A one shot animation task that makes the dog spin around.
+ * 
  * @author davebaol
  */
 public class SpinAroundTask extends OneShotAnimationTaskBase {

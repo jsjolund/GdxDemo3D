@@ -21,6 +21,8 @@ import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
+ * Movement task that makes the dog follow the current path.
+ * 
  * @author davebaol
  */
 public class FollowPathTask extends MovementAnimationTaskBase {

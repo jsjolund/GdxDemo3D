@@ -19,6 +19,8 @@ package com.mygdx.game.objects.dog;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
+ * Movement task that makes the dog wander.
+ * 
  * @author davebaol
  */
 public class WanderTask extends MovementAnimationTaskBase {

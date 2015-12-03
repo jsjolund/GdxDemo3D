@@ -18,6 +18,8 @@ package com.mygdx.game.objects.dog;
 
 
 /**
+ * Idle task that makes the dog lie down.
+ * 
  * @author davebaol
  */
 public class LieDownTask extends LoopedAnimationTaskBase {
