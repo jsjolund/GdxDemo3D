@@ -1,7 +1,7 @@
 import calculatePathToHuman:"com.mygdx.game.objects.dog.CalculatePathToHumanTask"
 import calculatePathToStick:"com.mygdx.game.objects.dog.CalculatePathToStickTask"
 import followPath:"com.mygdx.game.objects.dog.FollowPathTask"
-import adjustOrientation:"com.mygdx.game.objects.dog.AdjustOrientationTask"
+import spinAroundToFaceHuman:"com.mygdx.game.objects.dog.SpinAroundToFaceHumanTask"
 import setThrowButton:"com.mygdx.game.objects.dog.SetThrowButtonTask"
 import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
 import piss:"com.mygdx.game.objects.dog.PissTask"
@@ -27,7 +27,7 @@ sequence
   sequence  # ok the man want to play
     calculatePathToHuman
     followPath gait:"run"
-    adjustOrientation
+    spinAroundToFaceHuman
     setThrowButton enabled:true
     parallel
       humanWantToPlay?

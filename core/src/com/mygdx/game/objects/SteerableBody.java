@@ -132,7 +132,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		
 		// Set the bounding radius used by steering behaviors like collision avoidance, 
 		// raycast collision avoidance and some others. Note that calculation only takes
-		// into account dimensions on the horizontal plane since we are in 2.5D
+		// into account dimensions on the horizontal plane since we are steering in 2.5D
 		this.boundingRadius = (boundingBox.getWidth() + boundingBox.getDepth()) / 4;
 
 		this.steerSettings = steerSettings;
@@ -231,10 +231,10 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 
 	/**
 	 * Applies the linear component of the steering behaviour. As for the angular component,
-	 * the orientation of the model is set to follow the orientation of the path segments.
+	 * the orientation of the model and the body is set to follow the direction of motion (non independent facing).
 	 *
-	 * @param steering
-	 * @param deltaTime
+	 * @param steering the steering acceleration to apply
+	 * @param deltaTime the time between this frame and the previous one
 	 */
 	protected void applySteering(SteeringAcceleration<Vector3> steering, float deltaTime) {
 		// Update linear velocity trimming it to maximum speed
