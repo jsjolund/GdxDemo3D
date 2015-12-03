@@ -21,6 +21,8 @@ import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
+ * Action task that traces a path from the dog's current position to the stick.
+ * 
  * @author davebaol
  */
 public class CalculatePathToStickTask extends LeafTask<DogCharacter> {

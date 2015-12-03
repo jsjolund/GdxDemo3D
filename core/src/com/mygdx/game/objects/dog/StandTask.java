@@ -18,6 +18,8 @@ package com.mygdx.game.objects.dog;
 
 
 /**
+ * Idle task that makes the dog stand.
+ * 
  * @author davebaol
  */
 public class StandTask extends LoopedAnimationTaskBase {

@@ -26,6 +26,8 @@ import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Sounds;
 
 /**
+ * A one shot animation task that makes the dog spin around until it's facing its owner.
+ * 
  * @author davebaol
  */
 public class AdjustOrientationTask extends OneShotAnimationTaskBase {

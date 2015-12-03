@@ -25,6 +25,8 @@ import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.utilities.Constants;
 
 /**
+ * Action task that enables/disables the man's throw button.
+ * 
  * @author davebaol
  */
 public class SetThrowButtonTask extends LeafTask<DogCharacter> {

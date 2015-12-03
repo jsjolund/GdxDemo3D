@@ -21,6 +21,8 @@ import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
+ * Condition task that checks if the man wants to play.
+ * 
  * @author davebaol
  */
 public class HumanWantToPlayCondition extends LeafTask<DogCharacter> {

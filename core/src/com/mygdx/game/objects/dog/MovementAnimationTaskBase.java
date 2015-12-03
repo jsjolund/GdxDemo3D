@@ -22,6 +22,11 @@ import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.DogCharacter.DogSteerSettings;
 
 /**
+ * The base class for dog's movement animated tasks. It defines the task attribute {@link #gait} that allows you to specify
+ * how the dog should move, i.e. the animation to use. Typical values are {@link TaskAnimation#Walk} and {@link TaskAnimation#Run}
+ * but there's nothing stopping you from using any of the other values defined by the {@link TaskAnimation} enumeration, although
+ * most of them are not suitable for movement.
+ * 
  * @author davebaol
  */
 public abstract class MovementAnimationTaskBase extends LoopedAnimationTaskBase {

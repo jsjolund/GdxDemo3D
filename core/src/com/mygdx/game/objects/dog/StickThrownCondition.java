@@ -21,6 +21,8 @@ import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
+ * Condition task that checks if the man has thrown the stick.
+ * 
  * @author davebaol
  */
 public class StickThrownCondition extends LeafTask<DogCharacter> {

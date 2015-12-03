@@ -25,6 +25,8 @@ import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.pathfinding.Triangle;
 
 /**
+ * Action task that traces a path from the dog's current position to its owner (actually, 1 meter in front of him).
+ * 
  * @author davebaol
  */
 public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
