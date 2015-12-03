@@ -20,7 +20,7 @@ import com.mygdx.game.objects.DogCharacter;
 
 /**
  * The base class for dog's animated tasks that must last for one animation loop.
- * The task keeps running until the animation is completed, which makes the task succeeds. 
+ * The task keeps running until the animation is completed, which finally makes the task succeed. 
  * 
  * @author davebaol
  */
