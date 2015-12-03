@@ -17,7 +17,7 @@ import com.mygdx.game.utilities.Constants;
 
 /**
  * A dog character whose brain is modeled through a behavior tree.
- * 
+ *
  * @author jsjolund
  * @author davebaol
  */
@@ -80,7 +80,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
 	public boolean stickThrown;
-	
+
 	/*
 	 * Fields used to switch animation
 	 */
@@ -126,19 +126,27 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	}
 
 	@Override
-	public boolean handleMessage (Telegram telegram) {
+	public boolean handleMessage(Telegram telegram) {
 		switch (telegram.message) {
-		case Constants.MSG_DOG_LETS_PLAY:
-			humanWantToPlay = true;
-			stickThrown = false;
-			break;
-		case Constants.MSG_DOG_LETS_STOP_PLAYING:
-			humanWantToPlay = false;
-			break;
-		case Constants.MSG_DOG_STICK_THROWN:
-			stickThrown = true;
-			break;
+			case Constants.MSG_DOG_LETS_PLAY:
+				humanWantToPlay = true;
+				stickThrown = false;
+				break;
+			case Constants.MSG_DOG_LETS_STOP_PLAYING:
+				humanWantToPlay = false;
+				break;
+			case Constants.MSG_DOG_STICK_THROWN:
+				stickThrown = true;
+				break;
 		}
 		return true;
+	}
+
+
+	public Vector3 getFrontSpineBoneWorldDirection(Vector3 out) {
+		return getBoneDirection("front_spine", out);
+	}
+	public float getFrontSpineBoneOrientation() {
+		return getBoneOrientation("front_spine");
 	}
 }

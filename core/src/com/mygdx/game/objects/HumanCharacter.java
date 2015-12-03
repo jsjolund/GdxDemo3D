@@ -42,7 +42,7 @@ import com.mygdx.game.utilities.Sounds;
 
 /**
  * A human character whose brain is modeled through a finite state machine.
- * 
+ *
  * @author jsjolund
  */
 public class HumanCharacter extends Ragdoll {
@@ -362,10 +362,6 @@ public class HumanCharacter extends Ragdoll {
 
 	final FollowPathSteerer followPathSteerer;
 
-	private final Vector3 tmpNodePos = new Vector3();
-	private final Vector3 tmpNodeOffset = new Vector3();
-	private final Quaternion tmpModelRot = new Quaternion();
-
 	public HumanCharacter(Model model,
 						  String name,
 						  Vector3 location,
@@ -442,15 +438,4 @@ public class HumanCharacter extends Ragdoll {
 		return getBoneMidpointWorldPosition("left_hand", out);
 	}
 
-	public Vector3 getBoneMidpointWorldPosition(String nodeId, Vector3 out) {
-		Node node = modelInstance.getNode(nodeId);
-		Node endPointNode = (node.hasChildren()) ? node.getChild(0) : node;
-		endPointNode.globalTransform.getTranslation(tmpNodePos);
-		endPointNode.localTransform.getTranslation(tmpNodeOffset).scl(0.5f);
-		tmpNodePos.add(tmpNodeOffset);
-		modelInstance.transform.getRotation(tmpModelRot);
-		tmpModelRot.transform(tmpNodePos);
-		tmpNodePos.add(getPosition());
-		return out.set(tmpNodePos);
-	}
 }
