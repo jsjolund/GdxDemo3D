@@ -24,7 +24,7 @@ sequence
           wander gait:"walk"
           lieDown
           sit
-  sequence  # ok the man want to play
+  sequence  # ok the man wants to play
     calculatePathToHuman
     followPath gait:"run"
     spinAroundToFaceHuman
