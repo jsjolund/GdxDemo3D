@@ -28,7 +28,7 @@ import com.mygdx.game.utilities.Sounds;
  * 
  * @author davebaol
  */
-public class SpinAroundToFaceHumanTask extends OneShotAnimationTaskBase {
+public class SpinAroundToFaceHumanTask extends SpinAroundTask {
 
 	private static final float ORIENTATION_TOLERANCE = 8 * MathUtils.degreesToRadians; // 8 degrees tolerance
 
@@ -36,11 +36,6 @@ public class SpinAroundToFaceHumanTask extends OneShotAnimationTaskBase {
 	private boolean facingHuman;
 
 	public SpinAroundToFaceHumanTask () {
-	}
-
-	@Override
-	protected TaskAnimation getTaskAnimation () {
-		return TaskAnimation.SpinAround;
 	}
 
 	@Override
@@ -81,18 +76,17 @@ public class SpinAroundToFaceHumanTask extends OneShotAnimationTaskBase {
 
 				// Bark
 				Sounds.bark.play();
-				
-				// Set body and model orientation since the body does not rotate during spin around animation 
-				dog.setOrientation(currentDogOrientation);
-				
-				// Set stand animation
-				// Notice that we have change the animation instantaneously (transitionTime 0) to avoid
-				// the rapid but still noticeable rotation effect due to animation blending 
-				dog.animations.animate(TaskAnimation.Stand.animationId, 1, 1, animationListener, 0.0f);
-				updateAnimation(dog);
+
+				// Finish the animation
+				truncateAnimationCleanly(dog, currentDogOrientation);
 			}
 		}
 		return Status.RUNNING;
+	}
+
+	@Override
+	protected boolean mustTruncateAnimationCleanly() {
+		return !facingHuman;
 	}
 
 }

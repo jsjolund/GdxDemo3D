@@ -16,6 +16,8 @@
 
 package com.mygdx.game.objects.dog;
 
+import com.mygdx.game.objects.DogCharacter;
+
 
 /**
  * A one shot animation task that makes the dog spin around.
@@ -30,6 +32,38 @@ public class SpinAroundTask extends OneShotAnimationTaskBase {
 	@Override
 	protected TaskAnimation getTaskAnimation () {
 		return TaskAnimation.SpinAround;
+	}
+	
+	@Override
+	public void end() {
+		// Cleanly stop spinning around if task gets cancelled
+		if (mustTruncateAnimationCleanly()) {
+			truncateAnimationCleanly(getObject());
+		}
+		super.end();
+	}
+
+	protected boolean mustTruncateAnimationCleanly() {
+		return getStatus() == Status.CANCELLED;
+	}
+
+	protected void truncateAnimationCleanly(DogCharacter dog) {
+		// Get current model orientation
+		float currentDogOrientation = dog.getFrontSpineBoneOrientation();
+
+		// Finish animation
+		truncateAnimationCleanly(dog, currentDogOrientation);
+	}
+
+	protected void truncateAnimationCleanly(DogCharacter dog, float orientation) {
+		// Set body and model orientation since the body does not rotate during spin around animation 
+		dog.setOrientation(orientation);
+		
+		// Set stand animation
+		// Notice that we have to change the animation instantaneously to avoid the rapid but still
+		// noticeable rotation effect due to animation blending occurring when transitionTime > 0 
+		dog.animations.animate(TaskAnimation.Stand.animationId, 1, 1, animationListener, 0.0f);
+		updateAnimation(dog);
 	}
 
 }
