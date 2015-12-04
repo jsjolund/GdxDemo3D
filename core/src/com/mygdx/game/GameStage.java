@@ -357,7 +357,7 @@ public class GameStage extends Stage implements Observable {
 				HumanCharacter human = (HumanCharacter) character;
 				human.selected = true;
 				// Restore the controller based on the newly selected human
-				if (human.dog != null) {
+				if (human.dog != null && !human.stateMachine.isInState(HumanState.DEAD)) {
 					if (!human.dog.humanWantToPlay) {
 						this.setDogButton(whistleButton, human);
 					} else if (!human.dog.stickThrown) {
