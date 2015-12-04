@@ -14,35 +14,32 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.utilities;
+package com.mygdx.game.objects.dog;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.ai.btree.LeafTask;
+import com.badlogic.gdx.ai.btree.Task;
+import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.utilities.Sounds;
 
-public class Sounds {
+/**
+ * Action task that makes the dog whine.
+ * 
+ * @author davebaol
+ */
+public class WhineTask extends LeafTask<DogCharacter> {
 
-	static public Sound bark;
-	static public Sound whine;
-	static public Sound whistle;
-	
-	private Sounds () {
+	public WhineTask() {
 	}
 
-	public static void load() {
-		bark = load("sounds/bark.mp3");
-		whine = load("sounds/whine.mp3");
-		whistle = load("sounds/whistle.mp3");
+	@Override
+	public Status execute() {
+		Sounds.whine.play();
+		return Status.SUCCEEDED;
 	}
 
-	public static void dispose() {
-		bark.dispose();
-		whine.dispose();
-		whistle.dispose();
+	@Override
+	protected Task<DogCharacter> copyTo(Task<DogCharacter> task) {
+		return task;
 	}
 
-	private static Sound load(String file) {
-		Sound sound = Gdx.audio.newSound(Gdx.files.internal(file));
-		sound.play(0); // this should force loading on Android, so avoiding the wait on first play in game
-		return sound;
-	}
 }

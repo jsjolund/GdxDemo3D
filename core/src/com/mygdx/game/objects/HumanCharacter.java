@@ -401,6 +401,10 @@ public class HumanCharacter extends Ragdoll {
 		dog.human = this;
 	}
 
+	public boolean isDead() {
+		return stateMachine.getCurrentState() == HumanState.DEAD;
+	}
+
 	public boolean wantToPlay() {
 		return stateMachine.getCurrentState() == HumanState.WHISTLE;
 	}

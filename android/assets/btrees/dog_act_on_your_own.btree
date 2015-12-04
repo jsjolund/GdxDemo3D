@@ -1,0 +1,12 @@
+import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
+import sit:"com.mygdx.game.objects.dog.SitTask"
+import wander:"com.mygdx.game.objects.dog.WanderTask"
+
+    
+parallel policy:"selector"
+  wait seconds:"uniform,3,6"
+  randomSelector
+    wander gait:"run"
+    wander gait:"walk"
+    lieDown
+    sit
