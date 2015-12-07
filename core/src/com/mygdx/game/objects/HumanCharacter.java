@@ -186,7 +186,7 @@ public class HumanCharacter extends Ragdoll {
 
 				// If the entity owns a dog tell him you don't want to play and clear dog button
 				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, Constants.MSG_DOG_LETS_STOP_PLAYING);
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, Constants.MSG_DOG_HUMAN_IS_DEAD);
 					MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_CLEAR_DOG_BUTTON, entity);
 				}
 			}

@@ -34,7 +34,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		ACT_ON_YOUR_OWN() {
 			@Override
 			protected boolean canEnter(DogCharacter dog) {
-				return !dog.humanWantToPlay && !dog.human.isDead();
+				return !dog.humanWantToPlay && !dog.humanIsDead;
 			}
 		},
 		PLAY_WITH_HUMAN() {
@@ -51,7 +51,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		FEEL_SAD_FOR_HUMAN_DEATH() {
 			@Override
 			protected boolean canEnter(DogCharacter dog) {
-				return !dog.alreadyCriedForHumanDeath && dog.human.isDead() && dog.isHumanCloseEnough(20);
+				return !dog.alreadyCriedForHumanDeath && dog.humanIsDead && dog.isHumanCloseEnough(20);
 			}
 			@Override
 			public void exit(DogCharacter dog) {
@@ -165,6 +165,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public final WanderSteerer wanderSteerer;
 	public HumanCharacter human;
 	public boolean humanWantToPlay;
+	public boolean humanIsDead;
 	public boolean stickThrown;
 	public boolean alreadyCriedForHumanDeath;
 
@@ -210,10 +211,11 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		// Create wander steerer
 		wanderSteerer = new WanderSteerer(this);
 
-		// Init some flags
+		// Init flags
 		humanWantToPlay = false;
 		stickThrown = false;
 		alreadyCriedForHumanDeath = false;
+		humanIsDead = false;
 	}
 
 	public boolean followPath(Triangle targetTriangle, Vector3 targetPoint) {
@@ -236,7 +238,13 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 			case Constants.MSG_DOG_LETS_STOP_PLAYING:
 				humanWantToPlay = false;
 				break;
+			case Constants.MSG_DOG_HUMAN_IS_DEAD:
+				humanIsDead = true;
+				humanWantToPlay = false;
+				alreadyCriedForHumanDeath = false;
+				break;
 			case Constants.MSG_DOG_HUMAN_IS_RESURRECTED:
+				humanIsDead = false;
 				alreadyCriedForHumanDeath = false;
 				break;
 			case Constants.MSG_DOG_STICK_THROWN:
