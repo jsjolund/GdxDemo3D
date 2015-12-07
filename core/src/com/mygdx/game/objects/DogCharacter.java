@@ -2,7 +2,9 @@ package com.mygdx.game.objects;
 
 import java.util.EnumMap;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.btree.BehaviorTree;
+import com.badlogic.gdx.ai.btree.Task.Status;
 import com.badlogic.gdx.ai.btree.utils.BehaviorTreeLibraryManager;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.State;
@@ -21,7 +23,7 @@ import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
 
 /**
- * A dog character whose brain is modeled through a behavior tree.
+ * A dog character whose brain is modeled through some behavior trees coordinated by a state machine.
  *
  * @author jsjolund
  * @author davebaol
@@ -29,42 +31,78 @@ import com.mygdx.game.utilities.Constants;
 public class DogCharacter extends GameCharacter implements Telegraph {
 
 	public enum DogState implements State<DogCharacter> {
-		ACT_ON_YOUR_OWN,
-		PLAY_WITH_HUMAN,
-		FEEL_SAD_FOR_HUMAN_DEATH;
+		ACT_ON_YOUR_OWN() {
+			@Override
+			protected boolean canEnter(DogCharacter dog) {
+				return !dog.humanWantToPlay && !dog.human.isDead();
+			}
+		},
+		PLAY_WITH_HUMAN() {
+			@Override
+			protected boolean canEnter(DogCharacter dog) {
+				return dog.humanWantToPlay;
+			}
+			@Override
+			public void exit(DogCharacter dog) {
+				super.exit(dog);
+				dog.humanWantToPlay = false;
+			}
+		},
+		FEEL_SAD_FOR_HUMAN_DEATH() {
+			@Override
+			protected boolean canEnter(DogCharacter dog) {
+				return !dog.alreadyCriedForHumanDeath && dog.human.isDead() && dog.isHumanCloseEnough(20);
+			}
+			@Override
+			public void exit(DogCharacter dog) {
+				super.exit(dog);
+				dog.alreadyCriedForHumanDeath = true;
+			}
+		};
+
+		protected abstract boolean canEnter(DogCharacter dog);
 
 		@Override
-		public void enter(DogCharacter entity) {
-			System.out.println("enter state " + name());
-			entity.activeBehaviorTree = entity.bTrees.get(this);
+		public void enter(DogCharacter dog) {
+			Gdx.app.log("DogState", "Enter state " + name());
+			// Activate the tree of this state
+			dog.activeBehaviorTree = dog.bTrees.get(this);
 		}
+
+		private static final DogState[] priority = new DogState[] {
+			FEEL_SAD_FOR_HUMAN_DEATH, 
+			PLAY_WITH_HUMAN, 
+			ACT_ON_YOUR_OWN
+		};
 
 		@Override
 		public void update(DogCharacter dog) {
-			if (dog.human == null) {
-				dog.activeBehaviorTree.step();
-			} else if (this != FEEL_SAD_FOR_HUMAN_DEATH && !dog.alreadyCriedForHumanDeath && dog.human.isDead() && dog.isHumanCloseEnough(20)) {
-				dog.alreadyCriedForHumanDeath = true;
-				dog.bTreeSwitchFSM.changeState(FEEL_SAD_FOR_HUMAN_DEATH);
-			} else if (this != PLAY_WITH_HUMAN && dog.humanWantToPlay) {
-				dog.bTreeSwitchFSM.changeState(PLAY_WITH_HUMAN);
-			} else if(this != ACT_ON_YOUR_OWN && !dog.humanWantToPlay && !dog.human.isDead()) {
-				dog.bTreeSwitchFSM.changeState(ACT_ON_YOUR_OWN);
+			if (dog.human != null) {
+				for (int i = 0 ; i < priority.length; i++) {
+					DogState state = priority[i];
+					// Should we change behavior tree?
+					if (this != state && state.canEnter(dog)) {
+						dog.bTreeSwitchFSM.changeState(state);
+						return;
+					}
+				}
 			}
-			else {
-				dog.activeBehaviorTree.step();
-			}
+			// No behavior tree changed, so perform one step of the active one 
+			dog.activeBehaviorTree.step();
 		}
-
+		
 		@Override
 		public void exit(DogCharacter dog) {
-			System.out.println("exit state " + name());
-			dog.activeBehaviorTree.cancel();
+			Gdx.app.log("DogState", "Exit state " + name());
+			// Cancel the active tree, if running
+			if (dog.activeBehaviorTree.getStatus() == Status.RUNNING) {
+				dog.activeBehaviorTree.cancel();
+			}
 			dog.activeBehaviorTree = null;
 		}
 
 		@Override
-		public boolean onMessage (DogCharacter entity, Telegram telegram) {
+		public boolean onMessage (DogCharacter dog, Telegram telegram) {
 			return false;
 		}
 	}
@@ -172,6 +210,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		// Create wander steerer
 		wanderSteerer = new WanderSteerer(this);
 
+		// Init some flags
 		humanWantToPlay = false;
 		stickThrown = false;
 		alreadyCriedForHumanDeath = false;
@@ -196,6 +235,8 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 				break;
 			case Constants.MSG_DOG_LETS_STOP_PLAYING:
 				humanWantToPlay = false;
+				break;
+			case Constants.MSG_DOG_HUMAN_IS_RESURRECTED:
 				alreadyCriedForHumanDeath = false;
 				break;
 			case Constants.MSG_DOG_STICK_THROWN:

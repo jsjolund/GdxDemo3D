@@ -202,7 +202,7 @@ public class HumanCharacter extends Ragdoll {
 
 				// If the entity owns a dog re-enable whistle
 				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, Constants.MSG_DOG_LETS_STOP_PLAYING);
+					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 1.5f), null, entity.dog, Constants.MSG_DOG_HUMAN_IS_RESURRECTED);
 					MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE, entity);
 				}
 			}
