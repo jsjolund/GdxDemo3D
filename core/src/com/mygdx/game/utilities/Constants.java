@@ -48,6 +48,8 @@ public final class Constants {
 	public static final int MSG_DOG_LETS_PLAY = 1;
 	public static final int MSG_DOG_LETS_STOP_PLAYING = 2;
 	public static final int MSG_DOG_STICK_THROWN = 3;
+	public static final int MSG_DOG_HUMAN_IS_DEAD = 4;
+	public static final int MSG_DOG_HUMAN_IS_RESURRECTED = 5;
 
 	public static final int MSG_GUI_CLEAR_DOG_BUTTON = 10;
 	public static final int MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE = 11;
