@@ -184,7 +184,7 @@ public class HumanCharacter extends Ragdoll {
 				// Set ragdoll control
 				entity.setRagdollControl(true);
 
-				// If the entity owns a dog tell him you don't want to play and clear dog button
+				// Dog owners inform the dog of the death and clear dog button
 				if (entity.dog != null) {
 					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog, Constants.MSG_DOG_HUMAN_IS_DEAD);
 					MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_CLEAR_DOG_BUTTON, entity);
@@ -200,14 +200,13 @@ public class HumanCharacter extends Ragdoll {
 				entity.animations.paused = false;
 				entity.setRagdollControl(false);
 
-				// If the entity owns a dog re-enable whistle
+				// Dog owners inform the dog of the resurrection and enable whistle button
 				if (entity.dog != null) {
 					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 1.5f), null, entity.dog, Constants.MSG_DOG_HUMAN_IS_RESURRECTED);
 					MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE, entity);
 				}
 			}
-		},
-		GLOBAL() {};
+		};
 
 		public final HumanState idleState;
 		protected final float animationMultiplier;
@@ -389,7 +388,7 @@ public class HumanCharacter extends Ragdoll {
 		stateAnimationListeners.put(HumanState.THROW, new AnimationListener());
 
 		// Create the state machine
-		stateMachine = new DefaultStateMachine<HumanCharacter, HumanState>(this, HumanState.GLOBAL);
+		stateMachine = new DefaultStateMachine<HumanCharacter, HumanState>(this);
 		// Set the steering variables associated with default move state (walking)
 		stateMachine.changeState(moveState);
 		// Then make the character idle
@@ -417,7 +416,12 @@ public class HumanCharacter extends Ragdoll {
 
 	@Override
 	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
-		followPathSteerer.calculateNewPath(ray, visibleLayers);
+		// A man only moves if is idle or already moving
+		// For instance, the movement request will be ignored if the man is throwing the stick
+		HumanState state = stateMachine.getCurrentState();
+		if (state.isIdleState() || state.isMovementState()) {
+			followPathSteerer.calculateNewPath(ray, visibleLayers);
+		}
 	}
 
 	public void handleStateCommand(HumanState newState) {

@@ -54,5 +54,6 @@ public final class Constants {
 	public static final int MSG_GUI_CLEAR_DOG_BUTTON = 10;
 	public static final int MSG_GUI_SET_DOG_BUTTON_TO_WHISTLE = 11;
 	public static final int MSG_GUI_SET_DOG_BUTTON_TO_THROW = 12;
+	public static final int MSG_GUI_UPDATE_DOG_BUTTON = 13;
 
 }

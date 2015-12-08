@@ -9,6 +9,7 @@ import com.badlogic.gdx.ai.btree.utils.BehaviorTreeLibraryManager;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.State;
 import com.badlogic.gdx.ai.fsm.StateMachine;
+import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.ai.msg.Telegraph;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -250,6 +251,10 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 			case Constants.MSG_DOG_STICK_THROWN:
 				stickThrown = true;
 				break;
+		}
+		// Update GUI buttons if the dog's owner is selected
+		if (this.human != null && this.human.selected) {
+			MessageManager.getInstance().dispatchMessage(Constants.MSG_GUI_UPDATE_DOG_BUTTON, this.human);
 		}
 		return true;
 	}
