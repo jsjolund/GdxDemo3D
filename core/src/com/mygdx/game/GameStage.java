@@ -357,24 +357,16 @@ public class GameStage extends Stage implements Observable {
 				HumanCharacter human = (HumanCharacter) character;
 				human.selected = true;
 				// Restore the controller based on the newly selected human
-				if (human.dog != null && !human.stateMachine.isInState(HumanState.DEAD)) {
-					if (!human.dog.humanWantToPlay) {
-						this.setDogButton(whistleButton, human);
-					} else if (!human.dog.stickThrown) {
-						this.setDogButton(throwButton, human);
-					} else {
-						this.clearDogButton(human);
-					}
-				} else {
-					this.clearDogButton(human);
-				}
+				updateDogButton(human);
 				for (CharacterButton btn : radioGroup.getButtons()) {
-					if (btn.state == HumanState.DEAD && human.stateMachine.getCurrentState() == HumanState.DEAD) {
+					if (btn.state == HumanState.DEAD && human.isDead()) {
 						btn.setChecked(true);
 						break;
 					}
-					if (btn.state == human.getCurrentMoveState())
+					if (btn.state == human.getCurrentMoveState()) {
 						btn.setChecked(true);
+						break;
+					}
 				}
 				this.setVisible(true);
 			} else if (character instanceof DogCharacter) {
@@ -391,6 +383,23 @@ public class GameStage extends Stage implements Observable {
 				selectedCharacter.handleMovementRequest(ray, visibleLayers);
 			}
 		}
+		
+		// Restore the controller for the given human if it is currently selected
+		private void updateDogButton(HumanCharacter human) {
+			if (selectedCharacter != null && selectedCharacter == human) {
+				if (human.dog != null && !human.isDead()) {
+					if (!human.dog.humanWantToPlay) {
+						this.setDogButton(whistleButton, human);
+					} else if (!human.dog.stickThrown) {
+						this.setDogButton(throwButton, human);
+					} else {
+						this.clearDogButton(human);
+					}
+				} else {
+					this.clearDogButton(human);
+				}
+			}
+		}
 
 		@Override
 		public boolean handleMessage(Telegram telegram) {
@@ -403,6 +412,9 @@ public class GameStage extends Stage implements Observable {
 					return true;
 				case Constants.MSG_GUI_CLEAR_DOG_BUTTON:
 					clearDogButton((HumanCharacter) telegram.extraInfo);
+					return true;
+				case Constants.MSG_GUI_UPDATE_DOG_BUTTON:
+					updateDogButton((HumanCharacter) telegram.extraInfo);
 					return true;
 			}
 			return false;
