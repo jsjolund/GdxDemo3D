@@ -30,6 +30,8 @@ import com.mygdx.game.utilities.MyShapeRenderer;
 import com.mygdx.game.utilities.Steerer;
 
 /**
+ * Base class for steerers requiring collision avoidance behavior with priority. 
+ * 
  * @author davebaol
  */
 public abstract class CollisionAvoidanceSteererBase extends Steerer {
