@@ -37,6 +37,8 @@ import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
 /**
+ * A steerer to follow a path while avoiding collisions. 
+ * 
  * @author jsjolund
  * @author davebaol
  */
@@ -77,6 +79,8 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	 */
 	private final Array<Vector3> centerOfMassPath = new Array<Vector3>();
 
+	private Vector3 tmpVec1 = new Vector3();
+
 	public FollowPathSteerer(final SteerableBody steerableBody) {
 		super(steerableBody);
 
@@ -87,8 +91,6 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 
 		this.prioritySteering.add(followPathSB);
 	}
-
-	private Vector3 tmpVec1 = new Vector3();
 
 	public boolean calculateNewPath(Ray ray, Bits visibleLayers) {
 		if (GameEngine.engine.getScene().navMesh.getPath(
@@ -233,7 +235,8 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		 * Path following management
 		 */
 
-		// Check if we are at the end of the path
+		// Check to see if the entity has reached the end of the path
+//		if (steering.isZero() && followPathSB.getInternalTargetPosition().dst2(linePath.getEndPoint()) < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
 		if (steering.isZero() && steerableBody.getPosition().dst2(linePath.getEndPoint()) < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
 			return false;
 		}

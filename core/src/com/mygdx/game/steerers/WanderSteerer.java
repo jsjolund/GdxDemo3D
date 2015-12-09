@@ -26,6 +26,8 @@ import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
 /**
+ * A steerer to wander while avoiding collisions. 
+ * 
  * @author davebaol
  */
 public class WanderSteerer extends CollisionAvoidanceSteererBase {
@@ -74,7 +76,6 @@ public class WanderSteerer extends CollisionAvoidanceSteererBase {
 	public boolean stopSteering () {
 		return false;
 	}
-	
 	
 	@Override
 	public void draw(GameRenderer gameRenderer) {
