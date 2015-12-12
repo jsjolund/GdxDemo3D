@@ -16,9 +16,9 @@
 
 package com.mygdx.game.steerers;
 
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
-import com.badlogic.gdx.ai.steer.SteeringBehavior;
 import com.badlogic.gdx.ai.steer.behaviors.FollowPath;
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath;
 import com.badlogic.gdx.ai.steer.utils.paths.LinePath.LinePathParam;
@@ -29,6 +29,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.GameRenderer;
+import com.mygdx.game.objects.GameObject;
 import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
@@ -80,6 +81,10 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	private final Array<Vector3> centerOfMassPath = new Array<Vector3>();
 
 	private Vector3 tmpVec1 = new Vector3();
+	private Ray stationarityRayLow = new Ray();
+	private Ray stationarityRayHigh = new Ray();
+	private float stationarityRayLength;
+	private Color stationarityRayColor;
 
 	public FollowPathSteerer(final SteerableBody steerableBody) {
 		super(steerableBody);
@@ -136,7 +141,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 			centerOfMassPath.add(new Vector3(v).add(0, steerableBody.halfExtents.y, 0));
 		}
 		linePath.createPath(centerOfMassPath);
-
+		
 		followPathSB.setTimeToTarget(steerableBody.steerSettings.getTimeToTarget())
 				.setArrivalTolerance(steerableBody.steerSettings.getArrivalTolerance())
 				.setDecelerationRadius(steerableBody.steerSettings.getDecelerationRadius())
@@ -158,11 +163,6 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	 */
 	public int getCurrentSegmentIndex() {
 		return currentSegmentIndex;
-	}
-
-	@Override
-	public SteeringBehavior<Vector3> getSteeringBehavior() {
-		return prioritySteering;
 	}
 
 	@Override
@@ -234,10 +234,10 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		/*
 		 * Path following management
 		 */
+		float dst2FromPathEnd = steerableBody.getPosition().dst2(linePath.getEndPoint());
 
 		// Check to see if the entity has reached the end of the path
-//		if (steering.isZero() && followPathSB.getInternalTargetPosition().dst2(linePath.getEndPoint()) < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
-		if (steering.isZero() && steerableBody.getPosition().dst2(linePath.getEndPoint()) < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
+		if (steering.isZero() && dst2FromPathEnd < followPathSB.getArrivalTolerance() * followPathSB.getArrivalTolerance()) {
 			return false;
 		}
 
@@ -247,6 +247,36 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 				deadlockDetection = false;
 		}
 		
+		// If linear speed is very low and the entity is colliding something at his feet, like a step of the stairs
+		// for instance, we have to increase the acceleration to make him go upstairs. 
+		float minVel = .2f;
+		if (steerableBody.getLinearVelocity().len2() > minVel * minVel) {
+			stationarityRayColor = null;
+		} else {
+			steerableBody.getGroundPosition(stationarityRayLow.origin).add(0, 0.05f, 0);
+			steerableBody.getDirection(stationarityRayLow.direction).scl(1f, 0f, 1f).nor();
+			stationarityRayLength = steerableBody.getBoundingRadius() + 0.4f;
+			Entity hitEntityLow = GameEngine.engine.rayTest(stationarityRayLow, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
+			if (hitEntityLow instanceof GameObject) {
+				stationarityRayColor = Color.RED;
+				stationarityRayHigh.set(stationarityRayLow);
+				stationarityRayHigh.origin.add(0, .8f, 0);
+				Entity hitEntityHigh = GameEngine.engine.rayTest(stationarityRayHigh, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
+				if (hitEntityHigh == null) {
+					// The entity is touching a small obstacle with his feet like a step of the stairs.
+					// Increase the acceleration to make him go upstairs.
+					steering.linear.scl(8);
+				}
+				else if (hitEntityHigh instanceof GameObject) {
+					// The entity is touching a higher obstacle like a tree, a column or something.
+					// Here we should invent something to circumvent this kind of obstacles :)
+					//steering.linear.rotateRad(Constants.V3_UP, Constants.PI0_25);
+				}
+			} else {
+				stationarityRayColor = Color.BLUE;
+			}
+		}
+
 		return true;
 	}
 
@@ -277,6 +307,13 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 				Vector3 q = pathToRender.get(i++);
 				shapeRenderer.line(p, q);
 				p = q;
+			}			
+
+			// Draw stationarity rays
+			if (stationarityRayColor != null) {
+				shapeRenderer.setColor(stationarityRayColor);
+				shapeRenderer.line(stationarityRayLow.origin, tmpVec1.set(stationarityRayLow.origin).mulAdd(stationarityRayLow.direction, stationarityRayLength));
+				shapeRenderer.line(stationarityRayHigh.origin, tmpVec1.set(stationarityRayHigh.origin).mulAdd(stationarityRayHigh.direction, stationarityRayLength));
 			}
 
 			shapeRenderer.end();

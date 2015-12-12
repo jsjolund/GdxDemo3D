@@ -168,7 +168,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			// Apply steering acceleration since this character is steering
 			applySteering(steeringOutput, deltaTime);
 			
-		} else if (wasSteering) {
+		} else { //if (wasSteering) {
 			// Stop steering since this character is not steering now but was steering before
 			stopSteering(true);
 		}
@@ -181,7 +181,6 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	protected void startSteering() {
 		wasSteering = true;
 		body.setFriction(0);
-		body.setGravity(Vector3.Zero);
 		modelTransform.getRotation(currentOrientation, true);
 		if (steerer != null) {
 			steerer.startSteering();
@@ -206,8 +205,6 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 				currentOrientation.getPitch(),
 				currentOrientation.getRoll()).setTranslation(position);
 		body.setWorldTransform(modelTransform);
-
-		body.setGravity(GameEngine.engine.dynamicsWorld.getGravity());
 
 		if (steerer != null) {
 			clearLinearVelocity = steerer.stopSteering();

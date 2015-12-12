@@ -94,7 +94,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 
 			if (entity instanceof GameModel) {
 				GameModel model = (GameModel) entity;
-				if (hitFraction < this.hitFraction && model.visibleOnLayers.intersects(layers)) {
+				if (hitFraction < this.hitFraction && (layers == null || model.visibleOnLayers.intersects(layers))) {
 					this.hitFraction = hitFraction;
 					super.addSingleResult(rayResult, normalInWorldSpace);
 					return hitFraction;
@@ -182,7 +182,9 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		dynamicsWorld.rayTest(rayFrom, rayTo, callback);
 
 		if (callback.hasHit()) {
-			callback.getHitPointWorld(hitPointWorld);
+			if (hitPointWorld != null) {
+				callback.getHitPointWorld(hitPointWorld);
+			}
 			long entityId = callback.getCollisionObject().getUserPointer();
 			return getEntity(entityId);
 		}
