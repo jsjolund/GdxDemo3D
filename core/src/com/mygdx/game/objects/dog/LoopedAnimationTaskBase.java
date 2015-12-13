@@ -58,7 +58,8 @@ public abstract class LoopedAnimationTaskBase extends LeafTask<DogCharacter> {
 
 	protected AnimationDesc startAnimation (DogCharacter dog) {
 		int loopCount = -1;
-		if (animationListener != null && animationListener != dog.currentAnimationListener) {
+//		if (animationListener != null && animationListener != dog.currentAnimationListener) {
+		if (animationListener != null) {
 			animationListener.setAnimationCompleted(false);
 			loopCount = getAnimationLoopCount();
 		}
