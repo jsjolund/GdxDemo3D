@@ -17,7 +17,6 @@
 package com.mygdx.game;
 
 
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputMultiplexer;
@@ -57,6 +56,7 @@ import com.mygdx.game.settings.ShaderSettings;
 import com.mygdx.game.ui.*;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Constants;
+import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.Observable;
 import com.mygdx.game.utilities.Observer;
 

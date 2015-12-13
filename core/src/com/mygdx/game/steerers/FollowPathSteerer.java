@@ -16,7 +16,6 @@
 
 package com.mygdx.game.steerers;
 
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.steer.SteeringAcceleration;
 import com.badlogic.gdx.ai.steer.behaviors.FollowPath;
@@ -35,6 +34,7 @@ import com.mygdx.game.pathfinding.NavMeshGraphPath;
 import com.mygdx.game.pathfinding.NavMeshPointPath;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.MyShapeRenderer;
 
 /**

@@ -19,7 +19,6 @@ allprojects {
         gdxVersion = '1.7.2-SNAPSHOT'
         roboVMVersion = '1.9.0'
         box2DLightsVersion = '1.4'
-        ashleyVersion = '1.6.0'
         aiVersion = '1.6.1-SNAPSHOT'
     }
 
@@ -67,7 +66,6 @@ project(":android") {
         natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
         compile "com.badlogicgames.gdx:gdx-controllers:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-controllers-android:$gdxVersion"
-        compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "com.badlogicgames.gdx:gdx-ai:$aiVersion"
     }
 }
@@ -97,7 +95,6 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-bullet:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-controllers:$gdxVersion"
-        compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "com.badlogicgames.gdx:gdx-ai:$aiVersion"
     }
 }

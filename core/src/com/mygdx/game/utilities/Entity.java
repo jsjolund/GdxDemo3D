@@ -14,26 +14,20 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.mygdx.game.objects;
+package com.mygdx.game.utilities;
 
-import com.badlogic.gdx.math.collision.Ray;
-import com.badlogic.gdx.utils.Bits;
-import com.mygdx.game.utilities.Entity;
 
-/**
- * @author jsjolund
- */
-public abstract class GameObject extends Entity {
-	public final String name;
+public class Entity {
 
-	public GameObject(String name) {
-		this.name = name;
+	long uuid;
+
+	/** Creates an empty Entity. */
+	public Entity () {
 	}
 
-	public abstract void update(float deltaTime);
-
-	public abstract void dispose();
-
-	public void handleMovementRequest(Ray ray, Bits visibleLayers) {
+	/** @return The Entity's unique id. */
+	public long getId () {
+		return uuid;
 	}
+
 }

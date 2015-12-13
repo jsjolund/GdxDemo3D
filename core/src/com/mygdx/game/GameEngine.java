@@ -16,8 +16,6 @@
 
 package com.mygdx.game;
 
-import com.badlogic.ashley.core.Entity;
-import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.graphics.Camera;
@@ -37,6 +35,8 @@ import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.settings.GameSettings;
+import com.mygdx.game.utilities.Engine;
+import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.Observer;
 
 import java.util.Iterator;
@@ -49,7 +49,7 @@ import java.util.Iterator;
  *
  * @author jsjolund
  */
-public class GameEngine extends PooledEngine implements Disposable, Observer {
+public class GameEngine extends Engine implements Disposable, Observer {
 
 	/**
 	 * A ClosestRayResultCallback which takes object layers into account (e.g. house floors)
@@ -352,10 +352,7 @@ public class GameEngine extends PooledEngine implements Disposable, Observer {
 		debugDrawer.end();
 	}
 
-	@Override
 	public void update(float deltaTime) {
-		super.update(deltaTime);
-
 		// Update AI time
 		GdxAI.getTimepiece().update(deltaTime);
 

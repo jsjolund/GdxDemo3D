@@ -176,7 +176,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	/**
-	 * Starts steering; this clears friction and gravity since this character is now controlled by the steerer.
+	 * Starts steering; this clears friction since this character is now controlled by the steerer.
 	 */
 	protected void startSteering() {
 		wasSteering = true;
@@ -188,7 +188,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	}
 
 	/**
-	 * Stops steering; this restores normal friction and gravity so it cannot slide down most slopes.
+	 * Stops steering; this restores normal friction so it cannot slide down most slopes.
 	 * Removes any angular velocity the body accumulated.
 	 * Sets the body to the orientation of the model.
 	 * @param clearLinearVelocity whether linear velocity should be cleared or not 

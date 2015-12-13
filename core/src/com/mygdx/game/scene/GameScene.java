@@ -16,7 +16,6 @@
 
 package com.mygdx.game.scene;
 
-import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -43,6 +42,7 @@ import com.mygdx.game.blender.objects.BlenderModel;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.Constants;
+import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
 
