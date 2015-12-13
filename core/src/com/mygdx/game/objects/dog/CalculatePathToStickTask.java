@@ -18,7 +18,11 @@ package com.mygdx.game.objects.dog;
 
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.ai.btree.Task.Status;
+import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.GameEngine;
 import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.pathfinding.Triangle;
 
 /**
  * Action task that traces a path from the dog's current position to the stick.
@@ -40,9 +44,14 @@ public class CalculatePathToStickTask extends LeafTask<DogCharacter> {
 
 	@Override
 	public Status execute () {
+		DogCharacter dog = getObject();
+
 		// TODO: calculate destination and path 
+		Triangle randomTri = GameEngine.engine.getScene().navMesh.getRandomTriangle();
+		Vector3 randomPoint = new Vector3();
+		randomTri.getRandomPoint(randomPoint);
 		
-		return Status.SUCCEEDED;
+		return  dog.followPath(randomTri, randomPoint) ? Status.SUCCEEDED : Status.FAILED;
 	}
 
 	@Override
