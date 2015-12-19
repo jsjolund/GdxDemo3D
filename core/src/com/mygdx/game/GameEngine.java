@@ -131,7 +131,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	// Ugly hack to access the engine from anywhere
 	public static GameEngine engine;
 	// Bullet classes
-	public final btDynamicsWorld dynamicsWorld;
+	private final btDynamicsWorld dynamicsWorld;
 	private final btDispatcher dispatcher;
 	private final btConstraintSolver constraintSolver;
 	private final btDbvtBroadphase broadphase;
@@ -205,7 +205,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		scene.getGameObjects(objs);
 		for (GameObject obj : objs) {
 			addEntity(obj);
-			
+
 			// TODO: handle this in a better way
 			// Ideally the engine should not know the name of the entities in the scene
 			if (obj.name.equals("human") || obj.name.equals("dog")) {
@@ -350,6 +350,10 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		debugDrawer.begin(camera);
 		dynamicsWorld.debugDrawWorld();
 		debugDrawer.end();
+	}
+
+	public void setDebugMode(int mode) {
+		debugDrawer.setDebugMode(mode);
 	}
 
 	public void update(float deltaTime) {

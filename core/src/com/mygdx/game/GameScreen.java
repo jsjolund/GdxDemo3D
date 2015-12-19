@@ -28,7 +28,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
-import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw.DebugDrawModes;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
@@ -62,9 +61,8 @@ public class GameScreen implements Screen {
 	private final GhostCamera camera;
 	private final AssetManager assets;
 	private final ShapeRenderer shapeRenderer;
-	private final btIDebugDraw debugDraw;
 	private final CameraController cameraController;
-	private final GameRenderer renderSys;
+	private final GameRenderer renderer;
 	private final GameSceneManager sceneManager;
 
 	public GameScreen(int reqWidth, int reqHeight) {
@@ -150,18 +148,16 @@ public class GameScreen implements Screen {
 
 		defaultScene.setToSceneCamera(camera);
 
-		renderSys = new GameRenderer(viewport, camera, engine);
-		renderSys.setEnvironmentLights(defaultScene.lights, defaultScene.shadowCameraDirection);
+		renderer = new GameRenderer(viewport, camera, engine);
+		renderer.setEnvironmentLights(defaultScene.lights, defaultScene.shadowCameraDirection);
 		Billboard markerBillboard = defaultScene.spawnSelectionBillboard("marker", camera);
-		renderSys.setSelectionMarker(markerBillboard);
-
-		debugDraw = engine.dynamicsWorld.getDebugDrawer();
+		renderer.setSelectionMarker(markerBillboard);
 
 		cameraController = new CameraController(camera);
 		cameraController.setWorldBoundingBox(defaultScene.worldBounds);
 
 		stage = new GameStage(engine, viewport, cameraController);
-		stage.addObserver(renderSys);
+		stage.addObserver(renderer);
 		stage.addObserver(engine);
 
 		// Create humans by supplying the name of the shared blueprint "human", along with position
@@ -202,8 +198,7 @@ public class GameScreen implements Screen {
 		stage.dispose();
 		assets.dispose();
 		shapeRenderer.dispose();
-		debugDraw.dispose();
-		renderSys.dispose();
+		renderer.dispose();
 
 		engine.dispose();
 	}
@@ -223,7 +218,7 @@ public class GameScreen implements Screen {
 		shapeRenderer.end();
 
 		engine.update(delta);
-		renderSys.update(delta);
+		renderer.update(delta);
 
 		if (DebugViewSettings.drawCollShapes || DebugViewSettings.drawConstraints) {
 			int mode = 0;
@@ -234,7 +229,7 @@ public class GameScreen implements Screen {
 			if (DebugViewSettings.drawCollShapes) {
 				mode |= DebugDrawModes.DBG_DrawWireframe;
 			}
-			debugDraw.setDebugMode(mode);
+			engine.setDebugMode(mode);
 			engine.debugDrawWorld(camera);
 		}
 		stage.draw();
