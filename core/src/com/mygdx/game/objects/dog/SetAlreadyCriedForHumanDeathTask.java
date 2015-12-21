@@ -18,34 +18,27 @@ package com.mygdx.game.objects.dog;
 
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
-import com.badlogic.gdx.ai.btree.annotation.TaskAttribute;
 import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.objects.DogCharacter.DogState;
 
 /**
- * Action task that makes the dog's state machine switch to the specified state (behavior tree).
+ * Action task that sets the dog's property {@link DogCharacter#alreadyCriedForHumanDeath}.
  * 
  * @author davebaol
  */
-public class StateMachineTransition extends LeafTask<DogCharacter> {
-	
-	@TaskAttribute(required=true, name="to")
-	public DogState state;
+public class SetAlreadyCriedForHumanDeathTask extends LeafTask<DogCharacter> {
 
-	public StateMachineTransition() {
-		state = DogState.ACT_ON_YOUR_OWN;
+	public SetAlreadyCriedForHumanDeathTask() {
 	}
 
 	@Override
 	public Status execute() {
 		DogCharacter dog = getObject();
-		dog.bTreeSwitchFSM.changeState(state);
+		dog.alreadyCriedForHumanDeath = true;
 		return  Status.SUCCEEDED;
 	}
 
 	@Override
 	protected Task<DogCharacter> copyTo(Task<DogCharacter> task) {
-		((StateMachineTransition)task).state = state;
 		return task;
 	}
 
