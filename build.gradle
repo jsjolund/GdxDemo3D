@@ -16,10 +16,10 @@ allprojects {
     version = '1.0'
     ext {
         appName = 'GdxDemo3D'
-        gdxVersion = '1.7.2-SNAPSHOT'
+        gdxVersion = '1.7.2'
         roboVMVersion = '1.9.0'
         box2DLightsVersion = '1.4'
-        aiVersion = '1.7.0'
+        aiVersion = '1.7.1-SNAPSHOT'
     }
 
     repositories {

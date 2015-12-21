@@ -1,0 +1,80 @@
+import calculatePathToHuman:"com.mygdx.game.objects.dog.CalculatePathToHumanTask"
+import calculatePathToStick:"com.mygdx.game.objects.dog.CalculatePathToStickTask"
+import followPath:"com.mygdx.game.objects.dog.FollowPathTask"
+import lieDown:"com.mygdx.game.objects.dog.LieDownTask"
+import piss:"com.mygdx.game.objects.dog.PissTask"
+import setThrowButton:"com.mygdx.game.objects.dog.SetThrowButtonTask"
+import sit:"com.mygdx.game.objects.dog.SitTask"
+import spinAround:"com.mygdx.game.objects.dog.SpinAroundTask"
+import spinAroundToFaceHuman:"com.mygdx.game.objects.dog.SpinAroundToFaceHumanTask"
+import stand:"com.mygdx.game.objects.dog.StandTask"
+import stateMachineTransition:"com.mygdx.game.objects.dog.StateMachineTransition"
+import stickThrown?:"com.mygdx.game.objects.dog.StickThrownCondition"
+import wander:"com.mygdx.game.objects.dog.WanderTask"
+import whine:"com.mygdx.game.objects.dog.WhineTask"
+
+import alreadyCriedForHumanDeath?:"com.mygdx.game.objects.dog.AlreadyCriedForHumanDeathCondition"
+import isHumanDead?:"com.mygdx.game.objects.dog.IsHumanDeadCondition"
+import isHumanInRange?:"com.mygdx.game.objects.dog.IsHumanInRangeCondition"
+import humanWantToPlay?:"com.mygdx.game.objects.dog.HumanWantToPlayCondition"
+import setAlreadyCriedForHumanDeath:"com.mygdx.game.objects.dog.SetAlreadyCriedForHumanDeathTask"
+
+
+subtree name:"shouldFeelSadForHumanDeath?"
+  sequence
+    invert
+      alreadyCriedForHumanDeath?
+    isHumanDead?
+    isHumanInRange? meters:20
+
+subtree name:"feelSadForHumanDeath"
+  sequence
+    calculatePathToHuman
+    followPath gait:"run"
+    whine
+    parallel policy:"selector"
+      wait seconds:"uniform,10,25"
+      lieDown
+    whine
+    parallel policy:"selector"
+      wait seconds:"uniform,5,9"
+      sit
+    setAlreadyCriedForHumanDeath   # this makes the subtree's guard fail; the dog will start acting on his own
+
+subtree name:"playWithMan"
+  sequence
+    calculatePathToHuman
+    followPath gait:"run"
+    spinAroundToFaceHuman
+    setThrowButton enabled:true
+    parallel policy:"selector" # wait for the man to throw the stick
+      stickThrown?
+      repeat
+        sequence
+          parallel policy:"selector"
+            wait seconds:"uniform,3,5"
+            randomSelector
+              stand
+              sit
+          spinAround
+    setThrowButton enabled:false
+    calculatePathToStick  # actually we just calculate a random point
+    followPath gait:"run"
+
+subtree name:"actOnYourOwn"
+  selector
+    (random success:0.1) piss
+    parallel policy:"selector"
+      wait seconds:"uniform,3,6"
+      randomSelector
+        wander gait:"run"
+        wander gait:"walk"
+        lieDown
+        sit
+
+root
+  dynamicGuardSelector
+    ($shouldFeelSadForHumanDeath?) $feelSadForHumanDeath
+    (humanWantToPlay?)             $playWithMan
+    ()                             $actOnYourOwn  # fallback behavior (no guard)
+    
