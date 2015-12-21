@@ -22,7 +22,7 @@ import com.badlogic.gdx.ai.btree.annotation.TaskAttribute;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
- * Condition task that checks if the man wants to play.
+ * Condition task that checks if the dog's owner is within a given radius in meters.
  * 
  * @author davebaol
  */

@@ -19,7 +19,7 @@ import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
 
 /**
- * A dog character whose brain is modeled by a behavior trees.
+ * A dog character whose brain is modeled by a behavior tree.
  *
  * @author jsjolund
  * @author davebaol

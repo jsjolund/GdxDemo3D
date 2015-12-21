@@ -21,7 +21,7 @@ import com.badlogic.gdx.ai.btree.Task;
 import com.mygdx.game.objects.DogCharacter;
 
 /**
- * Condition task that checks if the man wants to play.
+ * Condition task that checks if the dog has already cried after the man has died.
  * 
  * @author davebaol
  */
