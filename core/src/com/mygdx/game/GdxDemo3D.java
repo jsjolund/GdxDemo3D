@@ -34,12 +34,11 @@ public class GdxDemo3D extends Game {
 	public void toggleFullscreen() {
 		if (Gdx.graphics.isFullscreen()) {
 			Gdx.app.debug(tag, String.format("Disabling fullscreen w=%s, h=%s", reqWidth, reqHeight));
-			Gdx.graphics.setDisplayMode(reqWidth, reqHeight, false);
+			Gdx.graphics.setWindowedMode(reqWidth, reqHeight);
 		} else {
 			Gdx.app.debug(tag, String.format("Enabling fullscreen w=%s, h=%s",
-					Gdx.graphics.getDesktopDisplayMode().width, Gdx.graphics.getDesktopDisplayMode().height));
-			Gdx.graphics.setDisplayMode(Gdx.graphics.getDesktopDisplayMode().width,
-					Gdx.graphics.getDesktopDisplayMode().height, true);
+					Gdx.graphics.getDisplayMode().width, Gdx.graphics.getDisplayMode().height));
+			Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 		}
 	}
 
