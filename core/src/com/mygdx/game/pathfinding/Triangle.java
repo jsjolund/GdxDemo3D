@@ -17,15 +17,16 @@
 package com.mygdx.game.pathfinding;
 
 import com.badlogic.gdx.ai.pfa.Connection;
-import com.badlogic.gdx.ai.pfa.indexed.IndexedNode;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 /**
+ * A {@code Triangle} is a node of the {@code NavMeshGraph}.
+ * 
  * @author jsjolund
  */
-public class Triangle implements IndexedNode<Triangle> {
+public class Triangle {
 
 	public int triIndex;
 	public int meshPartIndex;
@@ -54,12 +55,10 @@ public class Triangle implements IndexedNode<Triangle> {
 		return sb.toString();
 	}
 
-	@Override
 	public int getIndex() {
 		return triIndex;
 	}
 
-	@Override
 	public Array<Connection<Triangle>> getConnections() {
 		return connections;
 	}
