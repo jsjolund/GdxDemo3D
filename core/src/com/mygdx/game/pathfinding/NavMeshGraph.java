@@ -119,11 +119,9 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 		}
 		numConnectedEdges /= 2;
 		numTotalEdges = numConnectedEdges + numDisconnectedEdges;
-		Gdx.app.debug(tag, String.format(
-				"MeshParts: total=%s, Triangles: total=%s, Edges: connected=%s, disconnected=%s, total=%s",
-				getMeshPartCount(), getNodeCount(), getEdgeCountShared(),
-				getEdgeCountIsolated(), getEdgeCountTotal()));
-
+		Gdx.app.debug(tag, "MeshParts: total=" + getMeshPartCount() + ", Triangles: total=" + getNodeCount()
+			+ ", Edges: connected=" + getEdgeCountShared() + ", disconnected=" + getEdgeCountIsolated() + ", total=%s"
+			+ getEdgeCountTotal());
 	}
 
 
@@ -160,7 +158,7 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 			}
 			int totalEdges = (connectedEdges.size + disconnectedEdges.size);
 			if (totalEdges != 3) {
-				Gdx.app.debug(tag, String.format("Wrong number of edges (%s) in triangle %s ", totalEdges, tri.getIndex()));
+				Gdx.app.debug(tag, "Wrong number of edges (" + totalEdges + ") in triangle " + tri.getIndex());
 			}
 		}
 		return disconnectionMap;

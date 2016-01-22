@@ -20,8 +20,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-
-import java.lang.reflect.Field;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.Field;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 /**
  * @author jsjolund
@@ -33,12 +34,12 @@ public class FloatSettingsMenu extends Table {
 	public FloatSettingsMenu(String buttonText, Skin skin, Class<?> floatSettingsClass) {
 		final Table innerTable = new Table();
 
-		Field[] fields = floatSettingsClass.getFields();
+		Field[] fields = ClassReflection.getFields(floatSettingsClass);
 		for (final Field field : fields) {
 			final Label fieldName = new Label(field.getName(), skin);
 			float fieldValueFloat = 0;
 			try {
-				fieldValueFloat = field.getFloat(field);
+				fieldValueFloat = (Float)field.get(field);
 			} catch (Exception e) {
 				Gdx.app.debug(tag, "Cannot parse float value for " + field.getName());
 			}
@@ -58,8 +59,8 @@ public class FloatSettingsMenu extends Table {
 						return true;
 					}
 					try {
-						field.setFloat(field, newFieldValue);
-					} catch (IllegalAccessException e) {
+						field.set(field, (Float)newFieldValue);
+					} catch (ReflectionException e) {
 						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
 					}
 					return true;

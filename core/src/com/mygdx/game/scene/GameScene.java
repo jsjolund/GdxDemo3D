@@ -271,8 +271,7 @@ public class GameScene implements Disposable {
 			orientation = MathUtils.random(-Constants.PI, Constants.PI);
 		}
 		entity.setOrientation(orientation);
-		Gdx.app.debug(tag, String.format("%s: Orientation in radians is %s should be %s",
-				entity.getClass().getSimpleName(), entity.getOrientation(), orientation));
+		Gdx.app.debug(tag, entity.getClass().getSimpleName() + ": Orientation in radians is " + entity.getOrientation() + " should be " + orientation);
 	}
 
 	public Billboard spawnSelectionBillboard(String sharedBlueprintId, Camera camera) {
@@ -315,7 +314,7 @@ public class GameScene implements Disposable {
 			obj.visibleOnLayers.or(bp.visibleOnLayers);
 			addGameObject(obj);
 		} else {
-			throw new GdxRuntimeException(String.format("Could not read blueprint %s", bp));
+			throw new GdxRuntimeException("Could not read blueprint " + bp);
 		}
 	}
 
