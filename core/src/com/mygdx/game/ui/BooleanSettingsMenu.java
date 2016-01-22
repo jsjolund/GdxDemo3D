@@ -26,8 +26,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.Align;
-
-import java.lang.reflect.Field;
+import com.badlogic.gdx.utils.reflect.ClassReflection;
+import com.badlogic.gdx.utils.reflect.Field;
+import com.badlogic.gdx.utils.reflect.ReflectionException;
 
 /**
  * @author jsjolund
@@ -39,11 +40,11 @@ public class BooleanSettingsMenu extends Table {
 	public BooleanSettingsMenu(String buttonText, Skin skin, Class<?> booleanSettingsClass) {
 		final Table innerTable = new Table();
 
-		Field[] fields = booleanSettingsClass.getFields();
+		Field[] fields = ClassReflection.getDeclaredFields(booleanSettingsClass);
 		for (final Field field : fields) {
 			boolean fieldValueBoolean = false;
 			try {
-				fieldValueBoolean = field.getBoolean(field);
+				fieldValueBoolean = (Boolean)field.get(field);
 			} catch (Exception e) {
 				Gdx.app.debug(tag, "Cannot parse value for boolean " + field.getName());
 			}
@@ -55,8 +56,8 @@ public class BooleanSettingsMenu extends Table {
 				@Override
 				public void changed(ChangeEvent event, Actor actor) {
 					try {
-						field.setBoolean(field, checkBox.isChecked());
-					} catch (IllegalAccessException e) {
+						field.set(field, (Boolean)checkBox.isChecked());
+					} catch (ReflectionException e) {
 						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
 					}
 				}

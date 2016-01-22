@@ -60,8 +60,7 @@ public class BlenderAssetManager implements Disposable {
 			}
 			ObjectMap<String, T> innerMap = map.get(type);
 			if (innerMap.containsKey(name)) {
-				throw new GdxRuntimeException(String.format(
-						"Asset name is already used, try changing it: '%s'", name));
+				throw new GdxRuntimeException("Asset name is already used, try changing it: '" + name + "'");
 			}
 			innerMap.put(name, asset);
 		}
@@ -140,7 +139,7 @@ public class BlenderAssetManager implements Disposable {
 			models.add(new BlenderModel(assetId, localPath));
 			assetManager.load(localPath, Model.class, modelParameters);
 		} else {
-			throw new GdxRuntimeException(String.format("Asset type not supported '%s'", type));
+			throw new GdxRuntimeException("Asset type not supported '" + type + "'");
 		}
 	}
 
@@ -149,7 +148,7 @@ public class BlenderAssetManager implements Disposable {
 			Array<BlenderModel> mergedObjects = models.addFromJson(jsonPath, BlenderModel.class);
 			// Load the models into asset manager
 			for (BlenderModel bModel : mergedObjects) {
-				String filePath = String.format("%s%s%s", modelPath, bModel.model_file_name, modelExt);
+				String filePath = modelPath + bModel.model_file_name + modelExt;
 				assetManager.load(filePath, Model.class, modelParameters);
 			}
 		} else if (type == BlenderLight.class) {
@@ -159,7 +158,7 @@ public class BlenderAssetManager implements Disposable {
 		} else if (type == BlenderCamera.class) {
 			cameras.addFromJson(jsonPath, BlenderCamera.class);
 		} else {
-			throw new GdxRuntimeException(String.format("Could not add scene objects of type '%s'", type));
+			throw new GdxRuntimeException("Could not add scene objects of type '" + type + "'");
 		}
 	}
 
@@ -174,16 +173,16 @@ public class BlenderAssetManager implements Disposable {
 		if (type == Model.class) {
 			try {
 				String fileName = models.getByName(assetId).first().model_file_name;
-				filePath = String.format("%s%s%s", modelPath, fileName, modelExt);
+				filePath = modelPath + fileName + modelExt;
 			} catch (Exception e) {
-				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', name:'%s'", type, assetId));
+				throw new GdxRuntimeException("Could not find asset type:'" + type + "', name:'" + assetId + "'");
 			}
 
 		} else if (type == Texture.class) {
 			try {
 				filePath = textures.getByName(assetId).first().filePath;
 			} catch (Exception e) {
-				throw new GdxRuntimeException(String.format("Could not find asset type:'%s', name:'%s'", type, assetId));
+				throw new GdxRuntimeException("Could not find asset type:'" + type + "', name:'" + assetId + "'");
 			}
 		}
 
@@ -191,6 +190,7 @@ public class BlenderAssetManager implements Disposable {
 		return assetManager.get(filePath, type);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <S extends BlenderObjectMap<T>, T extends BlenderObject> S getTypeMap(Class<T> objClass) {
 		BlenderObjectMap<T> map = null;
 		if (objClass == BlenderModel.class) {
@@ -202,7 +202,7 @@ public class BlenderAssetManager implements Disposable {
 		} else if (objClass == BlenderCamera.class) {
 			map = (BlenderObjectMap<T>) cameras;
 		} else {
-			throw new GdxRuntimeException(String.format("Unknown map for type '%s'", objClass));
+			throw new GdxRuntimeException("Unknown map for type '" + objClass + "'");
 		}
 		return (S) map;
 	}

@@ -42,21 +42,21 @@ public class GameSceneManager implements Disposable {
 	public GameScene get(String sceneId) {
 		if (!sceneMap.containsKey(sceneId)) {
 			sceneMap.put(sceneId, new GameScene(modelPath, modelExt, sharedBlueprints));
-			Gdx.app.debug(tag, String.format("Added scene '%s'", sceneId));
+			Gdx.app.debug(tag, "Added scene '" + sceneId + "'");
 		}
 		return sceneMap.get(sceneId);
 	}
 
 	public void addSharedBlueprint(String blueprintId, GameObjectBlueprint blueprint) {
 		if (sharedBlueprints.containsKey(blueprintId)) {
-			throw new GdxRuntimeException(String.format("Shared blueprint already exists '%s'", blueprintId));
+			throw new GdxRuntimeException("Shared blueprint already exists '" + blueprintId + "'");
 		}
-		Gdx.app.debug(tag, String.format("Added shared blueprint '%s'", blueprintId));
+		Gdx.app.debug(tag, "Added shared blueprint '" + blueprintId + "'");
 		sharedBlueprints.put(blueprintId, blueprint);
 	}
 
 	public void dispose(String sceneId) {
-		Gdx.app.debug(tag, String.format("Disposing scene '%s'", sceneId));
+		Gdx.app.debug(tag, "Disposing scene '" + sceneId + "'");
 		sceneMap.get(sceneId).dispose();
 	}
 

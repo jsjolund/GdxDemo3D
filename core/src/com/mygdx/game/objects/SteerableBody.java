@@ -452,12 +452,12 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 			// since the entity is usually not far from where it was in the previous frame
 			currentTriangle = scene.navMesh.groundRayTest(pos, halfExtents.y + .2f, null);
 			if (currentTriangle == null) {
-				//Gdx.app.log(tag, String.format("Frame %d: Finding closest navigation mesh position for %s", frameId, this));
+				//Gdx.app.log(tag, "Frame " + frameId + ": Finding closest navigation mesh position for " + this);
 				// This test is O(n) where n is the number of meshes.
 				currentTriangle = scene.navMesh.getClosestTriangle(pos, tmpVec, null);
 			}
 			else {
-				//Gdx.app.log(tag, String.format("Frame %d: Vertical test has found navigation mesh for %s", frameId, this));
+				//Gdx.app.log(tag, "Frame " + frameId + ": Vertical test has found navigation mesh for " + this);
 			}
 		}
 		return currentTriangle;

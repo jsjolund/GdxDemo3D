@@ -74,8 +74,7 @@ public class GameObjectBlueprint implements Disposable {
 	public GameObjectBlueprint(BlenderEmpty blenderEmpty) {
 		if (!blenderEmpty.custom_properties.containsKey(blenderCollisionShapeField)
 				|| !blenderEmpty.custom_properties.containsKey(blenderMassField)) {
-			throw new GdxRuntimeException(String.format("Cannot load collision shape data from '%s'",
-					blenderEmpty.name));
+			throw new GdxRuntimeException("Cannot load collision shape data from '" + blenderEmpty.name + "'");
 		}
 		this.shapeType = blenderEmpty.custom_properties.get(blenderCollisionShapeField);
 		this.mass = Float.parseFloat(blenderEmpty.custom_properties.get(blenderMassField));
@@ -106,7 +105,7 @@ public class GameObjectBlueprint implements Disposable {
 		GameModel.applyTransform(position, rotation, blenderModel.scale, modelInstance);
 
 		this.shape = Bullet.obtainStaticNodeShape(modelInstance.nodes);
-		this.shapeType = String.format("static_node_shape_%s", blenderModel.name);
+		this.shapeType = "static_node_shape_" + blenderModel.name;
 		setCollisionFlags(this.mass);
 	}
 
@@ -115,8 +114,7 @@ public class GameObjectBlueprint implements Disposable {
 
 		if (!blenderEmpty.custom_properties.containsKey(blenderCollisionShapeField)
 				|| !blenderEmpty.custom_properties.containsKey(blenderMassField)) {
-			throw new GdxRuntimeException(String.format("Cannot load collision shape data for %s from '%s'",
-					blenderModel.name, blenderEmpty.name));
+			throw new GdxRuntimeException("Cannot load collision shape data for " + blenderModel.name + " from '" + blenderEmpty.name + "'");
 		}
 		this.shapeType = blenderEmpty.custom_properties.get(blenderCollisionShapeField);
 		this.mass = Float.parseFloat(blenderEmpty.custom_properties.get(blenderMassField));
@@ -160,8 +158,7 @@ public class GameObjectBlueprint implements Disposable {
 			shape = null;
 
 		} else {
-			throw new GdxRuntimeException(String.format("Cannot load collision shape data for %s from '%s'",
-					blenderModel.name, blenderEmpty.name));
+			throw new GdxRuntimeException("Cannot load collision shape data for " + blenderModel.name + " from '" + blenderEmpty.name + "'");
 		}
 		setCollisionFlags(this.mass);
 	}
