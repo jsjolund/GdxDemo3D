@@ -391,6 +391,11 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	}
 
 	@Override
+	public int getIndex (Triangle node) {
+		return node.getIndex();
+	}
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public Array<Connection<Triangle>> getConnections(Triangle fromNode) {
 		return (Array<Connection<Triangle>>) (Array<?>) sharedEdges.getValueAt(fromNode.triIndex);
@@ -474,5 +479,6 @@ public class NavMeshGraph implements IndexedGraph<Triangle> {
 	public int getEdgeCountIsolated() {
 		return numDisconnectedEdges;
 	}
+
 
 }
