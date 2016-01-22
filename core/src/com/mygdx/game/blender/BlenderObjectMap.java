@@ -46,8 +46,9 @@ class BlenderObjectMap<T extends BlenderObject> extends ArrayMap<String, Array<T
 		return objects;
 	}
 
+	@SuppressWarnings("unchecked")
 	private Array<T> deserialize(String jsonPath, Class<T> type) {
-		return (jsonPath == null) ? new Array<T>() : new Json().fromJson(Array.class, type, Gdx.files.local(jsonPath));
+		return (jsonPath == null) ? new Array<T>() : new Json().fromJson(Array.class, type, Gdx.files.internal(jsonPath));
 	}
 
 	public void add(T object) {

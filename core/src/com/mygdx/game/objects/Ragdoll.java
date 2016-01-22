@@ -306,7 +306,7 @@ public abstract class Ragdoll extends GameCharacter {
 
 		@SuppressWarnings("unchecked")
 		Array<BlenderEmpty> empties =
-				new Json().fromJson(Array.class, BlenderEmpty.class, Gdx.files.local(ragdollJson));
+				new Json().fromJson(Array.class, BlenderEmpty.class, Gdx.files.internal(ragdollJson));
 
 		for (BlenderEmpty empty : empties) {
 			Vector3 halfExtents = new Vector3(empty.scale);
