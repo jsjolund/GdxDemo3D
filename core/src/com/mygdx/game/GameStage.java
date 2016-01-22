@@ -141,10 +141,8 @@ public class GameStage extends Stage implements Observable {
 
 		@Override
 		public boolean keyTyped(char keyChar) {
-			int keyInt = Character.getNumericValue(keyChar);
-			keyInt--;
-			if (keyInt >= 0 && keyInt <= 9) {
-				layerController.setLayer(keyInt + 1);
+			if (keyChar >= '1' && keyChar <= '9') {
+				layerController.setLayer(keyChar - '0');
 			}
 			return true;
 		}
