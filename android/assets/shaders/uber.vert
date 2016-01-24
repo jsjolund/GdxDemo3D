@@ -1,5 +1,6 @@
-// From http://gist.github.com/xoppa/9766698
-#define nop(){};
+// Based on http://gist.github.com/xoppa/9766698
+#define nop() {}
+
 ////////////////////////////////////////////////////////////////////////////////////
 ////////// POSITION ATTRIBUTE - VERTEX
 ////////////////////////////////////////////////////////////////////////////////////
@@ -8,12 +9,11 @@ attribute vec3 a_position;
 #endif //positionFlag
 
 varying vec4 v_position;
+vec4 g_position = vec4(0.0, 0.0, 0.0, 1.0);
 #define pushPositionValue(value) (v_position = (value))
 #if defined(positionFlag)
-vec4 g_position = vec4(a_position, 1.0);
 #define passPositionValue(value) pushPositionValue(value)
 #else
-vec4 g_position = vec4(0.0, 0.0, 0.0, 1.0);
 #define passPositionValue(value) nop()
 #endif
 #define passPosition() passPositionValue(g_position)
@@ -27,12 +27,11 @@ attribute vec4 a_color;
 #endif //colorFlag
 
 varying vec4 v_color;
+vec4 g_color = vec4(1.0, 1.0, 1.0, 1.0);
 #define pushColorValue(value) (v_color = (value))
 #if defined(colorFlag)
-vec4 g_color = a_color;
 #define passColorValue(value) pushColorValue(value)
 #else
-vec4 g_color = vec4(1.0, 1.0, 1.0, 1.0);
 #define passColorValue(value) nop()
 #endif
 #define passColor() passColorValue(g_color)
@@ -46,12 +45,11 @@ attribute vec3 a_normal;
 #endif //normalFlag
 
 varying vec3 v_normal;
+vec3 g_normal = vec3(0.0, 0.0, 1.0);
 #define pushNormalValue(value) (v_normal = (value))
 #if defined(normalFlag)
-vec3 g_normal = a_normal;
 #define passNormalValue(value) pushNormalValue(value)
 #else
-vec3 g_normal = vec3(0.0, 0.0, 1.0);
 #define passNormalValue(value) nop()
 #endif
 #define passNormal() (passNormalValue(g_normal))
@@ -65,12 +63,11 @@ attribute vec3 a_binormal;
 #endif //binormalFlag
 
 varying vec3 v_binormal;
+vec3 g_binormal = vec3(0.0, 1.0, 0.0);
 #define pushBinormalValue(value) (v_binormal = (value))
 #if defined(binormalFlag)
-vec3 g_binormal = a_binormal;
 #define passBinormalValue(value) pushBinormalValue(value)
 #else
-vec3 g_binormal = vec3(0.0, 1.0, 0.0);
 #define passBinormalValue(value) nop()
 #endif // binormalFlag
 #define passBinormal() passBinormalValue(g_binormal)
@@ -84,12 +81,11 @@ attribute vec3 a_tangent;
 #endif //tangentFlag
 
 varying vec3 v_tangent;
+vec3 g_tangent = vec3(1.0, 0.0, 0.0);
 #define pushTangentValue(value) (v_tangent = (value))
 #if defined(tangentFlag)
-vec3 g_tangent = a_tangent;
 #define passTangentValue(value) pushTangentValue(value)
 #else
-vec3 g_tangent = vec3(1.0, 0.0, 0.0);
 #define passTangentValue(value) nop()
 #endif // tangentFlag
 #define passTangent() passTangentValue(g_tangent)
@@ -106,12 +102,11 @@ attribute vec2 a_texCoord0;
 #endif
 
 varying vec2 v_texCoord0;
+vec2 g_texCoord0 = vec2(0.0, 0.0);
 #define pushTexCoord0Value(value) (v_texCoord0 = value)
 #if defined(texCoord0Flag)
-vec2 g_texCoord0 = a_texCoord0;
 #define passTexCoord0Value(value) pushTexCoord0Value(value)
 #else
-vec2 g_texCoord0 = vec2(0.0, 0.0);
 #define passTexCoord0Value(value) nop()
 #endif // texCoord0Flag
 #define passTexCoord0() passTexCoord0Value(g_texCoord0)
@@ -223,7 +218,7 @@ attribute vec2 a_boneWeight7;
 
 // Declare the bones that are available
 #if defined(numBones)
-#if numBones > 0
+#if (numBones > 0)
 uniform mat4 u_bones[numBones];
 #endif //numBones
 #endif
@@ -236,35 +231,7 @@ uniform mat4 u_bones[numBones];
 #endif
 
 #ifdef skinningFlag
-mat4 skinningTransform = mat4(0.0)
-#ifdef boneWeight0Flag
-+ (a_boneWeight0.y) * u_bones[int(a_boneWeight0.x)]
-#endif //boneWeight0Flag
-#ifdef boneWeight1Flag
-+ (a_boneWeight1.y) * u_bones[int(a_boneWeight1.x)]
-#endif //boneWeight1Flag
-#ifdef boneWeight2Flag
-+ (a_boneWeight2.y) * u_bones[int(a_boneWeight2.x)]
-#endif //boneWeight2Flag
-#ifdef boneWeight3Flag
-+ (a_boneWeight3.y) * u_bones[int(a_boneWeight3.x)]
-#endif //boneWeight3Flag
-#ifdef boneWeight4Flag
-+ (a_boneWeight4.y) * u_bones[int(a_boneWeight4.x)]
-#endif //boneWeight4Flag
-#ifdef boneWeight5Flag
-+ (a_boneWeight5.y) * u_bones[int(a_boneWeight5.x)]
-#endif //boneWeight5Flag
-#ifdef boneWeight6Flag
-+ (a_boneWeight6.y) * u_bones[int(a_boneWeight6.x)]
-#endif //boneWeight6Flag
-#ifdef boneWeight7Flag
-+ (a_boneWeight7.y) * u_bones[int(a_boneWeight7.x)]
-#endif //boneWeight7Flag
-;
-#endif //skinningFlag
-
-#ifdef skinningFlag
+mat4 skinningTransform = mat4(0.0);
 vec3 applySkinning(const in vec3 x) { return (skinningTransform * vec4(x, 0.0)).xyz; }
 vec4 applySkinning(const in vec4 x) { return (skinningTransform * x); }
 #else
@@ -290,13 +257,19 @@ varying vec3 v_shadowMapUv;
 #endif //shadowMapFlag
 
 #if defined(normalFlag) && defined(binormalFlag) && defined(tangentFlag)
-#define calculateTangentVectors() nop()
+void calculateTangentVectors() {}
 #elif defined(normalFlag) && defined(binormalFlag)
-#define calculateTangentVectors() (g_tangent = normalize(cross(g_normal, g_binormal)))
+void calculateTangentVectors() {
+	g_tangent = normalize(cross(g_normal, g_binormal));
+}
 #elif defined(normalFlag) && defined(tangentFlag)
-#define calculateTangentVectors() (g_binormal = normalize(cross(g_normal, g_tangent)))
+void calculateTangentVectors() {
+	g_binormal = normalize(cross(g_normal, g_tangent));
+}
 #elif defined(binormalFlag) && defined(tangentFlag)
-#define calculateTangentVectors() (g_normal = normalize(cross(g_binormal, g_tangent)))
+void calculateTangentVectors() {
+	g_normal = normalize(cross(g_binormal, g_tangent));
+}
 #elif defined(normalFlag) || defined(binormalFlag) || defined(tangentFlag)
 vec3 biggestAngle(const in vec3 base, const in vec3 v1, const in vec3 v2) {
 	vec3 c1 = cross(base, v1);
@@ -325,7 +298,7 @@ void calculateTangentVectors() {
 ////// AMBIENT LIGHT
 //////////////////////////////////////////////////////
 #ifdef ambientLightFlag
-#ifndef ambientFlagu_normalTexture
+#ifndef ambientFlag
 #define ambientFlag
 #endif
 uniform vec3 u_ambientLight;
@@ -412,29 +385,77 @@ varying vec3 v_reflect;
 varying vec3 v_ambientLight;
 
 void main() {
+	// Non-constant global initializers do not work on Android - setting globals from attributes outside main()
+	#if defined(positionFlag)
+		g_position = vec4(a_position, 1.0);
+	#endif
+	#if defined(colorFlag)
+		g_color = a_color;
+	#endif
+	#if defined(normalFlag)
+		g_normal = a_normal;
+	#endif
+	#if defined(binormalFlag)
+		g_binormal = a_binormal;
+	#endif
+	#if defined(tangentFlag)
+		g_tangent = a_tangent;
+	#endif
+	#if defined(texCoord0Flag)
+		g_texCoord0 = a_texCoord0;
+	#endif
+	#ifdef skinningFlag
+	skinningTransform +=
+	#ifdef boneWeight0Flag
+		+ (a_boneWeight0.y) * u_bones[int(a_boneWeight0.x)]
+	#endif //boneWeight0Flag
+	#ifdef boneWeight1Flag
+		+ (a_boneWeight1.y) * u_bones[int(a_boneWeight1.x)]
+	#endif //boneWeight1Flag
+	#ifdef boneWeight2Flag
+		+ (a_boneWeight2.y) * u_bones[int(a_boneWeight2.x)]
+	#endif //boneWeight2Flag
+	#ifdef boneWeight3Flag
+		+ (a_boneWeight3.y) * u_bones[int(a_boneWeight3.x)]
+	#endif //boneWeight3Flag
+	#ifdef boneWeight4Flag
+		+ (a_boneWeight4.y) * u_bones[int(a_boneWeight4.x)]
+	#endif //boneWeight4Flag
+	#ifdef boneWeight5Flag
+		+ (a_boneWeight5.y) * u_bones[int(a_boneWeight5.x)]
+	#endif //boneWeight5Flag
+	#ifdef boneWeight6Flag
+		+ (a_boneWeight6.y) * u_bones[int(a_boneWeight6.x)]
+	#endif //boneWeight6Flag
+	#ifdef boneWeight7Flag
+		+ (a_boneWeight7.y) * u_bones[int(a_boneWeight7.x)]
+	#endif //boneWeight7Flag
+		;
+	#endif //skinningFlag
+	
 	calculateTangentVectors();
-
+	
 	g_position = applySkinning(g_position);
 	g_normal = normalize(u_normalMatrix * applySkinning(g_normal));
 	g_binormal = normalize(u_normalMatrix * applySkinning(g_binormal));
 	g_tangent = normalize(u_normalMatrix * applySkinning(g_tangent));
-
+	
 	g_position = u_worldTrans * g_position;
 	gl_Position = u_projViewTrans * g_position;
 
-#ifdef shadowMapFlag
+	#ifdef shadowMapFlag
 	vec4 spos = u_shadowMapProjViewTrans * g_position;
 	v_shadowMapUv.xy = (spos.xy / spos.w) * 0.5 + 0.5;
 	v_shadowMapUv.z = min(spos.z * 0.5 + 0.5, 0.998);
-#endif //shadowMapFlag
-
+	#endif //shadowMapFlag
+	
 	mat3 worldToTangent;
 	worldToTangent[0] = g_tangent;
 	worldToTangent[1] = g_binormal;
 	worldToTangent[2] = g_normal;
-
+	
 	v_ambientLight = getAmbient(g_normal);
-
+	
 	v_lightDir = normalize(-u_dirLights[0].direction) * worldToTangent;
 	v_lightCol = u_dirLights[0].color;
 	vec3 viewDir = normalize(u_cameraPosition.xyz - g_position.xyz);
@@ -442,7 +463,7 @@ void main() {
 	#ifdef environmentCubemapFlag
 	v_reflect = reflect(-viewDir, g_normal);
 	#endif
-
-	pushColor();
-	pushTexCoord0();
+	
+	pushColorValue(g_color);//pushColor(); does not work on Android
+	pushTexCoord0Value(g_texCoord0);//pushTexCoord0(); does not work on Android
 }
