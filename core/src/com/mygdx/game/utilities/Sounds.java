@@ -19,7 +19,7 @@ package com.mygdx.game.utilities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 
-public class Sounds {
+public final class Sounds {
 
 	static public Sound bark;
 	static public Sound whine;

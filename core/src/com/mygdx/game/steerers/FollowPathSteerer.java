@@ -181,8 +181,8 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	boolean deadlockDetection;
 	float deadlockDetectionStartTime;
 	float collisionDuration;
-	static final float deadlockTime = .5f;
-	static final float maxNoCollisionTime = deadlockTime + .5f;
+	private static final float DEADLOCK_TIME = .5f;
+	private static final float MAX_NO_COLLISION_TIME = DEADLOCK_TIME + .5f;
 
 	@Override
 	public boolean processSteering(SteeringAcceleration<Vector3> steering) {
@@ -191,17 +191,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		LinePathParam pathParam = followPathSB.getPathParam();
 		int traversedSegment = pathParam.getSegmentIndex();
 		if (traversedSegment > currentSegmentIndex) {
-			// Update model target orientation. Current orientation wi
 			currentSegmentIndex = traversedSegment;
-/*
-//			Segment<Vector3> segment = linePath.getSegments().get(currentSegmentIndex);
-//			steerableBody.setModelTargetOrientation(segment.getEnd().x - segment.getBegin().x, segment.getEnd().z - segment.getBegin().z);
-			// Update current navmesh triangle
-			steerableBody.currentTriangle = navMeshPointPath.getToTriangle(currentSegmentIndex);
-			// Set model to be visible on the same layer as mesh part index of current triangle
-			steerableBody.visibleOnLayers.clear();
-			steerableBody.visibleOnLayers.set(steerableBody.currentTriangle.meshPartIndex);
- */
 		}
 
 		if (prioritySteering.getSelectedBehaviorIndex() == 0) {
@@ -218,7 +208,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 				// Accumulate collision time during deadlock detection
 				collisionDuration += GdxAI.getTimepiece().getDeltaTime();
 
-				if (GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > deadlockTime && collisionDuration > deadlockTime * .6f) {
+				if (GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > DEADLOCK_TIME && collisionDuration > DEADLOCK_TIME * .6f) {
 					// Disable collision avoidance since most of the deadlock detection period has been spent on collision avoidance
 					collisionAvoidanceSB.setEnabled(false);
 				}
@@ -242,7 +232,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 		}
 
 		// Check if collision avoidance must be re-enabled
-		if (deadlockDetection && !collisionAvoidanceSB.isEnabled() && GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > maxNoCollisionTime) {
+		if (deadlockDetection && !collisionAvoidanceSB.isEnabled() && GdxAI.getTimepiece().getTime() - deadlockDetectionStartTime > MAX_NO_COLLISION_TIME) {
 				collisionAvoidanceSB.setEnabled(true);
 				deadlockDetection = false;
 		}

@@ -29,7 +29,7 @@ import com.badlogic.gdx.utils.reflect.ReflectionException;
  */
 public class FloatSettingsMenu extends Table {
 
-	private static final String tag = "FloatSettingsMenu";
+	private static final String TAG = "FloatSettingsMenu";
 
 	public FloatSettingsMenu(String buttonText, Skin skin, Class<?> floatSettingsClass) {
 		final Table innerTable = new Table();
@@ -41,7 +41,7 @@ public class FloatSettingsMenu extends Table {
 			try {
 				fieldValueFloat = (Float)field.get(field);
 			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse float value for " + field.getName());
+				Gdx.app.debug(TAG, "Cannot parse float value for " + field.getName());
 			}
 			final TextField fieldValue = new TextField(String.valueOf(fieldValueFloat), skin);
 			innerTable.add(fieldName).fillX();
@@ -61,7 +61,7 @@ public class FloatSettingsMenu extends Table {
 					try {
 						field.set(field, (Float)newFieldValue);
 					} catch (ReflectionException e) {
-						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
+						Gdx.app.debug(TAG, "Cannot set value for " + field.getName());
 					}
 					return true;
 				}

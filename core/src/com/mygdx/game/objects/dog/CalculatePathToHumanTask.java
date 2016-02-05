@@ -31,9 +31,9 @@ import com.mygdx.game.pathfinding.Triangle;
  */
 public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 
-	private static final Vector3 tmp1 = new Vector3();
-	private static final Vector3 tmp2 = new Vector3();
-	private static final Vector3 tmp3 = new Vector3();
+	private static final Vector3 TMP_VEC_1 = new Vector3();
+	private static final Vector3 TMP_VEC_2 = new Vector3();
+	private static final Vector3 TMP_VEC_3 = new Vector3();
 
 	public CalculatePathToHumanTask() {
 	}
@@ -43,10 +43,10 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 		DogCharacter dog = getObject();
 		HumanCharacter human = dog.human;
 
-		Vector3 humanDirection = human.getDirection(tmp1);
-		Vector3 humanPosition = human.getGroundPosition(tmp2);
+		Vector3 humanDirection = human.getDirection(TMP_VEC_1);
+		Vector3 humanPosition = human.getGroundPosition(TMP_VEC_2);
 		float targetDogDistanceToHuman = 2;
-		Vector3 dogTargetPoint = tmp3;
+		Vector3 dogTargetPoint = TMP_VEC_3;
 
 		Triangle dogTargetTri = GameEngine.engine.getScene().navMesh.getClosestValidPointAt(
 				humanPosition,

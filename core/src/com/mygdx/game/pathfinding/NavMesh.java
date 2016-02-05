@@ -40,7 +40,7 @@ import com.mygdx.game.utilities.GeometryUtils;
  */
 public class NavMesh implements Disposable {
 
-	public static final String tag = "NavMesh";
+	private static final String TAG = "NavMesh";
 
 	public final NavMeshGraph graph;
 
@@ -125,7 +125,7 @@ public class NavMesh implements Disposable {
 
 		Triangle fromTri = rayTest(fromRay, distance, allowedMeshParts);
 		if (fromTri == null) {
-			Gdx.app.debug(tag, "From triangle not found.");
+			Gdx.app.debug(TAG, "From triangle not found.");
 			return false;
 		}
 		Vector3 fromPoint = new Vector3();
@@ -149,7 +149,7 @@ public class NavMesh implements Disposable {
 						   float distance, NavMeshGraphPath path) {
 		Triangle toTri = rayTest(toRay, distance, allowedMeshParts);
 		if (toTri == null) {
-			Gdx.app.debug(tag, "To triangle not found.");
+			Gdx.app.debug(TAG, "To triangle not found.");
 			return false;
 		}
 		Vector3 toPoint = new Vector3();
@@ -178,7 +178,7 @@ public class NavMesh implements Disposable {
 			path.startTri = fromTri;
 			return true;
 		}
-		Gdx.app.debug(tag, "Path not found.");
+		Gdx.app.debug(TAG, "Path not found.");
 		return false;
 	}
 

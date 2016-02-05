@@ -35,7 +35,7 @@ import com.badlogic.gdx.utils.reflect.ReflectionException;
  */
 public class BooleanSettingsMenu extends Table {
 
-	private static final String tag = "BooleanSettingsMenu";
+	private static final String TAG = "BooleanSettingsMenu";
 
 	public BooleanSettingsMenu(String buttonText, Skin skin, Class<?> booleanSettingsClass) {
 		final Table innerTable = new Table();
@@ -46,7 +46,7 @@ public class BooleanSettingsMenu extends Table {
 			try {
 				fieldValueBoolean = (Boolean)field.get(field);
 			} catch (Exception e) {
-				Gdx.app.debug(tag, "Cannot parse value for boolean " + field.getName());
+				Gdx.app.debug(TAG, "Cannot parse value for boolean " + field.getName());
 			}
 			final CheckBox checkBox = new CheckBox(field.getName(), skin);
 			checkBox.setChecked(fieldValueBoolean);
@@ -58,7 +58,7 @@ public class BooleanSettingsMenu extends Table {
 					try {
 						field.set(field, (Boolean)checkBox.isChecked());
 					} catch (ReflectionException e) {
-						Gdx.app.debug(tag, "Cannot set value for " + field.getName());
+						Gdx.app.debug(TAG, "Cannot set value for " + field.getName());
 					}
 				}
 			});

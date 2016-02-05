@@ -172,7 +172,7 @@ public class GameStage extends Stage implements Observable {
 						GameEngine.ALL_FLAG,
 						GameSettings.CAMERA_PICK_RAY_DST, visibleLayers);
 
-				Gdx.app.debug(tag, "Hit entity " + hitEntity);
+				Gdx.app.debug(TAG, "Hit entity " + hitEntity);
 
 				if (hitEntity instanceof GameCharacter) {
 					characterController.handleCharacterSelection((GameCharacter) hitEntity);
@@ -463,7 +463,7 @@ public class GameStage extends Stage implements Observable {
 			}
 		}
 	}
-	public static final String tag = "GameStage";
+	private static final String TAG = "GameStage";
 	private final Viewport viewport;
 	private final SpriteBatch batch;
 	private final ShapeRenderer shapeRenderer;
@@ -533,12 +533,12 @@ public class GameStage extends Stage implements Observable {
 //					scaleY -= (getPrefHeight() - getHeight()) / (float)getPrefHeight();
 
 				if (MathUtils.isEqual(scaleX, 1, scaleTolerance) && MathUtils.isEqual(scaleY, 1, scaleTolerance)) {
-					Gdx.app.log(tag, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+					Gdx.app.log(TAG, "No need to scale rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
 					setTransform(false);
 					setOrigin(0, 0);
 					setScale(1);
 				} else {
-					Gdx.app.log(tag, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
+					Gdx.app.log(TAG, "Scaling rootTable: scaleX = " + scaleX + "  scaleY = " + scaleY);
 					setTransform(true);
 					setOrigin(0, 0);
 					setScale(scaleX, scaleY);

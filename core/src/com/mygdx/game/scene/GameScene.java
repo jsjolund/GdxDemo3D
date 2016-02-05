@@ -65,7 +65,7 @@ public class GameScene implements Disposable {
 		}
 	}
 
-	public final static String tag = "GameScene";
+	private final static String TAG = "GameScene";
 	public final BlenderAssetManager assets;
 	private final ArrayMap<String, Array<GameObject>> gameObjects = new ArrayMap<String, Array<GameObject>>();
 	private final ObjectMap<String, GameObjectBlueprint> sharedBlueprints;
@@ -134,7 +134,7 @@ public class GameScene implements Disposable {
 	}
 
 	public void spawnGameObjectsFromPlaceholders() {
-		Gdx.app.debug(tag, "Spawning predefined game objects.");
+		Gdx.app.debug(TAG, "Spawning predefined game objects.");
 		// TODO: Clean this up
 		Array<GameObjectBlueprint> blueprints = new Array<GameObjectBlueprint>();
 
@@ -271,7 +271,7 @@ public class GameScene implements Disposable {
 			orientation = MathUtils.random(-Constants.PI, Constants.PI);
 		}
 		entity.setOrientation(orientation);
-		Gdx.app.debug(tag, entity.getClass().getSimpleName() + ": Orientation in radians is " + entity.getOrientation() + " should be " + orientation);
+		Gdx.app.debug(TAG, entity.getClass().getSimpleName() + ": Orientation in radians is " + entity.getOrientation() + " should be " + orientation);
 	}
 
 	public Billboard spawnSelectionBillboard(String sharedBlueprintId, Camera camera) {

@@ -27,16 +27,17 @@ import com.mygdx.game.utilities.Sounds;
  */
 public class GdxDemo3D extends Game {
 
-	public static final String tag = "GdxDemo3D";
+	private static final String TAG = "GdxDemo3D";
+
 	public static int reqWidth = 1280;
 	public static int reqHeight = 720;
 
 	public void toggleFullscreen() {
 		if (Gdx.graphics.isFullscreen()) {
-			Gdx.app.debug(tag, "Disabling fullscreen w=" + reqWidth + ", h=" + reqHeight);
+			Gdx.app.debug(TAG, "Disabling fullscreen w=" + reqWidth + ", h=" + reqHeight);
 			Gdx.graphics.setWindowedMode(reqWidth, reqHeight);
 		} else {
-			Gdx.app.debug(tag, "Enabling fullscreen w=" + Gdx.graphics.getDisplayMode().width + ", h="
+			Gdx.app.debug(TAG, "Enabling fullscreen w=" + Gdx.graphics.getDisplayMode().width + ", h="
 					+ Gdx.graphics.getDisplayMode().height);
 			Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
 		}
