@@ -16,9 +16,9 @@ allprojects {
     version = '1.0'
     ext {
         appName = 'GdxDemo3D'
-        gdxVersion = '1.8.1-SNAPSHOT'
-        roboVMVersion = '1.9.0'
-        aiVersion = '1.7.1-SNAPSHOT'
+        gdxVersion = '1.9.1'
+        roboVMVersion = '1.13.0'
+        aiVersion = '1.8.0'
     }
 
     repositories {
