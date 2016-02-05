@@ -42,9 +42,9 @@ public final class GeometryUtils {
 	}
 
 
-	private static final Vector3 tmpVec1 = new Vector3();
-	private static final Vector3 tmpVec2 = new Vector3();
-	private static final Vector3 tmpVec3 = new Vector3();
+	private static final Vector3 TMP_VEC_1 = new Vector3();
+	private static final Vector3 TMP_VEC_2 = new Vector3();
+	private static final Vector3 TMP_VEC_3 = new Vector3();
 	
 	/**
 	 * Find the closest point on the triangle, given a measure point.
@@ -61,9 +61,9 @@ public final class GeometryUtils {
 	 */
 	public static float getClosestPointOnTriangle(Vector3 a, Vector3 b, Vector3 c, Vector3 p, Vector3 out) {
 		// Check if P in vertex region outside A
-		Vector3 ab = tmpVec1.set(b).sub(a);
-		Vector3 ac = tmpVec2.set(c).sub(a);
-		Vector3 ap = tmpVec3.set(p).sub(a);
+		Vector3 ab = TMP_VEC_1.set(b).sub(a);
+		Vector3 ac = TMP_VEC_2.set(c).sub(a);
+		Vector3 ap = TMP_VEC_3.set(p).sub(a);
 		float d1 = ab.dot(ap);
 		float d2 = ac.dot(ap);
 		if (d1 <= 0.0f && d2 <= 0.0f)  {
@@ -73,7 +73,7 @@ public final class GeometryUtils {
 		}
 		
 		// Check if P in vertex region outside B
-		Vector3 bp = tmpVec3.set(p).sub(b);
+		Vector3 bp = TMP_VEC_3.set(p).sub(b);
 		float d3 = ab.dot(bp);
 		float d4 = ac.dot(bp);
 		if (d3 >= 0.0f && d4 <= d3) {
@@ -85,14 +85,14 @@ public final class GeometryUtils {
 		// Check if P in edge region of AB, if so return projection of P onto AB
 		float vc = d1 * d4 - d3 * d2;
 		if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) {
-			Vector3 ret = out != null ? out : tmpVec3;
+			Vector3 ret = out != null ? out : TMP_VEC_3;
 			float v = d1 / (d1 - d3);
 			ret.set(a).mulAdd(ab, v); // barycentric coordinates (1-v,v,0)
 			return p.dst2(ret);
 		}
 
 		// Check if P in vertex region outside C
-		Vector3 cp = tmpVec3.set(p).sub(c);
+		Vector3 cp = TMP_VEC_3.set(p).sub(c);
 		float d5 = ab.dot(cp);
 		float d6 = ac.dot(cp);
 		if (d6 >= 0.0f && d5 <= d6) {
@@ -104,7 +104,7 @@ public final class GeometryUtils {
 		// Check if P in edge region of AC, if so return projection of P onto AC
 		float vb = d5 * d2 - d1 * d6;
 		if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) {
-			Vector3 ret = out != null ? out : tmpVec3;
+			Vector3 ret = out != null ? out : TMP_VEC_3;
 			float w = d2 / (d2 - d6);
 			ret.set(a).mulAdd(ac, w); // barycentric coordinates (1-w,0,w)
 			return ret.dst2(p); 
@@ -113,9 +113,9 @@ public final class GeometryUtils {
 		// Check if P in edge region of BC, if so return projection of P onto BC
 		float va = d3 * d6 - d5 * d4;
 		if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f) {
-			Vector3 ret = out != null ? out : tmpVec3;
+			Vector3 ret = out != null ? out : TMP_VEC_3;
 			float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-			ret.set(b).mulAdd(tmpVec1.set(c).sub(b), w); // barycentric coordinates (0,1-w,w)
+			ret.set(b).mulAdd(TMP_VEC_1.set(c).sub(b), w); // barycentric coordinates (0,1-w,w)
 			return ret.dst2(p); 
 		}
 		
@@ -123,7 +123,7 @@ public final class GeometryUtils {
 		float denom = 1.0f / (va + vb + vc);
 		float v = vb * denom;
 		float w = vc * denom;
-		Vector3 ret = out != null ? out : tmpVec3;
+		Vector3 ret = out != null ? out : TMP_VEC_3;
 		ret.set(a).mulAdd(ab, v).mulAdd(ac, w);
 		return ret.dst2(p); 
 	}

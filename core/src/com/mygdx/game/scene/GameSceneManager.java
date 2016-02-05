@@ -26,7 +26,7 @@ import com.badlogic.gdx.utils.ObjectMap;
  */
 public class GameSceneManager implements Disposable {
 
-	public static final String tag = "GameSceneManager";
+	private static final String TAG = "GameSceneManager";
 
 	private final ObjectMap<String, GameScene> sceneMap = new ObjectMap<String, GameScene>();
 	private final ObjectMap<String, GameObjectBlueprint> sharedBlueprints = new ObjectMap<String, GameObjectBlueprint>();
@@ -42,7 +42,7 @@ public class GameSceneManager implements Disposable {
 	public GameScene get(String sceneId) {
 		if (!sceneMap.containsKey(sceneId)) {
 			sceneMap.put(sceneId, new GameScene(modelPath, modelExt, sharedBlueprints));
-			Gdx.app.debug(tag, "Added scene '" + sceneId + "'");
+			Gdx.app.debug(TAG, "Added scene '" + sceneId + "'");
 		}
 		return sceneMap.get(sceneId);
 	}
@@ -51,12 +51,12 @@ public class GameSceneManager implements Disposable {
 		if (sharedBlueprints.containsKey(blueprintId)) {
 			throw new GdxRuntimeException("Shared blueprint already exists '" + blueprintId + "'");
 		}
-		Gdx.app.debug(tag, "Added shared blueprint '" + blueprintId + "'");
+		Gdx.app.debug(TAG, "Added shared blueprint '" + blueprintId + "'");
 		sharedBlueprints.put(blueprintId, blueprint);
 	}
 
 	public void dispose(String sceneId) {
-		Gdx.app.debug(tag, "Disposing scene '" + sceneId + "'");
+		Gdx.app.debug(TAG, "Disposing scene '" + sceneId + "'");
 		sceneMap.get(sceneId).dispose();
 	}
 

@@ -32,7 +32,7 @@ import com.mygdx.game.utilities.VertexColorTextureBlend;
  */
 public class UberShader extends DefaultShader {
 
-	public static final String tag = "UberShader";
+	private static final String TAG = "UberShader";
 
 	protected final int u_hue = register(new Uniform("u_hue"));
 	protected final int u_saturation = register(new Uniform("u_saturation"));
@@ -63,7 +63,7 @@ public class UberShader extends DefaultShader {
 
 		program = new ShaderProgram(prefix + config.vertexShader, prefix + config.fragmentShader);
 		if (!program.isCompiled()) {
-			Gdx.app.debug(tag, program.getLog());
+			Gdx.app.debug(TAG, program.getLog());
 		}
 	}
 
@@ -79,17 +79,17 @@ public class UberShader extends DefaultShader {
 
 		// Texture blending by vertex color
 		if (renderable.material.has(VertexColorTextureBlend.Red)) {
-			TextureDescriptor td = ((TextureAttribute)
+			TextureDescriptor<Texture> td = ((TextureAttribute)
 					renderable.material.get(VertexColorTextureBlend.Red)).textureDescription;
 			set(u_vcoltex_red, context.textureBinder.bind(td));
 		}
 		if (renderable.material.has(VertexColorTextureBlend.Green)) {
-			TextureDescriptor td = ((TextureAttribute)
+			TextureDescriptor<Texture> td = ((TextureAttribute)
 					renderable.material.get(VertexColorTextureBlend.Green)).textureDescription;
 			set(u_vcoltex_green, context.textureBinder.bind(td));
 		}
 		if (renderable.material.has(VertexColorTextureBlend.Blue)) {
-			TextureDescriptor td = ((TextureAttribute)
+			TextureDescriptor<Texture> td = ((TextureAttribute)
 					renderable.material.get(VertexColorTextureBlend.Blue)).textureDescription;
 			set(u_vcoltex_blue, context.textureBinder.bind(td));
 		}

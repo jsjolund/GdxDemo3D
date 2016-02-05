@@ -30,7 +30,7 @@ import com.badlogic.gdx.utils.Bits;
  */
 public class GameModel extends GameObject {
 
-	public static final String tag = "GameModel";
+	private static final String TAG = "GameModel";
 
 	/**
 	 * Center of bounding box for model instance
@@ -88,7 +88,7 @@ public class GameModel extends GameObject {
 		try {
 			modelInstance.calculateBoundingBox(boundingBox);
 		} catch (Exception e) {
-			Gdx.app.debug(tag, "Error when calculating bounding box.", e);
+			Gdx.app.debug(TAG, "Error when calculating bounding box.", e);
 		}
 		boundingBox.getCenter(center);
 		boundingBox.getDimensions(dimensions);

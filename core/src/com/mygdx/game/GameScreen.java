@@ -52,7 +52,7 @@ import com.mygdx.game.utilities.ModelFactory;
  */
 public class GameScreen implements Screen {
 
-	private final static String tag = "GameScreen";
+	private final static String TAG = "GameScreen";
 
 	private final Viewport viewport;
 	private final GameStage stage;
@@ -189,7 +189,7 @@ public class GameScreen implements Screen {
 		defaultScene.getGameModelById("tree_0", trees);
 		for (GameObject obj : trees) {
 			GameModel tree = (GameModel) obj;
-			Gdx.app.debug(tag, "Found tree at " + tree.modelTransform.getTranslation(new Vector3()));
+			Gdx.app.debug(TAG, "Found tree at " + tree.modelTransform.getTranslation(new Vector3()));
 		}
 	}
 

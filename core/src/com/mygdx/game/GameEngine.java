@@ -119,7 +119,6 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		}
 	}
 
-	public static final String tag = "PhysicsSystem";
 	// Collision flags
 	public final static short NONE_FLAG = 0;
 	public final static short NAVMESH_FLAG = 1 << 6;
@@ -145,8 +144,8 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	private GameScene scene;
 	// Models
 	private boolean modelCacheDirty = true;
-	private ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
-	private Array<GameModel> dynamicModels = new Array<GameModel>();
+	private final ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
+	private final Array<GameModel> dynamicModels = new Array<GameModel>();
 	private Bits visibleLayers = new Bits();
 
 	public Array<SteerableBody> characters = new Array<SteerableBody>();

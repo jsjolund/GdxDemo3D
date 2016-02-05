@@ -52,8 +52,6 @@ import com.mygdx.game.utilities.Observer;
  */
 public class GameRenderer implements Disposable, Observer {
 
-	public static final String tag = "GameRenderer";
-
 	/**
 	 * Temporary vector that steerers can use to draw
 	 */
