@@ -182,8 +182,9 @@ public class GameScreen implements Screen {
 		// Grabs all the game objects from the scene
 		engine.setScene(defaultScene);
 
+		// Set which scene layers should be visible on start. House scene only has 4 or 5
 		Bits defaultSceneLayers = new Bits();
-		for (int i = 0; i <= 2; i++) {
+		for (int i = 0; i <= 5; i++) {
 			defaultSceneLayers.set(i);
 		}
 		stage.setVisibleLayers(defaultSceneLayers);
