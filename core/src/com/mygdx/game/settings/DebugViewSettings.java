@@ -23,6 +23,6 @@ public class DebugViewSettings {
 	public static boolean drawModels = true;
 	public static boolean drawMouseNavMeshPos = false;
 	public static boolean drawNavmesh = false;
-	public static boolean drawSteering = true;
+	public static boolean drawSteering = false;
 	public static boolean drawUIDebug = false;
 }

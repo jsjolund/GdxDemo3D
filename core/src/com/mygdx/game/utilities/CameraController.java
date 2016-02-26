@@ -40,6 +40,8 @@ public class CameraController {
 	private final Quaternion deltaRotation = new Quaternion();
 	private float zoom = GameSettings.CAMERA_MAX_ZOOM;
 	private BoundingBox worldBoundingBox;
+	
+	private Matrix4 followTarget;
 
 	public CameraController(GhostCamera camera) {
 		this.camera = camera;
@@ -61,8 +63,13 @@ public class CameraController {
 		}
 
 	}
+	
+	public void setFollowTarget(Matrix4 followTarget) {
+		this.followTarget = followTarget;
+	}
 
 	public void processDragPan(Ray dragCurrentRay, Ray lastDragProcessedRay) {
+		followTarget = null;
 		// TODO:
 		// Can probably be optimized, but simply storing worldDragLast.set(worldDragCurrent)
 		// caused jitter for some reason.
@@ -92,6 +99,7 @@ public class CameraController {
 	}
 
 	public void processKeyboardPan(Vector2 keysMoveDirection, float deltaTime) {
+		followTarget = null;
 		tmp1.set(camera.targetDirection).crs(camera.targetUp).scl(keysMoveDirection.x);
 		tmp1.add(tmp2.set(camera.targetDirection).scl(keysMoveDirection.y));
 		tmp1.y = 0;
@@ -115,5 +123,11 @@ public class CameraController {
 //		Intersector.intersectRayPlane(ray, worldGroundPlane, worldGroundTarget);
 	}
 
+	public void update() {
+		if (followTarget != null) {
+			camera.targetPosition.add(tmp1.set(followTarget.getTranslation(tmp2)).sub(worldGroundTarget));
+			worldGroundTarget.set(tmp2);
+		}
+	}
 
 }

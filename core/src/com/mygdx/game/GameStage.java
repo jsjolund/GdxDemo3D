@@ -334,6 +334,8 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		public void handleCharacterSelection(GameCharacter character) {
+			cameraController.setFollowTarget(character.motionState.transform);
+			
 			if (selectedCharacter == character)
 				return;
 
@@ -516,7 +518,6 @@ public class GameStage extends Stage implements Observable {
 		characterController = new CharacterController(buttonsAtlas);
 		characterController.setVisible(false); // initially no character is selected, so hide the controller
 		layerController = new LayerController(buttonsAtlas);
-		layerController.setLayer(Integer.MAX_VALUE);
 
 		// Create a root table that auto-scales on resize
 		rootTable = new Table() {
@@ -672,6 +673,7 @@ public class GameStage extends Stage implements Observable {
 			rootTable.drawDebug(shapeRenderer);
 			shapeRenderer.end();
 		}
+		cameraController.update();
 	}
 
 	@Override
@@ -703,5 +705,12 @@ public class GameStage extends Stage implements Observable {
 		for (Observer observer : observers) {
 			observer.notifyCursorWorldPosition(x, y, z);
 		}
+	}
+
+	public void setVisibleLayers(Bits visibleLayers) {
+		this.visibleLayers.clear();
+		this.visibleLayers.or(visibleLayers);
+		layerController.setLayer(visibleLayers.nextClearBit(0) - 1);
+		notifyObserversLayerChanged(this.visibleLayers);
 	}
 }

@@ -109,7 +109,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	private EdgePoint lastPointAdded;
 	private Array<Vector3> vectors = new Array<Vector3>();
 	private Array<EdgePoint> pathPoints = new Array<EdgePoint>();
-	private Edge nodelLastEdge;
+	private Edge lastEdge;
 
 	@Override
 	public Iterator<Vector3> iterator() {
@@ -117,7 +117,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 	}
 
 	private Edge getEdge(int index) {
-		return (Edge) ((index == nodes.size) ? nodelLastEdge : nodes.get(index));
+		return (Edge) ((index == nodes.size) ? lastEdge : nodes.get(index));
 	}
 
 	private int numEdges() {
@@ -165,7 +165,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 			addPoint(start, startTri);
 			addPoint(end, startTri);
 		} else {
-			nodelLastEdge = new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end);
+			lastEdge = new Edge(nodes.get(nodes.size - 1).getToNode(), nodes.get(nodes.size - 1).getToNode(), end, end);
 			calculateEdgePoints();
 		}
 	}
@@ -180,7 +180,7 @@ public class NavMeshPointPath implements Iterable<Vector3> {
 		end = null;
 		startTri = null;
 		lastPointAdded = null;
-		nodelLastEdge = null;
+		lastEdge = null;
 	}
 
 	/**

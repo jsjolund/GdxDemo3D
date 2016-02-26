@@ -293,7 +293,7 @@ void main() {
 	float NL = dot(N.xyz, L);
 	float NH = max(0.0, dot(N.xyz, H));
 	
-	float specOpacity = 1.0; //(1.0 - diffuse.w);
+	float specOpacity = u_specOpacity; //(1.0 - diffuse.w);
 	float spec = min(1.0, pow(NH, 10.0) * specOpacity);
 	float selfShadow = saturate(4.0 * NL);
 	//

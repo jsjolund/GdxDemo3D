@@ -302,13 +302,14 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		if (entity instanceof GameModel) {
 			GameModel gameObj = (GameModel) entity;
 			modelsById.put(entity.getId(), gameObj);
-			modelCacheDirty = true;
 		}
 
 		if (entity instanceof GameObject) {
 			GameObject gameObj = (GameObject) entity;
 			objectsById.put(entity.getId(), gameObj);
 		}
+
+		modelCacheDirty = true;
 	}
 
 	@Override
@@ -337,12 +338,13 @@ public class GameEngine extends Engine implements Disposable, Observer {
 
 		if (entity instanceof GameModel) {
 			modelsById.remove(entity.getId());
-			modelCacheDirty = true;
 		}
 
 		if (entity instanceof GameObject) {
 			objectsById.remove(entity.getId());
 		}
+
+		modelCacheDirty = true;
 	}
 
 	public void debugDrawWorld(Camera camera) {
@@ -377,8 +379,9 @@ public class GameEngine extends Engine implements Disposable, Observer {
 
 	@Override
 	public void notifyLayerChanged(Bits layer) {
-		visibleLayers = layer;
-		modelCacheDirty = true;
+		visibleLayers.clear();
+		visibleLayers.or(layer);
+		updateModelCache(visibleLayers);
 	}
 
 	@Override

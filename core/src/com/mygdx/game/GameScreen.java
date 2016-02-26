@@ -165,7 +165,6 @@ public class GameScreen implements Screen {
 			defaultScene.spawnHuman("human", new Vector3(20, 1, 0), 0),
 			defaultScene.spawnHuman("human", new Vector3(24, 1, -5)),
 			defaultScene.spawnHuman("human", new Vector3(20, 1, 5)),
-			defaultScene.spawnHuman("human", new Vector3(-10, 4, 10))
 		};
 
 		// Create dogs by supplying the name of the shared blueprint "dog", along with position
@@ -183,8 +182,12 @@ public class GameScreen implements Screen {
 		// Grabs all the game objects from the scene
 		engine.setScene(defaultScene);
 
-		stage.notifyObserversLayerChanged(stage.getVisibleLayers(new Bits()));
-
+		Bits defaultSceneLayers = new Bits();
+		for (int i = 0; i <= 2; i++) {
+			defaultSceneLayers.set(i);
+		}
+		stage.setVisibleLayers(defaultSceneLayers);
+		
 		Array<GameObject> trees = new Array<GameObject>();
 		defaultScene.getGameModelById("tree_0", trees);
 		for (GameObject obj : trees) {

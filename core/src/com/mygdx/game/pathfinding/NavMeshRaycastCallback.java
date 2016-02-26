@@ -27,9 +27,9 @@ import com.badlogic.gdx.utils.Bits;
 public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 
 	public Vector3 hitNormalLocal = new Vector3();
-	public float hitFraction;
-	public int partId;
-	public int triangleIndex;
+	public float hitFraction = 1;
+	public int partId = -1;
+	public int triangleIndex = -1;
 
 	private btVector3 tmpSetFrom = new btVector3();
 	private btVector3 tmpSetTo = new btVector3();
@@ -37,7 +37,6 @@ public class NavMeshRaycastCallback extends btTriangleRaycastCallback {
 
 	public NavMeshRaycastCallback(Vector3 from, Vector3 to) {
 		super(from, to);
-		clearReport(); // FIXME Constructor should never call an overridable method
 	}
 
 	public void clearReport() {
