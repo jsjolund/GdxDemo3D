@@ -1,10 +1,10 @@
 # GdxDemo3D
 GdxDemo3D is an ongoing game project built with [libGDX](https://github.com/libgdx), demonstrating various aspects of the game library, as well as its extensions, such as the physics engine [Bullet](http://bulletphysics.org/) wrapper and the artificial intelligence library [gdx-ai](https://github.com/libgdx/gdx-ai).
 
-![alt tag](http://i.imgur.com/6rCnfsPl.png)  
+![alt tag](http://i.imgur.com/PWFlcWhl.png)  
 A simple 3D world is included, with a multi storey house and various other items.
 
-![alt tag](http://i.imgur.com/ALRHyMHl.png)  
+![alt tag](http://i.imgur.com/phUkbRGl.png)  
 Animated human and dog characters are used as actors in the world. Ragdoll physics allows for dynamic character animation when a human falls down.
 
 ![alt tag](http://i.imgur.com/Vqr1s9wl.png)  
