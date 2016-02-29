@@ -31,7 +31,9 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
+import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.AnimationListener;
@@ -370,12 +372,12 @@ public class HumanCharacter extends Ragdoll {
 						  short collidesWithFlag,
 						  boolean callback,
 						  boolean noDeactivate,
-						  String ragdollJson,
+						  Array<BlenderEmpty> ragdollEmpties,
 						  String armatureNodeId) {
 
 		super(model, name, location, rotation, scale,
 				shape, mass, belongsToFlag, collidesWithFlag,
-				callback, noDeactivate, ragdollJson, armatureNodeId,
+				callback, noDeactivate, ragdollEmpties, armatureNodeId,
 				new HumanSteerSettings());
 
 		// Create path follower

@@ -17,6 +17,8 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -28,9 +30,15 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
+import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
+import com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
@@ -66,6 +74,8 @@ public class GameRenderer implements Disposable, Observer {
 	private final ModelBatch shadowBatch;
 	public final MyShapeRenderer shapeRenderer;
 	private final SpriteBatch spriteBatch;
+	private final ParticleSystem particleSystem  = ParticleSystem.get();;
+
 	private final Vector3 tmp = new Vector3();
 	private final Vector3 cursorWorldPosition = new Vector3();
 
@@ -76,7 +86,6 @@ public class GameRenderer implements Disposable, Observer {
 	private Environment environment;
 	private DirectionalShadowLight shadowLight;
 	private GameEngine engine;
-	private Bits visibleLayers;
 	private Billboard markerBillboard;
 
 	private ArmatureDebugDrawer armatureDebugDrawer = new ArmatureDebugDrawer();
@@ -107,6 +116,7 @@ public class GameRenderer implements Disposable, Observer {
 			}
 		});
 	}
+	
 
 	@Override
 	public void notifyEntitySelected(GameCharacter entity) {
@@ -118,7 +128,7 @@ public class GameRenderer implements Disposable, Observer {
 
 	@Override
 	public void notifyLayerChanged(Bits layer) {
-		this.visibleLayers = layer;
+
 	}
 
 	@Override
@@ -160,12 +170,13 @@ public class GameRenderer implements Disposable, Observer {
 
 	/**
 	 * Checks if a model is visible using camera frustum culling and model layer visibility.
+	 *
 	 * @param camera
 	 * @param gameModel
 	 * @return
 	 */
 	private boolean isVisible(final Camera camera, final GameModel gameModel) {
-		if (!gameModel.visibleOnLayers.intersects(visibleLayers)) {
+		if (!gameModel.visibleOnLayers.intersects(engine.getVisibleLayers())) {
 			return false;
 		}
 		gameModel.modelInstance.transform.getTranslation(tmp);
@@ -202,7 +213,15 @@ public class GameRenderer implements Disposable, Observer {
 			if (markerBillboard != null && isVisible(camera, markerBillboard)) {
 				modelBatch.render(markerBillboard.modelInstance, environment);
 			}
+			
+			particleSystem.update(); // technically not necessary for rendering
+			particleSystem.begin();
+			particleSystem.draw();
+			particleSystem.end();
+			modelBatch.render(particleSystem);
+
 			modelBatch.end();
+
 		}
 		if (DebugViewSettings.drawArmature) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
@@ -216,12 +235,20 @@ public class GameRenderer implements Disposable, Observer {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			navMeshDebugDrawer.drawNavMesh(shapeRenderer, spriteBatch,
 					engine.getScene().navMesh, selectedCharacter,
-					visibleLayers, viewport.getCamera(), font);
+					engine.getVisibleLayers(), viewport.getCamera(), font);
 		}
 		if (DebugViewSettings.drawMouseNavMeshPos) {
 			shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 			drawMouseWorldAxis();
 		}
+	}
+
+	private void drawModels() {
+
+	}
+
+	private void renderParticleEffects() {
+
 	}
 
 	/**

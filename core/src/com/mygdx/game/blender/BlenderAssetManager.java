@@ -16,15 +16,17 @@
 
 package com.mygdx.game.blender;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
+import com.badlogic.gdx.utils.*;
 import com.mygdx.game.blender.objects.*;
 
 /**
@@ -50,7 +52,7 @@ public class BlenderAssetManager implements Disposable {
 		/**
 		 * Add a disposable asset to be held
 		 *
-		 * @param name    Asset name
+		 * @param name  Asset name
 		 * @param asset The asset
 		 * @param type  Type of asset
 		 */
@@ -102,29 +104,30 @@ public class BlenderAssetManager implements Disposable {
 
 	private final String modelPath;
 	private final String modelExt;
+	private final String pfxPath;
+
 	private final ModelLoader.ModelParameters modelParameters;
 	private final TextureLoader.TextureParameter textureParameter;
-	private final BlenderObjectMap<BlenderTexture> textures = new BlenderObjectMap<BlenderTexture>();
-	private final BlenderObjectMap<BlenderModel> models = new BlenderObjectMap<BlenderModel>();
-	private final BlenderObjectMap<BlenderEmpty> empties = new BlenderObjectMap<BlenderEmpty>();
-	private final BlenderObjectMap<BlenderLight> lights = new BlenderObjectMap<BlenderLight>();
-	private final BlenderObjectMap<BlenderCamera> cameras = new BlenderObjectMap<BlenderCamera>();
+	private final ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter;
+	
 	private final AssetManager assetManager = new AssetManager();
 	private final DisposableHolder disposableHolder = new DisposableHolder();
 
-	public BlenderAssetManager(String modelPath, String modelExt) {
+
+	public BlenderAssetManager(
+			ModelLoader.ModelParameters modelParameters,
+			TextureLoader.TextureParameter textureParameter,
+			ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter,
+			ParticleEffectLoader pfxLoader,
+			String pfxPath, String modelPath, String modelExt) {
 		this.modelExt = modelExt;
 		this.modelPath = modelPath;
+		this.pfxPath = pfxPath;
 
-		modelParameters = new ModelLoader.ModelParameters();
-		modelParameters.textureParameter.genMipMaps = true;
-		modelParameters.textureParameter.minFilter = Texture.TextureFilter.MipMap;
-		modelParameters.textureParameter.magFilter = Texture.TextureFilter.Linear;
-
-		textureParameter = new TextureLoader.TextureParameter();
-		textureParameter.genMipMaps = true;
-		textureParameter.minFilter = Texture.TextureFilter.MipMap;
-		textureParameter.magFilter = Texture.TextureFilter.Linear;
+		this.modelParameters = modelParameters;
+		this.textureParameter = textureParameter;
+		this.pfxParameter = pfxParameter;
+		assetManager.setLoader(ParticleEffect.class, pfxLoader);
 	}
 
 	public <T extends Disposable> void manageDisposable(String assetId, T asset, Class<T> type) {
@@ -133,35 +136,108 @@ public class BlenderAssetManager implements Disposable {
 
 	public <T> void manageDisposableFromPath(String assetId, String localPath, Class<T> type) {
 		if (type == Texture.class) {
-			textures.add(new BlenderTexture(assetId, localPath));
+			sceneData.textures.add(new BlenderTexture(assetId, localPath));
 			assetManager.load(localPath, Texture.class, textureParameter);
 		} else if (type == Model.class) {
-			models.add(new BlenderModel(assetId, localPath));
+			sceneData.models.add(new BlenderModel(assetId, localPath));
 			assetManager.load(localPath, Model.class, modelParameters);
 		} else {
 			throw new GdxRuntimeException("Asset type not supported '" + type + "'");
 		}
 	}
 
-	public void loadPlaceholders(String jsonPath, Class type) {
-		if (type == BlenderModel.class) {
-			Array<BlenderModel> mergedObjects = models.addFromJson(jsonPath, BlenderModel.class);
-			// Load the models into asset manager
-			for (BlenderModel bModel : mergedObjects) {
-				String filePath = modelPath + bModel.model_file_name + modelExt;
-				assetManager.load(filePath, Model.class, modelParameters);
+	private static class BlenderObjectMap<T extends BlenderObject> extends ArrayMap<String, Array<T>> {
+
+		public void add(T object) {
+			if (containsKey(object.name)) {
+				get(object.name).add(object);
+			} else {
+				Array<T> array = new Array<T>();
+				put(object.name, array);
+				array.add(object);
 			}
-		} else if (type == BlenderLight.class) {
-			lights.addFromJson(jsonPath, BlenderLight.class);
-		} else if (type == BlenderEmpty.class) {
-			empties.addFromJson(jsonPath, BlenderEmpty.class);
-		} else if (type == BlenderCamera.class) {
-			cameras.addFromJson(jsonPath, BlenderCamera.class);
-		} else {
-			throw new GdxRuntimeException("Could not add scene objects of type '" + type + "'");
+		}
+
+		public void addAll(Array<T> objects) {
+			for (T object : objects) {
+				add(object);
+			}
+		}
+
+		public void addAll(BlenderObjectMap<T> other) {
+			for (Array<T> value : other.values()) {
+				addAll(value);
+			}
+		}
+
+		public Array<T> removeByName(String name) {
+			return removeKey(name);
+		}
+
+		public Array<T> getByName(String name) {
+			return get(name);
+		}
+
+	}
+
+	private static class BlenderSceneData implements Json.Serializable {
+
+		final BlenderObjectMap<BlenderTexture> textures = new BlenderObjectMap<BlenderTexture>();
+		final BlenderObjectMap<BlenderModel> models = new BlenderObjectMap<BlenderModel>();
+		final BlenderObjectMap<BlenderEmpty> empties = new BlenderObjectMap<BlenderEmpty>();
+		final BlenderObjectMap<BlenderLight> lights = new BlenderObjectMap<BlenderLight>();
+		final BlenderObjectMap<BlenderCamera> cameras = new BlenderObjectMap<BlenderCamera>();
+
+		@Override
+		public void write(Json json) {
+
+		}
+
+		@Override
+		public void read(Json json, JsonValue jsonData) {
+			for (JsonValue category : jsonData) {
+				if (category.name.equals("model")) {
+					models.addAll(json.readValue(Array.class, BlenderModel.class, category));
+				} else if (category.name.equals("empty")) {
+					empties.addAll(json.readValue(Array.class, BlenderEmpty.class, category));
+				} else if (category.name.equals("light")) {
+					lights.addAll(json.readValue(Array.class, BlenderLight.class, category));
+				} else if (category.name.equals("camera")) {
+					cameras.addAll(json.readValue(Array.class, BlenderCamera.class, category));
+				}
+			}
+		}
+
+		public void add(BlenderSceneData other) {
+			textures.addAll(other.textures);
+			models.addAll(other.models);
+			empties.addAll(other.empties);
+			lights.addAll(other.lights);
+			cameras.addAll(other.cameras);
 		}
 	}
 
+	BlenderSceneData sceneData = new BlenderSceneData();
+
+	public void load(String jsonPath) {
+		BlenderSceneData newData = new Json().fromJson(BlenderSceneData.class, Gdx.files.internal(jsonPath));
+		// Load models with assetmanager
+		for (String model : newData.models.keys()) {
+			BlenderModel bModel = newData.models.get(model).first();
+			String filePath = modelPath + bModel.model_file_name + modelExt;
+			assetManager.load(filePath, Model.class, modelParameters);
+		}
+		// Load particle effects with assetmanager
+		for (Array<BlenderEmpty> empties : newData.empties.values()) {
+			for (BlenderEmpty empty : empties) {
+				if (empty.custom_properties.containsKey("pfx")) {
+					String filePath = pfxPath + empty.custom_properties.get("pfx");
+					assetManager.load(filePath, ParticleEffect.class, pfxParameter);
+				}
+			}
+		}
+		sceneData.add(newData);
+	}
 
 	public <T extends Disposable> T getAsset(String assetId, Class<T> type) {
 		if (disposableHolder.contains(assetId, type)) {
@@ -172,7 +248,7 @@ public class BlenderAssetManager implements Disposable {
 
 		if (type == Model.class) {
 			try {
-				String fileName = models.getByName(assetId).first().model_file_name;
+				String fileName = sceneData.models.getByName(assetId).first().model_file_name;
 				filePath = modelPath + fileName + modelExt;
 			} catch (Exception e) {
 				throw new GdxRuntimeException("Could not find asset type:'" + type + "', name:'" + assetId + "'");
@@ -180,7 +256,14 @@ public class BlenderAssetManager implements Disposable {
 
 		} else if (type == Texture.class) {
 			try {
-				filePath = textures.getByName(assetId).first().filePath;
+				filePath = sceneData.textures.getByName(assetId).first().filePath;
+			} catch (Exception e) {
+				throw new GdxRuntimeException("Could not find asset type:'" + type + "', name:'" + assetId + "'");
+			}
+			
+		} else if (type == ParticleEffect.class) {
+			try {
+				filePath = pfxPath + assetId;
 			} catch (Exception e) {
 				throw new GdxRuntimeException("Could not find asset type:'" + type + "', name:'" + assetId + "'");
 			}
@@ -194,13 +277,13 @@ public class BlenderAssetManager implements Disposable {
 	private <S extends BlenderObjectMap<T>, T extends BlenderObject> S getTypeMap(Class<T> objClass) {
 		BlenderObjectMap<T> map = null;
 		if (objClass == BlenderModel.class) {
-			map = (BlenderObjectMap<T>) models;
+			map = (BlenderObjectMap<T>) sceneData.models;
 		} else if (objClass == BlenderLight.class) {
-			map = (BlenderObjectMap<T>) lights;
+			map = (BlenderObjectMap<T>) sceneData.lights;
 		} else if (objClass == BlenderEmpty.class) {
-			map = (BlenderObjectMap<T>) empties;
+			map = (BlenderObjectMap<T>) sceneData.empties;
 		} else if (objClass == BlenderCamera.class) {
-			map = (BlenderObjectMap<T>) cameras;
+			map = (BlenderObjectMap<T>) sceneData.cameras;
 		} else {
 			throw new GdxRuntimeException("Unknown map for type '" + objClass + "'");
 		}

@@ -20,6 +20,7 @@ import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.ModelCache;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -44,8 +45,6 @@ import java.util.Iterator;
 /**
  * Class which keeps track of game objects, performs physics simulation and collision detection,
  * as well as decides which models to render.
- * This class extends {@link PooledEngine} from Ashley, but not all the methods of the super class
- * will work correctly.
  *
  * @author jsjolund
  */
@@ -149,6 +148,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	private Bits visibleLayers = new Bits();
 
 	public Array<SteerableBody> characters = new Array<SteerableBody>();
+	private ParticleSystem particleSystem;
 
 	public GameEngine() {
 		GameEngine.engine = this;
@@ -192,6 +192,10 @@ public class GameEngine extends Engine implements Disposable, Observer {
 
 	public GameScene getScene() {
 		return scene;
+	}
+	
+	public Bits getVisibleLayers() {
+		return visibleLayers;
 	}
 
 	public void setScene(GameScene scene) {

@@ -97,7 +97,7 @@ public abstract class Ragdoll extends GameCharacter {
 	 * @param collidesWithFlag Flag for which collision layers this body collides with
 	 * @param callback         If this body should trigger collision contact callbacks.
 	 * @param noDeactivate     If this body should never 'sleep'
-	 * @param ragdollJson      Json file with body part definitions
+	 * @param ragdollEmpties      Blender empties with body part definitions
 	 * @param armatureNodeId   The id of the root node in the model animation armature
 	 * @param steerSettings    Steerable settings
 	 */
@@ -112,14 +112,14 @@ public abstract class Ragdoll extends GameCharacter {
 				   short collidesWithFlag,
 				   boolean callback,
 				   boolean noDeactivate,
-				   String ragdollJson,
+				   Array<BlenderEmpty> ragdollEmpties,
 				   String armatureNodeId,
 				   SteerSettings steerSettings) {
 
 		super(model, name, location, rotation, scale, shape, mass,
 				belongsToFlag, collidesWithFlag, callback, noDeactivate, steerSettings);
 
-		createRagdoll(ragdollJson, armatureNodeId);
+		createRagdoll(ragdollEmpties, armatureNodeId);
 	}
 
 	@Override
@@ -294,19 +294,15 @@ public abstract class Ragdoll extends GameCharacter {
 
 
 	/**
-	 * @param ragdollJson    The json file containing rigid body dimension data
+	 * @param empties    Blender empties containing rigid body dimension data
 	 * @param armatureNodeId The name of the root skeleton/armature node
 	 */
-	private void createRagdoll(String ragdollJson, String armatureNodeId) {
+	private void createRagdoll(Array<BlenderEmpty> empties, String armatureNodeId) {
 		Node armature = modelInstance.getNode(armatureNodeId, true, true);
 
 		// Load mass and shape half extent data from Blender json
 		ArrayMap<String, Vector3> halfExtMap = new ArrayMap<String, Vector3>();
 		ArrayMap<String, Float> massMap = new ArrayMap<String, Float>();
-
-		@SuppressWarnings("unchecked")
-		Array<BlenderEmpty> empties =
-				new Json().fromJson(Array.class, BlenderEmpty.class, Gdx.files.internal(ragdollJson));
 
 		for (BlenderEmpty empty : empties) {
 			Vector3 halfExtents = new Vector3(empty.scale);

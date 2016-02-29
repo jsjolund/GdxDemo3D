@@ -245,16 +245,18 @@ class ModelToMeshMap(object):
         print()
 
 
-def write_json(json_file_path, objects):
+def write_json(json_file_path, object_map):
     """
     Serialize the "BlenderObjects" and write them to json file
     :param json_file_path:
     :param objects:
     :return:
     """
-    json_out = []
-    for obj in objects:
-        json_out.append(obj.serialize())
+    json_out = {}
+    for category in object_map:
+        json_out[category] = []
+        for obj in object_map[category]:
+            json_out[category].append(obj.serialize())
     json_file = open(json_file_path, "w")
     json_file.write(json.dumps(json_out))
     json_file.write("\n")
@@ -397,10 +399,8 @@ def main():
     json_dir_path = os.path.join(os.path.dirname(blender_file_basedir), "json")
     if not os.path.exists(json_dir_path):
         os.makedirs(json_dir_path)
-    for category in blender_object_map:
-        json_file_path = os.path.join(json_dir_path, "{}_{}.json".format(blender_filename_noext, category))
-        write_json(json_file_path, blender_object_map[category])
-    print()
+    json_file_path = os.path.join(json_dir_path, blender_filename_noext + ".json")
+    write_json(json_file_path, blender_object_map)
 
     export_objects = get_export_objects(blender_object_map[BlenderModel.category])
 

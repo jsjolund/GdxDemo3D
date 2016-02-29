@@ -19,10 +19,17 @@ package com.mygdx.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
+import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
@@ -33,10 +40,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.blender.objects.BlenderCamera;
 import com.mygdx.game.blender.objects.BlenderEmpty;
-import com.mygdx.game.blender.objects.BlenderLight;
-import com.mygdx.game.blender.objects.BlenderModel;
 import com.mygdx.game.objects.*;
 import com.mygdx.game.scene.GameObjectBlueprint;
 import com.mygdx.game.scene.GameScene;
@@ -59,69 +63,82 @@ public class GameScreen implements Screen {
 	private final GameEngine engine;
 	private final Color viewportBackgroundColor;
 	private final GhostCamera camera;
-	private final AssetManager assets;
-	private final ShapeRenderer shapeRenderer;
+	private final ShapeRenderer viewportBackgroundRenderer;
 	private final CameraController cameraController;
 	private final GameRenderer renderer;
 	private final GameSceneManager sceneManager;
 
 	public GameScreen(int reqWidth, int reqHeight) {
-		Bullet.init();
-		MipMapGenerator.setUseHardwareMipMap(true);
-
-		assets = new AssetManager();
-		engine = new GameEngine();
-		viewportBackgroundColor = Color.BLACK;
-
 		camera = new GhostCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
 		viewport = new FitViewport(reqWidth, reqHeight, camera);
+		
+		Bullet.init();
+		MipMapGenerator.setUseHardwareMipMap(true);
+		
+		ModelLoader.ModelParameters modelParameters = new ModelLoader.ModelParameters();
+		modelParameters.textureParameter.genMipMaps = true;
+		modelParameters.textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		modelParameters.textureParameter.magFilter = Texture.TextureFilter.Linear;
 
-		shapeRenderer = new ShapeRenderer();
+		TextureLoader.TextureParameter textureParameter = new TextureLoader.TextureParameter();
+		textureParameter.genMipMaps = true;
+		textureParameter.minFilter = Texture.TextureFilter.MipMap;
+		textureParameter.magFilter = Texture.TextureFilter.Linear;
 
-		sceneManager = new GameSceneManager("models/g3db/", ".g3db");
+		ParticleSystem particleSystem = ParticleSystem.get();
+		BillboardParticleBatch pointSpriteBatch = new BillboardParticleBatch();
+		pointSpriteBatch.setCamera(camera);
+		particleSystem.add(pointSpriteBatch);
+		ParticleEffectLoader.ParticleEffectLoadParameter loadParam =
+				new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
+		ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
+
+		engine = new GameEngine();
+		viewportBackgroundColor = Color.BLACK;
+
+		renderer = new GameRenderer(viewport, camera, engine);
+		
+		viewportBackgroundRenderer = new ShapeRenderer();
+
+		sceneManager = new GameSceneManager(modelParameters, textureParameter, loadParam, loader , "particles/", "models/g3db/", ".g3db");
 		// Create a default scene, which will be the game world.
-		GameScene defaultScene = sceneManager.get("scene0");
+		GameScene defaultScene = sceneManager.open("scene0");
 
 		// Add placeholders consisting of blender objects to the scene, loaded from blender json.
 		// These will later be used in various ways to spawn actual game objects.
 		// The reason for this decoupling is that some models have their collision shapes defined as Blender empties,
 		// coupled by matching string ids. These are later compared, and used for creating game object blueprints.
-		defaultScene.assets.loadPlaceholders("models/json/scene0_model.json", BlenderModel.class);
-		defaultScene.assets.loadPlaceholders("models/json/scene0_empty.json", BlenderEmpty.class);
-		defaultScene.assets.loadPlaceholders("models/json/scene0_light.json", BlenderLight.class);
-		defaultScene.assets.loadPlaceholders("models/json/scene0_camera.json", BlenderCamera.class);
+		defaultScene.assets.load("models/json/scene0.json");
 
 		// Since blender placeholder objects from different .blend scenes might have string name collisions,
 		// load each into a new scene  then distribute shared object blueprints among game scenes (only one scene so far).
-		sceneManager.get("human_scene").assets.loadPlaceholders("models/json/human_empty.json", BlenderEmpty.class);
-		sceneManager.get("human_scene").assets.loadPlaceholders("models/json/human_model.json", BlenderModel.class);
-		sceneManager.get("dog_scene").assets.loadPlaceholders("models/json/dog_model.json", BlenderModel.class);
-		sceneManager.get("dog_scene").assets.loadPlaceholders("models/json/dog_empty.json", BlenderEmpty.class);
+		sceneManager.open("human_scene").assets.load("models/json/human.json");
+		sceneManager.open("dog_scene").assets.load("models/json/dog.json");
 
 		// Create some game object blueprints which will be shared between game scenes.
-		sceneManager.get("utils_scene").assets.manageDisposableFromPath("marker", "images/marker.png", Texture.class);
-		Texture texture = sceneManager.get("utils_scene").assets.getAsset("marker", Texture.class);
+		sceneManager.open("utils_scene").assets.manageDisposableFromPath("marker", "images/marker.png", Texture.class);
+		Texture texture = sceneManager.open("utils_scene").assets.getAsset("marker", Texture.class);
 		Model billboardModel = ModelFactory.buildBillboardModel(texture, 1, 1);
-		sceneManager.get("utils_scene").assets.manageDisposable("markerModel", billboardModel, Model.class);
+		sceneManager.open("utils_scene").assets.manageDisposable("markerModel", billboardModel, Model.class);
 		GameObjectBlueprint markerBlueprint = new GameObjectBlueprint();
 		markerBlueprint.name = "marker";
 		markerBlueprint.model = billboardModel;
 		sceneManager.addSharedBlueprint("marker", markerBlueprint);
-
 		GameObjectBlueprint humanBlueprint = new GameObjectBlueprint();
 		humanBlueprint.position = new Vector3();
 		humanBlueprint.rotation = new Vector3();
 		humanBlueprint.scale = new Vector3(1, 1, 1);
-		humanBlueprint.model = sceneManager.get("human_scene").assets.getAsset("human", Model.class);
+		humanBlueprint.model = sceneManager.open("human_scene").assets.getAsset("human", Model.class);
 		humanBlueprint.name = "human";
 		humanBlueprint.shape = new btCapsuleShape(0.4f, 1.1f);
 		humanBlueprint.shapeType = "capsule"; // TODO: Create enums
 		humanBlueprint.mass = 1;
 		humanBlueprint.noDeactivate = true;
-		humanBlueprint.ragdollJson = "models/json/human_empty.json";
+		humanBlueprint.ragdollEmpties = new Array<BlenderEmpty>();
+		sceneManager.open("human_scene").assets.getAllPlaceholders(BlenderEmpty.class, humanBlueprint.ragdollEmpties);
 		humanBlueprint.armatureNodeId = "armature";
 		humanBlueprint.belongsToFlag = GameEngine.PC_FLAG;
 		humanBlueprint.collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
@@ -131,7 +148,7 @@ public class GameScreen implements Screen {
 		dogBlueprint.position = new Vector3();
 		dogBlueprint.rotation = new Vector3();
 		dogBlueprint.scale = new Vector3(0.3f, 0.3f, 0.3f);
-		dogBlueprint.model = sceneManager.get("dog_scene").assets.getAsset("dog", Model.class);
+		dogBlueprint.model = sceneManager.open("dog_scene").assets.getAsset("dog", Model.class);
 		dogBlueprint.name = "dog";
 		dogBlueprint.shape = new btCapsuleShape(0.4f, 0.5f);
 		dogBlueprint.shapeType = "capsule";
@@ -148,7 +165,7 @@ public class GameScreen implements Screen {
 
 		defaultScene.setToSceneCamera(camera);
 
-		renderer = new GameRenderer(viewport, camera, engine);
+
 		renderer.setEnvironmentLights(defaultScene.lights, defaultScene.shadowCameraDirection);
 		Billboard markerBillboard = defaultScene.spawnSelectionBillboard("marker", camera);
 		renderer.setSelectionMarker(markerBillboard);
@@ -200,8 +217,7 @@ public class GameScreen implements Screen {
 	@Override
 	public void dispose() {
 		stage.dispose();
-		assets.dispose();
-		shapeRenderer.dispose();
+		viewportBackgroundRenderer.dispose();
 		renderer.dispose();
 
 		engine.dispose();
@@ -216,10 +232,10 @@ public class GameScreen implements Screen {
 		Gdx.gl.glClearColor(0, 0, 0, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		shapeRenderer.setColor(viewportBackgroundColor);
-		shapeRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
-		shapeRenderer.end();
+		viewportBackgroundRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		viewportBackgroundRenderer.setColor(viewportBackgroundColor);
+		viewportBackgroundRenderer.rect(0, 0, viewport.getScreenWidth(), viewport.getScreenHeight());
+		viewportBackgroundRenderer.end();
 
 		engine.update(delta);
 		renderer.update(delta);

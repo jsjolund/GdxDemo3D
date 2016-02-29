@@ -17,6 +17,9 @@
 package com.mygdx.game.scene;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
+import com.badlogic.gdx.assets.loaders.TextureLoader;
+import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -33,15 +36,30 @@ public class GameSceneManager implements Disposable {
 
 	private final String modelPath;
 	private final String modelExt;
+	private final String pfxPath;
+	private final ModelLoader.ModelParameters modelParameters;
+	private final TextureLoader.TextureParameter textureParameter;
+	private final ParticleEffectLoader pfxLoader;
+	private final ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter;
 
-	public GameSceneManager(String modelPath, String modelExt) {
+	public GameSceneManager(ModelLoader.ModelParameters modelParameters,
+							TextureLoader.TextureParameter textureParameter,
+							ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter,
+							ParticleEffectLoader pfxLoader, String pfxPath, String modelPath, String modelExt) {
 		this.modelPath = modelPath;
 		this.modelExt = modelExt;
+		this.pfxPath = pfxPath;
+
+		this.modelParameters = modelParameters;
+		this.textureParameter = textureParameter;
+		this.pfxParameter = pfxParameter;
+		this.pfxLoader = pfxLoader;
 	}
 
-	public GameScene get(String sceneId) {
+	public GameScene open(String sceneId) {
 		if (!sceneMap.containsKey(sceneId)) {
-			sceneMap.put(sceneId, new GameScene(modelPath, modelExt, sharedBlueprints));
+			sceneMap.put(sceneId, new GameScene(modelParameters, textureParameter, pfxParameter, pfxLoader, 
+					pfxPath, modelPath, modelExt, sharedBlueprints));
 			Gdx.app.debug(TAG, "Added scene '" + sceneId + "'");
 		}
 		return sceneMap.get(sceneId);
@@ -51,8 +69,8 @@ public class GameSceneManager implements Disposable {
 		if (sharedBlueprints.containsKey(blueprintId)) {
 			throw new GdxRuntimeException("Shared blueprint already exists '" + blueprintId + "'");
 		}
-		Gdx.app.debug(TAG, "Added shared blueprint '" + blueprintId + "'");
 		sharedBlueprints.put(blueprintId, blueprint);
+		Gdx.app.debug(TAG, "Added shared blueprint '" + blueprintId + "'");
 	}
 
 	public void dispose(String sceneId) {
