@@ -126,7 +126,6 @@ public class BlenderAssetManager implements Disposable {
 			ModelLoader.ModelParameters modelParameters,
 			TextureLoader.TextureParameter textureParameter,
 			ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter,
-			ParticleEffectLoader pfxLoader,
 			String pfxPath, String modelPath, String modelExt) {
 		this.modelExt = modelExt;
 		this.modelPath = modelPath;
@@ -135,7 +134,6 @@ public class BlenderAssetManager implements Disposable {
 		this.modelParameters = modelParameters;
 		this.textureParameter = textureParameter;
 		this.pfxParameter = pfxParameter;
-		assetManager.setLoader(ParticleEffect.class, pfxLoader);
 	}
 
 	public <T extends Disposable> void manageDisposable(String assetId, T asset, Class<T> type) {
@@ -283,19 +281,19 @@ public class BlenderAssetManager implements Disposable {
 
 	@SuppressWarnings("unchecked")
 	private <S extends BlenderObjectMap<T>, T extends BlenderObject> S getTypeMap(Class<T> objClass) {
-		BlenderObjectMap<T> map = null;
+		S map = null;
 		if (objClass == BlenderModel.class) {
-			map = (BlenderObjectMap<T>) sceneData.models;
+			map = (S) sceneData.models;
 		} else if (objClass == BlenderLight.class) {
-			map = (BlenderObjectMap<T>) sceneData.lights;
+			map = (S) sceneData.lights;
 		} else if (objClass == BlenderEmpty.class) {
-			map = (BlenderObjectMap<T>) sceneData.empties;
+			map = (S) sceneData.empties;
 		} else if (objClass == BlenderCamera.class) {
-			map = (BlenderObjectMap<T>) sceneData.cameras;
+			map = (S) sceneData.cameras;
 		} else {
 			throw new GdxRuntimeException("Unknown map for type '" + objClass + "'");
 		}
-		return (S) map;
+		return map;
 	}
 
 	public <T extends BlenderObject> Array<String> getPlaceholderIdsByType(Class<T> objClass) {
