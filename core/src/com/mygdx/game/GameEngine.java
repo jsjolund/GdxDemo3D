@@ -16,31 +16,49 @@
 
 package com.mygdx.game;
 
+import java.util.Iterator;
+
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.ModelCache;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
-import com.badlogic.gdx.physics.bullet.collision.*;
-import com.badlogic.gdx.physics.bullet.dynamics.*;
+import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
+import com.badlogic.gdx.physics.bullet.collision.LocalRayResult;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
+import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
+import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
+import com.badlogic.gdx.physics.bullet.collision.btDispatcher;
+import com.badlogic.gdx.physics.bullet.dynamics.btConstraintSolver;
+import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
+import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
+import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
+import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.LongMap;
-import com.mygdx.game.objects.*;
+import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.GameCharacter;
+import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.GameModelBody;
+import com.mygdx.game.objects.GameObject;
+import com.mygdx.game.objects.InvisibleBody;
+import com.mygdx.game.objects.Ragdoll;
+import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.Engine;
 import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.Observer;
-
-import java.util.Iterator;
 
 /**
  * Class which keeps track of game objects, performs physics simulation and collision detection,
@@ -125,9 +143,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
 	public final static short ALL_FLAG = -1;
-	// FIXME
-	// Ugly hack to access the engine from anywhere
-	public static GameEngine engine;
+	
 	// Bullet classes
 	private final btDynamicsWorld dynamicsWorld;
 	private final btDispatcher dispatcher;
@@ -141,6 +157,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
 	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
 	private GameScene scene;
+	
 	// Models
 	private boolean modelCacheDirty = true;
 	private final ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
@@ -148,11 +165,8 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	private Bits visibleLayers = new Bits();
 
 	public Array<SteerableBody> characters = new Array<SteerableBody>();
-	private ParticleSystem particleSystem;
 
 	public GameEngine() {
-		GameEngine.engine = this;
-
 		collisionConfig = new btDefaultCollisionConfiguration();
 		dispatcher = new btCollisionDispatcher(collisionConfig);
 		broadphase = new btDbvtBroadphase();

@@ -16,11 +16,14 @@
 
 package com.mygdx.game.scene;
 
+import static com.mygdx.game.utilities.Constants.V3_DOWN;
+
+import java.util.Comparator;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
@@ -38,23 +41,30 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
-import com.badlogic.gdx.utils.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.blender.BlenderAssetManager;
 import com.mygdx.game.blender.objects.BlenderCamera;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.blender.objects.BlenderLight;
 import com.mygdx.game.blender.objects.BlenderModel;
-import com.mygdx.game.objects.*;
+import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.GameModelBody;
+import com.mygdx.game.objects.GameObject;
+import com.mygdx.game.objects.HumanCharacter;
+import com.mygdx.game.objects.InvisibleBody;
+import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
-
-import java.util.Comparator;
-
-import static com.mygdx.game.utilities.Constants.V3_DOWN;
 
 /**
  * A GameScene contains models, lights, physics bodies, navigation mesh and particle effects.

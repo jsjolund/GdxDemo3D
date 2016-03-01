@@ -18,23 +18,21 @@ package com.mygdx.game.utilities;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.Disposable;
 
-public final class Sounds {
+public class Sounds implements Disposable {
 
-	static public Sound bark;
-	static public Sound whine;
-	static public Sound whistle;
+	public final Sound bark;
+	public final Sound whine;
+	public final Sound whistle;
 	
-	private Sounds () {
-	}
-
-	public static void load() {
+	public Sounds () {
 		bark = load("sounds/bark.mp3");
 		whine = load("sounds/whine.mp3");
 		whistle = load("sounds/whistle.mp3");
 	}
 
-	public static void dispose() {
+	public void dispose() {
 		bark.dispose();
 		whine.dispose();
 		whistle.dispose();

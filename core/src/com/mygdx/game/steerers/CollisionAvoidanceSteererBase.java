@@ -23,8 +23,8 @@ import com.badlogic.gdx.ai.steer.behaviors.PrioritySteering;
 import com.badlogic.gdx.ai.steer.proximities.RadiusProximity;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.GameEngine;
 import com.mygdx.game.GameRenderer;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.utilities.MyShapeRenderer;
 import com.mygdx.game.utilities.Steerer;
@@ -44,7 +44,7 @@ public abstract class CollisionAvoidanceSteererBase extends Steerer {
 	public CollisionAvoidanceSteererBase(final SteerableBody steerableBody) {
 		super(steerableBody);
 
-		this.proximity = new RadiusProximity<Vector3>(steerableBody, GameEngine.engine.characters, steerableBody.getBoundingRadius() * 1.8f);
+		this.proximity = new RadiusProximity<Vector3>(steerableBody, GameScreen.screen.engine.characters, steerableBody.getBoundingRadius() * 1.8f);
 		this.collisionAvoidanceSB = new CollisionAvoidance<Vector3>(steerableBody, proximity) {
 			@Override
 			protected SteeringAcceleration<Vector3> calculateRealSteering(SteeringAcceleration<Vector3> steering) {

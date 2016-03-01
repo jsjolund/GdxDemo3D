@@ -18,8 +18,8 @@ package com.mygdx.game.objects.dog;
 
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.utilities.Sounds;
 
 /**
  * Action task that makes the dog whine.
@@ -33,7 +33,7 @@ public class WhineTask extends LeafTask<DogCharacter> {
 
 	@Override
 	public Status execute() {
-		Sounds.whine.play();
+		GameScreen.screen.sounds.whine.play();
 		return Status.SUCCEEDED;
 	}
 

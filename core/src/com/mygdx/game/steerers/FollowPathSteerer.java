@@ -28,6 +28,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.GameRenderer;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.GameObject;
 import com.mygdx.game.objects.SteerableBody;
 import com.mygdx.game.pathfinding.NavMeshGraphPath;
@@ -98,7 +99,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	}
 
 	public boolean calculateNewPath(Ray ray, Bits visibleLayers) {
-		if (GameEngine.engine.getScene().navMesh.getPath(
+		if (GameScreen.screen.engine.getScene().navMesh.getPath(
 				steerableBody.getCurrentTriangle(),
 				steerableBody.getGroundPosition(tmpVec1),
 				ray, visibleLayers,
@@ -112,7 +113,7 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 	}
 
 	public boolean calculateNewPath(Triangle targetTriangle, Vector3 targetPoint) {
-		if (GameEngine.engine.getScene().navMesh.getPath(
+		if (GameScreen.screen.engine.getScene().navMesh.getPath(
 				steerableBody.getCurrentTriangle(),
 				steerableBody.getGroundPosition(tmpVec1),
 				targetTriangle,
@@ -246,12 +247,12 @@ public class FollowPathSteerer extends CollisionAvoidanceSteererBase {
 			steerableBody.getGroundPosition(stationarityRayLow.origin).add(0, 0.05f, 0);
 			steerableBody.getDirection(stationarityRayLow.direction).scl(1f, 0f, 1f).nor();
 			stationarityRayLength = steerableBody.getBoundingRadius() + 0.4f;
-			Entity hitEntityLow = GameEngine.engine.rayTest(stationarityRayLow, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
+			Entity hitEntityLow = GameScreen.screen.engine.rayTest(stationarityRayLow, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
 			if (hitEntityLow instanceof GameObject) {
 				stationarityRayColor = Color.RED;
 				stationarityRayHigh.set(stationarityRayLow);
 				stationarityRayHigh.origin.add(0, .8f, 0);
-				Entity hitEntityHigh = GameEngine.engine.rayTest(stationarityRayHigh, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
+				Entity hitEntityHigh = GameScreen.screen.engine.rayTest(stationarityRayHigh, null, GameEngine.ALL_FLAG, GameEngine.PC_FLAG, stationarityRayLength, null);
 				if (hitEntityHigh == null) {
 					// The entity is touching a small obstacle with his feet like a step of the stairs.
 					// Increase the acceleration to make him go upstairs.

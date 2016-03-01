@@ -25,7 +25,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.mygdx.game.GameEngine;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.utilities.BulletLocation;
@@ -245,7 +245,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		
 		// Maybe we should do this even if applySteering is not invoked
 		// since the entity might move because of other bodies that are pushing it 
-		updateSteerableData(GameEngine.engine.getScene());
+		updateSteerableData(GameScreen.screen.engine.getScene());
 
 		// Calculate the target orientation of the model based on the direction of motion
 		// Note that the entity might twitch or jitter slightly when it finds itself in a situation with  
@@ -439,7 +439,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 	 * Returns the triangle which the steerable is standing on
 	 */
 	public Triangle getCurrentTriangle() {
-		return getCurrentTriangle(GameEngine.engine.getScene());
+		return getCurrentTriangle(GameScreen.screen.engine.getScene());
 	}
 
 	public Triangle getCurrentTriangle(GameScene scene) {

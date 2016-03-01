@@ -33,12 +33,12 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
-import com.mygdx.game.utilities.Sounds;
 
 /**
  * A human character whose brain is modeled through a finite state machine.
@@ -146,7 +146,7 @@ public class HumanCharacter extends Ragdoll {
 					updateAnimation(entity);
 				}
 				else {
-					Sounds.whistle.play();
+					GameScreen.screen.sounds.whistle.play();
 					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
