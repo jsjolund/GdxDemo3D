@@ -20,14 +20,22 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
-import com.badlogic.gdx.utils.*;
-import com.mygdx.game.blender.objects.*;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ArrayMap;
+import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.ObjectMap;
+import com.mygdx.game.blender.objects.BlenderCamera;
+import com.mygdx.game.blender.objects.BlenderEmpty;
+import com.mygdx.game.blender.objects.BlenderLight;
+import com.mygdx.game.blender.objects.BlenderModel;
+import com.mygdx.game.blender.objects.BlenderObject;
 
 /**
  * Reads blender json exported from a particular .blend file, and loads
@@ -47,7 +55,7 @@ public class BlenderAssetManager implements Disposable {
 	 * @param <T>
 	 */
 	private class DisposableHolder<T extends Disposable> implements Disposable {
-		ObjectMap<Class, ObjectMap<String, T>> map = new ObjectMap<Class, ObjectMap<String, T>>();
+		ObjectMap<Class<T>, ObjectMap<String, T>> map = new ObjectMap<Class<T>, ObjectMap<String, T>>();
 
 		/**
 		 * Add a disposable asset to be held
@@ -84,7 +92,7 @@ public class BlenderAssetManager implements Disposable {
 
 		@Override
 		public void dispose() {
-			for (ObjectMap.Entry<Class, ObjectMap<String, T>> entryClass : map) {
+			for (ObjectMap.Entry<Class<T>, ObjectMap<String, T>> entryClass : map) {
 				for (ObjectMap.Entry<String, T> entryId : entryClass.value) {
 					entryId.value.dispose();
 				}
@@ -302,28 +310,26 @@ public class BlenderAssetManager implements Disposable {
 		getTypeMap(type).addAll(instances);
 	}
 
-	public <S extends Array<T>, T extends BlenderObject> S getPlaceholders(String assetName, Class<T> type, Array<T> out) {
+	public <S extends Array<T>, T extends BlenderObject> S getPlaceholders(String assetName, Class<T> type, S out) {
 		Array<T> instances = getTypeMap(type).getByName(assetName);
 		if (instances != null) {
 			out.addAll(instances);
 		}
-		return (S) out;
+		return out;
 	}
 
-	public <S extends Array<T>, T extends BlenderObject> S getAllPlaceholders(Class<T> type, Array<T> out) {
+	public <S extends Array<T>, T extends BlenderObject> S getAllPlaceholders(Class<T> type, S out) {
 		BlenderObjectMap<T> map = getTypeMap(type);
 		for (ObjectMap.Entry<String, Array<T>> entry : map) {
 			out.addAll(entry.value);
 		}
-		return (S) out;
+		return out;
 	}
 
 	@Override
 	public void dispose() {
 		assetManager.dispose();
 		disposableHolder.dispose();
-
 	}
-
 
 }

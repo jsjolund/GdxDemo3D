@@ -18,7 +18,6 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
@@ -26,7 +25,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
@@ -41,7 +39,11 @@ import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.objects.BlenderEmpty;
-import com.mygdx.game.objects.*;
+import com.mygdx.game.objects.Billboard;
+import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.objects.GameModel;
+import com.mygdx.game.objects.GameObject;
+import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.scene.GameObjectBlueprint;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.scene.GameSceneManager;
@@ -50,6 +52,7 @@ import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.ModelFactory;
+import com.mygdx.game.utilities.Sounds;
 
 /**
  * @author jsjolund
@@ -58,9 +61,12 @@ public class GameScreen implements Screen {
 
 	private final static String TAG = "GameScreen";
 
+	public static GameScreen screen;
+
 	private final Viewport viewport;
 	private final GameStage stage;
-	private final GameEngine engine;
+	public final GameEngine engine;
+	public final Sounds sounds;
 	private final Color viewportBackgroundColor;
 	private final GhostCamera camera;
 	private final ShapeRenderer viewportBackgroundRenderer;
@@ -69,6 +75,9 @@ public class GameScreen implements Screen {
 	private final GameSceneManager sceneManager;
 
 	public GameScreen(int reqWidth, int reqHeight) {
+		// FIXME Ugly hack to access the screen from anywhere
+		GameScreen.screen = this;
+		
 		camera = new GhostCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
@@ -96,6 +105,7 @@ public class GameScreen implements Screen {
 				new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
 		ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
 
+		sounds = new Sounds();
 		engine = new GameEngine();
 		viewportBackgroundColor = Color.BLACK;
 
@@ -221,6 +231,9 @@ public class GameScreen implements Screen {
 		renderer.dispose();
 
 		engine.dispose();
+		sounds.dispose();
+		
+		screen = null;
 	}
 
 	@Override

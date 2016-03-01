@@ -16,7 +16,12 @@
 
 package com.mygdx.game.objects;
 
-import com.badlogic.gdx.Gdx;
+import static com.mygdx.game.utilities.Constants.PI;
+import static com.mygdx.game.utilities.Constants.PI0_25;
+import static com.mygdx.game.utilities.Constants.PI0_5;
+
+import java.util.Iterator;
+
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Matrix4;
@@ -29,14 +34,9 @@ import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.settings.GameSettings;
-
-import java.util.Iterator;
-
-import static com.mygdx.game.utilities.Constants.*;
 
 /**
  * @author jsjolund

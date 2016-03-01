@@ -19,7 +19,7 @@ package com.mygdx.game.objects.dog;
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.GameEngine;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.pathfinding.Triangle;
 
@@ -47,7 +47,7 @@ public class CalculatePathToStickTask extends LeafTask<DogCharacter> {
 
 		// Calculate random point
 		// TODO: We should find a path to the stick instead
-		Triangle randomTri = GameEngine.engine.getScene().navMesh.getRandomTriangle();
+		Triangle randomTri = GameScreen.screen.engine.getScene().navMesh.getRandomTriangle();
 		Vector3 randomPoint = new Vector3();
 		randomTri.getRandomPoint(randomPoint);
 		

@@ -19,7 +19,7 @@ package com.mygdx.game.objects.dog;
 import com.badlogic.gdx.ai.btree.LeafTask;
 import com.badlogic.gdx.ai.btree.Task;
 import com.badlogic.gdx.math.Vector3;
-import com.mygdx.game.GameEngine;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.pathfinding.Triangle;
@@ -48,7 +48,7 @@ public class CalculatePathToHumanTask extends LeafTask<DogCharacter> {
 		float targetDogDistanceToHuman = 2;
 		Vector3 dogTargetPoint = TMP_VEC_3;
 
-		Triangle dogTargetTri = GameEngine.engine.getScene().navMesh.getClosestValidPointAt(
+		Triangle dogTargetTri = GameScreen.screen.engine.getScene().navMesh.getClosestValidPointAt(
 				humanPosition,
 				humanDirection,
 				targetDogDistanceToHuman,

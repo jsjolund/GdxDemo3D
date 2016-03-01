@@ -19,9 +19,9 @@ package com.mygdx.game.objects.dog;
 import com.badlogic.gdx.ai.utils.ArithmeticUtils;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController.AnimationDesc;
 import com.badlogic.gdx.math.MathUtils;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.utilities.Constants;
-import com.mygdx.game.utilities.Sounds;
 
 /**
  * A one shot animation task that makes the dog spin around until it's facing its owner.
@@ -75,7 +75,7 @@ public class SpinAroundToFaceHumanTask extends SpinAroundTask {
 				facingHuman = true;
 
 				// Bark
-				Sounds.bark.play();
+				GameScreen.screen.sounds.bark.play();
 
 				// Finish the animation
 				truncateAnimationCleanly(dog, currentDogOrientation);
