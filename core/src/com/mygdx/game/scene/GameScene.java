@@ -99,11 +99,10 @@ public class GameScene implements Disposable {
 	public GameScene(ModelLoader.ModelParameters modelParameters,
 					 TextureLoader.TextureParameter textureParameter,
 					 ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter,
-					 ParticleEffectLoader pfxLoader,
 					 String pfxPath, String modelPath, String modelExt, ObjectMap<String, GameObjectBlueprint> sharedBlueprints) {
 		this.sharedBlueprints = sharedBlueprints;
 		this.assets = new BlenderAssetManager(modelParameters, textureParameter, pfxParameter,
-				pfxLoader, pfxPath, modelPath, modelExt);
+				pfxPath, modelPath, modelExt);
 	}
 
 	public void addGameObject(GameObject obj) {

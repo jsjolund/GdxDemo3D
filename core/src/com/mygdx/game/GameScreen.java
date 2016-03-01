@@ -20,7 +20,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -101,9 +100,8 @@ public class GameScreen implements Screen {
 		BillboardParticleBatch pointSpriteBatch = new BillboardParticleBatch();
 		pointSpriteBatch.setCamera(camera);
 		particleSystem.add(pointSpriteBatch);
-		ParticleEffectLoader.ParticleEffectLoadParameter loadParam =
+		ParticleEffectLoader.ParticleEffectLoadParameter peLoadParam =
 				new ParticleEffectLoader.ParticleEffectLoadParameter(particleSystem.getBatches());
-		ParticleEffectLoader loader = new ParticleEffectLoader(new InternalFileHandleResolver());
 
 		sounds = new Sounds();
 		engine = new GameEngine();
@@ -113,7 +111,7 @@ public class GameScreen implements Screen {
 		
 		viewportBackgroundRenderer = new ShapeRenderer();
 
-		sceneManager = new GameSceneManager(modelParameters, textureParameter, loadParam, loader , "particles/", "models/g3db/", ".g3db");
+		sceneManager = new GameSceneManager(modelParameters, textureParameter, peLoadParam , "particles/", "models/g3db/", ".g3db");
 		// Create a default scene, which will be the game world.
 		GameScene defaultScene = sceneManager.open("scene0");
 

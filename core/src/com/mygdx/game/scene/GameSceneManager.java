@@ -39,13 +39,12 @@ public class GameSceneManager implements Disposable {
 	private final String pfxPath;
 	private final ModelLoader.ModelParameters modelParameters;
 	private final TextureLoader.TextureParameter textureParameter;
-	private final ParticleEffectLoader pfxLoader;
 	private final ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter;
 
 	public GameSceneManager(ModelLoader.ModelParameters modelParameters,
 							TextureLoader.TextureParameter textureParameter,
 							ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter,
-							ParticleEffectLoader pfxLoader, String pfxPath, String modelPath, String modelExt) {
+							String pfxPath, String modelPath, String modelExt) {
 		this.modelPath = modelPath;
 		this.modelExt = modelExt;
 		this.pfxPath = pfxPath;
@@ -53,12 +52,11 @@ public class GameSceneManager implements Disposable {
 		this.modelParameters = modelParameters;
 		this.textureParameter = textureParameter;
 		this.pfxParameter = pfxParameter;
-		this.pfxLoader = pfxLoader;
 	}
 
 	public GameScene open(String sceneId) {
 		if (!sceneMap.containsKey(sceneId)) {
-			sceneMap.put(sceneId, new GameScene(modelParameters, textureParameter, pfxParameter, pfxLoader, 
+			sceneMap.put(sceneId, new GameScene(modelParameters, textureParameter, pfxParameter, 
 					pfxPath, modelPath, modelExt, sharedBlueprints));
 			Gdx.app.debug(TAG, "Added scene '" + sceneId + "'");
 		}
