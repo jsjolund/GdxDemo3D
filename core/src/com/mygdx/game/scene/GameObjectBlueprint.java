@@ -14,7 +14,6 @@
  * limitations under the License.
  ******************************************************************************/
 
-
 package com.mygdx.game.scene;
 
 import com.badlogic.gdx.graphics.Mesh;

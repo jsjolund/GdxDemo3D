@@ -31,6 +31,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonValue;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.blender.objects.BlenderCamera;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.blender.objects.BlenderLight;
@@ -118,7 +119,7 @@ public class BlenderAssetManager implements Disposable {
 	private final TextureLoader.TextureParameter textureParameter;
 	private final ParticleEffectLoader.ParticleEffectLoadParameter pfxParameter;
 	
-	private final AssetManager assetManager = new AssetManager();
+	private final AssetManager assetManager = GameScreen.screen.getGame().getAssetManager();
 	private final DisposableHolder disposableHolder = new DisposableHolder();
 
 
@@ -278,7 +279,7 @@ public class BlenderAssetManager implements Disposable {
 		assetManager.finishLoadingAsset(filePath);
 		return assetManager.get(filePath, type);
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	private <S extends BlenderObjectMap<T>, T extends BlenderObject> S getTypeMap(Class<T> objClass) {
 		S map = null;
@@ -326,7 +327,6 @@ public class BlenderAssetManager implements Disposable {
 
 	@Override
 	public void dispose() {
-		assetManager.dispose();
 		disposableHolder.dispose();
 	}
 

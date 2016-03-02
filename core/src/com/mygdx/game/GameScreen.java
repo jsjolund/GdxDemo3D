@@ -17,7 +17,6 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
 import com.badlogic.gdx.graphics.Color;
@@ -38,6 +37,7 @@ import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.objects.BlenderEmpty;
+import com.mygdx.game.gdxkit.LoadableGdxScreen;
 import com.mygdx.game.objects.Billboard;
 import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameModel;
@@ -56,32 +56,35 @@ import com.mygdx.game.utilities.Sounds;
 /**
  * @author jsjolund
  */
-public class GameScreen implements Screen {
+public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 
 	private final static String TAG = "GameScreen";
 
 	public static GameScreen screen;
 
 	private final Viewport viewport;
-	private final GameStage stage;
+	private GameStage stage;
 	public final GameEngine engine;
 	public final Sounds sounds;
 	private final Color viewportBackgroundColor;
 	private final GhostCamera camera;
 	private final ShapeRenderer viewportBackgroundRenderer;
-	private final CameraController cameraController;
+	private CameraController cameraController;
 	private final GameRenderer renderer;
 	private final GameSceneManager sceneManager;
+	private final GameScene defaultScene;
 
-	public GameScreen(int reqWidth, int reqHeight) {
+	public GameScreen(GdxDemo3D game) {
+		super(game);
+		
 		// FIXME Ugly hack to access the screen from anywhere
 		GameScreen.screen = this;
 		
-		camera = new GhostCamera(GameSettings.CAMERA_FOV, reqWidth, reqHeight);
+		camera = new GhostCamera(GameSettings.CAMERA_FOV, GdxDemo3D.WIDTH, GdxDemo3D.HEIGHT);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
-		viewport = new FitViewport(reqWidth, reqHeight, camera);
+		viewport = new FitViewport(GdxDemo3D.WIDTH, GdxDemo3D.HEIGHT, camera);
 		
 		Bullet.init();
 		MipMapGenerator.setUseHardwareMipMap(true);
@@ -112,8 +115,9 @@ public class GameScreen implements Screen {
 		viewportBackgroundRenderer = new ShapeRenderer();
 
 		sceneManager = new GameSceneManager(modelParameters, textureParameter, peLoadParam , "particles/", "models/g3db/", ".g3db");
+
 		// Create a default scene, which will be the game world.
-		GameScene defaultScene = sceneManager.open("scene0");
+		defaultScene = sceneManager.open("scene0");
 
 		// Add placeholders consisting of blender objects to the scene, loaded from blender json.
 		// These will later be used in various ways to spawn actual game objects.
@@ -125,6 +129,10 @@ public class GameScreen implements Screen {
 		// load each into a new scene  then distribute shared object blueprints among game scenes (only one scene so far).
 		sceneManager.open("human_scene").assets.load("models/json/human.json");
 		sceneManager.open("dog_scene").assets.load("models/json/dog.json");
+	}
+
+	@Override
+	public void loadingFinished () {
 
 		// Create some game object blueprints which will be shared between game scenes.
 		sceneManager.open("utils_scene").assets.manageDisposableFromPath("marker", "images/marker.png", Texture.class);
@@ -166,13 +174,12 @@ public class GameScreen implements Screen {
 		dogBlueprint.belongsToFlag = GameEngine.PC_FLAG;
 		dogBlueprint.collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
 		sceneManager.addSharedBlueprint("dog", dogBlueprint);
-
+		
 		// Spawn game objects for the house, ground, trees and stuff,
 		// which were defined in the blender scene json.
 		defaultScene.spawnGameObjectsFromPlaceholders();
 
 		defaultScene.setToSceneCamera(camera);
-
 
 		renderer.setEnvironmentLights(defaultScene.lights, defaultScene.shadowCameraDirection);
 		Billboard markerBillboard = defaultScene.spawnSelectionBillboard("marker", camera);
@@ -267,32 +274,11 @@ public class GameScreen implements Screen {
 
 	}
 
-
-	@Override
-	public void show() {
-		// TODO Auto-generated method stub
-	}
-
 	@Override
 	public void resize(int width, int height) {
+		super.resize(width, height);
 		stage.resize(width, height);
 	}
-
-	@Override
-	public void pause() {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void resume() {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
-	public void hide() {
-		// TODO Auto-generated method stub
-	}
-
 
 }
 

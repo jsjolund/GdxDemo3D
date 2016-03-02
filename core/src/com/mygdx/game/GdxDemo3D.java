@@ -17,24 +17,25 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.Application;
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.utils.Logger;
+import com.mygdx.game.gdxkit.GdxGame;
 
 /**
  * @author jsjolund
  */
-public class GdxDemo3D extends Game {
+public class GdxDemo3D extends GdxGame {
 
 	private static final String TAG = "GdxDemo3D";
 
-	public static int reqWidth = 1280;
-	public static int reqHeight = 720;
+	public static final int WIDTH = 1280;
+	public static final int HEIGHT = 720;
 
 	public void toggleFullscreen() {
 		if (Gdx.graphics.isFullscreen()) {
-			Gdx.app.debug(TAG, "Disabling fullscreen w=" + reqWidth + ", h=" + reqHeight);
-			Gdx.graphics.setWindowedMode(reqWidth, reqHeight);
+			Gdx.app.debug(TAG, "Disabling fullscreen w=" + WIDTH + ", h=" + HEIGHT);
+			Gdx.graphics.setWindowedMode(WIDTH, HEIGHT);
 		} else {
 			Gdx.app.debug(TAG, "Enabling fullscreen w=" + Gdx.graphics.getDisplayMode().width + ", h="
 					+ Gdx.graphics.getDisplayMode().height);
@@ -45,13 +46,11 @@ public class GdxDemo3D extends Game {
 	@Override
 	public void create() {
 		Gdx.app.setLogLevel(Application.LOG_DEBUG);
-		Screen currentScreen = new GameScreen(reqWidth, reqHeight);
-		setScreen(currentScreen);
-	}
 
-	@Override
-	public void dispose () {
-		super.dispose();
+		getAssetManager().getLogger().setLevel(Logger.DEBUG);
+
+		Screen currentScreen = new LoadingGameScreen(this, new GameScreen(this));
+		setScreen(currentScreen);
 	}
 
 }
