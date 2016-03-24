@@ -396,6 +396,7 @@ public class SteerableBody extends GameModelBody implements Steerable<Vector3> {
 		BulletSteeringUtils.angleToVector(tmpVec, -orientation);
 		modelTransform.setToLookAt(tmpVec, Constants.V3_UP).setTranslation(position);
 		body.setWorldTransform(modelTransform);
+		currentOrientation.setFromMatrix(modelTransform);
 	}
 
 	@Override
