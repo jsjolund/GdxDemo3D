@@ -156,7 +156,6 @@ public class GameModelBody extends GameModel {
 		// Let the calling class be responsible for shape dispose since it can be reused
 		// shape.dispose();
 		constructionInfo.dispose();
-		motionState.dispose();
 		body.dispose();
 		if (motionState != null) {
 			motionState.dispose();
