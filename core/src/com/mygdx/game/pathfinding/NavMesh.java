@@ -264,7 +264,7 @@ public class NavMesh implements Disposable {
 	 *
 	 * @param testPoint        The test point
 	 * @param out              The point of intersection between ray and triangle
-	 * @param allowedMeshParts Which mesh parts to test.
+	 * @param allowedMeshParts Which mesh parts to test. Null if all meshparts should be tested.
 	 * @return The triangle, or null if ray did not hit any triangles.
 	 */
 	public Triangle verticalRayTest(Vector3 testPoint, Vector3 out, Bits allowedMeshParts) {
