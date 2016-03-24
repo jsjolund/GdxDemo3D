@@ -30,6 +30,7 @@ import com.badlogic.gdx.graphics.glutils.MipMapGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw.DebugDrawModes;
 import com.badlogic.gdx.utils.Array;
@@ -38,11 +39,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.gdxkit.LoadableGdxScreen;
-import com.mygdx.game.objects.Billboard;
-import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.objects.GameModel;
-import com.mygdx.game.objects.GameObject;
-import com.mygdx.game.objects.HumanCharacter;
+import com.mygdx.game.objects.*;
 import com.mygdx.game.scene.GameObjectBlueprint;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.scene.GameSceneManager;
@@ -76,19 +73,19 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 
 	public GameScreen(GdxDemo3D game) {
 		super(game);
-		
+
 		// FIXME Ugly hack to access the screen from anywhere
 		GameScreen.screen = this;
-		
+
 		camera = new GhostCamera(GameSettings.CAMERA_FOV, GdxDemo3D.WIDTH, GdxDemo3D.HEIGHT);
 		camera.near = GameSettings.CAMERA_NEAR;
 		camera.far = GameSettings.CAMERA_FAR;
 		camera.update();
 		viewport = new FitViewport(GdxDemo3D.WIDTH, GdxDemo3D.HEIGHT, camera);
-		
+
 		Bullet.init();
 		MipMapGenerator.setUseHardwareMipMap(true);
-		
+
 		ModelLoader.ModelParameters modelParameters = new ModelLoader.ModelParameters();
 		modelParameters.textureParameter.genMipMaps = true;
 		modelParameters.textureParameter.minFilter = Texture.TextureFilter.MipMap;
@@ -111,10 +108,10 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 		viewportBackgroundColor = Color.BLACK;
 
 		renderer = new GameRenderer(viewport, camera, engine);
-		
+
 		viewportBackgroundRenderer = new ShapeRenderer();
 
-		sceneManager = new GameSceneManager(modelParameters, textureParameter, peLoadParam , "particles/", "models/g3db/", ".g3db");
+		sceneManager = new GameSceneManager(modelParameters, textureParameter, peLoadParam, "particles/", "models/g3db/", ".g3db");
 
 		// Create a default scene, which will be the game world.
 		defaultScene = sceneManager.open("scene0");
@@ -132,7 +129,7 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 	}
 
 	@Override
-	public void loadingFinished () {
+	public void loadingFinished() {
 
 		// Create some game object blueprints which will be shared between game scenes.
 		sceneManager.open("utils_scene").assets.manageDisposableFromPath("marker", "images/marker.png", Texture.class);
@@ -143,6 +140,7 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 		markerBlueprint.name = "marker";
 		markerBlueprint.model = billboardModel;
 		sceneManager.addSharedBlueprint("marker", markerBlueprint);
+
 		GameObjectBlueprint humanBlueprint = new GameObjectBlueprint();
 		humanBlueprint.position = new Vector3();
 		humanBlueprint.rotation = new Vector3();
@@ -174,7 +172,28 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 		dogBlueprint.belongsToFlag = GameEngine.PC_FLAG;
 		dogBlueprint.collidesWithFlag = (short) (GameEngine.OBJECT_FLAG | GameEngine.GROUND_FLAG);
 		sceneManager.addSharedBlueprint("dog", dogBlueprint);
-		
+
+		GameObjectBlueprint stickBlueprint = new GameObjectBlueprint();
+		stickBlueprint.position = new Vector3();
+		stickBlueprint.rotation = new Vector3();
+		stickBlueprint.scale = new Vector3(0.3f, 0.3f, 0.3f);
+		stickBlueprint.model = sceneManager.open("dog_scene").assets.getAsset("stick", Model.class);
+		stickBlueprint.name = "stick";
+		Array<BlenderEmpty> emptiesWithId = new Array<BlenderEmpty>();
+		sceneManager.open("dog_scene").assets.getPlaceholders("stick", BlenderEmpty.class, emptiesWithId);
+		stickBlueprint.shape = new btBoxShape(new Vector3(emptiesWithId.first().scale).scl(0.3f));
+		stickBlueprint.shapeType = emptiesWithId.first().custom_properties.get("collision_shape");
+		stickBlueprint.mass = Float.parseFloat(emptiesWithId.first().custom_properties.get("mass"));
+		stickBlueprint.noDeactivate = true;
+		// Generate collision callback in GameEngine when stick collides with something.
+		stickBlueprint.callback = true;
+		stickBlueprint.belongsToFlag = GameEngine.OBJECT_FLAG;
+		// Don't collide with human and dog, causes problems when throwing.
+		stickBlueprint.collidesWithFlag = (short) (GameEngine.GROUND_FLAG | GameEngine.OBJECT_FLAG); 
+		stickBlueprint.visibleOnLayers = new Bits();
+		stickBlueprint.visibleOnLayers.set(0);
+		sceneManager.addSharedBlueprint("stick", stickBlueprint);
+
 		// Spawn game objects for the house, ground, trees and stuff,
 		// which were defined in the blender scene json.
 		defaultScene.spawnGameObjectsFromPlaceholders();
@@ -193,34 +212,45 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 		stage.addObserver(engine);
 
 		// Create humans by supplying the name of the shared blueprint "human", along with position
-		HumanCharacter[] humans = new HumanCharacter[] {
-			defaultScene.spawnHuman("human", new Vector3(20, 1, 0), 0),
-			defaultScene.spawnHuman("human", new Vector3(24, 1, -5)),
-			defaultScene.spawnHuman("human", new Vector3(20, 1, 5)),
+		HumanCharacter[] humans = new HumanCharacter[]{
+				defaultScene.spawnHuman("human", new Vector3(20, 1, 0), 0),
+				defaultScene.spawnHuman("human", new Vector3(24, 1, -5)),
+				defaultScene.spawnHuman("human", new Vector3(20, 1, 5)),
 		};
 
 		// Create dogs by supplying the name of the shared blueprint "dog", along with position
-		DogCharacter[] dogs = new DogCharacter[] {
-			defaultScene.spawnDog("dog", new Vector3(7, 0.5f, -10)),
-			defaultScene.spawnDog("dog", new Vector3(12, 0.5f, 10)),
-			defaultScene.spawnDog("dog", new Vector3(15, 0.5f, 4))
+		DogCharacter[] dogs = new DogCharacter[]{
+				defaultScene.spawnDog("dog", new Vector3(7, 0.5f, -10)),
+				defaultScene.spawnDog("dog", new Vector3(12, 0.5f, 10)),
+				defaultScene.spawnDog("dog", new Vector3(15, 0.5f, 4))
+		};
+
+		Stick[] sticks = new Stick[]{
+				defaultScene.spawnStick("stick", new Vector3()),
+				defaultScene.spawnStick("stick", new Vector3()),
+				defaultScene.spawnStick("stick", new Vector3()),
 		};
 
 		// Assign each dog to a human
-		for (int i = 0, n = Math.min(humans.length, dogs.length); i < n; i ++) {
+		for (int i = 0, n = Math.min(humans.length, dogs.length); i < n; i++) {
 			humans[i].assignDog(dogs[i]);
 		}
-
+		
 		// Grabs all the game objects from the scene
 		engine.setScene(defaultScene);
 
+		// Assign each stick to a human
+		for (int i = 0, n = Math.min(humans.length, sticks.length); i < n; i++) {
+			humans[i].assignStick(sticks[i]);
+		}
+		
 		// Set which scene layers should be visible on start. House scene only has 4 or 5
 		Bits defaultSceneLayers = new Bits();
 		for (int i = 0; i <= 5; i++) {
 			defaultSceneLayers.set(i);
 		}
 		stage.setVisibleLayers(defaultSceneLayers);
-		
+
 		Array<GameObject> trees = new Array<GameObject>();
 		defaultScene.getGameModelById("tree_0", trees);
 		for (GameObject obj : trees) {
@@ -237,7 +267,7 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 
 		engine.dispose();
 		sounds.dispose();
-		
+
 		screen = null;
 	}
 

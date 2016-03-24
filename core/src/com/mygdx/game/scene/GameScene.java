@@ -16,10 +16,6 @@
 
 package com.mygdx.game.scene;
 
-import static com.mygdx.game.utilities.Constants.V3_DOWN;
-
-import java.util.Comparator;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.assets.loaders.TextureLoader;
@@ -41,30 +37,23 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ArrayMap;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.*;
 import com.mygdx.game.GameEngine;
 import com.mygdx.game.blender.BlenderAssetManager;
 import com.mygdx.game.blender.objects.BlenderCamera;
 import com.mygdx.game.blender.objects.BlenderEmpty;
 import com.mygdx.game.blender.objects.BlenderLight;
 import com.mygdx.game.blender.objects.BlenderModel;
-import com.mygdx.game.objects.Billboard;
-import com.mygdx.game.objects.DogCharacter;
-import com.mygdx.game.objects.GameModel;
-import com.mygdx.game.objects.GameModelBody;
-import com.mygdx.game.objects.GameObject;
-import com.mygdx.game.objects.HumanCharacter;
-import com.mygdx.game.objects.InvisibleBody;
-import com.mygdx.game.objects.SteerableBody;
+import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Entity;
 import com.mygdx.game.utilities.GhostCamera;
 import com.mygdx.game.utilities.VertexColorTextureBlend;
+
+import java.util.Comparator;
+
+import static com.mygdx.game.utilities.Constants.V3_DOWN;
 
 /**
  * A GameScene contains models, lights, physics bodies, navigation mesh and particle effects.
@@ -290,6 +279,45 @@ public class GameScene implements Disposable {
 		return obj;
 	}
 
+	public GameModelBody spawnGameModelBody(String sharedBlueprintId, Vector3 initialPosition) {
+		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
+		return spawnGameModelBody(bp, initialPosition);
+	}
+
+	public Stick spawnStick(String sharedBlueprintId, Vector3 initialPosition) {
+		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
+		Stick obj = new Stick(
+				bp.model, bp.name,
+				initialPosition, bp.rotation, bp.scale,
+				bp.shape, bp.mass,
+				bp.belongsToFlag, bp.collidesWithFlag,
+				bp.callback, bp.noDeactivate);
+		obj.visibleOnLayers.clear();
+		obj.visibleOnLayers.or(bp.visibleOnLayers);
+		addGameObject(obj);
+		return obj;
+	}
+
+	public GameModelBody spawnGameModelBody(GameObjectBlueprint bp, Vector3 initialPosition) {
+		GameModelBody obj = new GameModelBody(
+				bp.model, bp.name,
+				initialPosition, bp.rotation, bp.scale,
+				bp.shape, bp.mass,
+				bp.belongsToFlag, bp.collidesWithFlag,
+				bp.callback, bp.noDeactivate);
+		obj.visibleOnLayers.clear();
+		obj.visibleOnLayers.or(bp.visibleOnLayers);
+
+		if (bp.name.startsWith("door")) {
+			btHingeConstraint hinge = new btHingeConstraint(
+					obj.body, new Vector3(0, 0, -obj.halfExtents.z), Vector3.Y);
+			hinge.enableAngularMotor(true, 0, 0.1f);
+			obj.constraints.add(hinge);
+		}
+		addGameObject(obj);
+		return obj;
+	}
+
 	private static void setSteerableOrientation(SteerableBody entity, float orientation) {
 		if (Float.isNaN(orientation)) {
 			orientation = MathUtils.random(-Constants.PI, Constants.PI);
@@ -305,36 +333,23 @@ public class GameScene implements Disposable {
 		return obj;
 	}
 
-	private void spawnFromBlueprint(GameObjectBlueprint bp) {
+	private GameObject spawnFromBlueprint(GameObjectBlueprint bp) {
 		if (bp.pfx != null) {
 			ParticleEffect originalEffect = assets.getAsset(bp.pfx, ParticleEffect.class);
 			// we cannot use the originalEffect, we must make a copy each time we create new particle effect
 			ParticleEffect effect = originalEffect.copy();
 			particleEffects.add(effect);
 			effect.translate(bp.position);
+			effect.rotate(Vector3.X, 180);
 			effect.init();
 			effect.start();
 			ParticleSystem particleSystem = ParticleSystem.get();
 			particleSystem.add(effect);
-			return;
+			return null;
 		}
 		if (bp.model != null && bp.shape != null) {
-			GameModelBody obj = new GameModelBody(
-					bp.model, bp.name,
-					bp.position, bp.rotation, bp.scale,
-					bp.shape, bp.mass,
-					bp.belongsToFlag, bp.collidesWithFlag,
-					bp.callback, bp.noDeactivate);
-			obj.visibleOnLayers.clear();
-			obj.visibleOnLayers.or(bp.visibleOnLayers);
 
-			if (bp.name.startsWith("door")) {
-				btHingeConstraint hinge = new btHingeConstraint(
-						obj.body, new Vector3(0, 0, -obj.halfExtents.z), Vector3.Y);
-				hinge.enableAngularMotor(true, 0, 0.1f);
-				obj.constraints.add(hinge);
-			}
-			addGameObject(obj);
+			return spawnGameModelBody(bp, bp.position);
 
 		} else if (bp.model == null && bp.shape != null) {
 			InvisibleBody obj = new InvisibleBody(bp.name, bp.shape, bp.mass,
@@ -342,12 +357,14 @@ public class GameScene implements Disposable {
 					bp.belongsToFlag, bp.collidesWithFlag,
 					bp.callback, bp.noDeactivate);
 			addGameObject(obj);
+			return obj;
 
 		} else if (bp.model != null) {
 			GameModel obj = new GameModel(bp.model, bp.name, bp.position, bp.rotation, bp.scale);
 			obj.visibleOnLayers.clear();
 			obj.visibleOnLayers.or(bp.visibleOnLayers);
 			addGameObject(obj);
+			return obj;
 		} else {
 			throw new GdxRuntimeException("Could not read blueprint " + bp);
 		}

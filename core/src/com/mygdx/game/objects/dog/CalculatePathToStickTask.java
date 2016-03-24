@@ -21,16 +21,20 @@ import com.badlogic.gdx.ai.btree.Task;
 import com.badlogic.gdx.math.Vector3;
 import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.DogCharacter;
+import com.mygdx.game.pathfinding.NavMesh;
 import com.mygdx.game.pathfinding.Triangle;
 
 /**
  * Action task that traces a path from the dog's current position to the stick.
- * 
+ *
  * @author davebaol
  */
 public class CalculatePathToStickTask extends LeafTask<DogCharacter> {
 
-	public CalculatePathToStickTask () {
+	private final static Vector3 TMP_V1 = new Vector3();
+	private final static Vector3 TMP_V2 = new Vector3();
+
+	public CalculatePathToStickTask() {
 	}
 
 	public void startAnimation(DogCharacter dog) {
@@ -42,20 +46,24 @@ public class CalculatePathToStickTask extends LeafTask<DogCharacter> {
 	}
 
 	@Override
-	public Status execute () {
+	public Status execute() {
 		DogCharacter dog = getObject();
 
-		// Calculate random point
-		// TODO: We should find a path to the stick instead
-		Triangle randomTri = GameScreen.screen.engine.getScene().navMesh.getRandomTriangle();
-		Vector3 randomPoint = new Vector3();
-		randomTri.getRandomPoint(randomPoint);
-		
-		return  dog.followPath(randomTri, randomPoint) ? Status.SUCCEEDED : Status.FAILED;
+		NavMesh navMesh = GameScreen.screen.engine.getScene().navMesh;
+
+		Vector3 stickPos = dog.human.stick.body.getWorldTransform().getTranslation(TMP_V1);
+		Vector3 stickNavmeshPos = TMP_V2;
+		Triangle stickNavmeshTri = navMesh.verticalRayTest(stickPos, TMP_V2, null);
+
+		if (stickNavmeshTri == null) {
+			stickNavmeshTri = navMesh.getClosestTriangle(stickPos, stickNavmeshPos, null);
+		}
+
+		return dog.followPath(stickNavmeshTri, stickNavmeshPos) ? Status.SUCCEEDED : Status.FAILED;
 	}
 
 	@Override
-	protected Task<DogCharacter> copyTo (Task<DogCharacter> task) {
+	protected Task<DogCharacter> copyTo(Task<DogCharacter> task) {
 		return task;
 	}
 

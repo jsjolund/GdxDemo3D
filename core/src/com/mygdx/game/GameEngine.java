@@ -16,8 +16,6 @@
 
 package com.mygdx.game;
 
-import java.util.Iterator;
-
 import com.badlogic.gdx.ai.GdxAI;
 import com.badlogic.gdx.ai.msg.MessageManager;
 import com.badlogic.gdx.graphics.Camera;
@@ -26,33 +24,14 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
-import com.badlogic.gdx.physics.bullet.collision.ClosestRayResultCallback;
-import com.badlogic.gdx.physics.bullet.collision.LocalRayResult;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
-import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
-import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
-import com.badlogic.gdx.physics.bullet.collision.btDispatcher;
-import com.badlogic.gdx.physics.bullet.dynamics.btConstraintSolver;
-import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
-import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
-import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
-import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
-import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
+import com.badlogic.gdx.physics.bullet.collision.*;
+import com.badlogic.gdx.physics.bullet.dynamics.*;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Bits;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.LongMap;
-import com.mygdx.game.objects.Billboard;
-import com.mygdx.game.objects.GameCharacter;
-import com.mygdx.game.objects.GameModel;
-import com.mygdx.game.objects.GameModelBody;
-import com.mygdx.game.objects.GameObject;
-import com.mygdx.game.objects.InvisibleBody;
-import com.mygdx.game.objects.Ragdoll;
-import com.mygdx.game.objects.SteerableBody;
+import com.mygdx.game.objects.*;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.scene.GameScene;
 import com.mygdx.game.settings.GameSettings;
@@ -143,7 +122,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	public final static short GROUND_FLAG = 1 << 8;
 	public final static short OBJECT_FLAG = 1 << 9;
 	public final static short ALL_FLAG = -1;
-	
+
 	// Bullet classes
 	private final btDynamicsWorld dynamicsWorld;
 	private final btDispatcher dispatcher;
@@ -152,12 +131,14 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	private final DebugDrawer debugDrawer;
 	private final LayeredClosestRayResultCallback callback = new LayeredClosestRayResultCallback(Vector3.Zero, Vector3.Z);
 	private final btCollisionConfiguration collisionConfig;
+	private final CollisionContactListener contactListener;
+
 	private final Vector3 rayFrom = new Vector3();
 	private final Vector3 rayTo = new Vector3();
 	private final LongMap<GameObject> objectsById = new LongMap<GameObject>();
 	private final LongMap<GameModel> modelsById = new LongMap<GameModel>();
 	private GameScene scene;
-	
+
 	// Models
 	private boolean modelCacheDirty = true;
 	private final ModelCache modelCache = new ModelCache(new ModelCache.Sorter(), new ModelCache.TightMeshPool());
@@ -178,6 +159,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		debugDrawer = new DebugDrawer();
 		dynamicsWorld.setDebugDrawer(debugDrawer);
 		debugDrawer.setDebugMode(btIDebugDraw.DebugDrawModes.DBG_DrawWireframe);
+		contactListener = new CollisionContactListener();
 	}
 
 	public Entity rayTest(Ray ray, Vector3 hitPointWorld, short belongsToFlag, short collidesWithFlag,
@@ -207,7 +189,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	public GameScene getScene() {
 		return scene;
 	}
-	
+
 	public Bits getVisibleLayers() {
 		return visibleLayers;
 	}
@@ -226,7 +208,7 @@ public class GameEngine extends Engine implements Disposable, Observer {
 			// TODO: handle this in a better way
 			// Ideally the engine should not know the name of the entities in the scene
 			if (obj.name.equals("human") || obj.name.equals("dog")) {
-				characters.add((SteerableBody)obj);
+				characters.add((SteerableBody) obj);
 			}
 		}
 	}
@@ -238,13 +220,9 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		dynamicsWorld.dispose();
 		broadphase.dispose();
 		constraintSolver.dispose();
-//		contactListener.dispose();
+		contactListener.dispose();
 		debugDrawer.dispose();
 		callback.dispose();
-	}
-
-	public Iterator<GameModel> getAllModels() {
-		return modelsById.values().iterator();
 	}
 
 	public ModelCache getModelCache() {
@@ -383,7 +361,9 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		MessageManager.getInstance().update();
 
 		// Update Bullet simulation
-		dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f);
+		// On default fixedTimeStep = 1/60, small objects (the stick) will fall through 
+		// the ground (the ground has relatively big triangles).
+		dynamicsWorld.stepSimulation(deltaTime, 10, 1f / 240f);
 
 		for (GameObject object : objectsById.values()) {
 			object.update(deltaTime);
@@ -407,14 +387,21 @@ public class GameEngine extends Engine implements Disposable, Observer {
 
 	}
 
-//	public class CollisionContactListener extends ContactListener {
-//		@Override
-//		public boolean onContactAdded(btManifoldPoint cp,
-//									  btCollisionObject colObj0, int partId0, int index0,
-//									  btCollisionObject colObj1, int partId1, int index1) {
-//			long entityId0 = colObj0.getUserPointer();
-//			long entityId1 = colObj1.getUserPointer();
-//			return true;
-//		}
-//	}
+	public class CollisionContactListener extends ContactListener {
+
+		public boolean onContactAdded(btCollisionObject colObj0, int partId0, int index0, btCollisionObject colObj1, int partId1, int index1) {
+			Entity entity0 = getEntity(colObj0.getUserPointer());
+			Entity entity1 = getEntity(colObj1.getUserPointer());
+			Stick stick = null;
+			if (entity0 instanceof Stick) {
+				stick = (Stick) entity0;
+			} else if (entity1 instanceof Stick) {
+				stick = (Stick) entity1;
+			}
+			if (stick != null && !stick.hasLanded && stick.body.getLinearVelocity().isZero(0.1f)) {
+				stick.owner.onStickLanded();
+			}
+			return true;
+		}
+	}
 }

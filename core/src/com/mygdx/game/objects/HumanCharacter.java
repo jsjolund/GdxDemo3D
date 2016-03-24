@@ -17,8 +17,6 @@
 
 package com.mygdx.game.objects;
 
-import java.util.EnumMap;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.State;
@@ -28,6 +26,7 @@ import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
@@ -39,6 +38,8 @@ import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.steerers.FollowPathSteerer;
 import com.mygdx.game.utilities.AnimationListener;
 import com.mygdx.game.utilities.Constants;
+
+import java.util.EnumMap;
 
 /**
  * A human character whose brain is modeled through a finite state machine.
@@ -94,12 +95,11 @@ public class HumanCharacter extends Ragdoll {
 		THROW() {
 			@Override
 			public void enter(HumanCharacter entity) {
-				entity.animations.animate("armature|action_throw", 1, 1, animationListener(entity), 0.1f);
-
-				// If the entity owns a dog send it a delayed message to emulate reaction time
-				if (entity.dog != null) {
-					MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.3f, 1.2f, .6f), null, entity.dog,
-						Constants.MSG_DOG_STICK_THROWN);
+				if (!entity.hasStick) {
+					// TODO: The throw button should not be shown if human has no stick
+					entity.stateMachine.changeState(entity.stateMachine.getPreviousState());
+				} else {
+					entity.animations.animate("armature|action_throw", 1, 1, animationListener(entity), 0.1f);
 				}
 			}
 
@@ -108,7 +108,7 @@ public class HumanCharacter extends Ragdoll {
 				// Keep on updating throw animation
 				updateAnimation(entity);
 
-				AnimationListener animationListener = (AnimationListener)entity.animations.current.listener;
+				AnimationListener animationListener = (AnimationListener) entity.animations.current.listener;
 				if (animationListener.isAnimationCompleted()) {
 					// Transition to the appropriate idle state depending on the previous state
 					HumanState previousState = entity.stateMachine.getPreviousState();
@@ -116,12 +116,15 @@ public class HumanCharacter extends Ragdoll {
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
 							nextState = previousState.idleState;
-						}
-						else if (previousState.isIdleState()) {
+						} else if (previousState.isIdleState()) {
 							nextState = previousState;
 						}
 					}
 					entity.stateMachine.changeState(nextState);
+				}
+				// This should make the human throw when the right hand is approximately at highest position.
+				if (entity.hasStick && entity.animations.current.time > 1f) {
+					entity.throwStick();
 				}
 			}
 		},
@@ -144,13 +147,12 @@ public class HumanCharacter extends Ragdoll {
 				if (entity.isMoving()) {
 					// Keep on updating movement animation
 					updateAnimation(entity);
-				}
-				else {
+				} else {
 					GameScreen.screen.sounds.whistle.play();
 					// If the entity owns a dog send it a delayed message to emulate reaction time
 					if (entity.dog != null) {
 						MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.8f, 2f, 1.2f), null, entity.dog,
-							Constants.MSG_DOG_LETS_PLAY);
+								Constants.MSG_DOG_LETS_PLAY);
 					}
 					// Transition to the appropriate idle state depending on the previous state
 					HumanState previousState = entity.stateMachine.getPreviousState();
@@ -158,8 +160,7 @@ public class HumanCharacter extends Ragdoll {
 					if (previousState != null) {
 						if (previousState.isMovementState()) {
 							nextState = previousState.idleState;
-						}
-						else if (previousState.isIdleState()) {
+						} else if (previousState.isIdleState()) {
 							nextState = previousState;
 						}
 					}
@@ -359,7 +360,17 @@ public class HumanCharacter extends Ragdoll {
 	private float animationSpeedMultiplier = -1;
 	public boolean selected = false;
 
+	public Stick stick;
+	public boolean hasStick;
+
 	final FollowPathSteerer followPathSteerer;
+
+	private final Vector3 TMP_V1 = new Vector3();
+	private final Vector3 TMP_V2 = new Vector3();
+	private final Quaternion TMP_Q = new Quaternion();
+	
+	private final static float STICK_THROW_ANGLE = 45;
+	private final static float STICK_THROW_IMPULSE_SCL = 1;
 
 	public HumanCharacter(Model model,
 						  String name,
@@ -400,6 +411,40 @@ public class HumanCharacter extends Ragdoll {
 	public void assignDog(DogCharacter dog) {
 		this.dog = dog;
 		dog.human = this;
+	}
+
+	public void assignStick(Stick stick) {
+		this.stick = stick;
+		stick.owner = this;
+		hasStick = true;
+		// Remove it from the world if present, then add it after it is thrown.
+		// FIXME: This seems to cause slight lag when throwing
+		GameScreen.screen.engine.removeEntity(stick);
+	}
+
+	public void throwStick() {
+		GameScreen.screen.engine.addEntity(stick);
+		Vector3 rightHandPos = getRightHandWorldPosition(TMP_V1);
+		stick.modelTransform.setToTranslation(rightHandPos);
+		stick.body.setWorldTransform(stick.modelTransform);
+		
+		Vector3 humanDirection = getDirection(TMP_V1);
+		TMP_Q.setFromAxis(TMP_V2.set(humanDirection).crs(Constants.V3_UP), STICK_THROW_ANGLE);
+		Vector3 impulse = TMP_Q.transform(humanDirection).nor().scl(STICK_THROW_IMPULSE_SCL);
+		stick.body.applyCentralImpulse(impulse);
+
+		stick.hasLanded = false;
+		
+		hasStick = false;
+	}
+	
+	public void onStickLanded() {
+		stick.hasLanded = true;
+		// If the entity owns a dog send it a delayed message to emulate reaction time
+		if (dog != null) {
+			MessageManager.getInstance().dispatchMessage(MathUtils.randomTriangular(.3f, 1.2f, .6f), null, dog,
+					Constants.MSG_DOG_STICK_THROWN);
+		}
 	}
 
 	public boolean isDead() {
