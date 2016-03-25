@@ -27,6 +27,16 @@ import com.mygdx.game.utilities.Constants;
  */
 public class DogCharacter extends GameCharacter implements Telegraph {
 
+	public enum DogArmature {
+		HEAD("head"), FRONT_SPINE("front_spine");
+
+		public final String id;
+
+		DogArmature(String id) {
+			this.id = id;
+		}
+	}
+
 	public static class DogSteerSettings implements SteerSettings {
 		public static float maxLinearAcceleration = 50f;
 		public static float maxLinearSpeed = 2f;
@@ -86,8 +96,12 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	public boolean humanWantToPlay;
 	public boolean humanIsDead;
 	public boolean stickThrown;
+	public boolean stickCarried;
 	public boolean alreadyCriedForHumanDeath;
 
+	private final static Vector3 TMP_V1 = new Vector3();
+	private final static Vector3 TMP_V2 = new Vector3();
+	private final static Vector3 TMP_V3 = new Vector3();
 	/*
 	 * Fields used to switch animation
 	 */
@@ -100,7 +114,7 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		// Make the behavior tree library parser log
 		BehaviorTreeLibraryManager.getInstance().setLibrary(new BehaviorTreeLibrary(BehaviorTreeParser.DEBUG_HIGH));
 	}
-	
+
 	public DogCharacter(Model model, String name,
 						Vector3 location, Vector3 rotation, Vector3 scale,
 						btCollisionShape shape, float mass,
@@ -140,12 +154,19 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
-		
 		// Step the tree either directly or through the editor
 		//
 		// TODO: handle this in a better way
 		// Ideally the dog should not know of the tree editor
 		GameScreen.screen.stage.btreeController.step(this, deltaTime);
+
+		if (stickCarried) {
+			Vector3 mouthPos = getBoneMidpointWorldPosition(DogArmature.HEAD.id, TMP_V1);
+			Vector3 headDirection = getBoneDirection(DogArmature.HEAD.id, TMP_V2);
+			human.stick.modelTransform.setToLookAt(headDirection, TMP_V3.set(Constants.V3_UP).scl(-1));
+			human.stick.modelTransform.setTranslation(mouthPos);
+			human.stick.body.setWorldTransform(human.stick.modelTransform);
+		}
 	}
 
 	@Override
@@ -178,17 +199,18 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		return true;
 	}
 
-
-	public Vector3 getFrontSpineBoneWorldDirection(Vector3 out) {
-		return getBoneDirection("front_spine", out);
-	}
-	
-	public float getFrontSpineBoneOrientation() {
-		return getBoneOrientation("front_spine");
-	}
-	
 	public boolean isHumanCloseEnough(float radius) {
-		return human.getPosition().dst2(this.getPosition()) < radius * radius; 
+		return human.getPosition().dst2(this.getPosition()) < radius * radius;
 	}
-	
+
+	public void setCarryStick() {
+		stickCarried = true;
+	}
+
+	public void giveStickToHuman() {
+		stickCarried = false;
+		stickThrown = false;
+		human.assignStick(human.stick);
+	}
+
 }

@@ -64,7 +64,7 @@ public class SpinAroundToFaceHumanTask extends SpinAroundTask {
 		updateAnimation(dog);
 		if (dog.currentTaskAnimation == getTaskAnimation()) {
 			// Get current model orientation
-			float currentDogOrientation = dog.getFrontSpineBoneOrientation();
+			float currentDogOrientation = dog.getBoneOrientation(DogCharacter.DogArmature.FRONT_SPINE.id);
 			
 			// Calculate the difference between current and target orientation
 			float orientationDiff = ArithmeticUtils.wrapAngleAroundZero(currentDogOrientation - targetOrientation);

@@ -49,7 +49,7 @@ public class SpinAroundTask extends OneShotAnimationTaskBase {
 
 	protected void truncateAnimationCleanly(DogCharacter dog) {
 		// Get current model orientation
-		float currentDogOrientation = dog.getFrontSpineBoneOrientation();
+		float currentDogOrientation = dog.getBoneOrientation(DogCharacter.DogArmature.FRONT_SPINE.id);
 
 		// Finish animation
 		truncateAnimationCleanly(dog, currentDogOrientation);

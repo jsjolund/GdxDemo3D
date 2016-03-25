@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.model.Node;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.mygdx.game.objects.DogCharacter;
 import com.mygdx.game.objects.GameCharacter;
 import com.mygdx.game.objects.HumanCharacter;
 import com.mygdx.game.utilities.MyShapeRenderer;
@@ -30,11 +31,10 @@ import com.mygdx.game.utilities.MyShapeRenderer;
  */
 public class ArmatureDebugDrawer {
 
-	private final Vector3 tmp = new Vector3();
-	private final Vector3 modelPos = new Vector3();
-	private final Vector3 rootNodeGlobalPos = new Vector3();
-	private final Vector3 debugNodePos2 = new Vector3();
-	private final Quaternion modelRot = new Quaternion();
+	private final static Vector3 TMP_V1 = new Vector3();
+	private final static Vector3 TMP_V2 = new Vector3();
+	private final static Vector3 TMP_V3 = new Vector3();
+	private final static Quaternion TMP_Q = new Quaternion();
 
 	private MyShapeRenderer shapeRenderer;
 
@@ -50,25 +50,39 @@ public class ArmatureDebugDrawer {
 		shapeRenderer.begin(MyShapeRenderer.ShapeType.Line);
 		shapeRenderer.setColor(Color.YELLOW);
 
-
 		Node skeleton = character.modelInstance.getNode(rootNodeId);
 		if (skeleton != null) {
+			Vector3 modelPos = TMP_V1;
+			Vector3 rootNodeGlobalPos = TMP_V2;
+			Vector3 debugNodePos = TMP_V3;
+			Quaternion modelRot = TMP_Q;
+			
 			character.modelInstance.transform.getTranslation(modelPos);
 			character.modelInstance.transform.getRotation(modelRot);
 			skeleton.globalTransform.getTranslation(rootNodeGlobalPos);
-			drawArmatureNodes(skeleton, modelPos, modelRot, rootNodeGlobalPos, debugNodePos2);
+			drawArmatureNodes(skeleton, modelPos, modelRot, rootNodeGlobalPos, debugNodePos);
 		}
 		if (character instanceof HumanCharacter) {
 			HumanCharacter human = (HumanCharacter) character;
 
-			human.getRightHandWorldPosition(tmp);
-			drawVertex(tmp, 0.05f, Color.RED);
-			human.getLeftHandWorldPosition(tmp);
-			drawVertex(tmp, 0.05f, Color.GREEN);
+			human.getBoneMidpointWorldPosition(HumanCharacter.HumanArmature.RIGHT_HAND.id, TMP_V1);
+			drawVertex(TMP_V1, 0.05f, Color.RED);
+			human.getBoneMidpointWorldPosition(HumanCharacter.HumanArmature.LEFT_HAND.id, TMP_V1);
+			drawVertex(TMP_V1, 0.05f, Color.GREEN);
+		}
+		if (character instanceof DogCharacter) {
+			DogCharacter dog = (DogCharacter) character;
+  
+			dog.getBoneMidpointWorldPosition(DogCharacter.DogArmature.HEAD.id, TMP_V1);
+			drawVertex(TMP_V1, 0.05f, Color.RED);
+			dog.getBoneDirection(DogCharacter.DogArmature.HEAD.id, TMP_V2);
+			drawVertex(TMP_V1.add(TMP_V2.scl(0.5f)), 0.05f, Color.GREEN);
 		}
 
 		shapeRenderer.end();
 	}
+
+
 
 	private void drawArmatureNodes(Node currentNode, Vector3 modelPos,
 								   Quaternion modelRot,

@@ -48,6 +48,16 @@ import java.util.EnumMap;
  */
 public class HumanCharacter extends Ragdoll {
 
+	public enum HumanArmature {
+		RIGHT_HAND("right_hand"), LEFT_HAND("left_hand");
+
+		public final String id;
+
+		HumanArmature(String id) {
+			this.id = id;
+		}
+	}
+
 	public enum HumanState implements State<HumanCharacter> {
 		IDLE_STAND(true) {
 			@Override
@@ -368,7 +378,7 @@ public class HumanCharacter extends Ragdoll {
 	private final Vector3 TMP_V1 = new Vector3();
 	private final Vector3 TMP_V2 = new Vector3();
 	private final Quaternion TMP_Q = new Quaternion();
-	
+
 	private final static float STICK_THROW_ANGLE = 45;
 	private final static float STICK_THROW_IMPULSE_SCL = 1;
 
@@ -424,20 +434,25 @@ public class HumanCharacter extends Ragdoll {
 
 	public void throwStick() {
 		GameScreen.screen.engine.addEntity(stick);
-		Vector3 rightHandPos = getRightHandWorldPosition(TMP_V1);
-		stick.modelTransform.setToTranslation(rightHandPos);
+		stick.body.setLinearVelocity(Vector3.Zero);
+		stick.body.setAngularVelocity(Vector3.Zero);
+		Vector3 rightHandPos = getBoneMidpointWorldPosition(HumanArmature.RIGHT_HAND.id, TMP_V1);
+		stick.modelTransform.setToRotation(Vector3.Z, 90);
+		stick.modelTransform.rotate(Constants.V3_UP, getOrientation() * MathUtils.radiansToDegrees);
+		stick.modelTransform.setTranslation(rightHandPos);
 		stick.body.setWorldTransform(stick.modelTransform);
-		
+
 		Vector3 humanDirection = getDirection(TMP_V1);
 		TMP_Q.setFromAxis(TMP_V2.set(humanDirection).crs(Constants.V3_UP), STICK_THROW_ANGLE);
-		Vector3 impulse = TMP_Q.transform(humanDirection).nor().scl(STICK_THROW_IMPULSE_SCL);
-		stick.body.applyCentralImpulse(impulse);
+		Vector3 impulse = TMP_Q.transform(humanDirection).nor();
+		impulse.scl(STICK_THROW_IMPULSE_SCL);
+		stick.body.applyImpulse(impulse, TMP_V2.set(Constants.V3_UP).scl(0.005f));
 
 		stick.hasLanded = false;
-		
+
 		hasStick = false;
 	}
-	
+
 	public void onStickLanded() {
 		stick.hasLanded = true;
 		// If the entity owns a dog send it a delayed message to emulate reaction time
@@ -481,14 +496,6 @@ public class HumanCharacter extends Ragdoll {
 
 	public HumanState getCurrentIdleState() {
 		return moveState.idleState;
-	}
-
-	public Vector3 getRightHandWorldPosition(Vector3 out) {
-		return getBoneMidpointWorldPosition("right_hand", out);
-	}
-
-	public Vector3 getLeftHandWorldPosition(Vector3 out) {
-		return getBoneMidpointWorldPosition("left_hand", out);
 	}
 
 }
