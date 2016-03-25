@@ -60,7 +60,7 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 	public static GameScreen screen;
 
 	private final Viewport viewport;
-	private GameStage stage;
+	public GameStage stage;
 	public final GameEngine engine;
 	public final Sounds sounds;
 	private final Color viewportBackgroundColor;
@@ -220,9 +220,9 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 
 		// Create dogs by supplying the name of the shared blueprint "dog", along with position
 		DogCharacter[] dogs = new DogCharacter[]{
-				defaultScene.spawnDog("dog", new Vector3(7, 0.5f, -10)),
-				defaultScene.spawnDog("dog", new Vector3(12, 0.5f, 10)),
-				defaultScene.spawnDog("dog", new Vector3(15, 0.5f, 4))
+				defaultScene.spawnDog("dog", "Buddy", new Vector3(7, 0.5f, -10)),
+				defaultScene.spawnDog("dog", "Snoopy", new Vector3(12, 0.5f, 10)),
+				defaultScene.spawnDog("dog", "Rocky", new Vector3(15, 0.5f, 4))
 		};
 
 		Stick[] sticks = new Stick[]{
@@ -235,6 +235,7 @@ public class GameScreen extends LoadableGdxScreen<GdxDemo3D> {
 		for (int i = 0, n = Math.min(humans.length, dogs.length); i < n; i++) {
 			humans[i].assignDog(dogs[i]);
 		}
+		stage.btreeController.reset();
 		
 		// Grabs all the game objects from the scene
 		engine.setScene(defaultScene);

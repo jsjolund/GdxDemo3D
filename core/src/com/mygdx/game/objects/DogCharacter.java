@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.mygdx.game.GameScreen;
 import com.mygdx.game.objects.dog.TaskAnimation;
 import com.mygdx.game.pathfinding.Triangle;
 import com.mygdx.game.steerers.FollowPathSteerer;
@@ -76,7 +77,8 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 		}
 	}
 
-	BehaviorTree<DogCharacter> tree;
+	public String dogName;
+	public final BehaviorTree<DogCharacter> tree;
 	public final AnimationController animations;
 	public final FollowPathSteerer followPathSteerer;
 	public final WanderSteerer wanderSteerer;
@@ -138,7 +140,12 @@ public class DogCharacter extends GameCharacter implements Telegraph {
 	@Override
 	public void update(float deltaTime) {
 		super.update(deltaTime);
-		tree.step();
+		
+		// Step the tree either directly or through the editor
+		//
+		// TODO: handle this in a better way
+		// Ideally the dog should not know of the tree editor
+		GameScreen.screen.stage.btreeController.step(this, deltaTime);
 	}
 
 	@Override

@@ -261,11 +261,11 @@ public class GameScene implements Disposable {
 		return obj;
 	}
 
-	public DogCharacter spawnDog(String sharedBlueprintId, Vector3 initialPosition) {
-		return spawnDog(sharedBlueprintId, initialPosition, Float.NaN);
+	public DogCharacter spawnDog(String sharedBlueprintId, String dogName, Vector3 initialPosition) {
+		return spawnDog(sharedBlueprintId, dogName, initialPosition, Float.NaN);
 	}
 
-	public DogCharacter spawnDog(String sharedBlueprintId, Vector3 initialPosition, float initialOrientation) {
+	public DogCharacter spawnDog(String sharedBlueprintId, String dogName, Vector3 initialPosition, float initialOrientation) {
 		GameObjectBlueprint bp = sharedBlueprints.get(sharedBlueprintId);
 		DogCharacter obj = new DogCharacter(
 				bp.model, bp.name,
@@ -275,6 +275,7 @@ public class GameScene implements Disposable {
 				bp.callback, bp.noDeactivate);
 		setSteerableOrientation(obj, initialOrientation);
 		obj.updateSteerableData(this);
+		obj.dogName = dogName;
 		addGameObject(obj);
 		return obj;
 	}
