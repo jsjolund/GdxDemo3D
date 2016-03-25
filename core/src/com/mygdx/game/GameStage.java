@@ -30,6 +30,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -37,9 +39,17 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Slider;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
@@ -53,7 +63,12 @@ import com.mygdx.game.objects.HumanCharacter.HumanState;
 import com.mygdx.game.settings.DebugViewSettings;
 import com.mygdx.game.settings.GameSettings;
 import com.mygdx.game.settings.ShaderSettings;
-import com.mygdx.game.ui.*;
+import com.mygdx.game.ui.BooleanSettingsMenu;
+import com.mygdx.game.ui.FloatSettingsMenu;
+import com.mygdx.game.ui.FloatValueLabel;
+import com.mygdx.game.ui.GameSpeedController;
+import com.mygdx.game.ui.IntValueLabel;
+import com.mygdx.game.utilities.BehaviorTreeController;
 import com.mygdx.game.utilities.CameraController;
 import com.mygdx.game.utilities.Constants;
 import com.mygdx.game.utilities.Entity;
@@ -374,6 +389,8 @@ public class GameStage extends Stage implements Observable {
 				steerSettings.add(dogSteerSettings);
 				steerSettings.invalidateHierarchy();
 				this.setVisible(false);  // no controller for dogs
+				
+				btreeController.setCurrentDog((DogCharacter) character);
 			}
 		}
 
@@ -487,6 +504,9 @@ public class GameStage extends Stage implements Observable {
 	private final Vector2 tmpV2 = new Vector2();
 	private Bits visibleLayers;
 
+	public final BehaviorTreeController btreeController;
+	private final TextButton toggle;
+
 	public GameStage(GameEngine engine, Viewport viewport, CameraController cameraController) {
 		super(viewport);
 		this.engine = engine;
@@ -566,11 +586,21 @@ public class GameStage extends Stage implements Observable {
 		steerSettings = new Table();
 		steerSettings.add(humanSteerSettings);
 
+		btreeController = new BehaviorTreeController();
+		toggle = new TextButton("Show editor", skin);
+		toggle.addListener(new ClickListener(){
+			@Override public void clicked (InputEvent event, float x, float y) {
+				btreeController.toggleEditorWindow(rootTable, toggle);
+			}
+		});
+		btreeController.toggleEditorWindow(rootTable, toggle);
+
 		// Add bottom left table with settings
 		Table bottomLeftTable = new Table();
 		bottomLeftTable.add(new FloatSettingsMenu("Shader", skin, ShaderSettings.class)).bottom();
 		bottomLeftTable.add(new BooleanSettingsMenu("Debug", skin, DebugViewSettings.class)).bottom();
 		bottomLeftTable.add(steerSettings).bottom();
+		bottomLeftTable.add(toggle).bottom();
 		rootTable.add(bottomLeftTable).left();
 
 		// Add space between bottom left and bottom right tables
@@ -613,6 +643,17 @@ public class GameStage extends Stage implements Observable {
 		});
 	}
 
+	// Code modified from super.calculateScissors()
+	@Override
+	public void calculateScissors (Rectangle localRect, Rectangle scissorRect) {
+		ScissorStack.calculateScissors(cameraUI, viewport.getScreenX(), viewport.getScreenY(), viewport.getScreenWidth(), viewport.getScreenHeight(), batch.getTransformMatrix(), localRect, scissorRect);
+		Matrix4 transformMatrix;
+		if (shapeRenderer != null && shapeRenderer.isDrawing())
+			transformMatrix = shapeRenderer.getTransformMatrix();
+		else
+			transformMatrix = batch.getTransformMatrix();
+		ScissorStack.calculateScissors(cameraUI, viewport.getScreenX(), viewport.getScreenY(), viewport.getScreenWidth(), viewport.getScreenHeight(), transformMatrix, localRect, scissorRect);
+	}
 
 	public Bits getVisibleLayers(Bits out) {
 		out.clear();
