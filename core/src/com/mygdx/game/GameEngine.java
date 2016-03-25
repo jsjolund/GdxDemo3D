@@ -273,11 +273,14 @@ public class GameEngine extends Engine implements Disposable, Observer {
 	@Override
 	public void addEntity(Entity entity) {
 		super.addEntity(entity);
+
+		boolean isStaticBody = true;
+
 		if (entity instanceof Ragdoll) {
 			Ragdoll gameObj = (Ragdoll) entity;
-			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
-				body.setUserPointer(entity.getId());
-				dynamicsWorld.addRigidBody(body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
+			for (btRigidBody bodyPart : gameObj.bodyPartMap.keys()) {
+				bodyPart.setUserPointer(entity.getId());
+				dynamicsWorld.addRigidBody(bodyPart, gameObj.belongsToFlag, gameObj.collidesWithFlag);
 			}
 		}
 
@@ -287,6 +290,10 @@ public class GameEngine extends Engine implements Disposable, Observer {
 			dynamicsWorld.addRigidBody(gameObj.body, gameObj.belongsToFlag, gameObj.collidesWithFlag);
 			for (btTypedConstraint constraint : gameObj.constraints) {
 				dynamicsWorld.addConstraint(constraint, true);
+			}
+			if (gameObj.mass > 0) {
+				isStaticBody = false;
+				dynamicModels.add(gameObj);
 			}
 
 		} else if (entity instanceof InvisibleBody) {
@@ -305,17 +312,17 @@ public class GameEngine extends Engine implements Disposable, Observer {
 			objectsById.put(entity.getId(), gameObj);
 		}
 
-		modelCacheDirty = true;
+		modelCacheDirty = isStaticBody;
 	}
 
 	@Override
 	public void removeEntity(Entity entity) {
-		super.removeEntity(entity);
+		modelCacheDirty = true;
 
 		if (entity instanceof Ragdoll) {
 			Ragdoll gameObj = (Ragdoll) entity;
-			for (btRigidBody body : gameObj.bodyPartMap.keys()) {
-				dynamicsWorld.removeCollisionObject(body);
+			for (btRigidBody bodyPart : gameObj.bodyPartMap.keys()) {
+				dynamicsWorld.removeCollisionObject(bodyPart);
 			}
 		}
 
@@ -334,13 +341,18 @@ public class GameEngine extends Engine implements Disposable, Observer {
 
 		if (entity instanceof GameModel) {
 			modelsById.remove(entity.getId());
+			GameModel gameObj = (GameModel) entity;
+			if (dynamicModels.contains(gameObj, true)) {
+				modelCacheDirty = false;
+			}
+			dynamicModels.removeValue(gameObj, true);
 		}
 
 		if (entity instanceof GameObject) {
 			objectsById.remove(entity.getId());
 		}
 
-		modelCacheDirty = true;
+		super.removeEntity(entity);
 	}
 
 	public void debugDrawWorld(Camera camera) {
@@ -366,7 +378,9 @@ public class GameEngine extends Engine implements Disposable, Observer {
 		dynamicsWorld.stepSimulation(deltaTime, 10, 1f / 240f);
 
 		for (GameObject object : objectsById.values()) {
-			object.update(deltaTime);
+			if (object != null) {
+				object.update(deltaTime);
+			}
 		}
 	}
 
