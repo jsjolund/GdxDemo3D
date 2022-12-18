@@ -11,6 +11,7 @@
 
     <modules>
         <module>android</module>
+        <module>core</module>
         <module>desktop</module>
         <module>ios</module>
     </modules>
@@ -21,12 +22,46 @@
 
         <java.version>11</java.version>
 
+        <gdx.version>1.11.0</gdx.version>
+        <gdx-ai.version>1.8.2</gdx-ai.version>
+
         <maven.compiler.plugin.version>3.10.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
     </properties>
 
     <dependencyManagement>
-        <dependencies/>
+        <dependencies>
+            <!-- https://github.com/antivoland/GdxDemo3D -->
+            <dependency>
+                <groupId>com.mygdx.game</groupId>
+                <artifactId>core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- https://github.com/libgdx/libgdx -->
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-backend-android</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-bullet</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+
+            <!-- https://github.com/libgdx/gdx-ai -->
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-ai</artifactId>
+                <version>${gdx-ai.version}</version>
+            </dependency>
+        </dependencies>
     </dependencyManagement>
 
     <build>
