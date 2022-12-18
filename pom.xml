@@ -24,6 +24,7 @@
 
         <gdx.version>1.11.0</gdx.version>
         <gdx-ai.version>1.8.2</gdx-ai.version>
+        <bte.version>0.7.1</bte.version>
 
         <maven.compiler.plugin.version>3.10.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
@@ -61,8 +62,22 @@
                 <artifactId>gdx-ai</artifactId>
                 <version>${gdx-ai.version}</version>
             </dependency>
+
+            <!-- https://github.com/piotr-j/bte2 -->
+            <dependency>
+                <groupId>com.github.piotr-j.bte2</groupId>
+                <artifactId>bte</artifactId>
+                <version>${bte.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

@@ -29,6 +29,12 @@
             <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx-ai</artifactId>
         </dependency>
+
+        <!-- https://github.com/piotr-j/bte2 -->
+        <dependency>
+            <groupId>com.github.piotr-j.bte2</groupId>
+            <artifactId>bte</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
