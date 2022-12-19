@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mygdx.game</groupId>
+    <artifactId>gdx-demo-3d</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>android</module>
+        <module>core</module>
+        <module>desktop</module>
+        <module>ios</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <java.version>11</java.version>
+
+        <gdx.version>1.11.0</gdx.version>
+        <gdx-ai.version>1.8.2</gdx-ai.version>
+        <bte.version>0.7.1</bte.version>
+        <android.version>4.1.1.4</android.version>
+        <robovm.version>2.3.18</robovm.version>
+
+        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+        <maven-dependency-plugin.version>3.4.0</maven-dependency-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- https://github.com/antivoland/GdxDemo3D -->
+            <dependency>
+                <groupId>com.mygdx.game</groupId>
+                <artifactId>core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- https://github.com/libgdx/libgdx -->
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-backend-android</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-backend-lwjgl</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-backend-robovm</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-bullet</artifactId>
+                <version>${gdx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-bullet-platform</artifactId>
+                <version>${gdx.version}</version>
+                <classifier>natives-desktop</classifier>
+            </dependency>
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-platform</artifactId>
+                <version>${gdx.version}</version>
+                <classifier>natives-desktop</classifier>
+            </dependency>
+
+            <!-- https://github.com/libgdx/gdx-ai -->
+            <dependency>
+                <groupId>com.badlogicgames.gdx</groupId>
+                <artifactId>gdx-ai</artifactId>
+                <version>${gdx-ai.version}</version>
+            </dependency>
+
+            <!-- https://github.com/piotr-j/bte2 -->
+            <dependency>
+                <groupId>com.github.piotr-j.bte2</groupId>
+                <artifactId>bte</artifactId>
+                <version>${bte.version}</version>
+            </dependency>
+
+            <!-- http://source.android.com -->
+            <dependency>
+                <groupId>com.google.android</groupId>
+                <artifactId>android</artifactId>
+                <version>${android.version}</version>
+            </dependency>
+
+            <!-- https://github.com/MobiVM/robovm -->
+            <dependency>
+                <groupId>com.mobidevelop.robovm</groupId>
+                <artifactId>robovm-cocoatouch</artifactId>
+                <version>${robovm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.mobidevelop.robovm</groupId>
+                <artifactId>robovm-rt</artifactId>
+                <version>${robovm.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>analyze</id>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                        <configuration>
+                            <failOnWarning>true</failOnWarning>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

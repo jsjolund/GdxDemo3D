@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.mygdx.game</groupId>
+        <artifactId>gdx-demo-3d</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ios</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- https://github.com/antivoland/GdxDemo3D -->
+        <dependency>
+            <groupId>com.mygdx.game</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- https://github.com/libgdx/libgdx -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-robovm</artifactId>
+        </dependency>
+
+        <!-- https://github.com/MobiVM/robovm -->
+        <dependency>
+            <groupId>com.mobidevelop.robovm</groupId>
+            <artifactId>robovm-cocoatouch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mobidevelop.robovm</groupId>
+            <artifactId>robovm-rt</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+    </build>
+</project>
