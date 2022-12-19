@@ -14,10 +14,26 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- https://github.com/antivoland/GdxDemo3D -->
+        <dependency>
+            <groupId>com.mygdx.game</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- https://github.com/libgdx/libgdx -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-robovm</artifactId>
+        </dependency>
+
         <!-- https://github.com/MobiVM/robovm -->
         <dependency>
             <groupId>com.mobidevelop.robovm</groupId>
             <artifactId>robovm-cocoatouch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mobidevelop.robovm</groupId>
+            <artifactId>robovm-rt</artifactId>
         </dependency>
     </dependencies>
 
