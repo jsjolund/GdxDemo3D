@@ -39,5 +39,11 @@
 
     <build>
         <sourceDirectory>src</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>../android/assets</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
 </project>
