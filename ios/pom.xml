@@ -13,6 +13,14 @@
     <artifactId>ios</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <!-- https://github.com/MobiVM/robovm -->
+        <dependency>
+            <groupId>com.mobidevelop.robovm</groupId>
+            <artifactId>robovm-cocoatouch</artifactId>
+        </dependency>
+    </dependencies>
+
     <build>
         <sourceDirectory>src</sourceDirectory>
     </build>

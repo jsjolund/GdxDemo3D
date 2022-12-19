@@ -234,8 +234,8 @@ public class GameStage extends Stage implements Observable {
 		}
 
 		@Override
-		public boolean scrolled(int amount) {
-			cameraController.processZoom(amount);
+		public boolean scrolled(float amountX, float amountY) {
+			cameraController.processZoom(amountY);
 			return true;
 		}
 

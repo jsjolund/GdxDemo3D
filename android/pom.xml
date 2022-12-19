@@ -25,6 +25,12 @@
             <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx-backend-android</artifactId>
         </dependency>
+
+        <!-- http://source.android.com -->
+        <dependency>
+            <groupId>com.google.android</groupId>
+            <artifactId>android</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
