@@ -27,6 +27,11 @@
         </dependency>
         <dependency>
             <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-bullet-platform</artifactId>
+            <classifier>natives-desktop</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
             <artifactId>gdx-platform</artifactId>
             <classifier>natives-desktop</classifier>
         </dependency>
